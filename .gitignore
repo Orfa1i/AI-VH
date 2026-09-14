@@ -1,0 +1,35 @@
+# Environment and virtualenvs
+venv/
+**/venv/
+.venv/
+env/
+*.env
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+
+# Large Model Weights (local downloads)
+MedGemma Model/model/
+**/model/*.safetensors
+**/model/*.bin
+*.safetensors
+
+# Large Raw Books (keep directory, ignore giant binary PDFs)
+*.pdf
+
+# Node / Frontend
+node_modules/
+dist/
+build/
+.next/
+
+# IDE / OS
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+.claude/scheduled_tasks.lock

@@ -1,0 +1,1371 @@
+AI Virtual Hospital — Full Project Plan
+1. Project Vision
+
+Build a 3D Virtual Hospital Simulation Environment populated by autonomous AI agents representing:
+
+Doctors
+Nurses
+Patients
+Radiologists
+Laboratory staff
+Reception/administrative staff
+Potentially pharmacists and other clinical roles later
+
+The hospital should behave like a simulated healthcare environment where AI agents interact with each other, patients arrive with medical conditions, doctors investigate and diagnose them, nurses perform clinical workflows, and the system generates complete clinical reports.
+
+The central research objective is:
+
+Can autonomous medical AI agents improve their clinical decision-making and workflow behavior through expert human feedback and Reinforcement Learning?
+
+The system should therefore contain a continuous loop:
+
+Patient → Clinical Encounter → Agent Decisions → Diagnosis/Report → Human Physician Review → Feedback → Training/Evaluation → Improved Agent
+
+2. The Core Architecture
+
+The project should NOT be treated as simply "MedGemma inside a 3D hospital."
+
+Instead, separate it into several layers:
+
+                    VIRTUAL HOSPITAL
+                         │
+        ┌────────────────┴────────────────┐
+        │                                 │
+   3D Environment                    Simulation Engine
+        │                                 │
+        └────────────────┬────────────────┘
+                         │
+                  AGENT ORCHESTRATOR
+                         │
+       ┌─────────────────┼─────────────────┐
+       │                 │                 │
+    DOCTORS            NURSES           PATIENTS
+       │                 │                 │
+       └─────────────────┼─────────────────┘
+                         │
+                  CLINICAL TOOLS
+                         │
+       ┌─────────────────┼─────────────────┐
+       │                 │                 │
+     EHR              Radiology           Lab
+       │                 │                 │
+       └─────────────────┼─────────────────┘
+                         │
+                  MEDICAL KNOWLEDGE
+                         │
+                    RAG SYSTEM
+                         │
+                  MedGemma + Tools
+                         │
+                  Clinical Output
+                         │
+              HUMAN PHYSICIAN REVIEW
+                         │
+                     FEEDBACK
+                         │
+                 TRAINING PIPELINE
+                         │
+                RL / Preference Learning
+                         │
+                  EVALUATION ENGINE
+3. The Virtual Hospital
+
+The hospital should be a real interactive 3D environment, but do NOT start by building every hospital department.
+
+Start with a small but complete environment.
+
+Phase 1 Hospital
+
+Build:
+
+Reception
+Emergency Department
+Patient waiting area
+Examination rooms
+Nurse station
+Doctor station
+Radiology
+Laboratory
+Pharmacy
+Patient rooms
+Hospital corridor
+
+Later:
+
+ICU
+Operating room
+Pediatrics
+Obstetrics
+Internal medicine
+Cardiology
+Neurology
+Oncology
+Outpatient clinics
+Ambulance/emergency entrance
+4. How the 3D Hospital Should Work
+
+The 3D environment is primarily the simulation and visualization layer.
+
+It should NOT contain the medical intelligence itself.
+
+For example:
+
+3D Doctor
+    ↓
+Agent ID: doctor_001
+    ↓
+Doctor Agent Backend
+    ↓
+Clinical reasoning
+    ↓
+Tools
+    ↓
+EHR / Lab / Radiology
+
+The character you see walking around is simply the embodied representation of an AI agent.
+
+The agent's actual intelligence lives in the backend.
+
+5. Recommended 3D Technology
+
+For the initial prototype:
+
+Frontend
+React
+Next.js
+TypeScript
+Three.js
+React Three Fiber
+Drei
+
+The hospital can initially use relatively simple 3D assets.
+
+You do NOT need AAA-quality graphics.
+
+The important part is:
+
+The environment must accurately represent the clinical workflow.
+
+Later, if the project requires sophisticated simulation, consider:
+
+Unity
+Unreal Engine
+NVIDIA Omniverse
+
+But don't start there unless the research requires high-fidelity simulation.
+
+6. Agent Architecture
+
+Every agent should have a structured configuration.
+
+Example:
+
+Agent
+├── Identity
+├── Role
+├── Specialty
+├── Base Model
+├── System Instructions
+├── Medical Knowledge
+├── Memory
+├── Tools
+├── Goals
+├── Policies
+├── Environment State
+├── Decision History
+└── Performance Metrics
+7. Doctor Agents
+
+Doctor agents are the main intelligent agents.
+
+Each doctor should have:
+
+Base model
+
+MedGemma
+
+Use MedGemma as the medical foundation model where appropriate.
+
+But:
+
+MedGemma itself is NOT the entire doctor agent.
+
+The agent should be an architecture built around the model.
+
+Doctor Agent
+     │
+     ├── MedGemma
+     ├── Specialty Knowledge
+     ├── RAG
+     ├── Patient Memory
+     ├── Clinical Tools
+     ├── Decision Policy
+     ├── Environment State
+     └── Evaluation / Feedback
+8. Doctor Specialties
+
+Start with approximately 3–4 specialties.
+
+For example:
+
+Internal Medicine
+
+Knowledge:
+
+Internal medicine textbooks
+Clinical guidelines
+Appropriate medical references
+Radiology
+
+Knowledge:
+
+Radiology textbooks
+Imaging references
+Appropriate radiology guidelines
+Pediatrics
+
+Knowledge:
+
+Pediatric textbooks
+Pediatric clinical references
+Obstetrics & Gynecology
+
+Knowledge:
+
+Obstetrics textbooks
+Gynecology references
+Appropriate guidelines
+
+Later add:
+
+Cardiology
+Neurology
+Emergency medicine
+Surgery
+Oncology
+Infectious disease
+9. Medical Books
+
+Your medical books are extremely valuable.
+
+However:
+
+DO NOT put a 500–1000 page book directly into the model prompt.
+
+Instead:
+
+Medical Book
+      ↓
+PDF Processing
+      ↓
+Text Extraction
+      ↓
+Cleaning
+      ↓
+Chunking
+      ↓
+Metadata
+      ↓
+Embeddings
+      ↓
+Vector Database
+      ↓
+RAG
+      ↓
+Doctor Agent
+
+Each chunk should preserve metadata such as:
+
+{
+  "book": "Internal Medicine Reference",
+  "chapter": "Cardiology",
+  "page": 347,
+  "section": "Heart Failure",
+  "specialty": "Internal Medicine"
+}
+
+This allows the agent to retrieve relevant information when needed.
+
+10. RAG Architecture
+
+Each specialty should have its own knowledge collection.
+
+Example:
+
+Medical Knowledge
+│
+├── Internal Medicine
+│   ├── Books
+│   ├── Guidelines
+│   └── References
+│
+├── Radiology
+│   ├── Books
+│   ├── Guidelines
+│   └── References
+│
+├── Pediatrics
+│   ├── Books
+│   └── Guidelines
+│
+└── Obstetrics
+    ├── Books
+    └── Guidelines
+
+The doctor agent retrieves only the relevant information.
+
+11. Nurse Agents
+
+Nurses should NOT simply be copies of doctor agents.
+
+They should have a different role and decision policy.
+
+For example, a nurse may:
+
+Receive patients
+Record vital signs
+Monitor patients
+Administer simulated medications
+Collect samples
+Prepare patients for imaging
+Communicate observations to doctors
+Monitor changes in patient status
+Escalate deterioration
+
+Their knowledge base should contain:
+
+Nursing textbooks
+Nursing guidelines
+Clinical procedures
+Appropriate nursing references
+12. Patient Agents
+
+This is one of the most important parts.
+
+Patients should be simulated autonomous agents, rather than simple static NPCs.
+
+Each patient should have:
+
+Patient Agent
+│
+├── Age
+├── Sex
+├── Medical History
+├── Current Condition
+├── Symptoms
+├── Medications
+├── Allergies
+├── Vital Signs
+├── Disease Progression
+├── Personality
+├── Communication Style
+└── Hidden Clinical State
+13. Patient Cases
+
+Patients should enter the hospital with different conditions.
+
+For example:
+
+Patient #001
+Age: 62
+Chief Complaint: Chest pain
+
+Patient #002
+Age: 27
+Chief Complaint: Abdominal pain
+
+Patient #003
+Age: 8
+Chief Complaint: Fever
+
+Patient #004
+Age: 35
+Chief Complaint: Shortness of breath
+
+But the system should become progressively more difficult.
+
+14. Case Complexity
+
+You specifically want to measure how well the agents handle difficult cases.
+
+Therefore create case levels.
+
+Level 1 — Simple
+
+Clear symptoms and diagnosis.
+
+Level 2 — Moderate
+
+Multiple possible diagnoses.
+
+Level 3 — Complex
+
+Multiple symptoms and comorbidities.
+
+Level 4 — Difficult
+
+Conflicting evidence.
+
+Level 5 — High complexity
+
+Multiple conditions, incomplete information, changing vitals and possible complications.
+
+This creates a measurable benchmark.
+
+15. Random Patient Generation
+
+The simulation should be able to generate patients automatically.
+
+Example:
+
+Case Generator
+      ↓
+Disease
+      ↓
+Demographics
+      ↓
+Symptoms
+      ↓
+History
+      ↓
+Vitals
+      ↓
+Medications
+      ↓
+Disease progression
+
+The patient should not reveal all information immediately.
+
+The doctor must ask questions and request tests.
+
+That makes the environment more realistic.
+
+16. Clinical Workflow
+
+A typical emergency case might look like:
+
+Patient enters ER
+       ↓
+Nurse receives patient
+       ↓
+Vital signs collected
+       ↓
+Doctor notified
+       ↓
+Doctor interviews patient
+       ↓
+Doctor examines patient
+       ↓
+Doctor generates differential diagnosis
+       ↓
+Doctor orders laboratory tests
+       ↓
+Lab agent performs simulated test
+       ↓
+Results returned
+       ↓
+Doctor orders imaging
+       ↓
+Radiology agent processes study
+       ↓
+Results returned
+       ↓
+Doctor reassesses patient
+       ↓
+Final diagnosis
+       ↓
+Treatment plan
+       ↓
+Clinical report
+
+This workflow is the heart of the project.
+
+17. Clinical Tools
+
+Agents should interact with tools rather than simply generating text.
+
+Examples:
+
+get_patient_history()
+get_vital_signs()
+order_lab_test()
+get_lab_result()
+order_imaging()
+get_radiology_result()
+check_medications()
+check_allergies()
+search_medical_knowledge()
+write_clinical_report()
+notify_nurse()
+
+This makes the agent an actual tool-using autonomous agent.
+
+18. Agent Communication
+
+Agents need structured communication.
+
+For example:
+
+Doctor → Nurse
+"Please obtain a repeat blood pressure and temperature."
+
+Nurse → Doctor
+"BP: 88/55, Temp: 38.7°C."
+
+Doctor → Laboratory
+"Order CBC and CRP."
+
+Laboratory → Doctor
+"Results available."
+
+Do not rely exclusively on free-form chat.
+
+Use structured messages/events.
+
+19. Hospital Event Bus
+
+Create an event system.
+
+Example:
+
+PATIENT_ARRIVED
+VITALS_UPDATED
+DOCTOR_ASSIGNED
+LAB_ORDERED
+LAB_RESULT_READY
+IMAGING_ORDERED
+IMAGING_RESULT_READY
+DIAGNOSIS_UPDATED
+TREATMENT_ORDERED
+PATIENT_DETERIORATED
+REPORT_COMPLETED
+REVIEW_COMPLETED
+
+This becomes the backbone of the simulation.
+
+20. Database Architecture
+
+Use PostgreSQL as the primary database.
+
+Potentially use:
+
+PostgreSQL
+pgvector
+Redis
+PostgreSQL stores:
+users
+agents
+patients
+cases
+encounters
+symptoms
+vitals
+medications
+allergies
+lab_orders
+lab_results
+imaging_orders
+imaging_results
+diagnoses
+clinical_reports
+agent_actions
+agent_decisions
+agent_versions
+human_reviews
+feedback
+training_examples
+evaluation_runs
+21. Vector Database
+
+Use pgvector initially instead of adding another database unnecessarily.
+
+Store:
+
+medical knowledge embeddings
+book chunks
+guideline chunks
+case knowledge
+possibly historical approved examples
+
+This keeps the initial architecture simpler.
+
+22. Obsidian
+
+Yes—Obsidian can be extremely useful, but it should not be your production database.
+
+Use Obsidian as the project's:
+
+Knowledge Management + Research + Architecture Documentation System
+
+For example:
+
+Obsidian/
+│
+├── Architecture/
+├── Agents/
+├── Doctors/
+├── Nurses/
+├── Patients/
+├── Medical Knowledge/
+├── RL/
+├── Evaluation/
+├── Experiments/
+├── Research Papers/
+├── Decisions/
+└── Roadmap/
+
+PostgreSQL = application data.
+
+Obsidian = human project knowledge/documentation.
+
+23. Clinical Report
+
+Every doctor agent should generate a structured report.
+
+Example:
+
+Patient Information
+
+Chief Complaint
+
+History of Present Illness
+
+Relevant Medical History
+
+Vital Signs
+
+Clinical Findings
+
+Differential Diagnosis
+
+Investigations Requested
+
+Investigation Results
+
+Final Diagnosis
+
+Treatment Plan
+
+Clinical Reasoning
+
+Confidence
+
+References
+24. Human Physician Review
+
+This is one of the most important components of the project.
+
+Create a dedicated physician dashboard.
+
+Example:
+
+┌─────────────────────────────────────────────┐
+│ AI Clinical Review                          │
+├─────────────────────────────────────────────┤
+│ Case #1042                                  │
+│                                             │
+│ Condition                                   │
+│ Diagnosis                                   │
+│                                             │
+│ AI Clinical Report                          │
+│                                             │
+│ [Doctor Comments]                           │
+│                                             │
+│ [Edit Diagnosis]                             │
+│ [Edit Report]                                │
+│                                             │
+│ [Approve]       [Reject]                    │
+└─────────────────────────────────────────────┘
+25. Report Dashboard
+
+The left side can contain the report queue you described.
+
+Reports
+──────────────
+Case #1054
+Case #1053
+Case #1052
+Case #1051
+Case #1050
+
+Clicking one opens:
+
+Case
+↓
+Patient information
+↓
+Symptoms
+↓
+AI reasoning
+↓
+Diagnosis
+↓
+Investigations
+↓
+Results
+↓
+Final report
+↓
+Physician review
+26. Human Feedback
+
+Never overwrite the original AI report.
+
+Store:
+
+AI Original Report
+        +
+Physician Corrected Report
+        +
+Physician Feedback
+        +
+Approval/Rejection
+
+The difference between the two becomes valuable training/evaluation data.
+
+27. Feedback Types
+
+Instead of only allowing free text, create structured feedback.
+
+For example:
+
+Diagnosis
+Correct
+Partially correct
+Incorrect
+Reasoning
+Correct
+Missing evidence
+Incorrect reasoning
+Unsupported conclusion
+Investigation
+Appropriate
+Unnecessary
+Missing test
+Wrong test
+Treatment
+Appropriate
+Inappropriate
+Missing intervention
+Report
+Complete
+Incomplete
+Incorrect
+
+This gives you much better training data.
+
+28. Reinforcement Learning
+
+This is where your research component becomes interesting.
+
+Do NOT immediately train the entire medical foundation model.
+
+Instead, initially use RL to optimize the agent's decision-making/policy.
+
+Think:
+
+MedGemma
+     +
+Agent Architecture
+     +
+Tools
+     +
+Environment
+     +
+Reward Function
+     ↓
+RL Agent
+29. Reinforcement Learning Environment
+
+The virtual hospital itself becomes the RL environment.
+
+State
+
+The state may include:
+
+Patient condition
+Known symptoms
+Vital signs
+Medical history
+Available test results
+Current location
+Current clinical stage
+Previous actions
+Time
+Actions
+
+The doctor agent might:
+
+ask_patient_question
+perform_examination
+order_lab
+order_imaging
+consult_specialist
+review_history
+diagnose
+treat
+monitor
+discharge
+admit
+Reward
+
+The reward function evaluates the quality of the decision.
+
+For example:
+
+Correct diagnosis           + reward
+Appropriate test            + reward
+Unnecessary test            - penalty
+Missed critical condition   - large penalty
+Unsafe treatment            - large penalty
+Good clinical report        + reward
+Appropriate escalation      + reward
+
+The reward design needs to be clinically validated.
+
+30. Human Feedback → Learning
+
+The pipeline becomes:
+
+AI Decision
+     ↓
+AI Report
+     ↓
+Physician Review
+     ↓
+Correction
+     ↓
+Feedback Dataset
+     ↓
+Evaluation
+     ↓
+Training / Preference Optimization
+     ↓
+New Agent Version
+     ↓
+Testing
+     ↓
+Deployment
+
+Do not automatically deploy every physician correction directly into the live agent.
+
+Use a controlled model/version pipeline.
+
+31. Agent Versioning
+
+Every model/agent configuration should have a version.
+
+Example:
+
+Doctor_InternalMedicine_v0.1
+Doctor_InternalMedicine_v0.2
+Doctor_InternalMedicine_v0.3
+
+Track:
+
+Model
+Prompt
+RAG version
+Knowledge version
+Tools
+Policy
+Training data
+Evaluation score
+
+This lets you answer:
+
+"Did the agent actually improve?"
+
+32. Evaluation System
+
+You need a formal evaluation framework.
+
+Measure:
+
+Diagnostic accuracy
+
+Did it reach the correct diagnosis?
+
+Differential diagnosis quality
+
+Did it consider relevant alternatives?
+
+Investigation quality
+
+Did it order appropriate tests?
+
+Treatment quality
+
+Was the treatment appropriate?
+
+Safety
+
+Did it miss dangerous conditions?
+
+Efficiency
+
+How many unnecessary actions did it perform?
+
+Time
+
+How long did it take?
+
+Report quality
+
+Was the final report complete and clinically coherent?
+
+Evidence grounding
+
+Did its claims correspond to retrieved references?
+
+33. Benchmark Dataset
+
+Create a controlled set of cases.
+
+For example:
+
+100 cases
+├── 20 easy
+├── 30 moderate
+├── 30 complex
+└── 20 highly complex
+
+Keep a held-out test set that agents never train on.
+
+This is critical.
+
+Otherwise you won't know whether the model actually learned.
+
+34. Human Physician Evaluation
+
+Recruit qualified physicians to evaluate the system.
+
+For each case:
+
+AI output
+       ↓
+Physician score
+       ↓
+Correct / Incorrect
+       ↓
+Comments
+       ↓
+Suggested correction
+
+Eventually you could have multiple physicians evaluate the same case to measure inter-rater agreement.
+
+35. Safety Architecture
+
+Because this is a medical AI research system, implement safety controls from the beginning.
+
+The system should clearly be:
+
+A research/simulation environment, not a real clinical decision-making system.
+
+Important safeguards:
+
+No real patient data initially
+Synthetic patients
+Clear simulation labeling
+Human oversight
+Audit logs
+Agent action logs
+Model versioning
+No autonomous real-world treatment
+No real medication administration
+Controlled access
+36. Backend
+
+Recommended:
+
+Python
+
+Use:
+
+FastAPI
+Pydantic
+SQLAlchemy
+PostgreSQL
+pgvector
+Redis where useful
+
+Potential architecture:
+
+Frontend
+   ↓
+API Gateway
+   ↓
+Agent Orchestrator
+   ↓
+Simulation Engine
+   ↓
+Agent Services
+   ↓
+Clinical Tools
+   ↓
+Database / RAG
+37. Agent Orchestrator
+
+This is a major component.
+
+It manages:
+
+Which agent acts?
+What does the agent know?
+What tools can it use?
+What is the current environment state?
+What happened previously?
+Who should receive the next event?
+
+Example:
+
+Patient arrives
+       ↓
+Orchestrator
+       ↓
+Nurse Agent
+       ↓
+Vital signs
+       ↓
+Orchestrator
+       ↓
+Doctor Agent
+       ↓
+Clinical decision
+38. Memory
+
+Separate memory into different categories.
+
+Patient memory
+medical history
+previous encounters
+medications
+allergies
+Agent episodic memory
+previous actions
+previous cases
+previous feedback
+Knowledge memory
+medical books
+guidelines
+references
+
+Do not mix all of these together.
+
+39. Frontend Architecture
+
+Build two major interfaces.
+
+A. Virtual Hospital
+3D Hospital
+
+Used for:
+
+Simulation
+Agent visualization
+Patient movement
+Department interaction
+Real-time events
+B. Clinical/Research Dashboard
+
+Used for:
+
+Cases
+Reports
+Agent performance
+Physician reviews
+Training
+Evaluation
+Analytics
+40. Research Dashboard
+
+Create a separate analytics section.
+
+Show:
+
+Overall Agent Accuracy
+Diagnostic Accuracy
+Safety Score
+Average Actions / Case
+Average Time / Case
+Physician Approval Rate
+Report Quality
+Improvement Across Versions
+
+And graphs:
+
+Agent v0.1 → 62%
+Agent v0.2 → 71%
+Agent v0.3 → 79%
+Agent v0.4 → 84%
+
+This becomes powerful evidence for the research project.
+
+41. Project Folder Structure
+
+A possible structure:
+
+virtual-hospital/
+│
+├── frontend/
+│   ├── hospital-3d/
+│   ├── dashboard/
+│   └── components/
+│
+├── backend/
+│   ├── api/
+│   ├── agents/
+│   ├── simulation/
+│   ├── clinical/
+│   ├── rag/
+│   ├── evaluation/
+│   ├── training/
+│   └── database/
+│
+├── knowledge/
+│   ├── radiology/
+│   ├── internal-medicine/
+│   ├── pediatrics/
+│   └── obstetrics/
+│
+├── rl/
+│   ├── environments/
+│   ├── rewards/
+│   ├── policies/
+│   └── experiments/
+│
+├── data/
+│   ├── synthetic-patients/
+│   ├── cases/
+│   └── evaluations/
+│
+├── docs/
+│
+└── README.md
+42. Development Roadmap
+
+Do NOT attempt to build the complete hospital immediately.
+
+Phase 0 — Research & Architecture
+
+Define:
+
+Research question
+Agent architecture
+Clinical workflow
+Data model
+Evaluation methodology
+Safety requirements
+Phase 1 — MVP
+
+Build:
+
+1 patient agent
++
+1 nurse agent
++
+1 doctor agent
++
+ER
++
+basic EHR
++
+basic RAG
++
+clinical report
++
+physician review
+
+The complete workflow should work end-to-end.
+
+43. Phase 2 — Multi-Agent Hospital
+
+Add:
+
+Multiple doctors
+Multiple nurses
+Laboratory agent
+Radiology agent
+More patient agents
+
+Now agents communicate.
+
+44. Phase 3 — 3D Hospital
+
+Add:
+
+Hospital building
+Departments
+Rooms
+Characters
+Movement
+Agent visualization
+Real-time events
+45. Phase 4 — Physician Feedback
+
+Implement:
+
+AI report
+↓
+Physician review
+↓
+Corrections
+↓
+Structured feedback
+↓
+Dataset
+46. Phase 5 — Evaluation
+
+Build:
+
+Benchmark cases
+Automated metrics
+Physician scoring
+Safety evaluation
+Agent version comparison
+47. Phase 6 — Reinforcement Learning
+
+Only after the simulation and evaluation pipeline work reliably.
+
+Implement:
+
+Environment
+↓
+State
+↓
+Actions
+↓
+Reward
+↓
+Policy
+↓
+Training
+↓
+Evaluation
+
+Then compare:
+
+Base Agent
+vs
+RL-trained Agent
+48. Phase 7 — Scale
+
+Eventually:
+
+ER
++
+Radiology
++
+Laboratory
++
+ICU
++
+Pediatrics
++
+Internal Medicine
++
+Obstetrics
++
+Surgery
+...
+
+At that point the project becomes a true multi-agent virtual hospital simulation platform.
+
+49. The Most Important Research Experiment
+
+The strongest experiment isn't:
+
+"Can AI diagnose patients?"
+
+Instead, make the research question:
+
+"Can a multi-agent clinical AI system improve its decision-making and workflow performance through iterative expert feedback within a simulated hospital environment?"
+
+Then compare:
+
+Experiment A
+
+Base MedGemma agent.
+
+Experiment B
+
+MedGemma + specialty RAG.
+
+Experiment C
+
+MedGemma + RAG + tools.
+
+Experiment D
+
+MedGemma + RAG + tools + multi-agent environment.
+
+Experiment E
+
+MedGemma + RAG + tools + multi-agent environment + human feedback/RL.
+
+Then measure performance at every stage.
+
+That gives you a scientifically meaningful progression rather than simply building a flashy AI hospital.
+
+50. Final System
+
+Eventually the entire platform looks like:
+
+                         VIRTUAL HOSPITAL
+                               │
+       ┌───────────────────────┼───────────────────────┐
+       │                       │                       │
+    Patients                Nurses                 Doctors
+       │                       │                       │
+       └───────────────────────┼───────────────────────┘
+                               │
+                         EVENT ENGINE
+                               │
+                    CLINICAL WORKFLOW
+                               │
+       ┌───────────────────────┼───────────────────────┐
+       │                       │                       │
+      EHR                    LAB                  RADIOLOGY
+       │                       │                       │
+       └───────────────────────┼───────────────────────┘
+                               │
+                        MEDICAL RAG
+                               │
+                    SPECIALTY KNOWLEDGE
+                               │
+                           MEDGEMMA
+                               │
+                         AGENT POLICY
+                               │
+                         CLINICAL REPORT
+                               │
+                     PHYSICIAN REVIEW
+                               │
+                    ┌──────────┴──────────┐
+                    │                     │
+                 APPROVE               CORRECT
+                    │                     │
+                    └──────────┬──────────┘
+                               │
+                         FEEDBACK DATA
+                               │
+                       EVALUATION ENGINE
+                               │
+                    RL / PREFERENCE LEARNING
+                               │
+                         NEW AGENT VERSION
+                               │
+                         RE-EVALUATION
+                               │
+                         VIRTUAL HOSPITAL
+The key principle
+
+Don't build the 3D hospital first.
+
+Build the clinical simulation loop first:
+
+Patient → Nurse → Doctor → Investigation → Diagnosis → Report → Physician Review → Feedback → Evaluation
+
+Once that loop works reliably, put the 3D hospital around it.
+
+That approach dramatically reduces the risk of spending months building a beautiful virtual hospital before proving that the AI-agent + clinical-feedback + learning loop actually works.
