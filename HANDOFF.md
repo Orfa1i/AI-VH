@@ -16,25 +16,25 @@ AI-VH is an autonomous multi-agent healthcare simulation and reinforcement learn
   - Added test suite in `backend/tests/test_evaluator.py` (7 tests covering case evaluation, aggregate reports, and API response contracts).
   - Built interactive `frontend/src/components/rl/PolicyBenchmarkModal.tsx` with aggregate delta matrix, head-to-head comparison table, and case-by-case drilldowns.
 - **Web Speech API Audio Voice Synthesis (`speechSynthesis.ts`)**:
-  - Implemented client-side voice synthesis in `frontend/src/utils/speechSynthesis.ts` mapped to specialist agent personas:
-    - Dr. Marcus Vance, MD (Internal Medicine Specialist, pitch 0.92, rate 0.98, authoritative).
-    - Dr. Elena Rostova, PharmD (Clinical Pharmacist, pitch 1.05, rate 1.0, precise).
-    - Sarah Jenkins, RN (Triage Nurse, pitch 1.1, rate 1.02, warm).
-    - David Chen, CLS (Laboratory Scientist) & Dr. Arthur Hayes, MD (Radiology).
+  - Implemented client-side voice synthesis in `frontend/src/utils/speechSynthesis.ts` mapped to specialist agent personas (Dr. Vance, Dr. Rostova, Nurse Sarah, David Chen, Dr. Hayes).
   - Added voice readout triggers in `InternalMedicineConsultModal.tsx`, `PharmacistModal.tsx`, and `PolicyBenchmarkModal.tsx`.
   - Added global Audio Mute toggle button in `CaseSelector.tsx`.
 - **East Inpatient Wing Multi-Patient Central Telemetry Console**:
-  - Expanded benchmark cases bank to 4 full inpatient cases in `backend/clinical/cases.py`:
-    - CASE-101: Robert Miller (NSTEMI, post-angiography stepdown).
-    - CASE-102: Elena Rostova (DKA, ICU bed 2, closing anion gap).
-    - CASE-103: Arthur Pendelton (KDIGO Stage 3 AKI, prerenal azotemia fluid resuscitation).
-    - CASE-104: Clara Vance (Submassive Pulmonary Embolism, monitored telemetry).
+  - Expanded benchmark cases bank to 4 full inpatient cases in `backend/clinical/cases.py` (Robert Miller NSTEMI, Elena Rostova DKA, Arthur Pendelton AKI, Clara Vance PE).
   - Added REST endpoint `GET /api/inpatient/rooms`.
-  - Built `frontend/src/components/dashboard/InpatientTelemetryModal.tsx` featuring:
-    - HTML5 Canvas animated real-time ECG Lead II rhythm strips with dynamic P-Q-R-S-T waveforms.
-    - Simultaneous vitals telemetry (HR, BP, SpO2, RR).
-    - Active continuous infusions (Heparin, Insulin drip, Plasmalyte, Enoxaparin).
-    - Audio verbal handoff report narrated by Nurse Sarah Jenkins.
+  - Built `frontend/src/components/dashboard/InpatientTelemetryModal.tsx` featuring animated real-time ECG Lead II rhythm strips with dynamic P-Q-R-S-T waveforms.
+- **3D Humanoid Patient & Specialist Avatars (Commit `0c57db6`)**:
+  - Engineered full humanoid anatomy in `frontend/src/components/hospital3d/AgentAvatar.tsx`:
+    - Articulated limbs: dual legs (thighs, shins, feet), dual arms (sleeves, forearms, hands), neck, and cranium.
+    - Expressive facial features: multi-layered eyes (white sclera, dark iris/pupil, white corneal catchlight), eyebrows, 3D triangular nose bridge, shaped lips/mouth, ears, and cropped male hair with sideburns.
+    - Authentic hospital patient attire:
+      - Sky-blue medical patient gown with white V-neck collar binding.
+      - Patient admission identification barcode label on chest.
+      - Cardiac telemetry electrode lead patch on right chest.
+      - Hospital admission identification barcode wristband with red safety alert band on right wrist.
+      - Peripheral IV cannula with semi-transparent Tegaderm adhesive dressing and blue Luer-lock hub on left hand.
+      - Hospital safety-yellow fall-risk non-skid socks with white rubber traction tread strips.
+    - Professional clinical attire for healthcare staff (Doctor lab coat + stethoscope, Nurse cyan scrubs + white clogs, Pharmacist teal coat).
 - **Verification & Deployment**:
   - All 28 automated backend tests passing (`py -3.13 -m pytest backend/tests/ -v`).
   - Production frontend build clean with zero warnings (`pnpm build` -> exit code 0).
@@ -43,17 +43,10 @@ AI-VH is an autonomous multi-agent healthcare simulation and reinforcement learn
 
 ## 3. Current State of the Work
 - Both servers are active in background tasks and responding with HTTP 200.
-- Top navigation bar provides full access to:
-  - Clinical Encounter Runner
-  - Internal Medicine Consult (Harrison's RAG + Dr. Vance TTS)
-  - Pharmacy Safety Reconciliation (Dr. Rostova TTS)
-  - East Wing 4-Bed Central Telemetry Console
-  - Policy Benchmark (Base vs RL DPO head-to-head comparison)
-  - RL / DPO Preference Alignment Corpus
-  - Global Audio Voice Mute/Unmute toggle
-- Proximity triggers (`[E] to Interact`) in the 3D hospital world connect first-person walking directly to department inspection and specialist consultations.
+- Top navigation bar provides full access to Clinical Encounter Runner, IM Consult, Pharmacy Safety, Telemetry, Policy Benchmark, and RL Corpus.
+- The 3D virtual hospital renders the fully articulated male patient in authentic hospital gown, non-skid socks, IV cannula, and barcode wristband alongside clinical staff.
 
 ## 4. Next Steps
-- Implement continuous real-time WebSocket vitals streaming for the Inpatient Wing telemetry monitors.
-- Add multi-agent conference rounds where Dr. Vance, Dr. Rostova, and Nurse Sarah collaboratively present during morning inpatient rounds.
-- Connect the live local MedGemma 4-bit weights (`MedGemma Model/`) directly to the DPO-fine-tuned LoRA adapter (`models/medgemma-dpo-lora/`) for on-device live inference comparison.
+- Implement real-time WebSocket live vitals streaming for the East Wing Telemetry monitors.
+- Add multi-agent morning inpatient conference rounds.
+- Connect local 4-bit MedGemma model weights with DPO LoRA adapter for live on-device inference comparison.
