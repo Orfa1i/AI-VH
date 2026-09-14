@@ -14,23 +14,24 @@ AI-VH is an autonomous multi-agent healthcare simulation and reinforcement learn
   - Implemented `InternalMedicineSpecialistAgent` (`Dr. Marcus Vance, MD, FACP`) and `InternalMedicineRAGAgent` with query expansion, BM25 indexing over Harrison's 21st Edition, and formal `EvidenceBrief` synthesis.
   - Added `POST /api/specialists/internal-medicine/consult` and `InternalMedicineConsultModal.tsx`.
 - **UI Stacking Context & Drei Z-Index Fix (Commit `dc6c1ee`)**:
-  - **Identified and resolved 3D badge bleed-through**: `@react-three/drei`'s `<Html>` components by default assign astronomical 24-bit CSS `z-index` values (`zIndexRange: [16777271, 0]`) to depth-sort 3D DOM labels. Because departments and avatars on the left side of the hospital (`Reception & Intake`, `Examination Room 1`, `Clinical Laboratory`, `Patient`, and `David Chen, MLS`) had coordinates $x \in [-8, -7]$, their projected 2D HTML badges rendered with `z-index ~16,777,000`, punching straight through the modal container (`z-50`).
-  - **Resolution**:
-    1. Clamped `zIndexRange={[10, 0]}` on `<Html>` in `DepartmentRoom.tsx` and `AgentAvatar.tsx`.
-    2. Added `isolate z-0` to the Canvas container in `HospitalCanvas.tsx` to trap all 3D HTML elements within their own isolated stacking context.
-    3. Verified via production build (`tsc -b && vite build`) and hot module reload.
-- **3D First-Person Perspective & Clinical Interior Walkthrough (Commit `66d72e7`)**:
-  - Built `FirstPersonControls.tsx`: Camera control locked at realistic human eye-level (1.7m), WASD movement with sprint (`Shift`), mouse-drag pitch/yaw look with vertical clamping, room boundary constraints, and dynamic coordinate-based room identification.
-  - Built `HospitalFurnishings.tsx`: Comprehensive 3D clinical models including examination beds with rails, IV drip poles with fluid bags, physician workstations with dual diagnostic monitors, triage desks with vitals carts, clinical laboratory analyzer benches and centrifuges, and a radiology CT scanner gantry ring and scan table.
-  - Built `FirstPersonHUD.tsx`: Interactive heads-up display with central precision reticle, active room banner, walking control helper bar, and instant perspective toggle button between **1st-Person Walkthrough** and **Overhead Orbit View**.
-  - Integrated into `HospitalCanvas.tsx` and verified clean production compilation with `pnpm build`.
-- **Phase 6: RL / Direct Preference Optimization (DPO) Preference Generator (Commit pending)**:
-  - Built `ClinicalRewardModel` (`backend/rl/reward_model.py`): Multi-dimensional rubric evaluation weighting diagnosis accuracy (+0.35 to -0.40), evidence reasoning (+0.25 to -0.35), test appropriateness (+0.20 to -0.30), treatment safety (+0.25 to -0.65), physician Likert scaling, and Harrison's textbook citation fidelity bonus (+0.10).
-  - Built `DPOPreferenceGenerator` (`backend/rl/dpo_generator.py`): Transforms physician review feedback (including corrected diagnoses and treatments) into standard HuggingFace / PyTorch DPO training pairs `(prompt, chosen, rejected)`.
-  - Added cold-start Harrison's calibrated benchmark pairs for NSTEMI, DKA, and AKI prerenal azotemia.
-  - Added REST API endpoints `GET /api/rl/dataset` and `POST /api/rl/dataset/export`.
-  - Exported training dataset to `data/dpo_preference_dataset.jsonl` compatible with `trl.DPOTrainer`.
-  - Built interactive glassmorphism UI modal `RLDatasetModal.tsx` with side-by-side prompt, chosen, rejected cards, reward margins, citation grounding, filter pills, and instant JSONL export.
+  - Clamped `zIndexRange={[10, 0]}` and added `isolate z-0` to prevent 3D HTML badges from bleeding through modal containers.
+- **Phase 6: RL / Direct Preference Optimization (DPO) Preference Generator (Commit `a542916`)**:
+  - Built `ClinicalRewardModel`, `DPOPreferenceGenerator`, REST endpoints `GET /api/rl/dataset` and `POST /api/rl/dataset/export`, exported `data/dpo_preference_dataset.jsonl`, and built `RLDatasetModal.tsx` UI.
+- **AutoCAD Floor Plan (Sheet A-1) 1:1 Architectural Implementation & Light Clinic Aesthetic (Commit pending)**:
+  - **1:1 Blueprint Geometric Alignment**: Reconstructed the entire 3D virtual hospital according to the AutoCAD layout (`Gemini_Generated_Image_vcok6pvcok6pvcok.jpg`):
+    - **West Zone**: Main entrance double glass doors, Patient Waiting Area with 13 waiting chairs, Reception with curved counter & admin stations, Emergency Department (ED) with 7 acute stretcher bays & privacy divider rails, Triage desk with vitals monitor, and dedicated South Ambulance Entrance with docking markers.
+    - **Central Rotunda**: Semicircular curved twin nurse counters forming a circular command station island with 4-way outward-facing diagnostic terminals.
+    - **North Wing**: Examination Room 1, Examination Room 2, Doctor Station (Physician Office with executive desk and dual displays), and large Clinical Laboratory with double-sided central workbench, automated analyzers, and centrifuge.
+    - **Central Core**: Doctor Station (Conference consultation suite) and Pharmacy with dispensing counter, prescription pickup, and tiered pharmaceutical shelving.
+    - **South Wing**: 4 Examination Rooms (Exam 3, 4, 5, 6) and Radiology Suite (CT scanner gantry ring with sky-blue bore illumination, motorized scan couch, lead-shielded console, and patient ensuite).
+    - **East Inpatient Wing**: 4 private patient rooms (Patient Rooms 1, 2, 3, 4) with electric inpatient beds, cyan safety rails, IV infusion poles, and private ensuite bathrooms.
+  - **Light Clinical Color Palette**:
+    - Replaced dark environment with medical daylight illumination: `#f0f9ff` ambient sky, 5000K daylight lighting with soft shadows.
+    - Off-white porcelain tile floor plate (`#f8fafc`), clean gray tile grout grid (`#e2e8f0`), and soft cyan clinical corridor runners (`#e0f2fe`) with deep blue guide border ribbons (`#0284c7`).
+    - Crisp clinical drywall partitions (`#ffffff`) with medical sky-blue chair-rail accent trims.
+  - **1st-Person Navigation & Collision Update**:
+    - Updated `FirstPersonControls.tsx` to detect all 20+ rooms and zones dynamically as the physician walks across the clinic floor.
+    - Boundary constraints calibrated to the building footprint ($X \in [-17.2, 17.0], Z \in [-9.8, 9.8]$).
 - **Live Deployment & Verification**:
   - Backend FastAPI server running live on `http://127.0.0.1:8000` with `--reload` (Task 596).
   - Frontend Vite dev server running live on `http://127.0.0.1:5173` (Task 282).
@@ -39,9 +40,9 @@ AI-VH is an autonomous multi-agent healthcare simulation and reinforcement learn
 
 ## 3. Current State of the Work
 - Both servers are active in the background.
-- First-person 3D navigation is active by default in the 3D Hospital tab.
-- RL / DPO Alignment Corpus viewer is active via the top bar `RL / DPO Corpus` button.
+- The 3D clinic renders the exact AutoCAD layout in daylight medical styling.
+- Both 1st-Person Walkthrough and Overhead Orbit View are fully functional.
 
 ## 4. Next Steps
-- Add interactive proximity triggers in first-person mode (e.g. press [E] to consult doctor or inspect lab analyzer).
+- Add interactive proximity triggers in first-person mode (e.g. press [E] to consult doctor at desk or inspect laboratory analyzers).
 - Implement training loop script using HuggingFace `trl.DPOTrainer` with local 4-bit LoRA adapter for MedGemma.

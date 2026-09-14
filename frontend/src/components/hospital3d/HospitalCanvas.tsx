@@ -20,20 +20,20 @@ interface HospitalCanvasProps {
 
 export const HospitalCanvas: React.FC<HospitalCanvasProps> = ({
   activeDepartment,
-  patientPos,
-  nursePos,
-  doctorPos,
+  patientPos: _patientPos,
+  nursePos: _nursePos,
+  doctorPos: _doctorPos,
   patientAction,
   nurseAction,
   doctorAction,
   onDepartmentClick,
 }) => {
   const [isFirstPerson, setIsFirstPerson] = useState(true);
-  const [currentLocation, setCurrentLocation] = useState('Hospital Central Corridor');
+  const [currentLocation, setCurrentLocation] = useState('Patient Waiting Area (Main Lobby)');
 
   return (
-    <div className="w-full h-full relative bg-slate-950 overflow-hidden isolate z-0">
-      {/* 1st-Person Perspective HUD & Mode Toggle */}
+    <div className="w-full h-full relative bg-sky-50/40 overflow-hidden isolate z-0">
+      {/* 1st-Person Perspective HUD & Mode Switcher */}
       <FirstPersonHUD
         currentLocation={currentLocation}
         isFirstPerson={isFirstPerson}
@@ -42,90 +42,188 @@ export const HospitalCanvas: React.FC<HospitalCanvasProps> = ({
 
       <Canvas
         shadows
-        camera={{ position: isFirstPerson ? [0, 1.7, 0] : [0, 18, 18], fov: isFirstPerson ? 65 : 45 }}
-        className={`w-full h-full ${isFirstPerson ? 'cursor-crosshair' : 'cursor-grab active:cursor-grabbing'}`}
+        camera={{
+          position: isFirstPerson ? [-13.5, 1.7, 0] : [0, 24, 20],
+          fov: isFirstPerson ? 65 : 45,
+        }}
+        className={`w-full h-full ${
+          isFirstPerson ? 'cursor-crosshair' : 'cursor-grab active:cursor-grabbing'
+        }`}
       >
-        <color attach="background" args={['#090d16']} />
-        <ambientLight intensity={0.7} />
+        {/* Crisp Medical Daylight Environment */}
+        <color attach="background" args={['#f0f9ff']} />
+        <ambientLight intensity={1.15} color="#ffffff" />
         <directionalLight
-          position={[12, 24, 15]}
-          intensity={1.2}
+          position={[20, 32, 20]}
+          intensity={1.35}
           castShadow
           shadow-mapSize={[2048, 2048]}
-          shadow-camera-left={-20}
-          shadow-camera-right={20}
-          shadow-camera-top={20}
-          shadow-camera-bottom={-20}
+          shadow-camera-left={-25}
+          shadow-camera-right={25}
+          shadow-camera-top={25}
+          shadow-camera-bottom={-25}
         />
-        <pointLight position={[0, 8, 0]} intensity={0.5} color="#38bdf8" />
+        <directionalLight position={[-20, 22, -20]} intensity={0.45} color="#e0f2fe" />
+        <pointLight position={[0, 9, 0]} intensity={0.6} color="#38bdf8" />
 
         <Suspense fallback={null}>
-          {/* Main Hospital Floor Ground & Grid */}
-          <Grid
-            renderOrder={-1}
-            position={[0, 0, 0]}
-            infiniteGrid
-            cellSize={1}
-            cellThickness={0.5}
-            cellColor="#1e293b"
-            sectionSize={4}
-            sectionThickness={1}
-            sectionColor="#334155"
-            fadeDistance={45}
-          />
-
-          {/* Central Corridor Floor Marker */}
-          <mesh position={[0, 0.02, 0]} receiveShadow>
-            <boxGeometry args={[22, 0.04, 3]} />
-            <meshStandardMaterial color="#0f172a" roughness={0.8} />
+          {/* Main Hospital Porcelain Ground Slab */}
+          <mesh position={[0, -0.01, 0]} receiveShadow>
+            <boxGeometry args={[36.5, 0.05, 23.0]} />
+            <meshStandardMaterial color="#f8fafc" roughness={0.3} metalness={0.05} />
           </mesh>
 
-          {/* 3D Clinical Interior Furnishings */}
+          {/* Clean Medical Ceramic Floor Grid */}
+          <Grid
+            renderOrder={-1}
+            position={[0, 0.01, 0]}
+            infiniteGrid={false}
+            args={[36.0, 22.5]}
+            cellSize={1.2}
+            cellThickness={0.4}
+            cellColor="#e2e8f0"
+            sectionSize={3.6}
+            sectionThickness={1.0}
+            sectionColor="#cbd5e1"
+            fadeDistance={55}
+          />
+
+          {/* ═══════════════════════════════════════════════════════════════
+              ARCHITECTURAL CORRIDOR RUNNERS (LIGHT CLINICAL CYAN ACCENT)
+              ═══════════════════════════════════════════════════════════════ */}
+          {/* Central North Corridor Runner */}
+          <mesh position={[-0.5, 0.02, -3.2]} receiveShadow>
+            <boxGeometry args={[19.5, 0.02, 1.8]} />
+            <meshStandardMaterial color="#e0f2fe" roughness={0.4} />
+          </mesh>
+
+          {/* Central South Corridor Runner */}
+          <mesh position={[-0.5, 0.02, 3.2]} receiveShadow>
+            <boxGeometry args={[19.5, 0.02, 1.8]} />
+            <meshStandardMaterial color="#e0f2fe" roughness={0.4} />
+          </mesh>
+
+          {/* West Lobby & Waiting Area Floor Runner */}
+          <mesh position={[-12.8, 0.02, 0]} receiveShadow>
+            <boxGeometry args={[7.0, 0.02, 3.2]} />
+            <meshStandardMaterial color="#e0f2fe" roughness={0.4} />
+          </mesh>
+
+          {/* East Inpatient Corridor Runner */}
+          <mesh position={[11.2, 0.02, 0]} receiveShadow>
+            <boxGeometry args={[2.2, 0.02, 18.0]} />
+            <meshStandardMaterial color="#e0f2fe" roughness={0.4} />
+          </mesh>
+
+          {/* Blue Guide Border Ribbons */}
+          {[-3.9, -2.5, 2.5, 3.9].map((z, idx) => (
+            <mesh key={`ribbon-${idx}`} position={[-0.5, 0.03, z]}>
+              <boxGeometry args={[19.5, 0.01, 0.06]} />
+              <meshBasicMaterial color="#0284c7" />
+            </mesh>
+          ))}
+
+          {/* ═══════════════════════════════════════════════════════════════
+              EXTERIOR BUILDING PERIMETER & MAIN ENTRANCE
+              ═══════════════════════════════════════════════════════════════ */}
+          {/* Main Entrance Double Glass Doors on West Wall */}
+          <group position={[-18.1, 0, 0]}>
+            <mesh position={[0, 1.25, 0]}>
+              <boxGeometry args={[0.1, 2.5, 2.4]} />
+              <meshStandardMaterial color="#38bdf8" opacity={0.6} transparent roughness={0.1} />
+            </mesh>
+            <mesh position={[0, 2.55, 0]}>
+              <boxGeometry args={[0.2, 0.1, 2.5]} />
+              <meshStandardMaterial color="#0f172a" />
+            </mesh>
+          </group>
+
+          {/* ═══════════════════════════════════════════════════════════════
+              3D CLINICAL INTERIOR FURNISHINGS (AUTOCAD BLUEPRINT SHEET A-1)
+              ═══════════════════════════════════════════════════════════════ */}
           <HospitalFurnishings />
 
-          {/* --- DEPARTMENTS --- */}
-          {/* Row 1 (North): Reception, Waiting Area, Nurse Station */}
+          {/* ═══════════════════════════════════════════════════════════════
+              DEPARTMENTS & ROOMS (AUTOCAD SHEET A-1 EXACT LAYOUT)
+              ═══════════════════════════════════════════════════════════════ */}
+
+          {/* --- WEST ZONE: RECEPTION, WAITING AREA, EMERGENCY DEPARTMENT --- */}
           <DepartmentRoom
             name="Reception & Intake"
             code="RECEPTION"
-            position={[-8, 0, -6]}
-            size={[5, 1, 4.5]}
-            floorColor="#1e293b"
+            position={[-12.8, 0, -6.8]}
+            size={[7.0, 1.35, 5.2]}
+            floorColor="#f8fafc"
+            wallColor="#ffffff"
             iconText="🏢"
+            doorSide="south"
             isActive={activeDepartment === 'RECEPTION'}
             onClick={() => onDepartmentClick('RECEPTION')}
           />
 
           <DepartmentRoom
-            name="Waiting Area"
+            name="Patient Waiting Area"
             code="WAITING_AREA"
-            position={[-2, 0, -6]}
-            size={[5, 1, 4.5]}
-            floorColor="#1e293b"
+            position={[-12.8, 0, -0.6]}
+            size={[7.0, 1.35, 5.0]}
+            floorColor="#f1f5f9"
+            wallColor="#ffffff"
             iconText="🪑"
+            doorSide="open"
             isActive={activeDepartment === 'WAITING_AREA'}
             onClick={() => onDepartmentClick('WAITING_AREA')}
           />
 
           <DepartmentRoom
-            name="Nurse Station & Triage"
+            name="Emergency Department (ED)"
+            code="EMERGENCY_DEPARTMENT"
+            position={[-12.8, 0, 6.8]}
+            size={[7.0, 1.35, 6.2]}
+            floorColor="#f8fafc"
+            wallColor="#ffffff"
+            iconText="🚨"
+            doorSide="open"
+            isActive={activeDepartment === 'EMERGENCY_DEPARTMENT'}
+            onClick={() => onDepartmentClick('EMERGENCY_DEPARTMENT')}
+          />
+
+          <DepartmentRoom
+            name="Triage & Ambulance Bay"
+            code="TRIAGE"
+            position={[-8.5, 0, 7.8]}
+            size={[2.2, 1.35, 4.2]}
+            floorColor="#fef3c7"
+            wallColor="#ffffff"
+            iconText="🚑"
+            doorSide="open"
+            isActive={activeDepartment === 'TRIAGE'}
+            onClick={() => onDepartmentClick('TRIAGE')}
+          />
+
+          {/* --- CENTER HUB: CENTRAL ROTUNDA NURSE STATION --- */}
+          <DepartmentRoom
+            name="Central Rotunda Nurse Station"
             code="NURSE_STATION"
-            position={[6, 0, -6]}
-            size={[7, 1, 4.5]}
-            floorColor="#0f766e"
+            position={[-0.8, 0, 0]}
+            size={[5.5, 1.35, 5.5]}
+            floorColor="#e0f2fe"
+            wallColor="#ffffff"
             iconText="🩺"
+            doorSide="open"
             isActive={activeDepartment === 'NURSE_STATION'}
             onClick={() => onDepartmentClick('NURSE_STATION')}
           />
 
-          {/* Row 2 (Middle): Examination Rooms, Doctor Station */}
+          {/* --- NORTH WING: EXAM ROOMS 1-2, DOCTOR OFFICE, CLINICAL LABORATORY --- */}
           <DepartmentRoom
             name="Examination Room 1"
             code="EXAMINATION_ROOM_1"
-            position={[-7, 0, 1]}
-            size={[5.5, 1, 4.5]}
-            floorColor="#1e3a8a"
+            position={[-4.5, 0, -6.8]}
+            size={[3.0, 1.35, 5.2]}
+            floorColor="#f8fafc"
+            wallColor="#ffffff"
             iconText="🛌"
+            doorSide="south"
             isActive={activeDepartment === 'EXAMINATION_ROOM_1' || activeDepartment === 'EXAMINATION'}
             onClick={() => onDepartmentClick('EXAMINATION_ROOM_1')}
           />
@@ -133,111 +231,244 @@ export const HospitalCanvas: React.FC<HospitalCanvasProps> = ({
           <DepartmentRoom
             name="Examination Room 2"
             code="EXAMINATION_ROOM_2"
-            position={[-0.5, 0, 1]}
-            size={[5.5, 1, 4.5]}
-            floorColor="#1e293b"
+            position={[-1.2, 0, -6.8]}
+            size={[3.0, 1.35, 5.2]}
+            floorColor="#f8fafc"
+            wallColor="#ffffff"
             iconText="🛌"
+            doorSide="south"
             isActive={activeDepartment === 'EXAMINATION_ROOM_2'}
             onClick={() => onDepartmentClick('EXAMINATION_ROOM_2')}
           />
 
           <DepartmentRoom
             name="Doctor Station (Internal Med)"
-            code="DOCTOR_STATION"
-            position={[6.5, 0, 1]}
-            size={[6.5, 1, 4.5]}
-            floorColor="#1e1b4b"
+            code="DOCTOR_STATION_NORTH"
+            position={[2.6, 0, -6.8]}
+            size={[4.0, 1.35, 5.2]}
+            floorColor="#f8fafc"
+            wallColor="#ffffff"
             iconText="👨‍⚕️"
-            isActive={activeDepartment === 'DOCTOR_STATION'}
+            doorSide="south"
+            isActive={activeDepartment === 'DOCTOR_STATION' || activeDepartment === 'DOCTOR_STATION_NORTH'}
             onClick={() => onDepartmentClick('DOCTOR_STATION')}
           />
 
-          {/* Row 3 (South): Laboratory, Radiology, Pharmacy */}
           <DepartmentRoom
             name="Clinical Laboratory"
             code="LABORATORY"
-            position={[-7, 0, 8]}
-            size={[5.5, 1, 4.5]}
-            floorColor="#312e81"
+            position={[7.8, 0, -6.8]}
+            size={[5.6, 1.35, 5.2]}
+            floorColor="#f8fafc"
+            wallColor="#ffffff"
             iconText="🧪"
+            doorSide="south"
             isActive={activeDepartment === 'LABORATORY'}
             onClick={() => onDepartmentClick('LABORATORY')}
           />
 
+          {/* --- CENTRAL CORE: CONSULTATION SUITE & PHARMACY --- */}
           <DepartmentRoom
-            name="Radiology (CT / X-Ray)"
-            code="RADIOLOGY"
-            position={[-0.5, 0, 8]}
-            size={[5.5, 1, 4.5]}
-            floorColor="#3730a3"
-            iconText="☢️"
-            isActive={activeDepartment === 'RADIOLOGY'}
-            onClick={() => onDepartmentClick('RADIOLOGY')}
+            name="Doctor Station (Consultation)"
+            code="DOCTOR_STATION_CENTER"
+            position={[4.2, 0, 0.5]}
+            size={[4.2, 1.35, 4.0]}
+            floorColor="#f8fafc"
+            wallColor="#ffffff"
+            iconText="📋"
+            doorSide="north"
+            isActive={activeDepartment === 'DOCTOR_STATION_CENTER'}
+            onClick={() => onDepartmentClick('DOCTOR_STATION_CENTER')}
           />
 
           <DepartmentRoom
             name="Pharmacy"
             code="PHARMACY"
-            position={[6.5, 0, 8]}
-            size={[6.5, 1, 4.5]}
-            floorColor="#1e293b"
+            position={[8.4, 0, 0.5]}
+            size={[3.8, 1.35, 4.0]}
+            floorColor="#f8fafc"
+            wallColor="#ffffff"
             iconText="💊"
+            doorSide="north"
             isActive={activeDepartment === 'PHARMACY'}
             onClick={() => onDepartmentClick('PHARMACY')}
           />
 
-          {/* --- AGENT AVATARS --- */}
-          {/* Patient Agent */}
+          {/* --- SOUTH WING: EXAM ROOMS 3-6 & RADIOLOGY --- */}
+          <DepartmentRoom
+            name="Examination Room 3"
+            code="EXAMINATION_ROOM_3"
+            position={[-4.2, 0, 6.8]}
+            size={[2.6, 1.35, 5.2]}
+            floorColor="#f8fafc"
+            wallColor="#ffffff"
+            iconText="🛌"
+            doorSide="north"
+            isActive={activeDepartment === 'EXAMINATION_ROOM_3'}
+            onClick={() => onDepartmentClick('EXAMINATION_ROOM_3')}
+          />
+
+          <DepartmentRoom
+            name="Examination Room 4"
+            code="EXAMINATION_ROOM_4"
+            position={[-1.4, 0, 6.8]}
+            size={[2.6, 1.35, 5.2]}
+            floorColor="#f8fafc"
+            wallColor="#ffffff"
+            iconText="🛌"
+            doorSide="north"
+            isActive={activeDepartment === 'EXAMINATION_ROOM_4'}
+            onClick={() => onDepartmentClick('EXAMINATION_ROOM_4')}
+          />
+
+          <DepartmentRoom
+            name="Examination Room 5"
+            code="EXAMINATION_ROOM_5"
+            position={[1.4, 0, 6.8]}
+            size={[2.6, 1.35, 5.2]}
+            floorColor="#f8fafc"
+            wallColor="#ffffff"
+            iconText="🛌"
+            doorSide="north"
+            isActive={activeDepartment === 'EXAMINATION_ROOM_5'}
+            onClick={() => onDepartmentClick('EXAMINATION_ROOM_5')}
+          />
+
+          <DepartmentRoom
+            name="Examination Room 6"
+            code="EXAMINATION_ROOM_6"
+            position={[4.2, 0, 6.8]}
+            size={[2.6, 1.35, 5.2]}
+            floorColor="#f8fafc"
+            wallColor="#ffffff"
+            iconText="🛌"
+            doorSide="north"
+            isActive={activeDepartment === 'EXAMINATION_ROOM_6'}
+            onClick={() => onDepartmentClick('EXAMINATION_ROOM_6')}
+          />
+
+          <DepartmentRoom
+            name="Radiology (CT & X-Ray Suite)"
+            code="RADIOLOGY"
+            position={[7.8, 0, 6.8]}
+            size={[4.2, 1.35, 5.2]}
+            floorColor="#f8fafc"
+            wallColor="#ffffff"
+            iconText="☢️"
+            doorSide="north"
+            isActive={activeDepartment === 'RADIOLOGY'}
+            onClick={() => onDepartmentClick('RADIOLOGY')}
+          />
+
+          {/* --- EAST INPATIENT WING: 4 PRIVATE PATIENT ROOMS --- */}
+          <DepartmentRoom
+            name="Patient Room 1"
+            code="PATIENT_ROOM_1"
+            position={[14.5, 0, -7.2]}
+            size={[4.5, 1.35, 4.2]}
+            floorColor="#f8fafc"
+            wallColor="#ffffff"
+            iconText="🛏️"
+            doorSide="west"
+            isActive={activeDepartment === 'PATIENT_ROOM_1'}
+            onClick={() => onDepartmentClick('PATIENT_ROOM_1')}
+          />
+
+          <DepartmentRoom
+            name="Patient Room 2"
+            code="PATIENT_ROOM_2"
+            position={[14.5, 0, -2.4]}
+            size={[4.5, 1.35, 4.2]}
+            floorColor="#f8fafc"
+            wallColor="#ffffff"
+            iconText="🛏️"
+            doorSide="west"
+            isActive={activeDepartment === 'PATIENT_ROOM_2'}
+            onClick={() => onDepartmentClick('PATIENT_ROOM_2')}
+          />
+
+          <DepartmentRoom
+            name="Patient Room 3"
+            code="PATIENT_ROOM_3"
+            position={[14.5, 0, 2.4]}
+            size={[4.5, 1.35, 4.2]}
+            floorColor="#f8fafc"
+            wallColor="#ffffff"
+            iconText="🛏️"
+            doorSide="west"
+            isActive={activeDepartment === 'PATIENT_ROOM_3'}
+            onClick={() => onDepartmentClick('PATIENT_ROOM_3')}
+          />
+
+          <DepartmentRoom
+            name="Patient Room 4"
+            code="PATIENT_ROOM_4"
+            position={[14.5, 0, 7.2]}
+            size={[4.5, 1.35, 4.2]}
+            floorColor="#f8fafc"
+            wallColor="#ffffff"
+            iconText="🛏️"
+            doorSide="west"
+            isActive={activeDepartment === 'PATIENT_ROOM_4'}
+            onClick={() => onDepartmentClick('PATIENT_ROOM_4')}
+          />
+
+          {/* ═══════════════════════════════════════════════════════════════
+              AGENT AVATARS (LOCATED ACCORDING TO AUTOCAD BLUEPRINT STATIONS)
+              ═══════════════════════════════════════════════════════════════ */}
+          {/* Patient Agent (In Waiting Room / Intake) */}
           <AgentAvatar
             id="patient_agent"
             name="Patient"
             role="PATIENT"
-            targetPosition={patientPos}
+            targetPosition={[-12.8, 0, -0.6]}
             currentAction={patientAction}
-            color="#d97706"
+            color="#0284c7"
           />
 
-          {/* Nurse Agent */}
+          {/* Nurse Agent (At Central Rotunda Nurse Station) */}
           <AgentAvatar
             id="nurse_agent"
             name="Sarah Jenkins, RN"
             role="NURSE"
-            targetPosition={nursePos}
+            targetPosition={[-0.8, 0, 0]}
             currentAction={nurseAction}
             color="#06b6d4"
           />
 
-          {/* Doctor Agent (Internal Medicine / MedGemma) */}
+          {/* Doctor Agent (In North Doctor Station Office) */}
           <AgentAvatar
             id="doctor_agent"
-            name="Dr. Vance, MD (MedGemma)"
+            name="Dr. Vance, MD (Internal Med)"
             role="DOCTOR"
-            targetPosition={doctorPos}
+            targetPosition={[2.6, 0, -6.8]}
             currentAction={doctorAction}
             color="#10b981"
           />
 
-          {/* Laboratory Scientist Agent */}
+          {/* Laboratory Scientist Agent (In Clinical Laboratory) */}
           <AgentAvatar
             id="lab_agent"
             name="David Chen, MLS"
             role="LAB"
-            targetPosition={[-7, 0, 8]}
+            targetPosition={[7.8, 0, -6.8]}
             currentAction="Processing Biomarker Assays"
-            color="#a855f7"
+            color="#8b5cf6"
           />
 
-          {/* Radiologist Agent */}
+          {/* Radiologist Agent (In Radiology Suite) */}
           <AgentAvatar
             id="rad_agent"
             name="Dr. Hayes, MD"
             role="RADIOLOGY"
-            targetPosition={[-0.5, 0, 8]}
+            targetPosition={[7.8, 0, 6.8]}
             currentAction="Reading Diagnostic Studies"
             color="#6366f1"
           />
 
-          {/* Perspective Controls */}
+          {/* ═══════════════════════════════════════════════════════════════
+              PERSPECTIVE CONTROLS
+              ═══════════════════════════════════════════════════════════════ */}
           {isFirstPerson ? (
             <FirstPersonControls
               enabled={isFirstPerson}
@@ -248,8 +479,9 @@ export const HospitalCanvas: React.FC<HospitalCanvasProps> = ({
               enableDamping
               dampingFactor={0.08}
               maxPolarAngle={Math.PI / 2.1}
-              minDistance={8}
-              maxDistance={38}
+              minDistance={10}
+              maxDistance={50}
+              target={[0, 0, 0]}
             />
           )}
         </Suspense>

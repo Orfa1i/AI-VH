@@ -7,10 +7,12 @@ interface DepartmentRoomProps {
   code: string;
   position: [number, number, number];
   size: [number, number, number];
-  floorColor: string;
+  floorColor?: string;
+  wallColor?: string;
   isActive?: boolean;
   onClick?: () => void;
   iconText?: string;
+  doorSide?: 'north' | 'south' | 'east' | 'west' | 'open';
 }
 
 export const DepartmentRoom: React.FC<DepartmentRoomProps> = ({
@@ -18,61 +20,108 @@ export const DepartmentRoom: React.FC<DepartmentRoomProps> = ({
   code: _code,
   position,
   size,
-  floorColor,
+  floorColor = '#f8fafc',
+  wallColor = '#ffffff',
   isActive = false,
   onClick,
   iconText = '🏥',
+  doorSide = 'south',
 }) => {
   const [width, _height, depth] = size;
-  const wallHeight = 1.2;
-  const wallThickness = 0.15;
+  const wallHeight = 1.35;
+  const wallThickness = 0.12;
+  const doorWidth = 1.4;
 
   return (
     <group position={position} onClick={onClick}>
-      {/* Floor Plate */}
+      {/* Porcelain Tile Floor Plate */}
       <mesh position={[0, 0.05, 0]} receiveShadow>
         <boxGeometry args={[width, 0.1, depth]} />
         <meshStandardMaterial
-          color={isActive ? '#38bdf8' : floorColor}
-          roughness={0.4}
-          metalness={0.1}
+          color={isActive ? '#e0f2fe' : floorColor}
+          roughness={0.25}
+          metalness={0.05}
         />
       </mesh>
 
-      {/* Floor Edge Highlight */}
-      <lineSegments position={[0, 0.11, 0]}>
-        <edgesGeometry args={[new (THREE as any).BoxGeometry(width, 0.05, depth)]} />
-        <lineBasicMaterial color={isActive ? '#38bdf8' : '#334155'} linewidth={2} />
+      {/* Clean Ceramic Edge Bevel Highlight */}
+      <lineSegments position={[0, 0.105, 0]}>
+        <edgesGeometry args={[new (THREE as any).BoxGeometry(width, 0.01, depth)]} />
+        <lineBasicMaterial color={isActive ? '#0284c7' : '#cbd5e1'} linewidth={1.5} />
       </lineSegments>
 
-      {/* Back Wall */}
-      <mesh position={[0, wallHeight / 2 + 0.1, -depth / 2 + wallThickness / 2]}>
-        <boxGeometry args={[width, wallHeight, wallThickness]} />
-        <meshStandardMaterial color="#1e293b" roughness={0.7} />
+      {/* Back Wall (North Wall) */}
+      {doorSide !== 'north' ? (
+        <mesh position={[0, wallHeight / 2 + 0.1, -depth / 2 + wallThickness / 2]}>
+          <boxGeometry args={[width, wallHeight, wallThickness]} />
+          <meshStandardMaterial color={wallColor} roughness={0.3} />
+        </mesh>
+      ) : (
+        /* Wall with Doorway Opening */
+        <group position={[0, 0, -depth / 2 + wallThickness / 2]}>
+          <mesh position={[-(width - (width - doorWidth) / 2) / 2 - doorWidth / 4, wallHeight / 2 + 0.1, 0]}>
+            <boxGeometry args={[(width - doorWidth) / 2, wallHeight, wallThickness]} />
+            <meshStandardMaterial color={wallColor} roughness={0.3} />
+          </mesh>
+          <mesh position={[(width - (width - doorWidth) / 2) / 2 + doorWidth / 4, wallHeight / 2 + 0.1, 0]}>
+            <boxGeometry args={[(width - doorWidth) / 2, wallHeight, wallThickness]} />
+            <meshStandardMaterial color={wallColor} roughness={0.3} />
+          </mesh>
+        </group>
+      )}
+
+      {/* Left Wall (West Wall) */}
+      {doorSide !== 'west' ? (
+        <mesh position={[-width / 2 + wallThickness / 2, wallHeight / 2 + 0.1, 0]}>
+          <boxGeometry args={[wallThickness, wallHeight, depth]} />
+          <meshStandardMaterial color={wallColor} roughness={0.3} />
+        </mesh>
+      ) : null}
+
+      {/* Right Wall (East Wall) */}
+      {doorSide !== 'east' ? (
+        <mesh position={[width / 2 - wallThickness / 2, wallHeight / 2 + 0.1, 0]}>
+          <boxGeometry args={[wallThickness, wallHeight, depth]} />
+          <meshStandardMaterial color={wallColor} roughness={0.3} />
+        </mesh>
+      ) : null}
+
+      {/* Front Wall (South Wall) */}
+      {doorSide === 'south' ? (
+        /* Wall with Doorway Opening */
+        <group position={[0, 0, depth / 2 - wallThickness / 2]}>
+          <mesh position={[-(width - doorWidth) / 4 - doorWidth / 2, wallHeight / 2 + 0.1, 0]}>
+            <boxGeometry args={[(width - doorWidth) / 2, wallHeight, wallThickness]} />
+            <meshStandardMaterial color={wallColor} roughness={0.3} />
+          </mesh>
+          <mesh position={[(width - doorWidth) / 4 + doorWidth / 2, wallHeight / 2 + 0.1, 0]}>
+            <boxGeometry args={[(width - doorWidth) / 2, wallHeight, wallThickness]} />
+            <meshStandardMaterial color={wallColor} roughness={0.3} />
+          </mesh>
+        </group>
+      ) : doorSide !== 'open' ? (
+        <mesh position={[0, wallHeight / 2 + 0.1, depth / 2 - wallThickness / 2]}>
+          <boxGeometry args={[width, wallHeight, wallThickness]} />
+          <meshStandardMaterial color={wallColor} roughness={0.3} />
+        </mesh>
+      ) : null}
+
+      {/* Medical Accent Trim (Cyan Chair-Rail Band) */}
+      <mesh position={[0, 0.75, -depth / 2 + wallThickness / 2 + 0.01]}>
+        <boxGeometry args={[width - 0.05, 0.08, 0.01]} />
+        <meshStandardMaterial color="#38bdf8" roughness={0.2} />
       </mesh>
 
-      {/* Left Wall */}
-      <mesh position={[-width / 2 + wallThickness / 2, wallHeight / 2 + 0.1, 0]}>
-        <boxGeometry args={[wallThickness, wallHeight, depth]} />
-        <meshStandardMaterial color="#1e293b" roughness={0.7} />
-      </mesh>
-
-      {/* Right Wall */}
-      <mesh position={[width / 2 - wallThickness / 2, wallHeight / 2 + 0.1, 0]}>
-        <boxGeometry args={[wallThickness, wallHeight, depth]} />
-        <meshStandardMaterial color="#1e293b" roughness={0.7} />
-      </mesh>
-
-      {/* Floating Department Sign & Beacon */}
-      <Html position={[0, wallHeight + 0.6, 0]} center distanceFactor={15} zIndexRange={[10, 0]}>
+      {/* Floating Modern Clinical Sign */}
+      <Html position={[0, wallHeight + 0.6, 0]} center distanceFactor={16} zIndexRange={[10, 0]}>
         <div
-          className={`px-3 py-1.5 rounded-lg border text-xs font-semibold whitespace-nowrap cursor-pointer transition-all duration-300 shadow-lg flex items-center gap-1.5 ${
+          className={`px-3 py-1.5 rounded-xl border text-xs font-bold whitespace-nowrap cursor-pointer transition-all duration-300 shadow-md flex items-center gap-1.5 ${
             isActive
-              ? 'bg-sky-500/90 text-white border-sky-300 shadow-sky-500/50 scale-110 ring-2 ring-sky-400'
-              : 'bg-slate-900/80 text-slate-300 border-slate-700 hover:border-slate-500'
+              ? 'bg-sky-500 text-white border-sky-300 shadow-sky-500/30 scale-105 ring-2 ring-sky-300'
+              : 'bg-white/95 text-slate-800 border-slate-200 hover:border-sky-400 hover:text-sky-700 shadow-slate-200/50'
           }`}
         >
-          <span>{iconText}</span>
+          <span className="text-sm">{iconText}</span>
           <span>{name}</span>
           {isActive && (
             <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-ping ml-1" />

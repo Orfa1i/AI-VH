@@ -80,11 +80,12 @@ export const FirstPersonControls: React.FC<FirstPersonControlsProps> = ({
   // Initial position when entering first person / reset on exit
   useEffect(() => {
     if (enabled) {
-      camera.position.set(0, 1.7, 0); // Center corridor at 1.7m eye height
-      camera.lookAt(0, 1.7, 5);
+      // Enter at the West Main Entrance corridor looking East towards Central Nurse Rotunda
+      camera.position.set(-13.5, 1.7, 0.0);
+      camera.lookAt(0, 1.7, 0);
       euler.current.setFromQuaternion(camera.quaternion);
     } else {
-      camera.position.set(0, 18, 18);
+      camera.position.set(0, 24, 20);
       camera.lookAt(0, 0, 0);
     }
   }, [enabled, camera]);
@@ -118,30 +119,78 @@ export const FirstPersonControls: React.FC<FirstPersonControlsProps> = ({
       camera.position.addScaledVector(right, moveDist);
     }
 
-    // Lock eye height at standard physician eye-level (1.7 meters)
+    // Lock eye height at standard standing eye-level (1.7 meters)
     camera.position.y = 1.7;
 
-    // Boundary constraints within hospital bounds
-    camera.position.x = Math.max(-11.5, Math.min(10.5, camera.position.x));
-    camera.position.z = Math.max(-8.5, Math.min(10.5, camera.position.z));
+    // Boundary constraints according to AutoCAD Sheet A-1 building dimensions
+    camera.position.x = Math.max(-17.2, Math.min(17.0, camera.position.x));
+    camera.position.z = Math.max(-9.8, Math.min(9.8, camera.position.z));
 
-    // Room detection based on coordinates
+    // Room detection based on AutoCAD blueprint coordinates
     const x = camera.position.x;
     const z = camera.position.z;
     let room = 'Hospital Central Corridor';
 
-    if (z < -3.5) {
-      if (x < -4.5) room = 'Reception & Intake Desk';
-      else if (x <= 2) room = 'Patient Waiting Area';
-      else room = 'Nurse Station & Triage Bay';
-    } else if (z <= 4.5) {
-      if (x < -4) room = 'Examination Room 1 (Acute Bay)';
-      else if (x <= 3) room = 'Examination Room 2';
-      else room = 'Doctor Station (Internal Medicine)';
-    } else {
-      if (x < -4) room = 'Clinical Laboratory';
-      else if (x <= 3) room = 'Radiology (CT & X-Ray Suite)';
-      else room = 'Pharmacy';
+    // West Zone (Waiting Area, Reception, Emergency Department)
+    if (x <= -8.5) {
+      if (z <= -3.8) {
+        room = 'Reception & Patient Intake';
+      } else if (z <= 3.2) {
+        room = 'Patient Waiting Area (Main Lobby)';
+      } else {
+        room = 'Emergency Department (Acute Bays & Triage)';
+      }
+    }
+    // East Inpatient Wing (4 Patient Rooms)
+    else if (x >= 11.5) {
+      if (z <= -4.8) {
+        room = 'Inpatient Patient Room 1';
+      } else if (z <= 0) {
+        room = 'Inpatient Patient Room 2';
+      } else if (z <= 4.8) {
+        room = 'Inpatient Patient Room 3';
+      } else {
+        room = 'Inpatient Patient Room 4';
+      }
+    }
+    // North Wing Rooms
+    else if (z < -4.0) {
+      if (x <= -3.0) {
+        room = 'Examination Room 1';
+      } else if (x <= 0.5) {
+        room = 'Examination Room 2';
+      } else if (x <= 5.0) {
+        room = 'Doctor Station (Physician Office)';
+      } else {
+        room = 'Clinical Laboratory';
+      }
+    }
+    // South Wing Rooms
+    else if (z > 4.0) {
+      if (x <= -2.8) {
+        room = 'Examination Room 3';
+      } else if (x <= 0.0) {
+        room = 'Examination Room 4';
+      } else if (x <= 2.8) {
+        room = 'Examination Room 5';
+      } else if (x <= 5.8) {
+        room = 'Examination Room 6';
+      } else {
+        room = 'Radiology (CT & X-Ray Suite)';
+      }
+    }
+    // Central Hub & Inner Block
+    else {
+      const distToNurseStation = Math.sqrt((x - (-0.8)) ** 2 + z ** 2);
+      if (distToNurseStation <= 2.5) {
+        room = 'Central Rotunda Nurse Station';
+      } else if (x >= 2.0 && x <= 6.2) {
+        room = 'Doctor Station (Consultation Suite)';
+      } else if (x > 6.2 && x < 11.5) {
+        room = 'Pharmacy (Dispensing & Medication Store)';
+      } else {
+        room = 'Hospital Central Corridor';
+      }
     }
 
     if (room !== currentRoomRef.current) {
