@@ -64,7 +64,7 @@ export const DepartmentRoom: React.FC<DepartmentRoomProps> = ({
       </mesh>
 
       {/* Floating Department Sign & Beacon */}
-      <Html position={[0, wallHeight + 0.6, 0]} center distanceFactor={15}>
+      <Html position={[0, wallHeight + 0.6, 0]} center distanceFactor={15} zIndexRange={[10, 0]}>
         <div
           className={`px-3 py-1.5 rounded-lg border text-xs font-semibold whitespace-nowrap cursor-pointer transition-all duration-300 shadow-lg flex items-center gap-1.5 ${
             isActive

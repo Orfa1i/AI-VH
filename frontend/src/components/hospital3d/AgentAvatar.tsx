@@ -83,7 +83,7 @@ export const AgentAvatar: React.FC<AgentAvatarProps> = ({
       )}
 
       {/* Floating Name & Status Badge */}
-      <Html position={[0, 1.75, 0]} center distanceFactor={14}>
+      <Html position={[0, 1.75, 0]} center distanceFactor={14} zIndexRange={[10, 0]}>
         <div className="flex flex-col items-center pointer-events-none">
           <div
             className={`px-2 py-0.5 rounded-full border text-[11px] font-bold shadow-md uppercase tracking-wider ${getRoleBadgeStyle()}`}

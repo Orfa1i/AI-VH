@@ -26,7 +26,7 @@ export const HospitalCanvas: React.FC<HospitalCanvasProps> = ({
   onDepartmentClick,
 }) => {
   return (
-    <div className="w-full h-full relative bg-slate-950 overflow-hidden">
+    <div className="w-full h-full relative bg-slate-950 overflow-hidden isolate z-0">
       <Canvas
         shadows
         camera={{ position: [0, 18, 18], fov: 45 }}
