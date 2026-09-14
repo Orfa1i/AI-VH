@@ -118,6 +118,8 @@ class TestAppropriatenessFeedback(str, Enum):
     MISSING_ESSENTIAL_TEST = "MISSING_ESSENTIAL_TEST"
     INAPPROPRIATE_TEST = "INAPPROPRIATE_TEST"
 
+TestAppropriatenessFeedback.__test__ = False  # type: ignore[attr-defined]
+
 
 class TreatmentSafetyFeedback(str, Enum):
     SAFE_AND_OPTIMAL = "SAFE_AND_OPTIMAL"

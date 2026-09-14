@@ -1,6 +1,6 @@
 import React from 'react';
 import type { BenchmarkCase } from '../../types';
-import { Play, Loader2, Hospital, ClipboardCheck } from 'lucide-react';
+import { Play, Loader2, Hospital, ClipboardCheck, Sparkles } from 'lucide-react';
 
 interface CaseSelectorProps {
   cases: BenchmarkCase[];
@@ -12,6 +12,7 @@ interface CaseSelectorProps {
   onChangeView: (view: 'HOSPITAL_3D' | 'PHYSICIAN_REVIEW') => void;
   reportsCount: number;
   onOpenConsult?: () => void;
+  onOpenRLDataset?: () => void;
 }
 
 export const CaseSelector: React.FC<CaseSelectorProps> = ({
@@ -24,6 +25,7 @@ export const CaseSelector: React.FC<CaseSelectorProps> = ({
   onChangeView,
   reportsCount,
   onOpenConsult,
+  onOpenRLDataset,
 }) => {
   return (
     <header className="h-16 px-6 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 flex items-center justify-between z-30 shrink-0">
@@ -90,6 +92,16 @@ export const CaseSelector: React.FC<CaseSelectorProps> = ({
           >
             <span>🩺</span>
             <span>Consult IM Specialist (RAG)</span>
+          </button>
+        )}
+
+        {onOpenRLDataset && (
+          <button
+            onClick={onOpenRLDataset}
+            className="px-3.5 py-2 rounded-xl bg-purple-950/80 hover:bg-purple-900 border border-purple-700/70 text-purple-300 text-xs font-bold shadow-lg shadow-purple-900/30 flex items-center gap-1.5 cursor-pointer transition-all"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+            <span>RL / DPO Corpus</span>
           </button>
         )}
       </div>

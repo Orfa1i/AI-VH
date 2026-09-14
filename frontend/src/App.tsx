@@ -5,6 +5,7 @@ import { VitalsMonitorHUD } from './components/dashboard/VitalsMonitorHUD';
 import { PhysicianReviewDashboard } from './components/dashboard/PhysicianReviewDashboard';
 import { CaseSelector } from './components/dashboard/CaseSelector';
 import { InternalMedicineConsultModal } from './components/specialists/InternalMedicineConsultModal';
+import { RLDatasetModal } from './components/rl/RLDatasetModal';
 import type {
   HospitalEvent,
   ClinicalReport,
@@ -27,6 +28,7 @@ export const App: React.FC = () => {
   const [currentPatientName, setCurrentPatientName] = useState<string>('Robert Miller');
   const [isWsConnected, setIsWsConnected] = useState<boolean>(false);
   const [isConsultOpen, setIsConsultOpen] = useState<boolean>(false);
+  const [isRLModalOpen, setIsRLModalOpen] = useState<boolean>(false);
 
   // 3D Department & Agent Positions
   const [activeDepartment, setActiveDepartment] = useState<string>('RECEPTION');
@@ -220,6 +222,7 @@ export const App: React.FC = () => {
         onChangeView={(v) => setActiveView(v)}
         reportsCount={reports.length}
         onOpenConsult={() => setIsConsultOpen(true)}
+        onOpenRLDataset={() => setIsRLModalOpen(true)}
       />
 
       {/* Main Body View */}
@@ -257,6 +260,12 @@ export const App: React.FC = () => {
       <InternalMedicineConsultModal
         isOpen={isConsultOpen}
         onClose={() => setIsConsultOpen(false)}
+      />
+
+      {/* Phase 6: RL / DPO Preference Alignment Corpus Modal */}
+      <RLDatasetModal
+        isOpen={isRLModalOpen}
+        onClose={() => setIsRLModalOpen(false)}
       />
     </div>
   );

@@ -25,6 +25,7 @@ from ..agents.lab import LaboratoryAgent
 from ..agents.radiology import RadiologyAgent
 from ..agents.specialists.internal_medicine import InternalMedicineSpecialistAgent
 from ..rag.specialists.internal_medicine_rag import InternalMedicineRAGAgent
+from ..rl.dpo_generator import DPOPreferenceGenerator, DPOPreferencePair
 
 logger = logging.getLogger("SimulationOrchestrator")
 
@@ -199,6 +200,40 @@ class HospitalOrchestrator:
                 {"id": c.id, "name": c.name, "age": c.age, "complaint": c.chief_complaint, "acuity": c.triage_acuity.value}
                 for c in BENCHMARK_CASES
             ]
+        }
+
+    def get_dpo_dataset(self, include_calibrations: bool = True) -> Dict[str, Any]:
+        """Compiles DPO preference pairs from physician reviews and benchmark cases."""
+        cases_map = {c.id: c for c in BENCHMARK_CASES}
+        pairs = DPOPreferenceGenerator.compile_dpo_corpus(
+            reports=self.reports,
+            reviews=self.reviews,
+            cases_map=cases_map,
+            include_calibrations=include_calibrations,
+        )
+        stats = DPOPreferenceGenerator.get_dataset_statistics(pairs)
+        return {
+            "statistics": stats,
+            "pairs": [p.model_dump() for p in pairs],
+        }
+
+    def export_dpo_dataset(self, output_path: str = "data/dpo_preference_dataset.jsonl") -> Dict[str, Any]:
+        """Exports preference pairs to standard JSONL format for HuggingFace DPOTrainer."""
+        import os
+        os.makedirs(os.path.dirname(output_path) if os.path.dirname(output_path) else ".", exist_ok=True)
+        cases_map = {c.id: c for c in BENCHMARK_CASES}
+        pairs = DPOPreferenceGenerator.compile_dpo_corpus(
+            reports=self.reports,
+            reviews=self.reviews,
+            cases_map=cases_map,
+            include_calibrations=True,
+        )
+        count = DPOPreferenceGenerator.export_jsonl(pairs, output_path)
+        stats = DPOPreferenceGenerator.get_dataset_statistics(pairs)
+        return {
+            "exported_count": count,
+            "filepath": output_path,
+            "statistics": stats,
         }
 
 

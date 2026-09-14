@@ -115,3 +115,36 @@ export interface PhysicianReviewPayload {
   notes: string;
   corrected_diagnosis?: string;
 }
+
+export interface DPOPreferencePair {
+  id: string;
+  encounter_id: string;
+  case_id: string;
+  source: string;
+  prompt: string;
+  chosen: string;
+  rejected: string;
+  reward_chosen: number;
+  reward_rejected: number;
+  reward_margin: number;
+  is_safety_critical: boolean;
+  harrison_citations: string[];
+  metadata: Record<string, any>;
+  created_at: string;
+}
+
+export interface DPOStatistics {
+  total_pairs: number;
+  human_reviews_count: number;
+  benchmark_calibrations_count: number;
+  safety_critical_count: number;
+  average_reward_margin: number;
+  average_chosen_reward: number;
+  average_rejected_reward: number;
+}
+
+export interface DPOApiResponse {
+  statistics: DPOStatistics;
+  pairs: DPOPreferencePair[];
+}
+

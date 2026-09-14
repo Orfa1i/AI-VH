@@ -133,3 +133,25 @@ async def submit_review(req: PhysicianReviewRequest):
 @api_router.get("/analytics")
 async def get_analytics():
     return orchestrator.get_analytics()
+
+
+@api_router.get("/rl/dataset")
+async def get_rl_dpo_dataset(include_calibrations: bool = True):
+    """Returns the compiled DPO preference dataset with clinical reward statistics."""
+    try:
+        return orchestrator.get_dpo_dataset(include_calibrations=include_calibrations)
+    except Exception as e:
+        logger.error(f"Error fetching DPO dataset: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.post("/rl/dataset/export")
+async def export_rl_dpo_dataset(filepath: Optional[str] = "data/dpo_preference_dataset.jsonl"):
+    """Compiles and exports the DPO preference dataset to a HuggingFace-compatible JSONL file."""
+    try:
+        target_path = filepath or "data/dpo_preference_dataset.jsonl"
+        return orchestrator.export_dpo_dataset(output_path=target_path)
+    except Exception as e:
+        logger.error(f"Error exporting DPO dataset: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
