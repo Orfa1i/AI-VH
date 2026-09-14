@@ -23,6 +23,12 @@ export const AgentAvatar: React.FC<AgentAvatarProps> = ({
   rotation = [0, 0, 0],
 }) => {
   const groupRef = useRef<THREE.Group>(null);
+  const leftLegRef = useRef<THREE.Group>(null);
+  const rightLegRef = useRef<THREE.Group>(null);
+  const leftArmRef = useRef<THREE.Group>(null);
+  const rightArmRef = useRef<THREE.Group>(null);
+  const walkCycleRef = useRef<number>(0);
+
   const targetVec = useRef(new THREE.Vector3(...targetPosition));
 
   // Update target coordinates
@@ -30,16 +36,76 @@ export const AgentAvatar: React.FC<AgentAvatarProps> = ({
 
   useFrame((_, delta) => {
     if (groupRef.current) {
-      // Smooth lerp movement towards target department
-      groupRef.current.position.lerp(targetVec.current, Math.min(delta * 4, 0.2));
+      const currentPos = groupRef.current.position;
+      const distToTarget = currentPos.distanceTo(targetVec.current);
+      const isMoving = distToTarget > 0.08;
 
-      // Gentle breathing idle cycle when stationary
-      const isMoving = groupRef.current.position.distanceTo(targetVec.current) > 0.1;
-      if (!isMoving) {
-        groupRef.current.position.y = targetPosition[1] + Math.sin(Date.now() * 0.003) * 0.02;
+      if (isMoving) {
+        // Smooth lerp movement towards target department
+        currentPos.lerp(targetVec.current, Math.min(delta * 4, 0.25));
+
+        // Rotate character towards movement heading
+        const dx = targetVec.current.x - currentPos.x;
+        const dz = targetVec.current.z - currentPos.z;
+        if (Math.abs(dx) > 0.02 || Math.abs(dz) > 0.02) {
+          const moveAngle = Math.atan2(dx, dz);
+          groupRef.current.rotation.y = THREE.MathUtils.lerp(
+            groupRef.current.rotation.y,
+            moveAngle,
+            Math.min(delta * 8, 0.3)
+          );
+        }
+
+        // Advance stride time accumulator
+        walkCycleRef.current += delta * 8.5;
+        const cycle = walkCycleRef.current;
+
+        // Reciprocal leg stride oscillations around hip joint
+        if (leftLegRef.current) {
+          leftLegRef.current.rotation.x = Math.sin(cycle) * 0.45;
+        }
+        if (rightLegRef.current) {
+          rightLegRef.current.rotation.x = -Math.sin(cycle) * 0.45;
+        }
+
+        // Natural arm counter-swing around shoulder joint
+        if (leftArmRef.current) {
+          leftArmRef.current.rotation.x = -Math.sin(cycle) * 0.38;
+        }
+        if (rightArmRef.current) {
+          rightArmRef.current.rotation.x = Math.sin(cycle) * 0.38;
+        }
+
+        // Vertical step bounce
+        currentPos.y = targetPosition[1] + Math.abs(Math.sin(cycle)) * 0.03;
+      } else {
+        // Smoothly return limbs to idle resting position
+        if (leftLegRef.current) {
+          leftLegRef.current.rotation.x = THREE.MathUtils.lerp(leftLegRef.current.rotation.x, 0, delta * 8);
+        }
+        if (rightLegRef.current) {
+          rightLegRef.current.rotation.x = THREE.MathUtils.lerp(rightLegRef.current.rotation.x, 0, delta * 8);
+        }
+        if (leftArmRef.current) {
+          leftArmRef.current.rotation.x = THREE.MathUtils.lerp(leftArmRef.current.rotation.x, 0, delta * 8);
+        }
+        if (rightArmRef.current) {
+          rightArmRef.current.rotation.x = THREE.MathUtils.lerp(rightArmRef.current.rotation.x, 0, delta * 8);
+        }
+
+        // Gentle breathing idle bob
+        currentPos.y = targetPosition[1] + Math.sin(Date.now() * 0.003) * 0.015;
+
+        // Smoothly realign to original station orientation
+        groupRef.current.rotation.y = THREE.MathUtils.lerp(
+          groupRef.current.rotation.y,
+          rotation[1],
+          Math.min(delta * 4, 0.15)
+        );
       }
     }
   });
+
 
   const getRoleBadgeStyle = () => {
     switch (role) {
@@ -73,10 +139,10 @@ export const AgentAvatar: React.FC<AgentAvatarProps> = ({
       {/* ══════════════════════════════════════════════════════════════════
           LOWER BODY: LEGS, PANTS & FEET
           ══════════════════════════════════════════════════════════════════ */}
-      {/* Left Leg */}
-      <group position={[-0.12, 0, 0]}>
+      {/* Left Leg (Pivots from Hip at y=0.62) */}
+      <group ref={leftLegRef} position={[-0.12, 0.62, 0]}>
         {/* Thigh (Patient Scrub Pants / Pajamas) */}
-        <mesh position={[0, 0.42, 0]} castShadow>
+        <mesh position={[0, -0.20, 0]} castShadow>
           <cylinderGeometry args={[0.085, 0.075, 0.38, 16]} />
           <meshStandardMaterial
             color={isPatient ? '#7dd3fc' : role === 'NURSE' ? '#0891b2' : '#334155'}
@@ -85,7 +151,7 @@ export const AgentAvatar: React.FC<AgentAvatarProps> = ({
         </mesh>
 
         {/* Lower Leg / Calf */}
-        <mesh position={[0, 0.18, 0]} castShadow>
+        <mesh position={[0, -0.44, 0]} castShadow>
           <cylinderGeometry args={[0.07, 0.06, 0.22, 16]} />
           <meshStandardMaterial
             color={isPatient ? skinColor : role === 'NURSE' ? '#0891b2' : '#334155'}
@@ -96,7 +162,7 @@ export const AgentAvatar: React.FC<AgentAvatarProps> = ({
         {/* Foot / Footwear */}
         {isPatient ? (
           // Hospital Yellow Fall-Risk Non-Skid Traction Socks
-          <group position={[0, 0.055, 0.04]}>
+          <group position={[0, -0.565, 0.04]}>
             <mesh castShadow>
               <boxGeometry args={[0.11, 0.08, 0.22]} />
               <meshStandardMaterial color="#facc15" roughness={0.7} />
@@ -109,17 +175,17 @@ export const AgentAvatar: React.FC<AgentAvatarProps> = ({
           </group>
         ) : (
           // Professional Shoes / Clogs
-          <mesh position={[0, 0.05, 0.04]} castShadow>
+          <mesh position={[0, -0.57, 0.04]} castShadow>
             <boxGeometry args={[0.11, 0.08, 0.22]} />
             <meshStandardMaterial color={role === 'NURSE' ? '#ffffff' : '#0f172a'} roughness={0.3} />
           </mesh>
         )}
       </group>
 
-      {/* Right Leg */}
-      <group position={[0.12, 0, 0]}>
+      {/* Right Leg (Pivots from Hip at y=0.62) */}
+      <group ref={rightLegRef} position={[0.12, 0.62, 0]}>
         {/* Thigh */}
-        <mesh position={[0, 0.42, 0]} castShadow>
+        <mesh position={[0, -0.20, 0]} castShadow>
           <cylinderGeometry args={[0.085, 0.075, 0.38, 16]} />
           <meshStandardMaterial
             color={isPatient ? '#7dd3fc' : role === 'NURSE' ? '#0891b2' : '#334155'}
@@ -128,7 +194,7 @@ export const AgentAvatar: React.FC<AgentAvatarProps> = ({
         </mesh>
 
         {/* Lower Leg */}
-        <mesh position={[0, 0.18, 0]} castShadow>
+        <mesh position={[0, -0.44, 0]} castShadow>
           <cylinderGeometry args={[0.07, 0.06, 0.22, 16]} />
           <meshStandardMaterial
             color={isPatient ? skinColor : role === 'NURSE' ? '#0891b2' : '#334155'}
@@ -138,7 +204,7 @@ export const AgentAvatar: React.FC<AgentAvatarProps> = ({
 
         {/* Foot */}
         {isPatient ? (
-          <group position={[0, 0.055, 0.04]}>
+          <group position={[0, -0.565, 0.04]}>
             <mesh castShadow>
               <boxGeometry args={[0.11, 0.08, 0.22]} />
               <meshStandardMaterial color="#facc15" roughness={0.7} />
@@ -149,12 +215,13 @@ export const AgentAvatar: React.FC<AgentAvatarProps> = ({
             </mesh>
           </group>
         ) : (
-          <mesh position={[0, 0.05, 0.04]} castShadow>
+          <mesh position={[0, -0.57, 0.04]} castShadow>
             <boxGeometry args={[0.11, 0.08, 0.22]} />
             <meshStandardMaterial color={role === 'NURSE' ? '#ffffff' : '#0f172a'} roughness={0.3} />
           </mesh>
         )}
       </group>
+
 
       {/* ══════════════════════════════════════════════════════════════════
           TORSO: PATIENT GOWN / CLINICAL ATTIRE
@@ -224,8 +291,8 @@ export const AgentAvatar: React.FC<AgentAvatarProps> = ({
       {/* ══════════════════════════════════════════════════════════════════
           ARMS, SLEEVES & HANDS
           ══════════════════════════════════════════════════════════════════ */}
-      {/* Left Arm */}
-      <group position={[-0.26, 1.04, 0]}>
+      {/* Left Arm (Pivots from Shoulder at y=1.04) */}
+      <group ref={leftArmRef} position={[-0.26, 1.04, 0]}>
         {/* Upper Arm Sleeve */}
         <mesh position={[-0.04, -0.11, 0]} rotation={[0, 0, 0.18]} castShadow>
           <cylinderGeometry args={[0.075, 0.085, 0.24, 16]} />
@@ -264,8 +331,8 @@ export const AgentAvatar: React.FC<AgentAvatarProps> = ({
         )}
       </group>
 
-      {/* Right Arm */}
-      <group position={[0.26, 1.04, 0]}>
+      {/* Right Arm (Pivots from Shoulder at y=1.04) */}
+      <group ref={rightArmRef} position={[0.26, 1.04, 0]}>
         {/* Upper Arm Sleeve */}
         <mesh position={[0.04, -0.11, 0]} rotation={[0, 0, -0.18]} castShadow>
           <cylinderGeometry args={[0.075, 0.085, 0.24, 16]} />
@@ -274,6 +341,7 @@ export const AgentAvatar: React.FC<AgentAvatarProps> = ({
             roughness={0.4}
           />
         </mesh>
+
 
         {/* Forearm */}
         <mesh position={[0.08, -0.32, 0.02]} rotation={[0.08, 0, -0.12]} castShadow>
