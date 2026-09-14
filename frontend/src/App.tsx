@@ -8,6 +8,9 @@ import { InternalMedicineConsultModal } from './components/specialists/InternalM
 import { PharmacistModal } from './components/specialists/PharmacistModal';
 import { DepartmentStationModal } from './components/specialists/DepartmentStationModal';
 import { RLDatasetModal } from './components/rl/RLDatasetModal';
+import { PolicyBenchmarkModal } from './components/rl/PolicyBenchmarkModal';
+import { InpatientTelemetryModal } from './components/dashboard/InpatientTelemetryModal';
+import { toggleGlobalMute, isGlobalMuted } from './utils/speechSynthesis';
 import type {
   HospitalEvent,
   ClinicalReport,
@@ -35,6 +38,10 @@ export const App: React.FC = () => {
   const [isPharmacyOpen, setIsPharmacyOpen] = useState<boolean>(false);
   const [departmentStationId, setDepartmentStationId] = useState<string | null>(null);
   const [isRLModalOpen, setIsRLModalOpen] = useState<boolean>(false);
+  const [isBenchmarkOpen, setIsBenchmarkOpen] = useState<boolean>(false);
+  const [isInpatientOpen, setIsInpatientOpen] = useState<boolean>(false);
+  const [isAudioMuted, setIsAudioMuted] = useState<boolean>(isGlobalMuted());
+
 
   // 3D Department & Agent Positions
   const [activeDepartment, setActiveDepartment] = useState<string>('RECEPTION');
@@ -259,6 +266,10 @@ export const App: React.FC = () => {
         onOpenConsult={() => setIsConsultOpen(true)}
         onOpenPharmacy={() => setIsPharmacyOpen(true)}
         onOpenRLDataset={() => setIsRLModalOpen(true)}
+        onOpenBenchmark={() => setIsBenchmarkOpen(true)}
+        onOpenInpatient={() => setIsInpatientOpen(true)}
+        isAudioMuted={isAudioMuted}
+        onToggleAudio={() => setIsAudioMuted(toggleGlobalMute())}
       />
 
       {/* Main Body View */}
@@ -323,7 +334,20 @@ export const App: React.FC = () => {
         isOpen={isRLModalOpen}
         onClose={() => setIsRLModalOpen(false)}
       />
+
+      {/* Comparative Policy Evaluation Benchmark Modal (Base vs RL DPO) */}
+      <PolicyBenchmarkModal
+        isOpen={isBenchmarkOpen}
+        onClose={() => setIsBenchmarkOpen(false)}
+      />
+
+      {/* East Inpatient Wing Multi-Bed Central Telemetry Console */}
+      <InpatientTelemetryModal
+        isOpen={isInpatientOpen}
+        onClose={() => setIsInpatientOpen(false)}
+      />
     </div>
+
   );
 };
 

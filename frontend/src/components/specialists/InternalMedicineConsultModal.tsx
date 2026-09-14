@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { SpecialistConsultResponse } from '../../types';
 import {
   Stethoscope,
@@ -11,12 +11,16 @@ import {
   Sparkles,
   ChevronDown,
   ChevronUp,
+  Volume2,
+  VolumeX,
 } from 'lucide-react';
+import { speakClinicalMessage, stopClinicalSpeech } from '../../utils/speechSynthesis';
 
 interface InternalMedicineConsultProps {
   isOpen: boolean;
   onClose: () => void;
 }
+
 
 const PRESET_SCENARIOS = [
   {
@@ -48,8 +52,33 @@ export const InternalMedicineConsultModal: React.FC<InternalMedicineConsultProps
   const [isLoading, setIsLoading] = useState(false);
   const [consultResult, setConsultResult] = useState<SpecialistConsultResponse | null>(null);
   const [expandedCitationIndex, setExpandedCitationIndex] = useState<number | null>(null);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+
+  useEffect(() => {
+    if (!isOpen) {
+      stopClinicalSpeech();
+      setIsSpeaking(false);
+    }
+  }, [isOpen]);
+
+  const handleToggleSpeech = () => {
+    if (isSpeaking) {
+      stopClinicalSpeech();
+      setIsSpeaking(false);
+    } else if (consultResult) {
+      const textToSpeak = `Dr. Marcus Vance, Internal Medicine consult. ${consultResult.evidence_brief.clinical_summary} Guideline therapy includes: ${consultResult.recommendations.guideline_therapy.join('. ')}.`;
+      speakClinicalMessage(
+        textToSpeak,
+        'DR_VANCE',
+        () => setIsSpeaking(true),
+        () => setIsSpeaking(false)
+      );
+    }
+
+  };
 
   if (!isOpen) return null;
+
 
   const handleRunConsult = async () => {
     if (!scenario.trim()) return;
@@ -199,10 +228,24 @@ export const InternalMedicineConsultModal: React.FC<InternalMedicineConsultProps
                       Attending: {consultResult.specialist}
                     </span>
                   </div>
-                  <span className="text-xs text-purple-400 font-mono flex items-center gap-1">
-                    <BookOpen className="w-3.5 h-3.5" />
-                    {consultResult.citations.length} Textbook Passages
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={handleToggleSpeech}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+                        isSpeaking
+                          ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+                          : 'bg-slate-700/60 hover:bg-slate-700 text-slate-200 border border-slate-600'
+                      }`}
+                    >
+                      {isSpeaking ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
+                      <span>{isSpeaking ? 'Stop Voice' : 'Dr. Vance Voice'}</span>
+                    </button>
+                    <span className="text-xs text-purple-400 font-mono flex items-center gap-1">
+                      <BookOpen className="w-3.5 h-3.5" />
+                      {consultResult.citations.length} Textbook Passages
+                    </span>
+                  </div>
+
                 </div>
                 <p className="text-xs text-slate-200 leading-relaxed font-sans">
                   {consultResult.evidence_brief.clinical_summary}

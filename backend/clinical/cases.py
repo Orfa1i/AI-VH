@@ -214,6 +214,160 @@ BENCHMARK_CASES: List[PatientGroundTruth] = [
             "Abdomen": "Diffuse tenderness to palpation without peritoneal signs or localized guarding.",
             "Neurological": "Oriented to person and place, mildly confused about date."
         }
+    ),
+    # Level 3: Acute Kidney Injury (KDIGO Stage 3) / Prerenal Azotemia
+    PatientGroundTruth(
+        id="CASE-103",
+        name="Arthur Pendelton",
+        age=68,
+        sex="Male",
+        triage_acuity=TriageAcuity.URGENT,
+        chief_complaint="Severe weakness, marked oliguria (<200 mL/day), and lightheadedness for 3 days",
+        history_of_present_illness="68-year-old male with hypertension presents with profound lethargy, dry mucous membranes, and near-anuria for 48 hours following severe gastrointestinal fluid loss during a heat wave. Continued taking home lisinopril and over-the-counter ibuprofen for back pain.",
+        past_medical_history=["Hypertension", "Osteoarthritis", "Chronic Kidney Disease Stage 2 (baseline Cr 1.1)"],
+        medications=["Lisinopril 20mg daily", "Ibuprofen 400mg TID PRN", "Amlodipine 5mg daily"],
+        allergies=["No Known Drug Allergies (NKDA)"],
+        baseline_vitals=VitalSigns(
+            heart_rate=98,
+            systolic_bp=92,
+            diastolic_bp=56,
+            respiratory_rate=18,
+            temperature_c=37.1,
+            spo2_percent=97.0,
+            pain_score=3
+        ),
+        true_diagnosis="Acute Kidney Injury (KDIGO Stage 3) secondary to Prerenal Azotemia and Dehydration",
+        icd10_code="N17.9",
+        differential_candidates=[
+            "Prerenal Azotemia / Volume Depletion",
+            "Acute Tubular Necrosis (ATN)",
+            "Acute Interstitial Nephritis (AIN)",
+            "Post-Renal Obstructive Uropathy",
+            "Glomerulonephritis"
+        ],
+        recommended_labs=[
+            LabTestType.BMP,
+            LabTestType.CBC,
+            LabTestType.URINALYSIS,
+            LabTestType.ECG_12_LEAD
+        ],
+        contraindicated_treatments=[
+            "Continue Lisinopril / ACE inhibitor",
+            "Continue NSAIDs / Ibuprofen",
+            "Loop diuretic challenge while volume depleted"
+        ],
+        optimal_treatment=[
+            "Immediately hold Lisinopril, Amlodipine, and NSAIDs",
+            "Aggressive volume expansion with 0.9% Normal Saline 1000 mL IV challenge",
+            "Foley catheter placement to accurately quantify hourly urine output",
+            "Serial BMP every 12 hours to verify BUN/Cr recovery and prevent hyperkalemia",
+            "Renal bladder ultrasound to definitively exclude bilateral hydronephrosis"
+        ],
+        simulated_labs={
+            LabTestType.BMP.value: {
+                "Sodium": "136 mEq/L",
+                "Potassium": "5.2 mEq/L",
+                "BUN": "68 mg/dL",
+                "Creatinine": "3.8 mg/dL (baseline 1.1)",
+                "BUN_Cr_Ratio": "17.9 (Prerenal > 20:1 trend)",
+                "Glucose": "118 mg/dL",
+                "eGFR": "16 mL/min/1.73m2",
+                "interpretation": "Severe KDIGO Stage 3 AKI with prerenal azotemia exacerbated by concurrent ACE-I and NSAID triple whammy"
+            },
+            LabTestType.URINALYSIS.value: {
+                "Specific_Gravity": "1.028 (concentrated urine)",
+                "Urine_Sodium": "< 20 mEq/L",
+                "FENa": "0.6% (< 1% indicative of prerenal etiology)",
+                "Protein": "Trace",
+                "Casts": "Hyaline casts only, no muddy brown casts"
+            },
+            LabTestType.CBC.value: {
+                "WBC": "8.2 x10^3/uL",
+                "Hemoglobin": "15.8 g/dL (hemoconcentration)",
+                "Hematocrit": "47.5%",
+                "Platelets": "240 x10^3/uL"
+            }
+        },
+        physical_exam={
+            "General": "Fatigued, dry oral mucosa, furrowed tongue, flat neck veins while supine.",
+            "Cardiovascular": "Orthostatic tachycardia (HR 98 sitting -> 118 standing), soft S1/S2.",
+            "Abdomen": "Benign, no costovertebral angle tenderness, no palpable bladder distension.",
+            "Extremities": "Poor skin turgor with tenting, no peripheral edema, cool extremities."
+        }
+    ),
+    # Level 4: Acute Pulmonary Embolism (Submassive PE)
+    PatientGroundTruth(
+        id="CASE-104",
+        name="Clara Vance",
+        age=52,
+        sex="Female",
+        triage_acuity=TriageAcuity.EMERGENT,
+        chief_complaint="Sudden onset sharp right-sided pleuritic chest pain and breathlessness after a 12-hour flight",
+        history_of_present_illness="52-year-old female presents with acute dyspnea and sharp 7/10 right anterior chest pain worse with inspiration. Returned 24 hours ago from an international 12-hour flight. Mild right calf tenderness noted over past 2 days.",
+        past_medical_history=["Oral Contraceptive Use (Estrogen/Progestin)", "Mild Asthma"],
+        medications=["Combined Oral Contraceptive pill", "Albuterol inhaler PRN"],
+        allergies=["Codeine (nausea)"],
+        baseline_vitals=VitalSigns(
+            heart_rate=114,
+            systolic_bp=108,
+            diastolic_bp=72,
+            respiratory_rate=26,
+            temperature_c=37.4,
+            spo2_percent=91.0,
+            pain_score=7
+        ),
+        true_diagnosis="Acute Pulmonary Embolism (Submassive PE) with Right Ventricular Strain",
+        icd10_code="I26.92",
+        differential_candidates=[
+            "Acute Pulmonary Embolism",
+            "Pneumothorax",
+            "Aortic Dissection",
+            "Acute Coronary Syndrome",
+            "Pneumonia / Pleuritis"
+        ],
+        recommended_labs=[
+            LabTestType.D_DIMER,
+            LabTestType.TROPONIN_I,
+            LabTestType.BNP,
+            LabTestType.CT_CHEST,
+            LabTestType.ECG_12_LEAD
+        ],
+        contraindicated_treatments=[
+            "Discharge on oral analgesics alone",
+            "Aspirin monotherapy without therapeutic anticoagulation",
+            "Routine systemic thrombolysis without hemodynamic collapse"
+        ],
+        optimal_treatment=[
+            "Initiate immediate therapeutic anticoagulation (Enoxaparin 1 mg/kg SC q12h or IV Heparin)",
+            "Supplemental oxygen via nasal cannula targeting SpO2 >= 94%",
+            "Urgent CT Pulmonary Angiogram to confirm clot burden",
+            "Bedside Transthoracic Echocardiogram to evaluate RV strain and McConnell sign",
+            "Admit to monitored telemetry bed; hold estrogen-containing oral contraceptives"
+        ],
+        simulated_labs={
+            LabTestType.D_DIMER.value: {
+                "D_Dimer": "3420 ng/mL FEU (Normal < 500 ng/mL)",
+                "interpretation": "Markedly elevated D-Dimer indicating high probability of active venous thromboembolism"
+            },
+            LabTestType.TROPONIN_I.value: {
+                "Troponin_I": "0.18 ng/mL (Normal < 0.04)",
+                "interpretation": "Mild troponin leak consistent with right ventricular strain/micro-infarction"
+            },
+            LabTestType.BNP.value: {
+                "BNP": "385 pg/mL (Normal < 100)",
+                "interpretation": "Elevated BNP reflecting acute right ventricular stretch"
+            },
+            LabTestType.CT_CHEST.value: {
+                "findings": "Bilateral filling defects in main right pulmonary artery extending into lower lobe segmental branches. RV/LV ratio 1.2 indicating RV enlargement.",
+                "interpretation": "Acute bilateral submassive pulmonary embolism"
+            }
+        },
+        physical_exam={
+            "General": "Tachypneic female in moderate distress, splinting with deep inspiration.",
+            "Cardiovascular": "Tachycardia, accentuated P2 heart sound, mild jugular venous distention at 30 degrees.",
+            "Pulmonary": "Decreased breath sounds at right base with pleural friction rub.",
+            "Extremities": "Right calf 2.5 cm larger in circumference than left, tender along deep posterior calf."
+        }
     )
 ]
 
@@ -223,3 +377,4 @@ def get_benchmark_case(case_id: str = "CASE-101") -> PatientGroundTruth:
         if c.id == case_id:
             return c
     return BENCHMARK_CASES[0]
+

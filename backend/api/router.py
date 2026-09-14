@@ -13,6 +13,7 @@ import logging
 from ..simulation.orchestrator import orchestrator
 from ..simulation.event_bus import event_bus
 from ..clinical.cases import BENCHMARK_CASES
+from ..rl.evaluator import PolicyEvaluator
 
 logger = logging.getLogger("APIRouter")
 api_router = APIRouter(prefix="/api")
@@ -175,4 +176,123 @@ async def export_rl_dpo_dataset(filepath: Optional[str] = "data/dpo_preference_d
     except Exception as e:
         logger.error(f"Error exporting DPO dataset: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/rl/benchmark")
+async def get_policy_benchmark_report():
+    """
+    Executes and returns comparative policy evaluation benchmark report:
+    Base MedGemma (v0.1) vs Physician-Guided RL DPO-Aligned Agent (v0.3)
+    across all clinical benchmark cases.
+    """
+    try:
+        report = PolicyEvaluator.run_full_benchmark()
+        return report.model_dump()
+    except Exception as e:
+        logger.error(f"Error running policy benchmark: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/rl/benchmark/cases/{case_id}")
+async def get_case_policy_evaluation(case_id: str):
+    """
+    Returns comparative evaluation metrics for a specific clinical case.
+    """
+    case = next((c for c in BENCHMARK_CASES if c.id == case_id), None)
+    if not case:
+        raise HTTPException(status_code=404, detail=f"Case '{case_id}' not found in benchmark cases")
+    try:
+        comparison = PolicyEvaluator.evaluate_case(case)
+        return comparison.model_dump()
+    except Exception as e:
+        logger.error(f"Error evaluating case {case_id}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/inpatient/rooms")
+async def get_inpatient_rooms():
+    """
+    Returns telemetry and clinical monitoring status for the 4 inpatient rooms
+    in the East Inpatient Wing.
+    """
+    rooms = [
+        {
+            "room_number": "101",
+            "room_name": "Inpatient Suite 101 - Cardiac Telemetry",
+            "patient_name": "Robert Miller",
+            "age": 62,
+            "sex": "Male",
+            "diagnosis": "Acute NSTEMI (Post-Angiography)",
+            "acuity": "URGENT",
+            "heart_rate": 76,
+            "systolic_bp": 128,
+            "diastolic_bp": 82,
+            "respiratory_rate": 16,
+            "spo2": 98.0,
+            "rhythm_strip": "Normal Sinus Rhythm with resolving ST depression",
+            "active_infusion": "Unfractionated Heparin 18 units/kg/hr IV",
+            "diet": "Cardiac / Low Sodium",
+            "nurse_assigned": "Sarah Jenkins, RN",
+            "status": "STABLE_MONITORED",
+        },
+        {
+            "room_number": "102",
+            "room_name": "Inpatient Suite 102 - Medical ICU Bed",
+            "patient_name": "Elena Rostova",
+            "age": 24,
+            "sex": "Female",
+            "diagnosis": "Diabetic Ketoacidosis (Closing Anion Gap)",
+            "acuity": "EMERGENT",
+            "heart_rate": 96,
+            "systolic_bp": 110,
+            "diastolic_bp": 70,
+            "respiratory_rate": 20,
+            "spo2": 99.0,
+            "rhythm_strip": "Sinus Rhythm without ectopy",
+            "active_infusion": "Regular Insulin 5 units/hr + D5W 0.45% NS with 20 mEq KCl",
+            "diet": "NPO (strict)",
+            "nurse_assigned": "Sarah Jenkins, RN",
+            "status": "ACUTE_IMPROVING",
+        },
+        {
+            "room_number": "103",
+            "room_name": "Inpatient Suite 103 - Step-Down Bed",
+            "patient_name": "Arthur Pendelton",
+            "age": 68,
+            "sex": "Male",
+            "diagnosis": "Acute Kidney Injury Stage 3 (Resolving)",
+            "acuity": "URGENT",
+            "heart_rate": 80,
+            "systolic_bp": 118,
+            "diastolic_bp": 74,
+            "respiratory_rate": 16,
+            "spo2": 97.0,
+            "rhythm_strip": "Sinus Rhythm with first-degree AV block",
+            "active_infusion": "Plasmalyte @ 125 mL/hr IV Maintenance",
+            "diet": "Renal Diet (Low Potassium / Phosphorus)",
+            "nurse_assigned": "Sarah Jenkins, RN",
+            "status": "DIURESIS_RECOVERY",
+        },
+        {
+            "room_number": "104",
+            "room_name": "Inpatient Suite 104 - Step-Down Bed",
+            "patient_name": "Clara Vance",
+            "age": 52,
+            "sex": "Female",
+            "diagnosis": "Submassive Pulmonary Embolism",
+            "acuity": "EMERGENT",
+            "heart_rate": 92,
+            "systolic_bp": 116,
+            "diastolic_bp": 76,
+            "respiratory_rate": 20,
+            "spo2": 96.0,
+            "rhythm_strip": "Sinus Tachycardia with S1Q3T3 morphology",
+            "active_infusion": "Enoxaparin 80 mg SC q12h + 2L Nasal Cannula O2",
+            "diet": "Regular as tolerated",
+            "nurse_assigned": "Sarah Jenkins, RN",
+            "status": "STABLE_ANTICOAGULATED",
+        },
+    ]
+    return rooms
+
 

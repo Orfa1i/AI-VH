@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { MedicationSafetyReport, BenchmarkCase } from '../../types';
 import {
   Pill,
@@ -13,13 +13,17 @@ import {
   FileText,
   Activity,
   User,
+  Volume2,
+  VolumeX,
 } from 'lucide-react';
+import { speakClinicalMessage, stopClinicalSpeech } from '../../utils/speechSynthesis';
 
 interface PharmacistModalProps {
   isOpen: boolean;
   onClose: () => void;
   cases: BenchmarkCase[];
 }
+
 
 const PRESET_ORDERS = [
   {
@@ -88,8 +92,38 @@ export const PharmacistModal: React.FC<PharmacistModalProps> = ({
   );
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [report, setReport] = useState<MedicationSafetyReport | null>(null);
+  const [isSpeaking, setIsSpeaking] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (!isOpen) {
+      stopClinicalSpeech();
+      setIsSpeaking(false);
+    }
+  }, [isOpen]);
+
+  const handleToggleSpeech = () => {
+    if (isSpeaking) {
+      stopClinicalSpeech();
+      setIsSpeaking(false);
+    } else if (report) {
+      const summaryText = `Clinical Pharmacist Doctor Elena Rostova. Dispensing review status is: ${
+        report.safety_cleared ? 'cleared and approved' : 'hold for physician clarification'
+      }. ${
+        report.flagged_contraindications.length > 0
+          ? 'Alert: ' + report.flagged_contraindications.join('. ')
+          : 'All ordered medications cleared against patient profile.'
+      }`;
+      speakClinicalMessage(
+        summaryText,
+        'DR_ROSTOVA',
+        () => setIsSpeaking(true),
+        () => setIsSpeaking(false)
+      );
+    }
+  };
 
   if (!isOpen) return null;
+
 
   const handleSelectPreset = (idx: number) => {
     setSelectedPresetIndex(idx);
@@ -289,15 +323,29 @@ export const PharmacistModal: React.FC<PharmacistModalProps> = ({
                   </div>
                 </div>
 
-                <span
-                  className={`px-3 py-1 rounded-full text-xs font-mono font-bold uppercase ${
-                    report.safety_cleared
-                      ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
-                      : 'bg-rose-500/20 text-rose-300 border border-rose-500/40'
-                  }`}
-                >
-                  {report.dispensing_status}
-                </span>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleToggleSpeech}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+                      isSpeaking
+                        ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+                        : 'bg-slate-800/80 hover:bg-slate-700 text-slate-200 border border-slate-700'
+                    }`}
+                  >
+                    {isSpeaking ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
+                    <span>{isSpeaking ? 'Stop Voice' : 'Dr. Rostova Voice'}</span>
+                  </button>
+                  <span
+                    className={`px-3 py-1 rounded-full text-xs font-mono font-bold uppercase ${
+                      report.safety_cleared
+                        ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                        : 'bg-rose-500/20 text-rose-300 border border-rose-500/40'
+                    }`}
+                  >
+                    {report.dispensing_status}
+                  </span>
+                </div>
+
               </div>
 
               {/* Warnings and Interventions */}
