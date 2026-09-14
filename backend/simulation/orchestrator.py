@@ -23,6 +23,8 @@ from ..agents.nurse import NurseAgent
 from ..agents.doctor import DoctorAgent
 from ..agents.lab import LaboratoryAgent
 from ..agents.radiology import RadiologyAgent
+from ..agents.specialists.internal_medicine import InternalMedicineSpecialistAgent
+from ..rag.specialists.internal_medicine_rag import InternalMedicineRAGAgent
 
 logger = logging.getLogger("SimulationOrchestrator")
 
@@ -52,8 +54,28 @@ class HospitalOrchestrator:
         chunks = parser.load_or_extract_chunks(max_pages_per_chapter=2)
         self.rag_index = MedicalKnowledgeIndex(chunks)
 
-        # Initialize shared MedGemma service
+        # Initialize shared MedGemma service and dedicated Internal Medicine RAG Agent
         self.medgemma = MedGemmaService(enable_gpu=enable_gpu)
+        self.im_rag_agent = InternalMedicineRAGAgent()
+        self.im_specialist = InternalMedicineSpecialistAgent(
+            medgemma_service=self.medgemma,
+            rag_agent=self.im_rag_agent
+        )
+
+    async def conduct_specialist_consult(
+        self,
+        clinical_scenario: str,
+        abnormal_labs: Optional[List[str]] = None,
+        patient_id: str = "PAT-CONSULT",
+    ) -> Dict[str, Any]:
+        """Provides an on-demand clinical consultation with Dr. Marcus Vance, MD (Internal Medicine)."""
+        encounter_id = f"CON-{uuid.uuid4().hex[:6].upper()}"
+        return await self.im_specialist.conduct_specialist_consultation(
+            encounter_id=encounter_id,
+            patient_id=patient_id,
+            clinical_scenario=clinical_scenario,
+            abnormal_labs=abnormal_labs,
+        )
 
     async def run_encounter_simulation(self, case_id: str = "CASE-101") -> Dict[str, Any]:
         """Runs the complete clinical loop from patient arrival to report generation."""
@@ -70,10 +92,11 @@ class HospitalOrchestrator:
         nurse_agent = NurseAgent()
         lab_agent = LaboratoryAgent()
         radiology_agent = RadiologyAgent()
-        doctor_agent = DoctorAgent(
+        doctor_agent = InternalMedicineSpecialistAgent(
             medgemma_service=self.medgemma,
+            rag_agent=self.im_rag_agent,
             lab_agent=lab_agent,
-            radiology_agent=radiology_agent
+            radiology_agent=radiology_agent,
         )
 
         # 2. Patient Arrival at Reception & Waiting Area

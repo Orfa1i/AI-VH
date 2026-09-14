@@ -22,6 +22,12 @@ class SimulationRequest(BaseModel):
     case_id: str = "CASE-101"
 
 
+class SpecialistConsultRequest(BaseModel):
+    clinical_scenario: str
+    abnormal_labs: Optional[List[str]] = None
+    patient_id: Optional[str] = "PAT-CONSULT"
+
+
 class PhysicianReviewRequest(BaseModel):
     report_id: str
     physician_name: str = "Dr. Attending Physician, MD"
@@ -39,6 +45,21 @@ class PhysicianReviewRequest(BaseModel):
 @api_router.get("/health")
 async def health_check():
     return {"status": "healthy", "service": "AI Virtual Hospital Platform"}
+
+
+@api_router.post("/specialists/internal-medicine/consult")
+async def consult_internal_medicine(req: SpecialistConsultRequest):
+    """Consult Dr. Marcus Vance, MD (Internal Medicine) powered by Harrison's RAG."""
+    try:
+        result = await orchestrator.conduct_specialist_consult(
+            clinical_scenario=req.clinical_scenario,
+            abnormal_labs=req.abnormal_labs,
+            patient_id=req.patient_id or "PAT-CONSULT",
+        )
+        return result
+    except Exception as e:
+        logger.error(f"Specialist consult error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @api_router.get("/cases")

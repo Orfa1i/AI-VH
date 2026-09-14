@@ -82,6 +82,27 @@ export interface BenchmarkCase {
   acuity: string;
 }
 
+export interface SpecialistConsultResponse {
+  specialist: string;
+  specialty: string;
+  domain: string;
+  evidence_brief: {
+    query: string;
+    domain: string;
+    clinical_summary: string;
+    recommended_workup: string[];
+    recommended_therapy: string[];
+    contraindications: string[];
+    citations: MedicalCitation[];
+  };
+  recommendations: {
+    immediate_workup: string[];
+    guideline_therapy: string[];
+    contraindications: string[];
+  };
+  citations: MedicalCitation[];
+}
+
 export interface PhysicianReviewPayload {
   report_id: string;
   physician_name: string;

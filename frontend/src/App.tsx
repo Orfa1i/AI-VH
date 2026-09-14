@@ -4,6 +4,7 @@ import { EventStreamHUD } from './components/dashboard/EventStreamHUD';
 import { VitalsMonitorHUD } from './components/dashboard/VitalsMonitorHUD';
 import { PhysicianReviewDashboard } from './components/dashboard/PhysicianReviewDashboard';
 import { CaseSelector } from './components/dashboard/CaseSelector';
+import { InternalMedicineConsultModal } from './components/specialists/InternalMedicineConsultModal';
 import type {
   HospitalEvent,
   ClinicalReport,
@@ -25,6 +26,7 @@ export const App: React.FC = () => {
   const [activeVitals, setActiveVitals] = useState<VitalSigns | null>(null);
   const [currentPatientName, setCurrentPatientName] = useState<string>('Robert Miller');
   const [isWsConnected, setIsWsConnected] = useState<boolean>(false);
+  const [isConsultOpen, setIsConsultOpen] = useState<boolean>(false);
 
   // 3D Department & Agent Positions
   const [activeDepartment, setActiveDepartment] = useState<string>('RECEPTION');
@@ -217,6 +219,7 @@ export const App: React.FC = () => {
         activeView={activeView}
         onChangeView={(v) => setActiveView(v)}
         reportsCount={reports.length}
+        onOpenConsult={() => setIsConsultOpen(true)}
       />
 
       {/* Main Body View */}
@@ -249,6 +252,12 @@ export const App: React.FC = () => {
           />
         )}
       </div>
+
+      {/* Internal Medicine Specialist & Harrison's RAG Consultation Modal */}
+      <InternalMedicineConsultModal
+        isOpen={isConsultOpen}
+        onClose={() => setIsConsultOpen(false)}
+      />
     </div>
   );
 };

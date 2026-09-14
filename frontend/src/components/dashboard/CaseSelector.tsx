@@ -11,6 +11,7 @@ interface CaseSelectorProps {
   activeView: 'HOSPITAL_3D' | 'PHYSICIAN_REVIEW';
   onChangeView: (view: 'HOSPITAL_3D' | 'PHYSICIAN_REVIEW') => void;
   reportsCount: number;
+  onOpenConsult?: () => void;
 }
 
 export const CaseSelector: React.FC<CaseSelectorProps> = ({
@@ -22,6 +23,7 @@ export const CaseSelector: React.FC<CaseSelectorProps> = ({
   activeView,
   onChangeView,
   reportsCount,
+  onOpenConsult,
 }) => {
   return (
     <header className="h-16 px-6 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 flex items-center justify-between z-30 shrink-0">
@@ -80,6 +82,16 @@ export const CaseSelector: React.FC<CaseSelectorProps> = ({
             </>
           )}
         </button>
+
+        {onOpenConsult && (
+          <button
+            onClick={onOpenConsult}
+            className="px-3.5 py-2 rounded-xl bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-700/70 text-emerald-300 text-xs font-bold shadow-lg shadow-emerald-900/30 flex items-center gap-1.5 cursor-pointer transition-all"
+          >
+            <span>🩺</span>
+            <span>Consult IM Specialist (RAG)</span>
+          </button>
+        )}
       </div>
 
       {/* View Switcher Tabs */}
