@@ -1,8 +1,11 @@
-import React, { Suspense } from 'react';
+import React, { Suspense, useState } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Grid } from '@react-three/drei';
 import { DepartmentRoom } from './DepartmentRoom';
 import { AgentAvatar } from './AgentAvatar';
+import { HospitalFurnishings } from './HospitalFurnishings';
+import { FirstPersonControls } from './FirstPersonControls';
+import { FirstPersonHUD } from './FirstPersonHUD';
 
 interface HospitalCanvasProps {
   activeDepartment: string;
@@ -25,12 +28,22 @@ export const HospitalCanvas: React.FC<HospitalCanvasProps> = ({
   doctorAction,
   onDepartmentClick,
 }) => {
+  const [isFirstPerson, setIsFirstPerson] = useState(true);
+  const [currentLocation, setCurrentLocation] = useState('Hospital Central Corridor');
+
   return (
     <div className="w-full h-full relative bg-slate-950 overflow-hidden isolate z-0">
+      {/* 1st-Person Perspective HUD & Mode Toggle */}
+      <FirstPersonHUD
+        currentLocation={currentLocation}
+        isFirstPerson={isFirstPerson}
+        onTogglePerspective={() => setIsFirstPerson((prev) => !prev)}
+      />
+
       <Canvas
         shadows
-        camera={{ position: [0, 18, 18], fov: 45 }}
-        className="w-full h-full cursor-grab active:cursor-grabbing"
+        camera={{ position: isFirstPerson ? [0, 1.7, 0] : [0, 18, 18], fov: isFirstPerson ? 65 : 45 }}
+        className={`w-full h-full ${isFirstPerson ? 'cursor-crosshair' : 'cursor-grab active:cursor-grabbing'}`}
       >
         <color attach="background" args={['#090d16']} />
         <ambientLight intensity={0.7} />
@@ -66,6 +79,9 @@ export const HospitalCanvas: React.FC<HospitalCanvasProps> = ({
             <boxGeometry args={[22, 0.04, 3]} />
             <meshStandardMaterial color="#0f172a" roughness={0.8} />
           </mesh>
+
+          {/* 3D Clinical Interior Furnishings */}
+          <HospitalFurnishings />
 
           {/* --- DEPARTMENTS --- */}
           {/* Row 1 (North): Reception, Waiting Area, Nurse Station */}
@@ -221,14 +237,21 @@ export const HospitalCanvas: React.FC<HospitalCanvasProps> = ({
             color="#6366f1"
           />
 
-          {/* Controls */}
-          <OrbitControls
-            enableDamping
-            dampingFactor={0.08}
-            maxPolarAngle={Math.PI / 2.1}
-            minDistance={8}
-            maxDistance={38}
-          />
+          {/* Perspective Controls */}
+          {isFirstPerson ? (
+            <FirstPersonControls
+              enabled={isFirstPerson}
+              onLocationChange={(loc) => setCurrentLocation(loc)}
+            />
+          ) : (
+            <OrbitControls
+              enableDamping
+              dampingFactor={0.08}
+              maxPolarAngle={Math.PI / 2.1}
+              minDistance={8}
+              maxDistance={38}
+            />
+          )}
         </Suspense>
       </Canvas>
     </div>
