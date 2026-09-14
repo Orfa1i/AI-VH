@@ -21,6 +21,8 @@ from ..llm.medgemma_service import MedGemmaService
 from ..agents.patient import PatientAgent
 from ..agents.nurse import NurseAgent
 from ..agents.doctor import DoctorAgent
+from ..agents.lab import LaboratoryAgent
+from ..agents.radiology import RadiologyAgent
 
 logger = logging.getLogger("SimulationOrchestrator")
 
@@ -66,7 +68,13 @@ class HospitalOrchestrator:
         toolkit = ClinicalToolkit(ground_truth=case, rag_index=self.rag_index)
         patient_agent = PatientAgent(ground_truth=case)
         nurse_agent = NurseAgent()
-        doctor_agent = DoctorAgent(medgemma_service=self.medgemma)
+        lab_agent = LaboratoryAgent()
+        radiology_agent = RadiologyAgent()
+        doctor_agent = DoctorAgent(
+            medgemma_service=self.medgemma,
+            lab_agent=lab_agent,
+            radiology_agent=radiology_agent
+        )
 
         # 2. Patient Arrival at Reception & Waiting Area
         state.status = "ARRIVED"

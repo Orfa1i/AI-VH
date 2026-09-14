@@ -201,6 +201,26 @@ export const HospitalCanvas: React.FC<HospitalCanvasProps> = ({
             color="#10b981"
           />
 
+          {/* Laboratory Scientist Agent */}
+          <AgentAvatar
+            id="lab_agent"
+            name="David Chen, MLS"
+            role="LAB"
+            targetPosition={[-7, 0, 8]}
+            currentAction="Processing Biomarker Assays"
+            color="#a855f7"
+          />
+
+          {/* Radiologist Agent */}
+          <AgentAvatar
+            id="rad_agent"
+            name="Dr. Hayes, MD"
+            role="RADIOLOGY"
+            targetPosition={[-0.5, 0, 8]}
+            currentAction="Reading Diagnostic Studies"
+            color="#6366f1"
+          />
+
           {/* Controls */}
           <OrbitControls
             enableDamping

@@ -21,7 +21,9 @@ class DoctorAgent(BaseAgent):
         agent_id: str = "doc_marcus",
         name: str = "Dr. Marcus Vance, MD",
         specialty: str = "Internal Medicine",
-        medgemma_service: Optional[MedGemmaService] = None
+        medgemma_service: Optional[MedGemmaService] = None,
+        lab_agent: Optional[Any] = None,
+        radiology_agent: Optional[Any] = None,
     ):
         super().__init__(
             agent_id=agent_id,
@@ -31,6 +33,8 @@ class DoctorAgent(BaseAgent):
         )
         self.specialty = specialty
         self.llm = medgemma_service or MedGemmaService(enable_gpu=False)
+        self.lab_agent = lab_agent
+        self.radiology_agent = radiology_agent
 
     async def conduct_clinical_encounter(self, encounter_id: str, toolkit: ClinicalToolkit) -> ClinicalReport:
         patient_info = toolkit.get_patient_history()
@@ -73,28 +77,49 @@ class DoctorAgent(BaseAgent):
             payload={"citations_count": len(rag_citations), "top_citation": rag_citations[0] if rag_citations else None}
         )
 
-        # 4. Diagnostic Investigations Ordering
-        # Order clinical lab tests based on presentation
+        # 4. Diagnostic Investigations Ordering (Delegated to Lab & Radiology agents)
         recommended_tests = toolkit.ground_truth.recommended_labs
         lab_results_payload = []
 
         for test in recommended_tests:
-            await self.emit_event(
-                event_type=EventType.LAB_ORDERED,
-                encounter_id=encounter_id,
-                patient_id=patient_id,
-                summary=f"{self.name} ordered STAT: {test.value}",
-                payload={"test_type": test.value}
-            )
-            result = toolkit.order_lab_test(test)
+            is_imaging = test in [LabTestType.ECG_12_LEAD, LabTestType.CXR, LabTestType.CT_CHEST]
+            
+            if is_imaging and self.radiology_agent is not None:
+                await self.emit_event(
+                    event_type=EventType.IMAGING_ORDERED,
+                    encounter_id=encounter_id,
+                    patient_id=patient_id,
+                    summary=f"{self.name} ordered STAT imaging: {test.value}",
+                    payload={"study_type": test.value}
+                )
+                result = await self.radiology_agent.read_imaging_study(encounter_id, test, toolkit)
+            elif self.lab_agent is not None:
+                await self.emit_event(
+                    event_type=EventType.LAB_ORDERED,
+                    encounter_id=encounter_id,
+                    patient_id=patient_id,
+                    summary=f"{self.name} ordered STAT laboratory test: {test.value}",
+                    payload={"test_type": test.value}
+                )
+                result = await self.lab_agent.process_lab_order(encounter_id, test, toolkit)
+            else:
+                await self.emit_event(
+                    event_type=EventType.LAB_ORDERED,
+                    encounter_id=encounter_id,
+                    patient_id=patient_id,
+                    summary=f"{self.name} ordered STAT: {test.value}",
+                    payload={"test_type": test.value}
+                )
+                result = toolkit.order_lab_test(test)
+                await self.emit_event(
+                    event_type=EventType.LAB_RESULT_READY,
+                    encounter_id=encounter_id,
+                    patient_id=patient_id,
+                    summary=f"Laboratory returned results for {test.value}: {result.interpretation}",
+                    payload={"test_type": test.value, "values": result.values, "interpretation": result.interpretation}
+                )
+
             lab_results_payload.append(result.model_dump())
-            await self.emit_event(
-                event_type=EventType.LAB_RESULT_READY,
-                encounter_id=encounter_id,
-                patient_id=patient_id,
-                summary=f"Laboratory returned results for {test.value}: {result.interpretation}",
-                payload={"test_type": test.value, "values": result.values, "interpretation": result.interpretation}
-            )
 
         # 5. MedGemma Foundation Model Clinical Synthesis
         vitals = toolkit.get_vital_signs()

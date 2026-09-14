@@ -6,7 +6,7 @@ import * as THREE from 'three';
 interface AgentAvatarProps {
   id: string;
   name: string;
-  role: 'DOCTOR' | 'NURSE' | 'PATIENT';
+  role: 'DOCTOR' | 'NURSE' | 'PATIENT' | 'LAB' | 'RADIOLOGY';
   targetPosition: [number, number, number];
   currentAction?: string;
   color: string;
@@ -47,6 +47,10 @@ export const AgentAvatar: React.FC<AgentAvatarProps> = ({
         return 'bg-cyan-600/90 text-cyan-100 border-cyan-400';
       case 'PATIENT':
         return 'bg-amber-600/90 text-amber-100 border-amber-400';
+      case 'LAB':
+        return 'bg-purple-600/90 text-purple-100 border-purple-400';
+      case 'RADIOLOGY':
+        return 'bg-indigo-600/90 text-indigo-100 border-indigo-400';
     }
   };
 
