@@ -427,31 +427,35 @@ export const HospitalCanvas: React.FC<HospitalCanvasProps> = ({
           {/* Patient Agent (In Waiting Room / Intake) */}
           <AgentAvatar
             id="patient_agent"
-            name="Patient"
+            name="Robert Miller (Patient)"
             role="PATIENT"
-            targetPosition={[-12.8, 0, -0.6]}
+            targetPosition={_patientPos || [-12.8, 0, -0.6]}
             currentAction={patientAction}
-            color="#0284c7"
+            color="#38bdf8"
+            rotation={[0, Math.PI / 4, 0]}
           />
+
 
           {/* Nurse Agent (At Central Rotunda Nurse Station) */}
           <AgentAvatar
             id="nurse_agent"
             name="Sarah Jenkins, RN"
             role="NURSE"
-            targetPosition={[-0.8, 0, 0]}
+            targetPosition={_nursePos || [-0.8, 0, 0]}
             currentAction={nurseAction}
             color="#06b6d4"
+            rotation={[0, -Math.PI / 2, 0]}
           />
 
           {/* Doctor Agent (In North Doctor Station Office) */}
           <AgentAvatar
             id="doctor_agent"
-            name="Dr. Vance, MD (Internal Med)"
+            name="Dr. Marcus Vance, MD"
             role="DOCTOR"
-            targetPosition={[2.6, 0, -6.8]}
+            targetPosition={_doctorPos || [2.6, 0, -6.8]}
             currentAction={doctorAction}
             color="#10b981"
+            rotation={[0, Math.PI, 0]}
           />
 
           {/* Laboratory Scientist Agent (In Clinical Laboratory) */}
@@ -462,16 +466,18 @@ export const HospitalCanvas: React.FC<HospitalCanvasProps> = ({
             targetPosition={[7.8, 0, -6.8]}
             currentAction="Processing Biomarker Assays"
             color="#8b5cf6"
+            rotation={[0, Math.PI, 0]}
           />
 
           {/* Radiologist Agent (In Radiology Suite) */}
           <AgentAvatar
             id="rad_agent"
-            name="Dr. Hayes, MD"
+            name="Dr. Arthur Hayes, MD"
             role="RADIOLOGY"
             targetPosition={[7.8, 0, 6.8]}
             currentAction="Reading Diagnostic Studies"
             color="#6366f1"
+            rotation={[0, 0, 0]}
           />
 
           {/* Pharmacist Agent (In Hospital Pharmacy) */}
@@ -482,7 +488,9 @@ export const HospitalCanvas: React.FC<HospitalCanvasProps> = ({
             targetPosition={[8.4, 0, 0.5]}
             currentAction={pharmAction || "Medication Reconciliation & Dispensing"}
             color="#14b8a6"
+            rotation={[0, -Math.PI / 2, 0]}
           />
+
 
           {/* ═══════════════════════════════════════════════════════════════
               PERSPECTIVE CONTROLS
