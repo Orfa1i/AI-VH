@@ -5,6 +5,8 @@ import { VitalsMonitorHUD } from './components/dashboard/VitalsMonitorHUD';
 import { PhysicianReviewDashboard } from './components/dashboard/PhysicianReviewDashboard';
 import { CaseSelector } from './components/dashboard/CaseSelector';
 import { InternalMedicineConsultModal } from './components/specialists/InternalMedicineConsultModal';
+import { PharmacistModal } from './components/specialists/PharmacistModal';
+import { DepartmentStationModal } from './components/specialists/DepartmentStationModal';
 import { RLDatasetModal } from './components/rl/RLDatasetModal';
 import type {
   HospitalEvent,
@@ -27,7 +29,11 @@ export const App: React.FC = () => {
   const [activeVitals, setActiveVitals] = useState<VitalSigns | null>(null);
   const [currentPatientName, setCurrentPatientName] = useState<string>('Robert Miller');
   const [isWsConnected, setIsWsConnected] = useState<boolean>(false);
+
+  // Modals & Interactive Stations
   const [isConsultOpen, setIsConsultOpen] = useState<boolean>(false);
+  const [isPharmacyOpen, setIsPharmacyOpen] = useState<boolean>(false);
+  const [departmentStationId, setDepartmentStationId] = useState<string | null>(null);
   const [isRLModalOpen, setIsRLModalOpen] = useState<boolean>(false);
 
   // 3D Department & Agent Positions
@@ -39,6 +45,7 @@ export const App: React.FC = () => {
   const [patientAction, setPatientAction] = useState<string>('Waiting in Intake');
   const [nurseAction, setNurseAction] = useState<string>('At Nurse Station');
   const [doctorAction, setDoctorAction] = useState<string>('Reviewing Inpatient Charts');
+  const [pharmAction, setPharmAction] = useState<string>('Dispensing & Reconciling Prescriptions');
 
   const wsRef = useRef<WebSocket | null>(null);
 
@@ -165,6 +172,17 @@ export const App: React.FC = () => {
         setDoctorAction('MedGemma Diagnosis Established');
         break;
 
+      case 'PHARMACY_REVIEW_INITIATED':
+        setActiveDepartment('PHARMACY');
+        setPharmAction('Screening Contraindications & Renal Dosing');
+        break;
+
+      case 'PHARMACY_REVIEW_COMPLETED':
+      case 'MEDICATION_DISPENSED':
+        setActiveDepartment('PHARMACY');
+        setPharmAction(evt.summary || 'Medication Orders Reconciled');
+        break;
+
       case 'CLINICAL_REPORT_GENERATED':
         setActiveDepartment('DOCTOR_STATION');
         setDoctorAction('Report Finalized & Queued');
@@ -209,6 +227,23 @@ export const App: React.FC = () => {
     }
   };
 
+  // Handle station interaction triggers (from pressing [E] or HUD click in 1st person)
+  const handleStationInteract = (stationId: string) => {
+    switch (stationId) {
+      case 'INTERNAL_MEDICINE':
+        setIsConsultOpen(true);
+        break;
+      case 'PHARMACY':
+        setIsPharmacyOpen(true);
+        break;
+      case 'LABORATORY':
+      case 'RADIOLOGY':
+      case 'NURSE_STATION':
+        setDepartmentStationId(stationId);
+        break;
+    }
+  };
+
   return (
     <div className="w-screen h-screen flex flex-col bg-slate-950 overflow-hidden select-none font-sans">
       {/* Top Header Bar */}
@@ -222,6 +257,7 @@ export const App: React.FC = () => {
         onChangeView={(v) => setActiveView(v)}
         reportsCount={reports.length}
         onOpenConsult={() => setIsConsultOpen(true)}
+        onOpenPharmacy={() => setIsPharmacyOpen(true)}
         onOpenRLDataset={() => setIsRLModalOpen(true)}
       />
 
@@ -238,7 +274,9 @@ export const App: React.FC = () => {
               patientAction={patientAction}
               nurseAction={nurseAction}
               doctorAction={doctorAction}
+              pharmAction={pharmAction}
               onDepartmentClick={(dept) => setActiveDepartment(dept)}
+              onStationInteract={handleStationInteract}
             />
 
             {/* Floating Glassmorphism Vitals Telemetry */}
@@ -260,6 +298,24 @@ export const App: React.FC = () => {
       <InternalMedicineConsultModal
         isOpen={isConsultOpen}
         onClose={() => setIsConsultOpen(false)}
+      />
+
+      {/* Clinical Pharmacy & Medication Safety Modal */}
+      <PharmacistModal
+        isOpen={isPharmacyOpen}
+        onClose={() => setIsPharmacyOpen(false)}
+        cases={cases}
+      />
+
+      {/* Department Station Inspector Modal (Lab / Radiology / Nurse Triage) */}
+      <DepartmentStationModal
+        stationId={departmentStationId}
+        isOpen={departmentStationId !== null}
+        onClose={() => setDepartmentStationId(null)}
+        cases={cases}
+        selectedCaseId={selectedCaseId}
+        onRunEncounter={handleRunSimulation}
+        isRunning={isRunning}
       />
 
       {/* Phase 6: RL / DPO Preference Alignment Corpus Modal */}

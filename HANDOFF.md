@@ -1,7 +1,7 @@
 # Project Handoff: AI Virtual Hospital (AI-VH)
 
 ## 1. Project Overview & Context
-AI-VH is an autonomous multi-agent healthcare simulation and reinforcement learning platform designed to study whether autonomous medical AI agents (Doctors, Nurses, Patients, Laboratory Scientists, Radiologists) can improve clinical decision-making through expert physician feedback and reinforcement learning. The system is backed by local 4-bit quantized MedGemma running on an RTX 4060 GPU, Harrison's Principles of Internal Medicine (21st Ed) textbook RAG, an asynchronous event bus, an interactive 3D virtual hospital environment (Three.js / React Three Fiber), and a structured physician review dashboard.
+AI-VH is an autonomous multi-agent healthcare simulation and reinforcement learning platform designed to study whether autonomous medical AI agents (Doctors, Nurses, Patients, Laboratory Scientists, Radiologists, Pharmacists) can improve clinical decision-making through expert physician feedback and reinforcement learning. The system is backed by local 4-bit quantized MedGemma running on an RTX 4060 GPU, Harrison's Principles of Internal Medicine (21st Ed) textbook RAG, an asynchronous event bus, an interactive 3D virtual hospital environment (Three.js / React Three Fiber), and a structured physician review dashboard.
 
 ## 2. Accomplished This Session
 - **Phase 0 Baseline (Commit `7e46e58`)**:
@@ -17,32 +17,40 @@ AI-VH is an autonomous multi-agent healthcare simulation and reinforcement learn
   - Clamped `zIndexRange={[10, 0]}` and added `isolate z-0` to prevent 3D HTML badges from bleeding through modal containers.
 - **Phase 6: RL / Direct Preference Optimization (DPO) Preference Generator (Commit `a542916`)**:
   - Built `ClinicalRewardModel`, `DPOPreferenceGenerator`, REST endpoints `GET /api/rl/dataset` and `POST /api/rl/dataset/export`, exported `data/dpo_preference_dataset.jsonl`, and built `RLDatasetModal.tsx` UI.
-- **AutoCAD Floor Plan (Sheet A-1) 1:1 Architectural Implementation & Light Clinic Aesthetic (Commit pending)**:
-  - **1:1 Blueprint Geometric Alignment**: Reconstructed the entire 3D virtual hospital according to the AutoCAD layout (`Gemini_Generated_Image_vcok6pvcok6pvcok.jpg`):
-    - **West Zone**: Main entrance double glass doors, Patient Waiting Area with 13 waiting chairs, Reception with curved counter & admin stations, Emergency Department (ED) with 7 acute stretcher bays & privacy divider rails, Triage desk with vitals monitor, and dedicated South Ambulance Entrance with docking markers.
-    - **Central Rotunda**: Semicircular curved twin nurse counters forming a circular command station island with 4-way outward-facing diagnostic terminals.
-    - **North Wing**: Examination Room 1, Examination Room 2, Doctor Station (Physician Office with executive desk and dual displays), and large Clinical Laboratory with double-sided central workbench, automated analyzers, and centrifuge.
-    - **Central Core**: Doctor Station (Conference consultation suite) and Pharmacy with dispensing counter, prescription pickup, and tiered pharmaceutical shelving.
-    - **South Wing**: 4 Examination Rooms (Exam 3, 4, 5, 6) and Radiology Suite (CT scanner gantry ring with sky-blue bore illumination, motorized scan couch, lead-shielded console, and patient ensuite).
-    - **East Inpatient Wing**: 4 private patient rooms (Patient Rooms 1, 2, 3, 4) with electric inpatient beds, cyan safety rails, IV infusion poles, and private ensuite bathrooms.
-  - **Light Clinical Color Palette**:
-    - Replaced dark environment with medical daylight illumination: `#f0f9ff` ambient sky, 5000K daylight lighting with soft shadows.
-    - Off-white porcelain tile floor plate (`#f8fafc`), clean gray tile grout grid (`#e2e8f0`), and soft cyan clinical corridor runners (`#e0f2fe`) with deep blue guide border ribbons (`#0284c7`).
-    - Crisp clinical drywall partitions (`#ffffff`) with medical sky-blue chair-rail accent trims.
-  - **1st-Person Navigation & Collision Update**:
-    - Updated `FirstPersonControls.tsx` to detect all 20+ rooms and zones dynamically as the physician walks across the clinic floor.
-    - Boundary constraints calibrated to the building footprint ($X \in [-17.2, 17.0], Z \in [-9.8, 9.8]$).
+- **AutoCAD Floor Plan (Sheet A-1) 1:1 Architectural Implementation & Light Clinic Aesthetic (Commit `4aa3e5b`)**:
+  - Reconstructed the complete 3D virtual hospital following AutoCAD layout (`Gemini_Generated_Image_vcok6pvcok6pvcok.jpg`): West Entrance/Waiting/ER, Central Rotunda Nurse Station, North Doctor/Lab, Central Doctor/Pharmacy, South Exam/Radiology, and East Inpatient Wing.
+- **Phase 7 Scale: Clinical Pharmacist Agent (`Dr. Elena Rostova, PharmD, BCPS`)**:
+  - Implemented `PharmacistAgent` in `backend/agents/pharmacist.py` with multi-tier pharmacology screening:
+    - Allergen cross-reactivity mapping (penicillin beta-lactams, sulfa, aspirin, opiates).
+    - Drug-class contraindication detection (NSAIDs in ACS/AKI, beta-blockers in cardiogenic shock, sliding-scale monotherapy).
+    - Renal dose adjustments (flagging nephrotoxicity and enoxaparin dose adjustments when creatinine >= 1.5 mg/dL or BUN >= 30).
+  - Integrated into simulation loop in `backend/simulation/orchestrator.py` with `MedicationSafetyReport` generation.
+  - Added REST endpoint `POST /api/pharmacy/review` with full request validation.
+  - Implemented interactive `PharmacistModal.tsx` with clinical benchmark scenario presets.
+  - Added Pharmacist 3D avatar with teal/emerald badge in the Hospital Pharmacy room.
+  - Added 5 unit/integration tests in `backend/tests/test_pharmacist.py`.
+- **Interactive Proximity Triggers System (`[E]` Key & HUD Banner)**:
+  - Added dynamic proximity detector in `FirstPersonControls.tsx` calculating Euclidean distance to all 5 specialist stations: Dr. Vance (Internal Med), Dr. Rostova (Pharmacy), David Chen (Laboratory), Dr. Hayes (Radiology), and Sarah Jenkins (Rotunda Triage).
+  - Implemented interactive HUD banner in `FirstPersonHUD.tsx` with animated prompt `[E] to Interact`.
+  - Built `DepartmentStationModal.tsx` for interactive inspection of Automated Biomarker Analyzers, CT PACS Console, and Triage Queues.
+- **Phase 6 Reinforcement Learning / DPO Training Pipeline (`train_dpo.py`)**:
+  - Implemented HuggingFace `trl.DPOTrainer` / `peft.LoraConfig` training pipeline in `backend/rl/train_dpo.py` with 4-bit LoRA adapter configuration.
+  - Added auto-hardware detection with live GPU fine-tuning and simulated verification mode for CPU/CI/CD.
+  - Exported verified LoRA configuration (`models/medgemma-dpo-lora/adapter_config.json`) and training summary log.
+  - Added unit test suite in `backend/tests/test_dpo_training.py`.
 - **Live Deployment & Verification**:
-  - Backend FastAPI server running live on `http://127.0.0.1:8000` with `--reload` (Task 596).
-  - Frontend Vite dev server running live on `http://127.0.0.1:5173` (Task 282).
-  - 14/14 automated backend tests passing (`pytest backend/tests/ -v`).
+  - Backend FastAPI server running live on `http://127.0.0.1:8000` with `--reload` (Task 278).
+  - Frontend Vite dev server running live on `http://localhost:5173` (Task 280).
+  - 21/21 automated backend tests passing (`py -3.13 -m pytest backend/tests/ -v`).
   - Production frontend build clean (`pnpm build` -> exit code 0).
 
 ## 3. Current State of the Work
-- Both servers are active in the background.
-- The 3D clinic renders the exact AutoCAD layout in daylight medical styling.
-- Both 1st-Person Walkthrough and Overhead Orbit View are fully functional.
+- Both backend and frontend servers are active in the background.
+- The 3D clinic renders the exact AutoCAD layout with all 6 healthcare agents active.
+- First-person walking dynamically prompts `[E] to Interact` when approaching any specialist station.
+- RL DPO training pipeline is executable directly via `python -m backend.rl.train_dpo`.
 
 ## 4. Next Steps
-- Add interactive proximity triggers in first-person mode (e.g. press [E] to consult doctor at desk or inspect laboratory analyzers).
-- Implement training loop script using HuggingFace `trl.DPOTrainer` with local 4-bit LoRA adapter for MedGemma.
+- Integrate speech audio synthesis (Web Speech API / TTS) for agent verbal responses during consultations.
+- Add multi-patient simultaneous inpatient monitoring in the East Inpatient Wing (Rooms 1-4).
+- Add automated policy evaluation benchmarking script comparing base MedGemma vs RL DPO LoRA adapter.

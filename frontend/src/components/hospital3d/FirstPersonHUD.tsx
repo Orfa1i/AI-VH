@@ -1,16 +1,21 @@
 import React from 'react';
-import { Compass, Eye, Layers } from 'lucide-react';
+import { Compass, Eye, Layers, Sparkles } from 'lucide-react';
+import type { ProximityTarget } from './FirstPersonControls';
 
 interface FirstPersonHUDProps {
   currentLocation: string;
   isFirstPerson: boolean;
   onTogglePerspective: () => void;
+  activeStation?: ProximityTarget | null;
+  onInteract?: (stationId: string) => void;
 }
 
 export const FirstPersonHUD: React.FC<FirstPersonHUDProps> = ({
   currentLocation,
   isFirstPerson,
   onTogglePerspective,
+  activeStation,
+  onInteract,
 }) => {
   return (
     <>
@@ -60,6 +65,25 @@ export const FirstPersonHUD: React.FC<FirstPersonHUDProps> = ({
         </button>
       </div>
 
+      {/* Interactive Proximity Trigger Banner (Appears when near an agent / station) */}
+      {isFirstPerson && activeStation && (
+        <div className="absolute bottom-16 left-1/2 -translate-x-1/2 z-30 animate-in fade-in slide-in-from-bottom-3 duration-200">
+          <button
+            onClick={() => onInteract && onInteract(activeStation.id)}
+            className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-600/95 to-teal-600/95 hover:from-emerald-500 hover:to-teal-500 backdrop-blur-md border border-emerald-300/80 text-white shadow-2xl shadow-emerald-500/40 flex items-center gap-3 font-semibold text-xs transition-all cursor-pointer transform hover:scale-105 active:scale-95"
+          >
+            <span className="w-6 h-6 rounded-lg bg-black/40 border border-white/40 flex items-center justify-center font-mono font-black text-white text-[13px] shadow-inner">
+              E
+            </span>
+            <div className="text-left">
+              <div className="text-white font-bold tracking-tight">{activeStation.actionPrompt}</div>
+              <div className="text-[10px] text-emerald-100 font-normal">{activeStation.name}</div>
+            </div>
+            <Sparkles className="w-4 h-4 text-emerald-200 animate-pulse ml-1" />
+          </button>
+        </div>
+      )}
+
       {/* Walking Controls Prompt Bar (Bottom Center in First Person) */}
       {isFirstPerson && (
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 px-4 py-2 rounded-xl bg-slate-900/80 backdrop-blur-md border border-slate-800 text-[11px] text-slate-300 shadow-xl flex items-center gap-4 pointer-events-none font-mono">
@@ -80,6 +104,12 @@ export const FirstPersonHUD: React.FC<FirstPersonHUDProps> = ({
               Shift
             </span>
             <span className="text-slate-400">Sprint</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="px-1.5 py-0.5 rounded bg-emerald-950 border border-emerald-600 text-emerald-300 font-bold">
+              E
+            </span>
+            <span className="text-emerald-400">Interact</span>
           </div>
         </div>
       )}

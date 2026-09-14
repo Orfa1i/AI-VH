@@ -23,6 +23,7 @@ from ..agents.nurse import NurseAgent
 from ..agents.doctor import DoctorAgent
 from ..agents.lab import LaboratoryAgent
 from ..agents.radiology import RadiologyAgent
+from ..agents.pharmacist import PharmacistAgent
 from ..agents.specialists.internal_medicine import InternalMedicineSpecialistAgent
 from ..rag.specialists.internal_medicine_rag import InternalMedicineRAGAgent
 from ..rl.dpo_generator import DPOPreferenceGenerator, DPOPreferencePair
@@ -62,6 +63,7 @@ class HospitalOrchestrator:
             medgemma_service=self.medgemma,
             rag_agent=self.im_rag_agent
         )
+        self.pharmacist = PharmacistAgent()
 
     async def conduct_specialist_consult(
         self,
@@ -77,6 +79,30 @@ class HospitalOrchestrator:
             clinical_scenario=clinical_scenario,
             abnormal_labs=abnormal_labs,
         )
+
+    async def review_medication_orders(
+        self,
+        prescriptions: List[str],
+        patient_id: str = "CASE-101",
+        diagnosis: str = "Clinical Encounter Diagnosis",
+    ) -> Dict[str, Any]:
+        """On-demand medication reconciliation by Dr. Elena Rostova, PharmD."""
+        case = None
+        for c in BENCHMARK_CASES:
+            if c.id == patient_id:
+                case = c
+                break
+        if not case:
+            case = BENCHMARK_CASES[0]
+
+        encounter_id = f"PHARM-REV-{uuid.uuid4().hex[:6].upper()}"
+        report = await self.pharmacist.review_medication_order(
+            encounter_id=encounter_id,
+            prescriptions=prescriptions,
+            patient=case,
+            diagnosis=diagnosis,
+        )
+        return report.model_dump()
 
     async def run_encounter_simulation(self, case_id: str = "CASE-101") -> Dict[str, Any]:
         """Runs the complete clinical loop from patient arrival to report generation."""
@@ -117,7 +143,20 @@ class HospitalOrchestrator:
         state.current_department = "EXAMINATION_ROOM_1"
         report = await doctor_agent.conduct_clinical_encounter(encounter_id, toolkit)
         
-        # 5. Finalize Encounter
+        # 5. Pharmacist Medication Safety Review & Dispensing in Pharmacy
+        state.status = "PHARMACY_REVIEW"
+        state.current_department = "PHARMACY"
+        if report.treatment_plan:
+            pharm_report = await self.pharmacist.review_medication_order(
+                encounter_id=encounter_id,
+                prescriptions=report.treatment_plan,
+                patient=case,
+                diagnosis=report.primary_diagnosis,
+            )
+            report.pharmacist_review = pharm_report
+            await asyncio.sleep(0.05)
+
+        # 6. Finalize Encounter
         state.status = "REPORT_READY"
         state.report = report
         self.reports[report.id] = report

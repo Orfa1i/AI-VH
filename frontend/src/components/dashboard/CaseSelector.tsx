@@ -13,6 +13,7 @@ interface CaseSelectorProps {
   reportsCount: number;
   onOpenConsult?: () => void;
   onOpenRLDataset?: () => void;
+  onOpenPharmacy?: () => void;
 }
 
 export const CaseSelector: React.FC<CaseSelectorProps> = ({
@@ -26,6 +27,7 @@ export const CaseSelector: React.FC<CaseSelectorProps> = ({
   reportsCount,
   onOpenConsult,
   onOpenRLDataset,
+  onOpenPharmacy,
 }) => {
   return (
     <header className="h-16 px-6 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 flex items-center justify-between z-30 shrink-0">
@@ -92,6 +94,16 @@ export const CaseSelector: React.FC<CaseSelectorProps> = ({
           >
             <span>🩺</span>
             <span>Consult IM Specialist (RAG)</span>
+          </button>
+        )}
+
+        {onOpenPharmacy && (
+          <button
+            onClick={onOpenPharmacy}
+            className="px-3.5 py-2 rounded-xl bg-teal-950/80 hover:bg-teal-900 border border-teal-700/70 text-teal-300 text-xs font-bold shadow-lg shadow-teal-900/30 flex items-center gap-1.5 cursor-pointer transition-all"
+          >
+            <span>💊</span>
+            <span>Pharmacy Safety (Dr. Rostova)</span>
           </button>
         )}
 

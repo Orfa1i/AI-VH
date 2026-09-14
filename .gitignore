@@ -17,6 +17,9 @@ MedGemma Model/model/
 **/model/*.safetensors
 **/model/*.bin
 *.safetensors
+models/**/*.bin
+models/**/*.safetensors
+models/**/*.pt
 
 # Large Raw Books (keep directory, ignore giant binary PDFs)
 *.pdf

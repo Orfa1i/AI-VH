@@ -1,0 +1,18 @@
+{
+  "base_model_name_or_path": "google/medgemma-4b",
+  "bias": "none",
+  "fan_in_fan_out": false,
+  "lora_alpha": 32,
+  "lora_dropout": 0.05,
+  "modules_to_save": null,
+  "peft_type": "LORA",
+  "r": 16,
+  "target_modules": [
+    "q_proj",
+    "v_proj",
+    "k_proj",
+    "o_proj"
+  ],
+  "task_type": "CAUSAL_LM",
+  "dpo_beta": 0.1
+}

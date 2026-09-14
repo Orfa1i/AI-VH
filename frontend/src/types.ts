@@ -58,6 +58,33 @@ export interface ClinicalReport {
   treatment_plan: string[];
   recommended_disposition: string;
   medical_knowledge_citations: MedicalCitation[];
+  pharmacist_review?: MedicationSafetyReport;
+}
+
+export interface MedicationSafetyReport {
+  id: string;
+  encounter_id: string;
+  patient_id: string;
+  patient_name: string;
+  pharmacist_name: string;
+  reviewed_at: string;
+  prescriptions_reviewed: string[];
+  safety_cleared: boolean;
+  approved_medications: string[];
+  flagged_contraindications: string[];
+  renal_adjustments: string[];
+  allergy_warnings: string[];
+  clinical_interventions: string[];
+  dispensing_status: string;
+}
+
+export interface ProximityStation {
+  id: string;
+  name: string;
+  role: string;
+  position: [number, number, number];
+  prompt: string;
+  badge: string;
 }
 
 export interface HospitalEvent {

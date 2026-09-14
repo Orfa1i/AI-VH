@@ -28,6 +28,12 @@ class SpecialistConsultRequest(BaseModel):
     patient_id: Optional[str] = "PAT-CONSULT"
 
 
+class PharmacyReviewRequest(BaseModel):
+    prescriptions: List[str]
+    patient_id: Optional[str] = "CASE-101"
+    diagnosis: Optional[str] = "Acute Inpatient Admission"
+
+
 class PhysicianReviewRequest(BaseModel):
     report_id: str
     physician_name: str = "Dr. Attending Physician, MD"
@@ -59,6 +65,21 @@ async def consult_internal_medicine(req: SpecialistConsultRequest):
         return result
     except Exception as e:
         logger.error(f"Specialist consult error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.post("/pharmacy/review")
+async def review_medications_pharmacy(req: PharmacyReviewRequest):
+    """Reconciles medication orders with Dr. Elena Rostova, PharmD."""
+    try:
+        result = await orchestrator.review_medication_orders(
+            prescriptions=req.prescriptions,
+            patient_id=req.patient_id or "CASE-101",
+            diagnosis=req.diagnosis or "Acute Inpatient Admission",
+        )
+        return result
+    except Exception as e:
+        logger.error(f"Pharmacy review error: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 

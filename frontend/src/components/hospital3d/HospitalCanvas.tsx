@@ -5,6 +5,7 @@ import { DepartmentRoom } from './DepartmentRoom';
 import { AgentAvatar } from './AgentAvatar';
 import { HospitalFurnishings } from './HospitalFurnishings';
 import { FirstPersonControls } from './FirstPersonControls';
+import type { ProximityTarget } from './FirstPersonControls';
 import { FirstPersonHUD } from './FirstPersonHUD';
 
 interface HospitalCanvasProps {
@@ -15,7 +16,9 @@ interface HospitalCanvasProps {
   patientAction: string;
   nurseAction: string;
   doctorAction: string;
+  pharmAction?: string;
   onDepartmentClick: (name: string) => void;
+  onStationInteract?: (stationId: string) => void;
 }
 
 export const HospitalCanvas: React.FC<HospitalCanvasProps> = ({
@@ -26,10 +29,13 @@ export const HospitalCanvas: React.FC<HospitalCanvasProps> = ({
   patientAction,
   nurseAction,
   doctorAction,
+  pharmAction,
   onDepartmentClick,
+  onStationInteract,
 }) => {
   const [isFirstPerson, setIsFirstPerson] = useState(true);
   const [currentLocation, setCurrentLocation] = useState('Patient Waiting Area (Main Lobby)');
+  const [activeProximityStation, setActiveProximityStation] = useState<ProximityTarget | null>(null);
 
   return (
     <div className="w-full h-full relative bg-sky-50/40 overflow-hidden isolate z-0">
@@ -38,6 +44,8 @@ export const HospitalCanvas: React.FC<HospitalCanvasProps> = ({
         currentLocation={currentLocation}
         isFirstPerson={isFirstPerson}
         onTogglePerspective={() => setIsFirstPerson((prev) => !prev)}
+        activeStation={activeProximityStation}
+        onInteract={onStationInteract}
       />
 
       <Canvas
@@ -466,6 +474,16 @@ export const HospitalCanvas: React.FC<HospitalCanvasProps> = ({
             color="#6366f1"
           />
 
+          {/* Pharmacist Agent (In Hospital Pharmacy) */}
+          <AgentAvatar
+            id="pharm_agent"
+            name="Dr. Elena Rostova, PharmD"
+            role="PHARMACIST"
+            targetPosition={[8.4, 0, 0.5]}
+            currentAction={pharmAction || "Medication Reconciliation & Dispensing"}
+            color="#14b8a6"
+          />
+
           {/* ═══════════════════════════════════════════════════════════════
               PERSPECTIVE CONTROLS
               ═══════════════════════════════════════════════════════════════ */}
@@ -473,6 +491,8 @@ export const HospitalCanvas: React.FC<HospitalCanvasProps> = ({
             <FirstPersonControls
               enabled={isFirstPerson}
               onLocationChange={(loc) => setCurrentLocation(loc)}
+              onProximityChange={(station) => setActiveProximityStation(station)}
+              onInteract={onStationInteract}
             />
           ) : (
             <OrbitControls

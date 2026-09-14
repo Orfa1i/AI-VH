@@ -2,14 +2,76 @@ import React, { useEffect, useRef } from 'react';
 import { useThree, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
+export interface ProximityTarget {
+  id: string;
+  name: string;
+  actionPrompt: string;
+  station: string;
+  x: number;
+  z: number;
+  radius: number;
+}
+
+export const INTERACTION_STATIONS: ProximityTarget[] = [
+  {
+    id: 'INTERNAL_MEDICINE',
+    name: 'Dr. Marcus Vance, MD (Internal Medicine)',
+    actionPrompt: 'Consult Specialist Physician',
+    station: 'Doctor Station (Physician Office)',
+    x: 2.6,
+    z: -6.8,
+    radius: 3.5,
+  },
+  {
+    id: 'PHARMACY',
+    name: 'Dr. Elena Rostova, PharmD (Clinical Pharmacist)',
+    actionPrompt: 'Review Prescriptions & Dispensing',
+    station: 'Hospital Pharmacy',
+    x: 8.4,
+    z: 0.5,
+    radius: 3.5,
+  },
+  {
+    id: 'LABORATORY',
+    name: 'David Chen, MLS (Clinical Laboratory)',
+    actionPrompt: 'Inspect Biomarker Analyzers',
+    station: 'Clinical Pathology Laboratory',
+    x: 7.8,
+    z: -6.8,
+    radius: 3.5,
+  },
+  {
+    id: 'RADIOLOGY',
+    name: 'Dr. Hayes, MD (Radiology Imaging Suite)',
+    actionPrompt: 'Inspect CT Gantry & Scans',
+    station: 'Radiology CT Suite',
+    x: 7.8,
+    z: 6.8,
+    radius: 3.5,
+  },
+  {
+    id: 'NURSE_STATION',
+    name: 'Sarah Jenkins, RN (Rotunda Triage Desk)',
+    actionPrompt: 'Run Simulated Patient Encounter',
+    station: 'Central Rotunda Nurse Station',
+    x: -0.8,
+    z: 0.0,
+    radius: 3.5,
+  },
+];
+
 interface FirstPersonControlsProps {
   enabled: boolean;
   onLocationChange?: (locationName: string) => void;
+  onProximityChange?: (target: ProximityTarget | null) => void;
+  onInteract?: (stationId: string) => void;
 }
 
 export const FirstPersonControls: React.FC<FirstPersonControlsProps> = ({
   enabled,
   onLocationChange,
+  onProximityChange,
+  onInteract,
 }) => {
   const { camera, gl } = useThree();
   const keys = useRef<{ [key: string]: boolean }>({});
@@ -17,6 +79,7 @@ export const FirstPersonControls: React.FC<FirstPersonControlsProps> = ({
   const prevMouse = useRef({ x: 0, y: 0 });
   const euler = useRef(new THREE.Euler(0, 0, 0, 'YXZ'));
   const currentRoomRef = useRef<string>('');
+  const currentProximityRef = useRef<ProximityTarget | null>(null);
 
   // Setup keyboard listeners
   useEffect(() => {
@@ -24,6 +87,11 @@ export const FirstPersonControls: React.FC<FirstPersonControlsProps> = ({
 
     const onKeyDown = (e: KeyboardEvent) => {
       keys.current[e.code] = true;
+      if ((e.code === 'KeyE' || e.key === 'e' || e.key === 'E') && currentProximityRef.current) {
+        if (onInteract) {
+          onInteract(currentProximityRef.current.id);
+        }
+      }
     };
     const onKeyUp = (e: KeyboardEvent) => {
       keys.current[e.code] = false;
@@ -36,7 +104,7 @@ export const FirstPersonControls: React.FC<FirstPersonControlsProps> = ({
       window.removeEventListener('keydown', onKeyDown);
       window.removeEventListener('keyup', onKeyUp);
     };
-  }, [enabled]);
+  }, [enabled, onInteract]);
 
   // Setup mouse look via pointer drag
   useEffect(() => {
@@ -77,66 +145,62 @@ export const FirstPersonControls: React.FC<FirstPersonControlsProps> = ({
     };
   }, [enabled, camera, gl]);
 
-  // Initial position when entering first person / reset on exit
+  // Initialize camera position in reception lobby when first person is toggled
   useEffect(() => {
     if (enabled) {
-      // Enter at the West Main Entrance corridor looking East towards Central Nurse Rotunda
-      camera.position.set(-13.5, 1.7, 0.0);
-      camera.lookAt(0, 1.7, 0);
-      euler.current.setFromQuaternion(camera.quaternion);
-    } else {
-      camera.position.set(0, 24, 20);
-      camera.lookAt(0, 0, 0);
+      camera.position.set(-11.5, 1.4, 0);
+      euler.current.set(0, -Math.PI / 2, 0);
+      camera.quaternion.setFromEuler(euler.current);
     }
   }, [enabled, camera]);
 
-  // Movement update loop
   useFrame((_, delta) => {
     if (!enabled) return;
 
-    const speed = keys.current['ShiftLeft'] || keys.current['ShiftRight'] ? 7.5 : 4.2;
-    const moveDist = speed * delta;
+    // Walking speed (sprint with Shift)
+    const baseSpeed = keys.current['ShiftLeft'] || keys.current['ShiftRight'] ? 5.5 : 3.2;
+    const moveSpeed = baseSpeed * delta;
 
-    // Movement direction vectors relative to camera view
-    const forward = new THREE.Vector3();
-    camera.getWorldDirection(forward);
+    // Movement direction vectors relative to current camera heading
+    const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
     forward.y = 0;
     forward.normalize();
 
-    const right = new THREE.Vector3();
-    right.crossVectors(camera.up, forward).negate().normalize();
+    const right = new THREE.Vector3(1, 0, 0).applyQuaternion(camera.quaternion);
+    right.y = 0;
+    right.normalize();
 
-    if (keys.current['KeyW'] || keys.current['ArrowUp']) {
-      camera.position.addScaledVector(forward, moveDist);
-    }
-    if (keys.current['KeyS'] || keys.current['ArrowDown']) {
-      camera.position.addScaledVector(forward, -moveDist);
-    }
-    if (keys.current['KeyA'] || keys.current['ArrowLeft']) {
-      camera.position.addScaledVector(right, -moveDist);
-    }
-    if (keys.current['KeyD'] || keys.current['ArrowRight']) {
-      camera.position.addScaledVector(right, moveDist);
+    const moveVector = new THREE.Vector3();
+
+    if (keys.current['KeyW'] || keys.current['ArrowUp']) moveVector.add(forward);
+    if (keys.current['KeyS'] || keys.current['ArrowDown']) moveVector.sub(forward);
+    if (keys.current['KeyD'] || keys.current['ArrowRight']) moveVector.add(right);
+    if (keys.current['KeyA'] || keys.current['ArrowLeft']) moveVector.sub(right);
+
+    if (moveVector.lengthSq() > 0) {
+      moveVector.normalize().multiplyScalar(moveSpeed);
+      camera.position.add(moveVector);
     }
 
-    // Lock eye height at standard standing eye-level (1.7 meters)
-    camera.position.y = 1.7;
+    // Keep camera at realistic eye level
+    camera.position.y = 1.4;
 
-    // Boundary constraints according to AutoCAD Sheet A-1 building dimensions
+    // Building boundaries matching Sheet A-1 footprint
     camera.position.x = Math.max(-17.2, Math.min(17.0, camera.position.x));
     camera.position.z = Math.max(-9.8, Math.min(9.8, camera.position.z));
 
-    // Room detection based on AutoCAD blueprint coordinates
     const x = camera.position.x;
     const z = camera.position.z;
+
+    // Determine room based on exact AutoCAD architectural coordinates
     let room = 'Hospital Central Corridor';
 
-    // West Zone (Waiting Area, Reception, Emergency Department)
-    if (x <= -8.5) {
-      if (z <= -3.8) {
-        room = 'Reception & Patient Intake';
-      } else if (z <= 3.2) {
-        room = 'Patient Waiting Area (Main Lobby)';
+    // West Wing Rooms
+    if (x <= -6.0) {
+      if (z <= -1.8) {
+        room = 'Reception & Patient Waiting Area';
+      } else if (z <= 1.8) {
+        room = 'Main Hospital Entrance Vestibule';
       } else {
         room = 'Emergency Department (Acute Bays & Triage)';
       }
@@ -196,6 +260,23 @@ export const FirstPersonControls: React.FC<FirstPersonControlsProps> = ({
     if (room !== currentRoomRef.current) {
       currentRoomRef.current = room;
       if (onLocationChange) onLocationChange(room);
+    }
+
+    // Proximity calculation for interactive stations
+    let closestStation: ProximityTarget | null = null;
+    let minDistance = Infinity;
+
+    for (const station of INTERACTION_STATIONS) {
+      const dist = Math.sqrt((x - station.x) ** 2 + (z - station.z) ** 2);
+      if (dist <= station.radius && dist < minDistance) {
+        minDistance = dist;
+        closestStation = station;
+      }
+    }
+
+    if (closestStation?.id !== currentProximityRef.current?.id) {
+      currentProximityRef.current = closestStation;
+      if (onProximityChange) onProximityChange(closestStation);
     }
   });
 

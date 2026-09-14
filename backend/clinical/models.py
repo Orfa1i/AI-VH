@@ -98,6 +98,27 @@ class ClinicalReport(BaseModel):
     # Evidence & Citations
     medical_knowledge_citations: List[Dict[str, Any]] = Field(default_factory=list)
 
+    # Pharmacy & Medication Safety Review (Phase 7)
+    pharmacist_review: Optional['MedicationSafetyReport'] = None
+
+
+class MedicationSafetyReport(BaseModel):
+    id: str
+    encounter_id: str
+    patient_id: str
+    patient_name: str
+    pharmacist_name: str = "Dr. Elena Rostova, PharmD, BCPS"
+    reviewed_at: datetime = Field(default_factory=datetime.utcnow)
+    prescriptions_reviewed: List[str] = Field(default_factory=list)
+    safety_cleared: bool = True
+    approved_medications: List[str] = Field(default_factory=list)
+    flagged_contraindications: List[str] = Field(default_factory=list)
+    renal_adjustments: List[str] = Field(default_factory=list)
+    allergy_warnings: List[str] = Field(default_factory=list)
+    clinical_interventions: List[str] = Field(default_factory=list)
+    dispensing_status: str = "READY_FOR_ADMINISTRATION"
+
+
 
 class DiagnosisFeedback(str, Enum):
     CORRECT = "CORRECT"
