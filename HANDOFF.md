@@ -4,6 +4,9 @@
 AI-VH is an autonomous multi-agent healthcare simulation and reinforcement learning platform designed to study whether autonomous medical AI agents (Doctors, Nurses, Patients, Laboratory Scientists, Radiologists, Pharmacists) can improve clinical decision-making through expert physician feedback and reinforcement learning. The system is backed by local 4-bit quantized MedGemma running on an RTX 4060 GPU, Harrison's Principles of Internal Medicine (21st Ed) textbook RAG, an asynchronous event bus, an interactive 3D virtual hospital environment (Three.js / React Three Fiber), and a structured physician review dashboard.
 
 ## 2. Accomplished This Session
+- **Phase Completion Audit & Documentation Roadmap**:
+  - Validated that Phases 0 through 6 are 100% complete and operational, with Phase 7 (Scale) foundational departments live.
+  - Updated root `README.md` roadmap to reflect verified deliverables.
 - **Comparative Policy Evaluation & Benchmarking (Commit `637e20e`)**:
   - Implemented `backend/rl/evaluator.py` (`PolicyEvaluator`, `BenchmarkComparisonReport`, `CaseComparisonResult`) evaluating Base MedGemma (v0.1) vs Physician-Aligned RL DPO MedGemma (v0.3).
   - Statistically verified core scientific thesis:
@@ -35,6 +38,13 @@ AI-VH is an autonomous multi-agent healthcare simulation and reinforcement learn
       - Peripheral IV cannula with semi-transparent Tegaderm adhesive dressing and blue Luer-lock hub on left hand.
       - Hospital safety-yellow fall-risk non-skid socks with white rubber traction tread strips.
     - Professional clinical attire for healthcare staff (Doctor lab coat + stethoscope, Nurse cyan scrubs + white clogs, Pharmacist teal coat).
+- **Dynamic Procedural Walking Animations (Commit `6a0c6aa`)**:
+  - Implemented real-time walking locomotion in `frontend/src/components/hospital3d/AgentAvatar.tsx`:
+    - Directional heading alignment: avatar dynamically rotates to face its travel trajectory.
+    - Reciprocal hip-joint leg stride oscillations (`Math.sin(cycle) * 0.45`).
+    - Counterbalanced shoulder-joint arm swinging (`-Math.sin(cycle) * 0.38`).
+    - Subtle vertical stepping bounce during motion (`Math.abs(Math.sin(cycle)) * 0.03`).
+    - Smooth decay and lerp back into resting idle posture and department station orientation when stationary.
 - **Verification & Deployment**:
   - All 28 automated backend tests passing (`py -3.13 -m pytest backend/tests/ -v`).
   - Production frontend build clean with zero warnings (`pnpm build` -> exit code 0).
@@ -44,7 +54,7 @@ AI-VH is an autonomous multi-agent healthcare simulation and reinforcement learn
 ## 3. Current State of the Work
 - Both servers are active in background tasks and responding with HTTP 200.
 - Top navigation bar provides full access to Clinical Encounter Runner, IM Consult, Pharmacy Safety, Telemetry, Policy Benchmark, and RL Corpus.
-- The 3D virtual hospital renders the fully articulated male patient in authentic hospital gown, non-skid socks, IV cannula, and barcode wristband alongside clinical staff.
+- The 3D virtual hospital renders the fully articulated male patient in authentic hospital gown, non-skid socks, IV cannula, and barcode wristband alongside clinical staff, with live walking stride locomotion when moving.
 
 ## 4. Next Steps
 - Implement real-time WebSocket live vitals streaming for the East Wing Telemetry monitors.
