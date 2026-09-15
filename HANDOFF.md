@@ -59,6 +59,39 @@ AI-VH is an autonomous multi-agent healthcare simulation and reinforcement learn
 - The 3D virtual hospital renders the fully articulated male patient in authentic hospital gown, non-skid socks, IV cannula, and barcode wristband alongside clinical staff, with live walking stride locomotion when moving.
 - Live streaming vitals are fully operational via WebSockets in the East Wing Telemetry Console.
 
-## 4. Next Steps
-- Add multi-agent morning inpatient conference rounds.
-- Connect local 4-bit MedGemma model weights with DPO LoRA adapter for live on-device inference comparison.
+## 4. Session: Live GPU Inference + Real DPO Training (2026-09-15)
+- **Comprehensive gap audit**: identified that `models/medgemma-dpo-lora` held only a dry-run
+  simulation (`mode: SIMULATION_VERIFIED`, no real weight file) — `peft`/`trl`/`datasets` were
+  missing from the venv, silently forcing every training attempt into the fallback path.
+  Also found `PolicyEvaluator`'s benchmark numbers are hardcoded literals (not computed from
+  real model runs), the DPO dataset had only 3 pairs, and Phase 7 is missing ICU/Pediatrics/
+  Obstetrics/Surgery departments.
+- **Wired live comparative GPU inference** (`backend/llm/medgemma_service.py`
+  `generate_comparative_inference`): fixed two real bugs — `selected_case_id` was never set on
+  the live-GPU success path (NameError), and the hardcoded-fallback routing had an unconditional
+  first branch that always returned CASE-102 regardless of requested `case_id`.
+- **Ran real DPO training on the RTX 4060** (`backend.rl.train_dpo`, 8 epochs, lr 2e-4, 4
+  preference pairs incl. a newly-added CASE-104 PE calibration): loss 0.693 -> 0.088, produced a
+  real `adapter_model.safetensors` (23.8MB, gitignored — binary weights stay local).
+- **Found and fixed the real base-vs-DPO bug**: `PeftModel.from_pretrained(self.model, ...)`
+  mutates `self.model`'s layers *in place* (LoRA wrappers inserted into the shared module tree),
+  so generating from `self.model` and `self.adapter_model` ran through the *same* LoRA-active
+  layers — verified base/DPO output was byte-identical. Fixed by using
+  `with self.adapter_model.disable_adapter():` for the base pass (the method lives on the
+  PeftModel, not the raw model). Verified end-to-end: base and DPO now produce genuinely
+  different diagnoses on the same prompt (confirmed via direct script, not just unit tests).
+- **Fixed `_parse_llm_text_to_structured_output`**: diagnosis regex matched "assessment" anywhere
+  mid-sentence and captured a stray `**` markdown marker instead of the real diagnosis text; now
+  anchors to a standalone header line.
+- All 30 backend tests pass; frontend builds clean. Commits `a61bb3f`, `86289f5`.
+
+## 5. Next Steps
+- Add multi-agent morning inpatient conference rounds (not started).
+- Replace `PolicyEvaluator`'s hardcoded benchmark scores with metrics computed from real model
+  runs now that a real adapter exists.
+- Expand the DPO preference dataset well beyond 4 pairs (ideally via real physician review
+  sessions through the Phase 4 pipeline) — the current adapter is trained on 4 examples and
+  overfits at the hyperparameters needed to get any observable effect; this is a data-scarcity
+  limitation, not a code bug.
+- Phase 7 "Scale": ICU, Pediatrics, Obstetrics, Surgery departments not yet built.
+- No GitHub remote configured on this repo — user declined auto-creating one this session.
