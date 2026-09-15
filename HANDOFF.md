@@ -300,3 +300,36 @@ patient/staff work, see above, not touched by this commit). Frontend build clean
   config per `docs/06-data-architecture.md`.
 - No GitHub remote configured on this repo — nine+ commits deep, still entirely local-only.
 
+## 9. Session 12: Decoupled 3D Hospital View, Patient Intake & Staff Management (2026-09-15)
+- **Resolved Pre-existing Failing Tests in `test_patients_and_staff.py`**:
+  - Root-caused the `ON_DUTY` vs `IN_CONSULT` failure: `DatabaseRepository.get_staff_member()` and `list_staff()` were prioritizing old values in `raw_json` over updated relational SQL columns.
+  - Fixed precedence so relational columns (`status`, `department`, `title`, etc.) are the authoritative source of truth.
+  - Enhanced `update_staff_status()` to synchronize both the SQL column and internal `raw_json` atomically.
+  - Result: **48/48 backend tests passing (100% pass rate)**.
+- **Decoupled 3D Visualization onto Dedicated Route / URL (`/3d`, Commit `0d166b7`)**:
+  - Created `frontend/src/components/hospital3d/Hospital3DPage.tsx`: standalone, full-screen 3D hospital world with interactive department navigation, first-person mode controls, avatar movement, HUD telemetry, event feed, and proximity station modals.
+  - Added a dedicated top navigation bar with a prominent **"← Back to Hospital Management Portal"** button.
+  - Added HTML5 History API (`window.history.pushState`) and popstate/hashchange listener in `frontend/src/App.tsx` routing between `/3d` (or `#3d`) and the Management Portal (`/`).
+  - Added a "Pop-out 3D" link (`target="_blank"`) so clinicians can run the 3D simulation on a secondary monitor while managing operations on the primary monitor.
+- **Built Clinical Operations & Management Portal (`/`)**:
+  - Created **Case Intake & Admission Section** (`frontend/src/components/management/CaseIntakeAdmissionSection.tsx`):
+    - Clinical case intake form pre-fillable with 1-click benchmark presets or manual entry.
+    - Captures ESI Triage Acuity (Level 1 Resuscitation to Level 5 Non-urgent), Department assignment, Bed allocation, Chief Complaint, HPI, Past History, Medications, Allergies, and baseline vital signs.
+    - Integrated with `POST /api/patients/admit` and "Admit & Launch Encounter" action.
+  - Created **Patient Directory & Bed Board Section** (`frontend/src/components/management/PatientDirectorySection.tsx`):
+    - Displays active inpatients, bed assignments, acuity badges, baseline vitals, and admission timestamps.
+    - Searchable by Name, MRN, or Complaint, with status (Admitted/Discharged) and department filters.
+    - Interactive full EHR Chart Drawer/Modal displaying past history, vitals, medications, and allergies.
+    - Integrated patient discharge lifecycle action (`POST /api/patients/{id}/discharge`).
+  - Created **Hospital Staff & Roster Section** (`frontend/src/components/management/StaffManagementSection.tsx`):
+    - Multi-disciplinary roster tracking Doctors, Nurses, Pharmacists, Lab Scientists, Radiologists, and Admissions staff.
+    - Interactive 1-click duty status switcher (`ON_DUTY` [emerald], `IN_CONSULT` [amber], `OFF_DUTY` [slate]) backed by `PUT /api/staff/{id}/status`.
+    - Modal dialog to register new healthcare professionals (`POST /api/staff`).
+  - Created **Harrison's RAG Vector Search Section** (`frontend/src/components/management/KnowledgeSearchSection.tsx`):
+    - Direct keyword/semantic search against the 128-dim embedded knowledge base (`/api/knowledge/search`).
+- **Build & Test Verification**:
+  - `py -3.13 -m pytest backend/tests/ -v` -> 48 passed, 0 failed.
+  - `npm run build` in `frontend/` -> 0 errors (`tsc -b && vite build` built in 1.23s).
+  - Git commit `0d166b7`: clean working tree.
+
+
