@@ -30,7 +30,7 @@ export const App: React.FC = () => {
   const [events, setEvents] = useState<HospitalEvent[]>([]);
   const [reports, setReports] = useState<ClinicalReport[]>([]);
   const [activeVitals, setActiveVitals] = useState<VitalSigns | null>(null);
-  const [currentPatientName, setCurrentPatientName] = useState<string>('Robert Miller');
+  const [currentPatientName, setCurrentPatientName] = useState<string>('');
   const [isWsConnected, setIsWsConnected] = useState<boolean>(false);
 
   // Modals & Interactive Stations
@@ -43,16 +43,11 @@ export const App: React.FC = () => {
   const [isAudioMuted, setIsAudioMuted] = useState<boolean>(isGlobalMuted());
 
 
-  // 3D Department & Agent Positions
+  // 3D Department & Agent Position (IM-only scope: only the Internal Medicine
+  // physician is rendered in the 3D scene; see HospitalCanvas.tsx)
   const [activeDepartment, setActiveDepartment] = useState<string>('RECEPTION');
-  const [patientPos, setPatientPos] = useState<[number, number, number]>([-8, 0, -6]);
-  const [nursePos, setNursePos] = useState<[number, number, number]>([6, 0, -6]);
   const [doctorPos, setDoctorPos] = useState<[number, number, number]>([6.5, 0, 1]);
-
-  const [patientAction, setPatientAction] = useState<string>('Waiting in Intake');
-  const [nurseAction, setNurseAction] = useState<string>('At Nurse Station');
   const [doctorAction, setDoctorAction] = useState<string>('Reviewing Inpatient Charts');
-  const [pharmAction, setPharmAction] = useState<string>('Dispensing & Reconciling Prescriptions');
 
   const wsRef = useRef<WebSocket | null>(null);
 
@@ -130,34 +125,22 @@ export const App: React.FC = () => {
     switch (evt.event_type) {
       case 'PATIENT_ARRIVED':
         setActiveDepartment('RECEPTION');
-        setPatientPos([-8, 0, -6]);
-        setPatientAction('Arrived at ER Reception');
         if (evt.payload.name) setCurrentPatientName(evt.payload.name);
         break;
 
       case 'NURSE_TRIAGE_STARTED':
       case 'VITALS_RECORDED':
         setActiveDepartment('NURSE_STATION');
-        setPatientPos([4, 0, -6]);
-        setNursePos([6, 0, -6]);
-        setPatientAction('In Triage Bay');
-        setNurseAction('Measuring Vital Signs');
         if (evt.payload.heart_rate) {
           setActiveVitals(evt.payload as VitalSigns);
         }
-        break;
-
-      case 'TRIAGE_COMPLETED':
-        setNurseAction('Paged Attending Physician');
         break;
 
       case 'DOCTOR_ASSIGNED':
       case 'EXAMINATION_STARTED':
       case 'PATIENT_INTERVIEWED':
         setActiveDepartment('EXAMINATION_ROOM_1');
-        setPatientPos([-7, 0, 1]);
         setDoctorPos([-5.5, 0, 1]);
-        setPatientAction('Exam Room Bed 1');
         setDoctorAction('Conducting Clinical Exam & Interview');
         break;
 
@@ -180,14 +163,9 @@ export const App: React.FC = () => {
         break;
 
       case 'PHARMACY_REVIEW_INITIATED':
-        setActiveDepartment('PHARMACY');
-        setPharmAction('Screening Contraindications & Renal Dosing');
-        break;
-
       case 'PHARMACY_REVIEW_COMPLETED':
       case 'MEDICATION_DISPENSED':
         setActiveDepartment('PHARMACY');
-        setPharmAction(evt.summary || 'Medication Orders Reconciled');
         break;
 
       case 'CLINICAL_REPORT_GENERATED':
@@ -279,13 +257,8 @@ export const App: React.FC = () => {
             {/* 3D Hospital Canvas */}
             <HospitalCanvas
               activeDepartment={activeDepartment}
-              patientPos={patientPos}
-              nursePos={nursePos}
               doctorPos={doctorPos}
-              patientAction={patientAction}
-              nurseAction={nurseAction}
               doctorAction={doctorAction}
-              pharmAction={pharmAction}
               onDepartmentClick={(dept) => setActiveDepartment(dept)}
               onStationInteract={handleStationInteract}
             />

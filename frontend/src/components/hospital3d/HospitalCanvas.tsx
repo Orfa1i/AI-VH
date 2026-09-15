@@ -10,26 +10,16 @@ import { FirstPersonHUD } from './FirstPersonHUD';
 
 interface HospitalCanvasProps {
   activeDepartment: string;
-  patientPos: [number, number, number];
-  nursePos: [number, number, number];
   doctorPos: [number, number, number];
-  patientAction: string;
-  nurseAction: string;
   doctorAction: string;
-  pharmAction?: string;
   onDepartmentClick: (name: string) => void;
   onStationInteract?: (stationId: string) => void;
 }
 
 export const HospitalCanvas: React.FC<HospitalCanvasProps> = ({
   activeDepartment,
-  patientPos: _patientPos,
-  nursePos: _nursePos,
   doctorPos: _doctorPos,
-  patientAction,
-  nurseAction,
   doctorAction,
-  pharmAction,
   onDepartmentClick,
   onStationInteract,
 }) => {
@@ -422,73 +412,19 @@ export const HospitalCanvas: React.FC<HospitalCanvasProps> = ({
           />
 
           {/* ═══════════════════════════════════════════════════════════════
-              AGENT AVATARS (LOCATED ACCORDING TO AUTOCAD BLUEPRINT STATIONS)
+              AGENT AVATARS (IM-ONLY SCOPE: ONLY THE INTERNAL MEDICINE PHYSICIAN
+              IS RENDERED. Patient/Nurse/Lab/Radiology/Pharmacist avatars were
+              removed pending real testing per project scope decision.)
               ═══════════════════════════════════════════════════════════════ */}
-          {/* Patient Agent (In Waiting Room / Intake) */}
-          <AgentAvatar
-            id="patient_agent"
-            name="Robert Miller (Patient)"
-            role="PATIENT"
-            targetPosition={_patientPos || [-12.8, 0, -0.6]}
-            currentAction={patientAction}
-            color="#38bdf8"
-            rotation={[0, Math.PI / 4, 0]}
-          />
-
-
-          {/* Nurse Agent (At Central Rotunda Nurse Station) */}
-          <AgentAvatar
-            id="nurse_agent"
-            name="Sarah Jenkins, RN"
-            role="NURSE"
-            targetPosition={_nursePos || [-0.8, 0, 0]}
-            currentAction={nurseAction}
-            color="#06b6d4"
-            rotation={[0, -Math.PI / 2, 0]}
-          />
-
           {/* Doctor Agent (In North Doctor Station Office) */}
           <AgentAvatar
             id="doctor_agent"
-            name="Dr. Marcus Vance, MD"
+            name="Internal Medicine Physician"
             role="DOCTOR"
             targetPosition={_doctorPos || [2.6, 0, -6.8]}
             currentAction={doctorAction}
             color="#10b981"
             rotation={[0, Math.PI, 0]}
-          />
-
-          {/* Laboratory Scientist Agent (In Clinical Laboratory) */}
-          <AgentAvatar
-            id="lab_agent"
-            name="David Chen, MLS"
-            role="LAB"
-            targetPosition={[7.8, 0, -6.8]}
-            currentAction="Processing Biomarker Assays"
-            color="#8b5cf6"
-            rotation={[0, Math.PI, 0]}
-          />
-
-          {/* Radiologist Agent (In Radiology Suite) */}
-          <AgentAvatar
-            id="rad_agent"
-            name="Dr. Arthur Hayes, MD"
-            role="RADIOLOGY"
-            targetPosition={[7.8, 0, 6.8]}
-            currentAction="Reading Diagnostic Studies"
-            color="#6366f1"
-            rotation={[0, 0, 0]}
-          />
-
-          {/* Pharmacist Agent (In Hospital Pharmacy) */}
-          <AgentAvatar
-            id="pharm_agent"
-            name="Dr. Elena Rostova, PharmD"
-            role="PHARMACIST"
-            targetPosition={[8.4, 0, 0.5]}
-            currentAction={pharmAction || "Medication Reconciliation & Dispensing"}
-            color="#14b8a6"
-            rotation={[0, -Math.PI / 2, 0]}
           />
 
 
