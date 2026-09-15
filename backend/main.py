@@ -11,6 +11,7 @@ import json
 
 from .api.router import api_router
 from .simulation.event_bus import event_bus
+from .llm.medgemma_service import medgemma_service
 
 logging.basicConfig(
     level=logging.INFO,
@@ -23,6 +24,22 @@ app = FastAPI(
     description="Autonomous Multi-Agent Healthcare Simulation & Reinforcement Learning Platform",
     version="1.0.0"
 )
+
+
+@app.on_event("startup")
+async def load_medgemma_model():
+    """Loads MedGemma + DPO LoRA adapter onto the GPU at server startup so live
+    comparative inference is actually reachable through the running app instead
+    of only via standalone verification scripts."""
+    loop = asyncio.get_event_loop()
+    try:
+        await loop.run_in_executor(None, medgemma_service.load_model)
+        logger.info(
+            f"MedGemma service ready: model_loaded={medgemma_service.model is not None}, "
+            f"adapter_loaded={medgemma_service._is_adapter_loaded and medgemma_service.adapter_model is not None}"
+        )
+    except Exception as e:
+        logger.error(f"MedGemma model failed to load at startup: {e}. Server will use the heuristic clinical engine.")
 
 # CORS middleware for frontend communication
 app.add_middleware(

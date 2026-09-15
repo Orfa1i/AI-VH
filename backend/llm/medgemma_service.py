@@ -332,7 +332,8 @@ Provide Assessment and Plan."""
         
         base_output = None
         dpo_output = None
-        
+        live_gpu_used = False
+
         if cuda_active and self.model is not None and self.processor is not None and self.adapter_model is not None:
             try:
                 from backend.clinical.cases import get_benchmark_case
@@ -391,6 +392,7 @@ Provide Assessment and Plan."""
                     "rag_evidence_citations": ["Harrison's Principles of Internal Medicine"],
                     "latency_ms": round(dpo_latency, 2)
                 }
+                live_gpu_used = True
             except Exception as e:
                 logger.error(f"Live comparative GPU inference failed: {e}")
                 cuda_active = False # fallback to heuristic
@@ -589,6 +591,15 @@ Provide Assessment and Plan."""
             }
 
         elapsed_ms = (time.perf_counter() - start_time) * 1000
+        adapter_active = self._is_adapter_loaded and self.adapter_model is not None
+
+        vram_allocated_gb = 0.0
+        if cuda_active:
+            try:
+                import torch
+                vram_allocated_gb = round(torch.cuda.memory_allocated(0) / 1e9, 2)
+            except Exception:
+                pass
 
         return {
             "case_id": selected_case_id,
@@ -597,13 +608,15 @@ Provide Assessment and Plan."""
             "telemetry": {
                 "hardware_device": hardware_device,
                 "cuda_available": cuda_active,
+                "model_loaded": self.model is not None,
+                "live_gpu_inference_used": live_gpu_used,
                 "precision": "BitsAndBytes 4-bit NF4 (bfloat16 compute)",
                 "base_model": "google/medgemma-4b (local 8.6 GB safetensors)",
                 "lora_adapter": "models/medgemma-dpo-lora (r=16, alpha=32, target=[q_proj, v_proj, k_proj, o_proj])",
                 "lora_rank": 16,
                 "lora_alpha": 32,
-                "adapter_status": "LOADED_AND_ACTIVE",
-                "vram_allocated_gb": 4.15 if cuda_active else 0.0,
+                "adapter_status": "LOADED_AND_ACTIVE" if adapter_active else "NOT_LOADED",
+                "vram_allocated_gb": vram_allocated_gb,
                 "total_inference_time_ms": round(elapsed_ms, 2),
                 "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
             },
