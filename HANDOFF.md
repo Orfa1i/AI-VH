@@ -171,7 +171,34 @@ labs/radiology/pharmacy backend agents still run (Phase 1-6 loop untouched), the
 longer rendered as 3D avatars in the scene. Build and lint verified clean, no new warnings.
 Commit `1c0cd17`.
 
+## 9. Session: API-Level Functional Testing of Main IM Pipeline (2026-09-15, continued)
+
+Claude-in-Chrome extension was still not connected this session, so visual/click browser QA
+remains undone. Tested the "main functions" the IM-only project needs to work, at the API
+level, against a real running backend (model + adapter loaded at startup):
+
+- `POST /api/simulation/run` (CASE-101) → real end-to-end pipeline: reception → triage → IM
+  encounter → diagnosis (NSTEMI) → 7-item treatment plan → pharmacist safety review
+  (`safety_cleared: true`) → report `REP-...` generated. Confirmed working.
+- `POST /api/reviews` → physician review submission against that report. Confirmed working.
+- `GET /api/rl/dataset` → live in-memory DPO corpus view (derived from `orchestrator.reports`
+  + `orchestrator.reviews`, distinct from the file dataset). Confirmed working.
+
+**Real bug found (data-loss risk, caught and undone, not yet fixed in code)**:
+`POST /api/rl/dataset/export` (→ `orchestrator.export_dpo_dataset()`) **always overwrites**
+`data/dpo_preference_dataset.jsonl` from scratch — it regenerates the file purely from the 4
+hardcoded `include_calibrations` pairs in `dpo_generator.py` plus whatever's in the live
+orchestrator's in-memory `reports`/`reviews`. Calling this endpoint during this test silently
+discarded the 6 hand-added scenarios from §7, dropping the file back to 5 pairs. Caught
+immediately via `git diff --stat`, restored with `git checkout -- data/dpo_preference_dataset.jsonl`
+(the 10-pair version was already committed in `5b94867`), no permanent loss. **This endpoint
+should not be called again without first understanding this** — it does not merge with or
+preserve existing file content. A real fix (append/merge instead of overwrite, or a separate
+output path) is needed before this endpoint is used again for real physician-review exports.
+
 ### Updated Next Steps
+- **Fix `orchestrator.export_dpo_dataset()` destructive overwrite** (see above) before using
+  it again — currently unsafe to call once a hand-curated dataset exists at the same path.
 - **Visual/click QA of the full IM-only flow in a real browser** — not done this session
   (Claude-in-Chrome extension unavailable). Needs a pass through ER → triage → IM consult →
   labs/radiology → pharmacy → report → physician review → RL benchmark dashboard, now with
