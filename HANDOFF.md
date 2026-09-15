@@ -87,11 +87,30 @@ AI-VH is an autonomous multi-agent healthcare simulation and reinforcement learn
 
 ## 5. Next Steps
 - Add multi-agent morning inpatient conference rounds (not started).
-- Replace `PolicyEvaluator`'s hardcoded benchmark scores with metrics computed from real model
-  runs now that a real adapter exists.
 - Expand the DPO preference dataset well beyond 4 pairs (ideally via real physician review
   sessions through the Phase 4 pipeline) — the current adapter is trained on 4 examples and
   overfits at the hyperparameters needed to get any observable effect; this is a data-scarcity
   limitation, not a code bug.
 - Phase 7 "Scale": ICU, Pediatrics, Obstetrics, Surgery departments not yet built.
 - No GitHub remote configured on this repo — user declined auto-creating one this session.
+
+## 6. Session: Real Computed Benchmark Metrics (2026-09-15)
+- **Replaced `PolicyEvaluator`'s hardcoded literal scores** (Commit `0b66b68`): `evaluate_case()`
+  previously returned hand-written per-case numbers with zero connection to
+  `medgemma_service`. It now calls `medgemma_service.generate_comparative_inference(case_id)`
+  and scores the actual returned diagnosis/treatment/reasoning text against each case's
+  `PatientGroundTruth` (`true_diagnosis`, `differential_candidates`, `optimal_treatment`,
+  contraindication/adverse-violation counts).
+- Added `backend/rl/clinical_scoring.py`: deterministic token-overlap scorer — diagnostic
+  accuracy (bucketed recall of true-diagnosis tokens), differential-candidate coverage
+  (acronym + key-token matching), treatment-plan overlap with `optimal_treatment`, and an
+  `overall_clinical_score` composite (1.0-5.0) that weights safety/diagnosis heavily and
+  halves the score outright if any contraindication is flagged.
+- Verified: all 9 `test_evaluator.py` tests and the full 30-test backend suite pass with the
+  new scoring math (no test assertions changed); frontend build clean.
+- Note: when the GPU model/adapter isn't loaded (e.g. test env, no CUDA), `generate_comparative_inference`
+  still falls back to per-case canned text inside `medgemma_service.py` (lines ~399-589) — the
+  evaluator now scores whatever text that function returns rather than inventing its own, but
+  those fallback texts are themselves still hand-authored until a live-GPU-only code path is
+  enforced. On a real GPU run with the adapter loaded, scores are computed from genuinely
+  generated model text end to end.
