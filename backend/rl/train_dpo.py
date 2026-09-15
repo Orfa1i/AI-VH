@@ -9,6 +9,7 @@ import sys
 import json
 import logging
 import argparse
+from pathlib import Path
 from typing import Dict, Any, List, Optional
 from dataclasses import dataclass, asdict
 from datetime import datetime
@@ -19,18 +20,17 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(na
 
 @dataclass
 class DPOTrainingConfig:
-    model_name_or_path: str = "google/medgemma-4b"
+    model_name_or_path: str = "MedGemma Model/model"
     dataset_path: str = "data/dpo_preference_dataset.jsonl"
     output_dir: str = "models/medgemma-dpo-lora"
-    learning_rate: float = 5e-5
+    learning_rate: float = 2e-4
     beta: float = 0.1  # DPO implicit reward temperature
     lora_r: int = 16
     lora_alpha: int = 32
     lora_dropout: float = 0.05
-    epochs: int = 3
-    batch_size: int = 2
+    epochs: int = 8
+    batch_size: int = 1
     gradient_accumulation_steps: int = 4
-    max_prompt_length: int = 512
     max_length: int = 1024
     dry_run: bool = False
 
@@ -81,8 +81,8 @@ def run_dpo_training(config: DPOTrainingConfig) -> Dict[str, Any]:
     if has_cuda:
         logger.info(f"CUDA GPU detected: {torch.cuda.get_device_name(0)}. Initiating GPU DPOTrainer...")
         try:
-            from transformers import AutoModelForCausalLM, AutoTokenizer, TrainingArguments
-            from peft import LoraConfig, get_peft_model, TaskType
+            from transformers import AutoModelForImageTextToText, AutoProcessor, BitsAndBytesConfig
+            from peft import LoraConfig, TaskType, prepare_model_for_kbit_training
             from trl import DPOTrainer, DPOConfig
             from datasets import Dataset
 
@@ -91,16 +91,22 @@ def run_dpo_training(config: DPOTrainingConfig) -> Dict[str, Any]:
                 for r in records
             ])
 
-            tokenizer = AutoTokenizer.from_pretrained(config.model_name_or_path, trust_remote_code=True)
+            processor = AutoProcessor.from_pretrained(config.model_name_or_path)
+            tokenizer = processor.tokenizer
             if tokenizer.pad_token is None:
                 tokenizer.pad_token = tokenizer.eos_token
 
-            model = AutoModelForCausalLM.from_pretrained(
-                config.model_name_or_path,
-                torch_dtype=torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16,
-                device_map="auto",
-                trust_remote_code=True,
+            bnb_config = BitsAndBytesConfig(
+                load_in_4bit=True,
+                bnb_4bit_compute_dtype=torch.bfloat16,
+                bnb_4bit_quant_type="nf4",
             )
+            model = AutoModelForImageTextToText.from_pretrained(
+                config.model_name_or_path,
+                quantization_config=bnb_config,
+                device_map="auto",
+            )
+            model = prepare_model_for_kbit_training(model, use_gradient_checkpointing=True)
 
             peft_config = LoraConfig(
                 r=config.lora_r,
@@ -118,19 +124,21 @@ def run_dpo_training(config: DPOTrainingConfig) -> Dict[str, Any]:
                 num_train_epochs=config.epochs,
                 per_device_train_batch_size=config.batch_size,
                 gradient_accumulation_steps=config.gradient_accumulation_steps,
-                max_prompt_length=config.max_prompt_length,
                 max_length=config.max_length,
                 logging_steps=1,
                 save_strategy="epoch",
+                bf16=True,
+                gradient_checkpointing=True,
+                report_to=[],
+                remove_unused_columns=False,
             )
 
             trainer = DPOTrainer(
                 model=model,
                 ref_model=None,
                 args=dpo_args,
-                beta=config.beta,
                 train_dataset=hf_dataset,
-                tokenizer=tokenizer,
+                processing_class=tokenizer,
                 peft_config=peft_config,
             )
 
@@ -140,16 +148,19 @@ def run_dpo_training(config: DPOTrainingConfig) -> Dict[str, Any]:
 
             training_summary = {
                 "status": "COMPLETED_GPU",
+                "mode": "LIVE_GPU_TRAINED",
                 "device": torch.cuda.get_device_name(0),
                 "pairs_trained": len(records),
+                "safety_critical_pairs": safety_critical_count,
                 "epochs": config.epochs,
-                "loss": train_result.training_loss,
+                "final_loss": round(train_result.training_loss, 4),
                 "avg_reward_margin": round(avg_reward_margin, 3),
                 "adapter_path": config.output_dir,
+                "config": asdict(config),
                 "timestamp": datetime.utcnow().isoformat(),
             }
         except Exception as e:
-            logger.warning(f"Live GPU training encountered error ({e}); falling back to verified adapter export mode.")
+            logger.error(f"Live GPU training encountered error ({e}); falling back to verified adapter export mode.", exc_info=True)
             training_summary = _generate_verified_adapter_export(config, records, avg_reward_margin, safety_critical_count)
     else:
         logger.info("Running in CPU / Verification mode. Validating loss trajectory and emitting LoRA metadata...")
@@ -206,11 +217,11 @@ def _generate_verified_adapter_export(
 
 def main():
     parser = argparse.ArgumentParser(description="AI-VH MedGemma DPO LoRA Fine-Tuning Pipeline")
-    parser.add_argument("--model", type=str, default="google/medgemma-4b", help="Base model path or HF ID")
+    parser.add_argument("--model", type=str, default="MedGemma Model/model", help="Base model local path or HF ID")
     parser.add_argument("--dataset", type=str, default="data/dpo_preference_dataset.jsonl", help="Path to DPO jsonl")
     parser.add_argument("--output_dir", type=str, default="models/medgemma-dpo-lora", help="Output directory for adapter")
-    parser.add_argument("--epochs", type=int, default=3, help="Number of training epochs")
-    parser.add_argument("--lr", type=float, default=5e-5, help="Learning rate")
+    parser.add_argument("--epochs", type=int, default=8, help="Number of training epochs")
+    parser.add_argument("--lr", type=float, default=2e-4, help="Learning rate")
     parser.add_argument("--beta", type=float, default=0.1, help="DPO temperature beta")
     parser.add_argument("--dry_run", action="store_true", help="Run verification without allocating GPU VRAM")
     args = parser.parse_args()

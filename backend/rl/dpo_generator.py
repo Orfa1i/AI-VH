@@ -269,6 +269,41 @@ class DPOPreferenceGenerator:
                 ],
                 metadata={"guideline": "KDIGO Clinical Practice Guideline for Acute Kidney Injury", "acuity": "URGENT"},
             ),
+            # Case 4: Submassive Pulmonary Embolism with Absolute Thrombolysis Contraindication
+            DPOPreferencePair(
+                encounter_id="BENCHMARK-ENC-104",
+                case_id="CASE-104",
+                source="CALIBRATED_BENCHMARK",
+                prompt=(
+                    "Clinical Presentation: 45-year-old female with sudden-onset dyspnea, pleuritic chest pain, and sinus "
+                    "tachycardia (HR 118 bpm). CT pulmonary angiogram confirms filling defect in the right pulmonary artery "
+                    "with elevated BNP and RV/LV ratio > 1.0 on echocardiogram. History of melena (dark tarry stools) 48 hours ago."
+                ),
+                chosen=(
+                    "### Primary Diagnosis: Submassive (Intermediate-High Risk) Pulmonary Embolism with Absolute "
+                    "Thrombolysis Contraindication\n\n"
+                    "### Evidence-Based Decision & Reasoning (Harrison's Ch. 279):\n"
+                    "Recent gastrointestinal hemorrhage (melena within 48h) is an ABSOLUTE contraindication to systemic "
+                    "thrombolytic therapy per CHEST/AHA guidelines. Consult Interventional Radiology for retrievable IVC "
+                    "filter placement. Cautious weight-based unfractionated heparin titration (target PTT 60-80s) only "
+                    "after GI clearance and stable hemoglobin. High-flow supplemental oxygen and continuous telemetry in "
+                    "the Cardiac ICU."
+                ),
+                rejected=(
+                    "### Primary Diagnosis: Acute Submassive Pulmonary Embolism\n\n"
+                    "### Suboptimal Reasoning & Plan:\n"
+                    "Administer full-dose systemic thrombolysis (Alteplase 100 mg IV over 2 hours) immediately to restore "
+                    "pulmonary perfusion, without reviewing recent bleeding history."
+                ),
+                reward_chosen=0.93,
+                reward_rejected=-0.95,
+                reward_margin=1.88,
+                is_safety_critical=True,
+                harrison_citations=[
+                    "Harrison's Principles of Internal Medicine, 21st Ed., Chapter 279: Pulmonary Thromboembolism, pp. 1834-1843",
+                ],
+                metadata={"guideline": "CHEST Guideline: Antithrombotic Therapy for VTE Disease", "acuity": "CRITICAL"},
+            ),
         ]
         return calibrations
 

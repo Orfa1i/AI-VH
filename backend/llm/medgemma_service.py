@@ -273,19 +273,30 @@ Provide Assessment and Plan."""
             "clinical_reasoning": text,
             "treatment_plan": [],
         }
-        
-        diag_match = re.search(r'(?i)(?:diagnosis|assessment):\s*([^\n]+)', text)
-        if diag_match:
-            result["primary_diagnosis"] = diag_match.group(1).strip()
-            
-        plan_match = re.search(r'(?i)(?:plan|treatment):\s*(.*)', text, re.DOTALL)
+
+        # Strip markdown emphasis markers so section headers and their content aren't
+        # split apart by a stray "**" landing right after the colon (e.g. "**Assessment:**\n\n*   **Dx**").
+        clean = re.sub(r'\*\*|__', '', text)
+
+        # Only match "Assessment:" / "Diagnosis:" as a standalone header line (not a mid-sentence
+        # mention like "...here is a potential assessment and plan..."), then take the next bullet.
+        header_match = re.search(r'(?im)^\s*(?:primary\s+diagnosis|assessment|diagnosis)\s*:\s*$', clean)
+        if header_match:
+            after = clean[header_match.end():]
+            bullet_match = re.search(r'[^\S\n]*(?:[-*\d.\s]+)?([A-Z][^\n:]{4,140})', after)
+            if bullet_match:
+                candidate = bullet_match.group(1).strip().rstrip('.:')
+                if candidate:
+                    result["primary_diagnosis"] = candidate
+
+        plan_match = re.search(r'(?i)(?:plan|treatment)\s*:?\s*\n(.*)', clean, re.DOTALL)
         if plan_match:
             plan_text = plan_match.group(1).strip()
             lines = plan_text.split('\n')
             items = [re.sub(r'^[\-\*\d\.]+\s*', '', line).strip() for line in lines if line.strip()]
             if items:
                 result["treatment_plan"] = items[:5]
-                
+
         return result
 
     def generate_comparative_inference(
@@ -337,12 +348,16 @@ Provide Assessment and Plan."""
                 lab_results = [{"test_type": k, "values": v} for k, v in target_case_obj.simulated_labs.items()]
                 rag_context = [{"text": "Harrison's Principles of Internal Medicine - refer to guidelines."}]
 
-                # Base Model Inference (raw base weights, no LoRA adapter attached)
+                # Base Model Inference: PEFT injects LoRA layers into self.model's modules IN PLACE,
+                # so self.model and self.adapter_model share the same underlying layers — generating
+                # from self.model directly would still run through the (still-enabled) LoRA deltas.
+                # disable_adapter() is the only way to get true base-weight-only behavior.
                 t0 = time.perf_counter()
-                base_raw_dict = self._infer_with_gpu_raw(self.model, chief_complaint, hpi, vitals_summary, exam_findings, lab_results, rag_context)
+                with self.adapter_model.disable_adapter():
+                    base_raw_dict = self._infer_with_gpu_raw(self.adapter_model, chief_complaint, hpi, vitals_summary, exam_findings, lab_results, rag_context)
                 base_latency = (time.perf_counter() - t0) * 1000
 
-                # DPO Model Inference (PeftModel wrapping self.model with LoRA weights active)
+                # DPO Model Inference (adapter active)
                 t1 = time.perf_counter()
                 dpo_raw_dict = self._infer_with_gpu_raw(self.adapter_model, chief_complaint, hpi, vitals_summary, exam_findings, lab_results, rag_context)
                 dpo_latency = (time.perf_counter() - t1) * 1000
