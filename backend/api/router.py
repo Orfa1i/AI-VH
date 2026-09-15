@@ -9,6 +9,7 @@ from pydantic import BaseModel
 import asyncio
 import json
 import logging
+import random
 
 from ..simulation.orchestrator import orchestrator
 from ..simulation.event_bus import event_bus
@@ -47,6 +48,12 @@ class PhysicianReviewRequest(BaseModel):
     notes: str
     corrected_diagnosis: Optional[str] = None
     corrected_treatment: Optional[List[str]] = None
+
+
+class ComparativeInferenceRequest(BaseModel):
+    case_id: Optional[str] = "CASE-101"
+    clinical_scenario: Optional[str] = None
+    force_gpu: Optional[bool] = False
 
 
 @api_router.get("/health")
@@ -209,6 +216,26 @@ async def get_case_policy_evaluation(case_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@api_router.post("/rl/inference/compare")
+async def run_comparative_model_inference(req: ComparativeInferenceRequest):
+    """
+    Executes a live comparative on-device model inference comparing:
+    - Base MedGemma (v0.1 Unaligned Foundation Model)
+    - RL DPO MedGemma (v0.3 Physician-Aligned LoRA Model)
+    """
+    try:
+        from ..llm.medgemma_service import medgemma_service
+        result = medgemma_service.generate_comparative_inference(
+            case_id=req.case_id,
+            clinical_scenario=req.clinical_scenario,
+            force_gpu=req.force_gpu or False,
+        )
+        return result
+    except Exception as e:
+        logger.error(f"Error in comparative model inference: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @api_router.get("/inpatient/rooms")
 async def get_inpatient_rooms():
     """
@@ -296,3 +323,27 @@ async def get_inpatient_rooms():
     return rooms
 
 
+@api_router.websocket("/inpatient/telemetry/stream")
+async def telemetry_stream(websocket: WebSocket):
+    await websocket.accept()
+    
+    # We maintain a localized copy of the rooms to mutate their state slightly over time
+    current_rooms = await get_inpatient_rooms()
+    
+    try:
+        while True:
+            # Apply slight physiological variance
+            for room in current_rooms:
+                room["heart_rate"] = max(40, min(200, room["heart_rate"] + random.randint(-2, 2)))
+                room["systolic_bp"] = max(80, min(220, room["systolic_bp"] + random.randint(-3, 3)))
+                room["diastolic_bp"] = max(40, min(120, room["diastolic_bp"] + random.randint(-2, 2)))
+                room["respiratory_rate"] = max(8, min(40, room["respiratory_rate"] + random.randint(-1, 1)))
+                room["spo2"] = max(80, min(100, round(room["spo2"] + random.choice([-1, 0, 0, 0, 1]), 1))) # Mostly stable, small chance to change
+
+            await websocket.send_json(current_rooms)
+            await asyncio.sleep(1.5)
+            
+    except WebSocketDisconnect:
+        logger.info("Telemetry WebSocket disconnected")
+    except Exception as e:
+        logger.error(f"Telemetry stream error: {e}", exc_info=True)

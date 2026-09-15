@@ -25,7 +25,9 @@ AI-VH is an autonomous multi-agent healthcare simulation and reinforcement learn
 - **East Inpatient Wing Multi-Patient Central Telemetry Console**:
   - Expanded benchmark cases bank to 4 full inpatient cases in `backend/clinical/cases.py` (Robert Miller NSTEMI, Elena Rostova DKA, Arthur Pendelton AKI, Clara Vance PE).
   - Added REST endpoint `GET /api/inpatient/rooms`.
+  - Added WebSocket endpoint `@api_router.websocket("/inpatient/telemetry/stream")` for live streaming vitals with physiological variance.
   - Built `frontend/src/components/dashboard/InpatientTelemetryModal.tsx` featuring animated real-time ECG Lead II rhythm strips with dynamic P-Q-R-S-T waveforms.
+  - Upgraded frontend telemetry modal to connect to the live WebSocket stream, updating vital signs dynamically and displaying a live connection badge.
 - **3D Humanoid Patient & Specialist Avatars (Commit `0c57db6`)**:
   - Engineered full humanoid anatomy in `frontend/src/components/hospital3d/AgentAvatar.tsx`:
     - Articulated limbs: dual legs (thighs, shins, feet), dual arms (sleeves, forearms, hands), neck, and cranium.
@@ -48,15 +50,15 @@ AI-VH is an autonomous multi-agent healthcare simulation and reinforcement learn
 - **Verification & Deployment**:
   - All 28 automated backend tests passing (`py -3.13 -m pytest backend/tests/ -v`).
   - Production frontend build clean with zero warnings (`pnpm build` -> exit code 0).
-  - Live backend running on `http://127.0.0.1:8000` (task-150).
-  - Live frontend running on `http://localhost:5173` (task-152).
+  - Live backend running on `http://127.0.0.1:8000` (task-52).
+  - Live frontend running on `http://localhost:5173` (task-53).
 
 ## 3. Current State of the Work
-- Both servers are active in background tasks and responding with HTTP 200.
+- Both servers are active in background tasks and responding with HTTP 200/101 (WebSocket).
 - Top navigation bar provides full access to Clinical Encounter Runner, IM Consult, Pharmacy Safety, Telemetry, Policy Benchmark, and RL Corpus.
 - The 3D virtual hospital renders the fully articulated male patient in authentic hospital gown, non-skid socks, IV cannula, and barcode wristband alongside clinical staff, with live walking stride locomotion when moving.
+- Live streaming vitals are fully operational via WebSockets in the East Wing Telemetry Console.
 
 ## 4. Next Steps
-- Implement real-time WebSocket live vitals streaming for the East Wing Telemetry monitors.
 - Add multi-agent morning inpatient conference rounds.
 - Connect local 4-bit MedGemma model weights with DPO LoRA adapter for live on-device inference comparison.

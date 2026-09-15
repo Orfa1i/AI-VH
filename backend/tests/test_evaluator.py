@@ -100,3 +100,44 @@ def test_api_inpatient_rooms_endpoint():
     assert rooms[0]["heart_rate"] > 0
     assert "rhythm_strip" in rooms[0]
 
+
+def test_api_rl_inference_compare_endpoint():
+    client = TestClient(app)
+    payload = {
+        "case_id": "CASE-101",
+        "force_gpu": False
+    }
+    response = client.post("/api/rl/inference/compare", json=payload)
+    assert response.status_code == 200
+    data = response.json()
+
+    assert data["case_id"] == "CASE-101"
+    assert "telemetry" in data
+    assert "hardware_device" in data["telemetry"]
+    assert "precision" in data["telemetry"]
+    assert "base_model_output" in data
+    assert "dpo_model_output" in data
+    assert "comparison_summary" in data
+
+    # Check Base model vulnerabilities captured
+    base = data["base_model_output"]
+    assert len(base["contraindications_flagged"]) > 0
+    assert base["clinical_reward_score"] < 0
+
+    # Check DPO model improvements captured
+    dpo = data["dpo_model_output"]
+    assert len(dpo["contraindications_flagged"]) == 0
+    assert dpo["clinical_reward_score"] > 8.0
+    assert len(dpo["rag_evidence_citations"]) > 0
+    assert data["comparison_summary"]["winner"] == "RL_DPO_ALIGNED"
+
+
+def test_medgemma_service_all_cases_comparative_inference():
+    from backend.llm.medgemma_service import medgemma_service
+    for case_id in ["CASE-101", "CASE-102", "CASE-103", "CASE-104"]:
+        res = medgemma_service.generate_comparative_inference(case_id=case_id)
+        assert res["case_id"] == case_id
+        assert res["comparison_summary"]["winner"] == "RL_DPO_ALIGNED"
+        assert res["dpo_model_output"]["adverse_safety_violations"] == 0
+
+

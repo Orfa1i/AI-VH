@@ -123,16 +123,48 @@ export const InpatientTelemetryModal: React.FC<InpatientTelemetryModalProps> = (
   const [loading, setLoading] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [animOffset, setAnimOffset] = useState(0);
+  const [connectionStatus, setConnectionStatus] = useState<'Connecting' | 'Live' | 'Offline'>('Offline');
+  const wsRef = useRef<WebSocket | null>(null);
 
   const canvasRefs = useRef<{ [key: string]: HTMLCanvasElement | null }>({});
 
   useEffect(() => {
     if (isOpen) {
       fetchRooms();
+      
+      setConnectionStatus('Connecting');
+      const ws = new WebSocket(`ws://127.0.0.1:8000/api/inpatient/telemetry/stream`);
+      wsRef.current = ws;
+
+      ws.onopen = () => setConnectionStatus('Live');
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          setRooms(data);
+        } catch (e) {
+          console.error("Error parsing telemetry WebSocket data", e);
+        }
+      };
+      ws.onclose = () => setConnectionStatus('Offline');
+      ws.onerror = (error) => {
+        console.error("Telemetry WebSocket error", error);
+        setConnectionStatus('Offline');
+      };
     } else {
+      if (wsRef.current) {
+        wsRef.current.close();
+        wsRef.current = null;
+      }
+      setConnectionStatus('Offline');
       stopClinicalSpeech();
       setIsSpeaking(false);
     }
+
+    return () => {
+      if (wsRef.current) {
+        wsRef.current.close();
+      }
+    };
   }, [isOpen]);
 
   // Real-time animated ECG drawing loop
@@ -262,8 +294,13 @@ export const InpatientTelemetryModal: React.FC<InpatientTelemetryModalProps> = (
                 <h2 className="text-base font-bold text-slate-100">
                   East Inpatient Wing: Central Telemetry Console
                 </h2>
-                <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-mono font-semibold">
-                  LIVE 4-BED CENTRAL MONITORING
+                <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold flex items-center gap-1.5 border ${
+                  connectionStatus === 'Live' ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' :
+                  connectionStatus === 'Connecting' ? 'bg-amber-500/20 text-amber-300 border-amber-500/30' :
+                  'bg-rose-500/20 text-rose-300 border-rose-500/30'
+                }`}>
+                  {connectionStatus === 'Live' && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />}
+                  {connectionStatus === 'Live' ? 'LIVE 4-BED CENTRAL MONITORING' : `${connectionStatus.toUpperCase()}`}
                 </span>
               </div>
               <p className="text-xs text-slate-400">
