@@ -231,9 +231,72 @@ output path) is needed before this endpoint is used again for real physician-rev
   - Full backend test suite passing with 44/44 tests green (`py -3.13 -m pytest backend/tests/ -v`).
   - Frontend production build clean (`pnpm build` -> exit code 0).
 
+## 12. Session: CRITICAL FIX — Real Simulation Never Used GPU Inference (2026-09-15, continued)
+
+**Context**: another agent/session did substantial real work in parallel/between turns this
+session (§10-11 above: PostgreSQL/pgvector persistence, RAG vector seeding) — noted here for
+continuity, not redone. That work also left **uncommitted changes in the working tree**
+(`backend/api/router.py`, `backend/database/{models,repository,schema}.py`, new untracked
+`backend/tests/test_patients_and_staff.py` — a patient admission/discharge + staff management
+feature). **Not touched or committed by this session** — 2 of its own tests fail
+(`test_staff_management_repo`, `test_staff_api_endpoints`: a staff status update doesn't
+persist, `ON_DUTY` stays instead of becoming `OFF_DUTY` — pre-existing bug in that
+uncommitted code, confirmed via `git stash` that it fails identically without my changes
+too). Whoever owns that work should finish/commit or discard it — it is currently just sitting
+uncommitted on disk.
+
+**The critical finding**: ran all 4 benchmark cases through the real `/api/simulation/run`
+API end to end (item requested by user) and found `HospitalOrchestrator` was constructing its
+own separate `MedGemmaService(enable_gpu=enable_gpu)` instance — completely disconnected from
+the `medgemma_service` singleton that `main.py`'s startup event actually loads (the fix from
+§7). **Every real clinical encounter through the actual simulation endpoint has therefore
+always run the 2-branch keyword heuristic engine, never live GPU inference** — CASE-101/102
+only ever "worked" because their chief complaints coincidentally contain the "chest"/
+"vomiting" keywords that heuristic checks for. CASE-104 (Pulmonary Embolism) was being
+**misdiagnosed as NSTEMI** because "pleuritic chest pain" false-matched the same "chest"
+keyword; CASE-103 (AKI) matched neither branch and got the generic
+"Undifferentiated Acute Medical Illness" default. This was a real patient-safety-relevant
+correctness bug in the core product feature, undetected until this session's live 4-case test
+pass (Commit `42d0c38`).
+
+Fixed by having the orchestrator reuse the module-level `medgemma_service` singleton instead
+of constructing its own never-loaded instance. Then found a second, compounding bug once the
+real model was wired in: `_parse_llm_text_to_structured_output`'s diagnosis extraction only
+matched an exact standalone `"Assessment:"`/`"Diagnosis:"` header line — real generations use
+`"**Clinical Assessment:**"` (extra word breaks the match), state the diagnosis in plain
+prose (`"...high clinical suspicion for acute pulmonary embolism (PE) based on..."`), or bold
+it inline mid-sentence, none of which the old regex caught, silently defaulting every time.
+Rewrote as a 3-strategy parser (diagnostic phrasing → bolded condition span with a broadened
+section-label exclusion list → original header fallback), verified against 5 real/synthetic
+generation patterns captured this session.
+
+**Result after both fixes**, all 4 cases through the real API:
+- CASE-101: "acute subendocardial ischemia" (correct NSTEMI terminology)
+- CASE-102: "the high anion gap metabolic acidosis seen on the ABG" (clinically correct
+  content, verbose phrase-extraction — not a wrong diagnosis, but imprecise wording; the
+  phrase-pattern regexes still have room to tighten)
+- CASE-103: "Severe Hypovolemia" (clinically reasonable for AKI 2° prerenal
+  azotemia/dehydration, not an exact string match to ground truth but no longer generic/wrong)
+- CASE-104: "acute pulmonary embolism (PE) with right ventricular strain" (**correct** — was
+  NSTEMI before this session's fixes)
+
+44/46 backend tests pass (2 pre-existing failures are the other session's uncommitted
+patient/staff work, see above, not touched by this commit). Frontend build clean.
+
 ### Updated Next Steps
-- **Visual/click QA of the full IM-only flow in a real browser** — needs a pass through ER → triage → IM consult → labs/radiology → pharmacy → report → physician review → RL benchmark dashboard.
-- **Run benchmark evaluations with larger case bank** (expand beyond the current 4 benchmark cases).
-- **Deploy/connect live PostgreSQL instance with pgvector** (set `DATABASE_URL` in environment).
-- No GitHub remote configured on this repo — user declined auto-creating one this session.
+- **Diagnosis-phrase extraction is still imprecise for some generations** (e.g. CASE-102's
+  verbose clause) — works and isn't clinically wrong, but could be tightened further; not
+  blocking, lower priority than it was before this session's critical fix.
+- **Resolve the other session's uncommitted patient/staff management work** (`git status`
+  will show it) — either finish/fix the 2 failing tests and commit, or discard if abandoned.
+- **Visual/click QA of the full IM-only flow in a real browser** — still not done this
+  session, Claude-in-Chrome extension still not connecting.
+- **No frontend automated test suite exists** — `package.json` has `dev`/`build`/`lint`/
+  `preview` only, zero test runner.
+- **Run benchmark evaluations with larger case bank** (expand beyond the current 4 benchmark
+  cases).
+- **Deploy/connect live PostgreSQL instance with pgvector** (set `DATABASE_URL` in
+  environment) — currently SQLite fallback, which is real and tested but not the target prod
+  config per `docs/06-data-architecture.md`.
+- No GitHub remote configured on this repo — nine+ commits deep, still entirely local-only.
 
