@@ -7,6 +7,7 @@ into HuggingFace-compatible DPO preference pairs: (prompt, chosen, rejected).
 from typing import List, Dict, Any, Optional
 from pydantic import BaseModel, Field
 import json
+import os
 import uuid
 from datetime import datetime
 
@@ -336,27 +337,88 @@ class DPOPreferenceGenerator:
         return dataset
 
     @classmethod
-    def export_jsonl(cls, pairs: List[DPOPreferencePair], output_path: str) -> int:
+    def export_jsonl(cls, pairs: List[DPOPreferencePair], output_path: str, merge: bool = True) -> int:
         """
         Exports preference pairs in standard JSONL format for trl.DPOTrainer:
         Each line: {"prompt": "...", "chosen": "...", "rejected": "..."}
+
+        When merge=True (default) and output_path already has content, existing
+        records are preserved and only records whose prompt isn't already present
+        are appended. This is called every time a physician review comes in, so it
+        must not silently discard hand-curated or previously exported pairs living
+        at the same path -- ids are regenerated per call (including for the static
+        benchmark calibrations), so dedup is by prompt content, not id.
         """
-        count = 0
+        existing_records: List[Dict[str, Any]] = []
+        seen_prompts = set()
+        if merge and os.path.exists(output_path):
+            with open(output_path, "r", encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    record = json.loads(line)
+                    existing_records.append(record)
+                    seen_prompts.add(record["prompt"])
+
+        new_records = []
+        for pair in pairs:
+            if pair.prompt in seen_prompts:
+                continue
+            new_records.append({
+                "id": pair.id,
+                "prompt": pair.prompt,
+                "chosen": pair.chosen,
+                "rejected": pair.rejected,
+                "reward_margin": pair.reward_margin,
+                "is_safety_critical": pair.is_safety_critical,
+                "citations": pair.harrison_citations,
+                "source": pair.source,
+            })
+            seen_prompts.add(pair.prompt)
+
+        all_records = existing_records + new_records
         with open(output_path, "w", encoding="utf-8") as f:
-            for pair in pairs:
-                record = {
-                    "id": pair.id,
-                    "prompt": pair.prompt,
-                    "chosen": pair.chosen,
-                    "rejected": pair.rejected,
-                    "reward_margin": pair.reward_margin,
-                    "is_safety_critical": pair.is_safety_critical,
-                    "citations": pair.harrison_citations,
-                    "source": pair.source,
-                }
+            for record in all_records:
                 f.write(json.dumps(record, ensure_ascii=False) + "\n")
-                count += 1
-        return count
+        return len(all_records)
+
+    @classmethod
+    def get_file_statistics(cls, output_path: str) -> Dict[str, Any]:
+        """Computes dataset statistics directly from an exported JSONL file's records."""
+        if not os.path.exists(output_path):
+            return {
+                "total_pairs": 0,
+                "human_reviews_count": 0,
+                "benchmark_calibrations_count": 0,
+                "safety_critical_count": 0,
+                "average_reward_margin": 0.0,
+            }
+
+        records: List[Dict[str, Any]] = []
+        with open(output_path, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if line:
+                    records.append(json.loads(line))
+
+        total = len(records)
+        if total == 0:
+            return {
+                "total_pairs": 0,
+                "human_reviews_count": 0,
+                "benchmark_calibrations_count": 0,
+                "safety_critical_count": 0,
+                "average_reward_margin": 0.0,
+            }
+
+        return {
+            "total_pairs": total,
+            "human_reviews_count": sum(1 for r in records if r.get("source") == "HUMAN_PHYSICIAN"),
+            "benchmark_calibrations_count": sum(1 for r in records if r.get("source") == "CALIBRATED_BENCHMARK"),
+            "safety_critical_count": sum(1 for r in records if r.get("is_safety_critical")),
+            "average_reward_margin": round(sum(r.get("reward_margin", 0.0) for r in records) / total, 3),
+        }
 
     @classmethod
     def get_dataset_statistics(cls, pairs: List[DPOPreferencePair]) -> Dict[str, Any]:

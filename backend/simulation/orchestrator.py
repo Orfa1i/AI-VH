@@ -267,8 +267,8 @@ class HospitalOrchestrator:
             cases_map=cases_map,
             include_calibrations=True,
         )
-        count = DPOPreferenceGenerator.export_jsonl(pairs, output_path)
-        stats = DPOPreferenceGenerator.get_dataset_statistics(pairs)
+        count = DPOPreferenceGenerator.export_jsonl(pairs, output_path, merge=True)
+        stats = DPOPreferenceGenerator.get_file_statistics(output_path)
         return {
             "exported_count": count,
             "filepath": output_path,
