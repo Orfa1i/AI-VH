@@ -159,11 +159,23 @@ indefinitely — do not build it without being asked again.
   session) — restart with `py -3.13 -m uvicorn backend.main:app --host 127.0.0.1 --port 8000`
   and `pnpm dev` in `frontend/`.
 
+## 8. Session: 3D Scene Simplified to IM-Only, Dummy Data Cleared (2026-09-15, continued)
+Per user request: removed the Patient/Nurse/Laboratory/Radiology/Pharmacist 3D avatars from
+`HospitalCanvas.tsx` — only the Internal Medicine physician avatar now renders in the 3D
+scene. Removed the corresponding dead position/action state and websocket-event wiring in
+`App.tsx` (`patientPos`, `nursePos`, `patientAction`, `nurseAction`, `pharmAction`), and
+cleared hardcoded dummy display names ("Robert Miller" default patient name, "Dr. Marcus
+Vance", "Sarah Jenkins, RN", "David Chen, MLS", "Dr. Arthur Hayes, MD", "Dr. Elena Rostova,
+PharmD"). Department rooms, vitals telemetry HUD, and event stream HUD are unaffected —
+labs/radiology/pharmacy backend agents still run (Phase 1-6 loop untouched), they're just no
+longer rendered as 3D avatars in the scene. Build and lint verified clean, no new warnings.
+Commit `1c0cd17`.
+
 ### Updated Next Steps
 - **Visual/click QA of the full IM-only flow in a real browser** — not done this session
-  (extension unavailable). Needs a pass through ER → triage → IM consult → labs/radiology →
-  pharmacy → report → physician review → RL benchmark dashboard with the Claude-in-Chrome
-  extension connected, or manually by the user.
+  (Claude-in-Chrome extension unavailable). Needs a pass through ER → triage → IM consult →
+  labs/radiology → pharmacy → report → physician review → RL benchmark dashboard, now with
+  the simplified IM-only 3D scene, with the extension connected or manually by the user.
 - Add multi-agent morning inpatient conference rounds (not started, not yet requested for
   IM-only scope).
 - Continue expanding the DPO dataset further / via real physician review sessions as more
