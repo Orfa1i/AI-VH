@@ -85,13 +85,12 @@ AI-VH is an autonomous multi-agent healthcare simulation and reinforcement learn
   anchors to a standalone header line.
 - All 30 backend tests pass; frontend builds clean. Commits `a61bb3f`, `86289f5`.
 
-## 5. Next Steps
+## 5. Next Steps (superseded — see §7)
 - Add multi-agent morning inpatient conference rounds (not started).
-- Expand the DPO preference dataset well beyond 4 pairs (ideally via real physician review
-  sessions through the Phase 4 pipeline) — the current adapter is trained on 4 examples and
-  overfits at the hyperparameters needed to get any observable effect; this is a data-scarcity
-  limitation, not a code bug.
-- Phase 7 "Scale": ICU, Pediatrics, Obstetrics, Surgery departments not yet built.
+- Phase 7 "Scale": explicitly OUT OF SCOPE per user direction (2026-09-15) — user wants the
+  project completed and fully tested using ONLY the Internal Medicine agent; ICU/Pediatrics/
+  Obstetrics/Surgery will be added later once the IM-only core is done. Do not build these
+  departments unless the user explicitly asks again.
 - No GitHub remote configured on this repo — user declined auto-creating one this session.
 
 ## 6. Session: Real Computed Benchmark Metrics (2026-09-15)
@@ -114,3 +113,60 @@ AI-VH is an autonomous multi-agent healthcare simulation and reinforcement learn
   those fallback texts are themselves still hand-authored until a live-GPU-only code path is
   enforced. On a real GPU run with the adapter loaded, scores are computed from genuinely
   generated model text end to end.
+
+## 7. Session: IM-Only Core Completion Audit + Real Startup Wiring (2026-09-15, continued)
+
+**Scope decision**: user explicitly restricted all further work to the Internal Medicine
+specialist agent only. Phase 7 scale-out (ICU/Pediatrics/Obstetrics/Surgery) is deferred
+indefinitely — do not build it without being asked again.
+
+- **Audit (read-only, via subagent)**: checked Phases 1-6 end-to-end (reception → nurse triage
+  → `InternalMedicineSpecialistAgent.conduct_clinical_encounter()` → lab/radiology agent calls
+  → pharmacist safety review → report → physician review → DPO dataset export) against the
+  actual code. Found no stubs, mocks, or dead wiring — `backend/simulation/orchestrator.py`
+  genuinely runs the full loop, `test_simulation.py::test_clinical_simulation_end_to_end`
+  exercises it, and the reward-model → dpo_generator → dataset-export chain is real.
+- **Real bug found and fixed (Commit `5b94867`)**: `medgemma_service.load_model()` was never
+  called anywhere in the running app — no FastAPI startup hook existed. This meant
+  `generate_comparative_inference()` always fell through to the per-case canned fallback text
+  even with CUDA available; the "live GPU inference" claimed verified in §4 had only ever been
+  exercised via standalone scripts, never through the actual server. Added a `@app.on_event
+  ("startup")` handler in `backend/main.py` that loads the model + adapter for real, and fixed
+  `medgemma_service.py`'s telemetry (`adapter_status`, `vram_allocated_gb`, new
+  `live_gpu_inference_used`/`model_loaded` fields) to report actual state instead of a
+  hardcoded `"LOADED_AND_ACTIVE"` string. Verified via a real running server + live curl call:
+  base and DPO models now generate genuinely different real text ("Acute Myocardial Infarction
+  (AMI)" vs "...(NSTEMI)") — confirmed `live_gpu_inference_used: true` in the response.
+- **Expanded DPO dataset 4 → 10 pairs** (`backend/scripts/expand_dpo_dataset.py`): added 6 new
+  IM safety-critical scenarios (COPD exacerbation, variceal GI bleed, severe hyperkalemia,
+  anaphylaxis, hypertensive emergency, septic pneumonia), same schema/quality bar as the
+  original 4.
+- **Re-ran real DPO training on the RTX 4060.** `bitsandbytes` was missing from the venv
+  (fresh regression — first attempt silently fell back to `SIMULATION_VERIFIED` fake-loss
+  mode; caught this before accepting it and installed `bitsandbytes>=0.46.1`). Real GPU
+  training then ran; a system low-memory event killed the backgrounded process at global_step
+  10/24, but loss had already collapsed 0.693 → ~7e-11 with reward accuracy pinned at 1.0
+  since step 2 (full convergence by epoch 3/8 on this small dataset). Promoted the last saved
+  checkpoint (`checkpoint-9`, epoch 3) as the final adapter instead of re-running, and wrote an
+  honest `training_summary.json` documenting the interruption and early-stop rationale rather
+  than reporting a fabricated 8-epoch completion.
+- **Verification**: full 30-test backend suite passes, frontend build clean, backend/frontend
+  servers verified live via curl (200 on `/api/health`, `/api/rl/benchmark`,
+  `/api/inpatient/rooms`, `/docs`, `/`). Browser-based visual/click QA was **not** performed —
+  the Claude-in-Chrome extension was not connected this session, so the IM clinical flow has
+  not been walked through in an actual browser this session. Both dev servers were stopped at
+  the end of the session (GPU/VRAM + system memory were under pressure once already this
+  session) — restart with `py -3.13 -m uvicorn backend.main:app --host 127.0.0.1 --port 8000`
+  and `pnpm dev` in `frontend/`.
+
+### Updated Next Steps
+- **Visual/click QA of the full IM-only flow in a real browser** — not done this session
+  (extension unavailable). Needs a pass through ER → triage → IM consult → labs/radiology →
+  pharmacy → report → physician review → RL benchmark dashboard with the Claude-in-Chrome
+  extension connected, or manually by the user.
+- Add multi-agent morning inpatient conference rounds (not started, not yet requested for
+  IM-only scope).
+- Continue expanding the DPO dataset further / via real physician review sessions as more
+  data becomes available — 10 pairs is still small; adapter converges near-instantly and is
+  prone to overfitting at these hyperparameters.
+- No GitHub remote configured on this repo — user declined auto-creating one this session.
