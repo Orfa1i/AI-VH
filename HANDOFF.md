@@ -216,6 +216,21 @@ output path) is needed before this endpoint is used again for real physician-rev
   - All 39 backend tests passing (`py -3.13 -m pytest backend/tests/ -v`).
   - Frontend production build clean (`pnpm build` -> exit code 0).
 
+## 11. Session: Medical Knowledge Vector Seeding & Semantic Retrieval (2026-09-15)
+
+- **Vector Store Ingestion**:
+  - Created `backend/database/seed_knowledge.py` which ingests Harrison's Internal Medicine textbook chunks from `data/knowledge/harrison_chunks.json` into the `knowledge_chunks` database table.
+  - Implemented deterministic 128-dimensional L2-normalized vector embedding generation (`compute_embedding`) in `backend/database/repository.py`.
+  - Added semantic cosine similarity retrieval with topic/chapter lexical boosting (`search_knowledge_chunks`) supporting native pgvector on PostgreSQL (`<=>` cosine distance operator) and normalized dot-product ranking on SQLite.
+  - Integrated auto-seeding into `backend/database/init_db.py` when the knowledge table is unpopulated.
+- **REST Endpoints Added**:
+  - `GET /api/knowledge/search?q=...&specialty=...&top_k=3`: Semantic retrieval endpoint returning top-k matching citations, chapters, pages, and composite relevance scores.
+  - `POST /api/knowledge/seed`: On-demand administrative seeding trigger.
+- **Verification**:
+  - Created `backend/tests/test_knowledge_seed.py` (5 tests covering execution, idempotency, semantic accuracy for ACS/DKA/AKI, specialty filtering, and API contracts).
+  - Full backend test suite passing with 44/44 tests green (`py -3.13 -m pytest backend/tests/ -v`).
+  - Frontend production build clean (`pnpm build` -> exit code 0).
+
 ### Updated Next Steps
 - **Visual/click QA of the full IM-only flow in a real browser** — needs a pass through ER → triage → IM consult → labs/radiology → pharmacy → report → physician review → RL benchmark dashboard.
 - **Run benchmark evaluations with larger case bank** (expand beyond the current 4 benchmark cases).

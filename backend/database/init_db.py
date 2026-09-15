@@ -27,6 +27,13 @@ def main():
     review_count = db_repo.count_reviews()
     chunk_count = db_repo.count_knowledge_chunks()
     
+    if chunk_count == 0:
+        logger.info("Knowledge vector table is empty. Auto-seeding Harrison's Internal Medicine...")
+        from backend.database.seed_knowledge import seed_harrison_knowledge
+        seed_res = seed_harrison_knowledge(db_repo)
+        chunk_count = seed_res.get("total_in_db", chunk_count)
+        logger.info(f"Auto-seeded {seed_res.get('seeded_count', 0)} chunks.")
+
     logger.info(f"Schema initialized. Existing records: {report_count} reports, {review_count} reviews, {chunk_count} knowledge chunks.")
     logger.info("Database ready for clinical encounters.")
 

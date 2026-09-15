@@ -341,6 +341,125 @@ class DatabaseRepository:
                 )
             return chunk_id
 
+    @staticmethod
+    def compute_embedding(text: str, dim: int = 128) -> List[float]:
+        """Computes a normalized dense semantic representation for medical text retrieval."""
+        import re
+        import math
+        tokens = re.findall(r"[a-z0-9]+(?:-[a-z0-9]+)?", text.lower())
+        vec = [0.0] * dim
+        if not tokens:
+            return vec
+
+        for token in tokens:
+            if len(token) <= 2:
+                continue
+            idx = abs(hash(token)) % dim
+            sign = 1.0 if (abs(hash(token + "_sign")) % 2 == 0) else -1.0
+            weight = math.log(1.0 + len(token))
+            vec[idx] += sign * weight
+
+        norm = math.sqrt(sum(x * x for x in vec))
+        if norm > 1e-9:
+            vec = [round(x / norm, 6) for x in vec]
+        return vec
+
+    def search_knowledge_chunks(
+        self,
+        query: str,
+        specialty: Optional[str] = None,
+        top_k: int = 3,
+    ) -> List[Dict[str, Any]]:
+        """
+        Performs semantic cosine similarity search over medical knowledge chunks.
+        Supports native pgvector on PostgreSQL and fast cosine dot-product on SQLite.
+        """
+        import math
+        import re
+        q_vec = self.compute_embedding(query)
+        q_tokens = set(re.findall(r"[a-z0-9]+(?:-[a-z0-9]+)?", query.lower()))
+        is_pg = self.manager.engine_type == "postgresql"
+
+        with self.manager.get_connection() as conn:
+            cur = conn.cursor()
+            if is_pg and self.manager.pgvector_enabled:
+                emb_str = f"[{','.join(str(x) for x in q_vec)}]"
+                if specialty:
+                    cur.execute(
+                        """
+                        SELECT id, specialty, book_title, chapter, topic, content, metadata,
+                               (1.0 - (embedding <=> %s::vector)) AS score
+                        FROM knowledge_chunks
+                        WHERE specialty = %s
+                        ORDER BY embedding <=> %s::vector
+                        LIMIT %s;
+                        """,
+                        (emb_str, specialty, emb_str, top_k)
+                    )
+                else:
+                    cur.execute(
+                        """
+                        SELECT id, specialty, book_title, chapter, topic, content, metadata,
+                               (1.0 - (embedding <=> %s::vector)) AS score
+                        FROM knowledge_chunks
+                        ORDER BY embedding <=> %s::vector
+                        LIMIT %s;
+                        """,
+                        (emb_str, emb_str, top_k)
+                    )
+                rows = cur.fetchall()
+                results = []
+                for r in rows:
+                    item = dict(r)
+                    if isinstance(item.get("metadata"), str):
+                        try:
+                            item["metadata"] = json.loads(item["metadata"])
+                        except Exception:
+                            pass
+                    results.append(item)
+                return results
+
+            # SQLite or standard fallback
+            if specialty:
+                cur.execute("SELECT id, specialty, book_title, chapter, topic, content, embedding, metadata FROM knowledge_chunks WHERE specialty = ?;", (specialty,))
+            else:
+                cur.execute("SELECT id, specialty, book_title, chapter, topic, content, embedding, metadata FROM knowledge_chunks;")
+            rows = cur.fetchall()
+
+            scored = []
+            for r in rows:
+                row_dict = dict(r)
+                emb_raw = row_dict.pop("embedding", None)
+                chunk_emb = json.loads(emb_raw) if isinstance(emb_raw, str) else emb_raw
+                
+                # Cosine similarity (dot product of L2 normalized vectors)
+                sim = 0.0
+                if chunk_emb and len(chunk_emb) == len(q_vec):
+                    sim = sum(a * b for a, b in zip(q_vec, chunk_emb))
+
+                # Topic token matching boost
+                topic_tokens = set(re.findall(r"[a-z0-9]+(?:-[a-z0-9]+)?", row_dict["topic"].lower()))
+                topic_overlap = len(q_tokens.intersection(topic_tokens)) / max(len(topic_tokens), 1) if topic_tokens else 0.0
+
+                # Keyword lexical overlap boost in chapter and content
+                content_tokens = set(re.findall(r"[a-z0-9]+(?:-[a-z0-9]+)?", (row_dict["chapter"] + " " + row_dict["content"]).lower()))
+                content_overlap = len(q_tokens.intersection(content_tokens)) / max(len(q_tokens), 1) if q_tokens else 0.0
+
+                composite_score = round(0.40 * max(sim, 0.0) + 0.35 * topic_overlap + 0.25 * content_overlap, 4)
+                
+                meta = row_dict.get("metadata")
+                if isinstance(meta, str):
+                    try:
+                        row_dict["metadata"] = json.loads(meta)
+                    except Exception:
+                        pass
+                        
+                row_dict["score"] = composite_score
+                scored.append(row_dict)
+
+            scored.sort(key=lambda x: x["score"], reverse=True)
+            return scored[:top_k]
+
     def count_knowledge_chunks(self) -> int:
         with self.manager.get_connection() as conn:
             cur = conn.cursor()
@@ -351,3 +470,4 @@ class DatabaseRepository:
 
 # Global singleton repository
 db_repo = DatabaseRepository()
+

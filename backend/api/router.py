@@ -171,6 +171,46 @@ async def get_database_status():
     return status
 
 
+@api_router.get("/knowledge/search")
+async def search_medical_knowledge(
+    q: str,
+    specialty: Optional[str] = None,
+    top_k: int = 3,
+):
+    """
+    Performs semantic vector and keyword retrieval against the textbook knowledge database.
+    """
+    try:
+        results = orchestrator.db.search_knowledge_chunks(
+            query=q,
+            specialty=specialty,
+            top_k=top_k,
+        )
+        return {
+            "query": q,
+            "specialty": specialty,
+            "count": len(results),
+            "results": results,
+        }
+    except Exception as e:
+        logger.error(f"Knowledge search error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.post("/knowledge/seed")
+async def seed_knowledge_base():
+    """
+    Triggers seeding of Harrison's Internal Medicine textbook chunks into the database vector store.
+    """
+    try:
+        from backend.database.seed_knowledge import seed_harrison_knowledge
+        result = seed_harrison_knowledge(orchestrator.db)
+        return result
+    except Exception as e:
+        logger.error(f"Knowledge seeding error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @api_router.get("/reports/{report_id}")
 async def get_report_detail(report_id: str):
     report = orchestrator.get_report(report_id)
