@@ -1,7 +1,8 @@
 """
 AI Virtual Hospital - Database Schema & DDL
 Defines table schemas for both PostgreSQL (with pgvector / JSONB) and SQLite.
-Uses indexed relational columns alongside structured JSON payloads for 100% loss-free persistence.
+Includes support for Encounters, Reports, Reviews, DPO Pairs, Knowledge Chunks,
+Admitted Patients, and Hospital Staff Management.
 """
 
 SQLITE_SCHEMA = """
@@ -66,12 +67,44 @@ CREATE TABLE IF NOT EXISTS knowledge_chunks (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS patients (
+    id TEXT PRIMARY KEY,
+    mrn TEXT UNIQUE NOT NULL,
+    name TEXT NOT NULL,
+    age INTEGER NOT NULL,
+    sex TEXT NOT NULL,
+    triage_acuity TEXT NOT NULL,
+    chief_complaint TEXT NOT NULL,
+    admission_status TEXT NOT NULL DEFAULT 'ADMITTED',
+    assigned_department TEXT NOT NULL DEFAULT 'EMERGENCY',
+    bed_number TEXT,
+    admitted_at TIMESTAMP NOT NULL,
+    raw_json TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS hospital_staff (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    role TEXT NOT NULL,
+    specialty TEXT NOT NULL,
+    title TEXT NOT NULL,
+    department TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'ON_DUTY',
+    credentials TEXT NOT NULL,
+    raw_json TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE INDEX IF NOT EXISTS idx_reports_case ON clinical_reports(case_id);
 CREATE INDEX IF NOT EXISTS idx_reports_encounter ON clinical_reports(encounter_id);
 CREATE INDEX IF NOT EXISTS idx_reviews_report ON physician_reviews(report_id);
 CREATE INDEX IF NOT EXISTS idx_reviews_encounter ON physician_reviews(encounter_id);
 CREATE INDEX IF NOT EXISTS idx_dpo_prompt ON dpo_feedback_pairs(prompt);
 CREATE INDEX IF NOT EXISTS idx_knowledge_specialty ON knowledge_chunks(specialty);
+CREATE INDEX IF NOT EXISTS idx_patients_status ON patients(admission_status);
+CREATE INDEX IF NOT EXISTS idx_patients_mrn ON patients(mrn);
+CREATE INDEX IF NOT EXISTS idx_staff_role ON hospital_staff(role);
+CREATE INDEX IF NOT EXISTS idx_staff_dept ON hospital_staff(department);
 """
 
 POSTGRES_SCHEMA = """
@@ -134,10 +167,42 @@ CREATE TABLE IF NOT EXISTS knowledge_chunks (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS patients (
+    id VARCHAR(64) PRIMARY KEY,
+    mrn VARCHAR(64) UNIQUE NOT NULL,
+    name VARCHAR(128) NOT NULL,
+    age INTEGER NOT NULL,
+    sex VARCHAR(16) NOT NULL,
+    triage_acuity VARCHAR(32) NOT NULL,
+    chief_complaint TEXT NOT NULL,
+    admission_status VARCHAR(32) NOT NULL DEFAULT 'ADMITTED',
+    assigned_department VARCHAR(64) NOT NULL DEFAULT 'EMERGENCY',
+    bed_number VARCHAR(32),
+    admitted_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    raw_json JSONB NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS hospital_staff (
+    id VARCHAR(64) PRIMARY KEY,
+    name VARCHAR(128) NOT NULL,
+    role VARCHAR(32) NOT NULL,
+    specialty VARCHAR(64) NOT NULL,
+    title VARCHAR(128) NOT NULL,
+    department VARCHAR(64) NOT NULL,
+    status VARCHAR(32) NOT NULL DEFAULT 'ON_DUTY',
+    credentials VARCHAR(64) NOT NULL,
+    raw_json JSONB NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE INDEX IF NOT EXISTS idx_reports_case ON clinical_reports(case_id);
 CREATE INDEX IF NOT EXISTS idx_reports_encounter ON clinical_reports(encounter_id);
 CREATE INDEX IF NOT EXISTS idx_reviews_report ON physician_reviews(report_id);
 CREATE INDEX IF NOT EXISTS idx_reviews_encounter ON physician_reviews(encounter_id);
 CREATE INDEX IF NOT EXISTS idx_dpo_prompt ON dpo_feedback_pairs(prompt);
 CREATE INDEX IF NOT EXISTS idx_knowledge_specialty ON knowledge_chunks(specialty);
+CREATE INDEX IF NOT EXISTS idx_patients_status ON patients(admission_status);
+CREATE INDEX IF NOT EXISTS idx_patients_mrn ON patients(mrn);
+CREATE INDEX IF NOT EXISTS idx_staff_role ON hospital_staff(role);
+CREATE INDEX IF NOT EXISTS idx_staff_dept ON hospital_staff(department);
 """

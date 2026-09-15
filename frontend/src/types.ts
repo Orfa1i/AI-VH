@@ -175,3 +175,40 @@ export interface DPOApiResponse {
   pairs: DPOPreferencePair[];
 }
 
+export interface PatientRecord {
+  id: string;
+  mrn: string;
+  name: string;
+  age: number;
+  sex: string;
+  triage_acuity: string;
+  chief_complaint: string;
+  history_of_present_illness?: string;
+  past_medical_history?: string[];
+  medications?: string[];
+  allergies?: string[];
+  baseline_vitals?: Record<string, any>;
+  admission_status: 'ADMITTED' | 'IN_ENCOUNTER' | 'DISCHARGED';
+  assigned_department: string;
+  bed_number?: string;
+  admitted_at: string;
+  case_data?: Record<string, any>;
+}
+
+export interface HospitalStaffRecord {
+  id: string;
+  name: string;
+  role: 'DOCTOR' | 'NURSE' | 'PHARMACIST' | 'RADIOLOGIST' | 'LAB_SCIENTIST' | 'RECEPTIONIST';
+  specialty: string;
+  title: string;
+  department: string;
+  status: 'ON_DUTY' | 'IN_CONSULT' | 'OFF_DUTY';
+  credentials: string;
+  bio: string;
+  system_prompt?: string;
+  assigned_patients?: string[];
+  total_encounters: number;
+  created_at?: string;
+}
+
+

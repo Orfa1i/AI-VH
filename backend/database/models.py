@@ -81,3 +81,40 @@ class EncounterRecord(BaseModel):
     report_id: Optional[str] = None
     review_id: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class PatientRecord(BaseModel):
+    id: str
+    mrn: str
+    name: str
+    age: int
+    sex: str
+    triage_acuity: str
+    chief_complaint: str
+    history_of_present_illness: str
+    past_medical_history: List[str] = Field(default_factory=list)
+    medications: List[str] = Field(default_factory=list)
+    allergies: List[str] = Field(default_factory=list)
+    baseline_vitals: Dict[str, Any] = Field(default_factory=dict)
+    admission_status: str = "ADMITTED"  # ADMITTED, IN_ENCOUNTER, DISCHARGED
+    assigned_department: str = "EMERGENCY"
+    bed_number: Optional[str] = None
+    admitted_at: datetime = Field(default_factory=datetime.utcnow)
+    raw_case_data: Dict[str, Any] = Field(default_factory=dict)
+
+
+class HospitalStaffRecord(BaseModel):
+    id: str
+    name: str
+    role: str  # DOCTOR, NURSE, PHARMACIST, RADIOLOGIST, LAB_SCIENTIST, RECEPTIONIST
+    specialty: str
+    title: str
+    department: str
+    status: str = "ON_DUTY"  # ON_DUTY, IN_CONSULT, OFF_DUTY
+    credentials: str
+    bio: str
+    system_prompt: Optional[str] = None
+    assigned_patients: List[str] = Field(default_factory=list)
+    total_encounters: int = 0
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+

@@ -56,6 +56,39 @@ class ComparativeInferenceRequest(BaseModel):
     force_gpu: Optional[bool] = False
 
 
+class PatientAdmitRequest(BaseModel):
+    name: str
+    age: int
+    sex: str
+    chief_complaint: str
+    history_of_present_illness: Optional[str] = ""
+    past_medical_history: Optional[List[str]] = None
+    medications: Optional[List[str]] = None
+    allergies: Optional[List[str]] = None
+    baseline_vitals: Optional[Dict[str, Any]] = None
+    triage_acuity: Optional[str] = "URGENT"
+    assigned_department: Optional[str] = "EMERGENCY"
+    bed_number: Optional[str] = None
+    case_id: Optional[str] = None
+
+
+class StaffCreateRequest(BaseModel):
+    name: str
+    role: str
+    specialty: str
+    title: str
+    department: str
+    status: Optional[str] = "ON_DUTY"
+    credentials: str
+    bio: str
+    system_prompt: Optional[str] = None
+
+
+class StaffStatusUpdateRequest(BaseModel):
+    status: str
+
+
+
 @api_router.get("/health")
 async def health_check():
     return {"status": "healthy", "service": "AI Virtual Hospital Platform"}
@@ -320,8 +353,103 @@ async def run_comparative_model_inference(req: ComparativeInferenceRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+# =============================================================================
+# Patient Admission & EHR Storage Endpoints
+# =============================================================================
+
+@api_router.post("/patients/admit")
+async def admit_patient_endpoint(req: PatientAdmitRequest):
+    """
+    Intake and admission endpoint: converts an incoming clinical case or manual intake
+    into an admitted patient record in the database with assigned department and bed.
+    """
+    try:
+        case_dict = req.model_dump()
+        admitted = orchestrator.db.admit_patient(case_dict)
+        return admitted
+    except Exception as e:
+        logger.error(f"Error admitting patient: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/patients")
+async def list_patients_endpoint(status: Optional[str] = None, limit: int = 50, offset: int = 0):
+    """Lists admitted patients, filterable by status (ADMITTED, IN_ENCOUNTER, DISCHARGED)."""
+    try:
+        patients = orchestrator.db.list_patients(status=status, limit=limit, offset=offset)
+        total = orchestrator.db.count_patients(status=status)
+        return {"total": total, "patients": patients}
+    except Exception as e:
+        logger.error(f"Error listing patients: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/patients/{patient_id}")
+async def get_patient_endpoint(patient_id: str):
+    """Retrieves full clinical chart and EHR for a specific patient ID or MRN."""
+    patient = orchestrator.db.get_patient(patient_id)
+    if not patient:
+        raise HTTPException(status_code=404, detail=f"Patient '{patient_id}' not found")
+    return patient
+
+
+@api_router.post("/patients/{patient_id}/discharge")
+async def discharge_patient_endpoint(patient_id: str):
+    """Discharges a patient from the hospital."""
+    success = orchestrator.db.discharge_patient(patient_id)
+    if not success:
+        raise HTTPException(status_code=404, detail=f"Patient '{patient_id}' not found or already discharged")
+    return {"status": "DISCHARGED", "patient_id": patient_id}
+
+
+# =============================================================================
+# Hospital Personnel & Staff Management Endpoints
+# =============================================================================
+
+@api_router.get("/staff")
+async def list_staff_endpoint(role: Optional[str] = None, department: Optional[str] = None):
+    """Returns the hospital clinical and operational staff roster."""
+    try:
+        staff_members = orchestrator.db.list_staff(role=role, department=department)
+        return {"total": len(staff_members), "staff": staff_members}
+    except Exception as e:
+        logger.error(f"Error listing staff: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/staff/{staff_id}")
+async def get_staff_endpoint(staff_id: str):
+    """Retrieves detailed credentials and profile for a staff member."""
+    member = orchestrator.db.get_staff_member(staff_id)
+    if not member:
+        raise HTTPException(status_code=404, detail=f"Staff member '{staff_id}' not found")
+    return member
+
+
+@api_router.post("/staff")
+async def create_staff_endpoint(req: StaffCreateRequest):
+    """Adds a new healthcare professional or staff member to the hospital directory."""
+    try:
+        staff_id = orchestrator.db.add_staff_member(req.model_dump())
+        member = orchestrator.db.get_staff_member(staff_id)
+        return member
+    except Exception as e:
+        logger.error(f"Error creating staff member: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.put("/staff/{staff_id}/status")
+async def update_staff_status_endpoint(staff_id: str, req: StaffStatusUpdateRequest):
+    """Updates the shift/duty status of a hospital staff member (ON_DUTY, IN_CONSULT, OFF_DUTY)."""
+    success = orchestrator.db.update_staff_status(staff_id, req.status)
+    if not success:
+        raise HTTPException(status_code=404, detail=f"Staff member '{staff_id}' not found")
+    return {"staff_id": staff_id, "status": req.status}
+
+
 @api_router.get("/inpatient/rooms")
 async def get_inpatient_rooms():
+
     """
     Returns telemetry and clinical monitoring status for the 4 inpatient rooms
     in the East Inpatient Wing.

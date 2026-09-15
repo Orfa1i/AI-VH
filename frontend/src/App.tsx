@@ -1,326 +1,404 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { HospitalCanvas } from './components/hospital3d/HospitalCanvas';
-import { EventStreamHUD } from './components/dashboard/EventStreamHUD';
-import { VitalsMonitorHUD } from './components/dashboard/VitalsMonitorHUD';
+import React, { useState, useEffect } from 'react';
+import { Hospital3DPage } from './components/hospital3d/Hospital3DPage';
+import { CaseIntakeAdmissionSection } from './components/management/CaseIntakeAdmissionSection';
+import { PatientDirectorySection } from './components/management/PatientDirectorySection';
+import { StaffManagementSection } from './components/management/StaffManagementSection';
+import { KnowledgeSearchSection } from './components/management/KnowledgeSearchSection';
 import { PhysicianReviewDashboard } from './components/dashboard/PhysicianReviewDashboard';
-import { CaseSelector } from './components/dashboard/CaseSelector';
 import { InternalMedicineConsultModal } from './components/specialists/InternalMedicineConsultModal';
 import { PharmacistModal } from './components/specialists/PharmacistModal';
-import { DepartmentStationModal } from './components/specialists/DepartmentStationModal';
+import { InpatientTelemetryModal } from './components/dashboard/InpatientTelemetryModal';
 import { RLDatasetModal } from './components/rl/RLDatasetModal';
 import { PolicyBenchmarkModal } from './components/rl/PolicyBenchmarkModal';
-import { InpatientTelemetryModal } from './components/dashboard/InpatientTelemetryModal';
 import { toggleGlobalMute, isGlobalMuted } from './utils/speechSynthesis';
 import type {
-  HospitalEvent,
-  ClinicalReport,
   BenchmarkCase,
+  ClinicalReport,
   PhysicianReviewPayload,
-  VitalSigns,
+  PatientRecord,
 } from './types';
 
+type PortalTab = 'INTAKE' | 'PATIENTS' | 'STAFF' | 'REPORTS' | 'KNOWLEDGE' | 'BENCHMARK';
+
 export const App: React.FC = () => {
-  // Navigation
-  const [activeView, setActiveView] = useState<'HOSPITAL_3D' | 'PHYSICIAN_REVIEW'>('HOSPITAL_3D');
+  // Determine if current URL or hash points to the 3D visualization page
+  const checkIs3DRoute = (): boolean => {
+    const path = window.location.pathname.toLowerCase();
+    const hash = window.location.hash.toLowerCase();
+    return (
+      path === '/3d' ||
+      path.startsWith('/3d/') ||
+      path === '/simulation' ||
+      path.startsWith('/simulation/') ||
+      hash === '#3d' ||
+      hash === '#simulation'
+    );
+  };
 
-  // Simulation State
+  const [is3DMode, setIs3DMode] = useState<boolean>(checkIs3DRoute());
+  const [activeTab, setActiveTab] = useState<PortalTab>('INTAKE');
+
+  // Shared Data State
   const [cases, setCases] = useState<BenchmarkCase[]>([]);
-  const [selectedCaseId, setSelectedCaseId] = useState<string>('CASE-101');
-  const [isRunning, setIsRunning] = useState<boolean>(false);
-  const [events, setEvents] = useState<HospitalEvent[]>([]);
   const [reports, setReports] = useState<ClinicalReport[]>([]);
-  const [activeVitals, setActiveVitals] = useState<VitalSigns | null>(null);
-  const [currentPatientName, setCurrentPatientName] = useState<string>('');
-  const [isWsConnected, setIsWsConnected] = useState<boolean>(false);
-
-  // Modals & Interactive Stations
-  const [isConsultOpen, setIsConsultOpen] = useState<boolean>(false);
-  const [isPharmacyOpen, setIsPharmacyOpen] = useState<boolean>(false);
-  const [departmentStationId, setDepartmentStationId] = useState<string | null>(null);
-  const [isRLModalOpen, setIsRLModalOpen] = useState<boolean>(false);
-  const [isBenchmarkOpen, setIsBenchmarkOpen] = useState<boolean>(false);
-  const [isInpatientOpen, setIsInpatientOpen] = useState<boolean>(false);
+  const [isSubmittingReview, setIsSubmittingReview] = useState<boolean>(false);
+  const [patientRefreshCounter, setPatientRefreshCounter] = useState<number>(0);
   const [isAudioMuted, setIsAudioMuted] = useState<boolean>(isGlobalMuted());
 
+  // Quick Action Modals
+  const [isConsultOpen, setIsConsultOpen] = useState<boolean>(false);
+  const [isPharmacyOpen, setIsPharmacyOpen] = useState<boolean>(false);
+  const [isInpatientOpen, setIsInpatientOpen] = useState<boolean>(false);
+  const [isRLModalOpen, setIsRLModalOpen] = useState<boolean>(false);
+  const [isBenchmarkOpen, setIsBenchmarkOpen] = useState<boolean>(false);
 
-  // 3D Department & Agent Position (IM-only scope: only the Internal Medicine
-  // physician is rendered in the 3D scene; see HospitalCanvas.tsx)
-  const [activeDepartment, setActiveDepartment] = useState<string>('RECEPTION');
-  const [doctorPos, setDoctorPos] = useState<[number, number, number]>([6.5, 0, 1]);
-  const [doctorAction, setDoctorAction] = useState<string>('Reviewing Inpatient Charts');
+  // URL Navigation listener (popstate and hashchange)
+  useEffect(() => {
+    const handleLocationChange = () => {
+      setIs3DMode(checkIs3DRoute());
+    };
 
-  const wsRef = useRef<WebSocket | null>(null);
+    window.addEventListener('popstate', handleLocationChange);
+    window.addEventListener('hashchange', handleLocationChange);
+    return () => {
+      window.removeEventListener('popstate', handleLocationChange);
+      window.removeEventListener('hashchange', handleLocationChange);
+    };
+  }, []);
+
+  const navigateTo = (path: string) => {
+    window.history.pushState({}, '', path);
+    setIs3DMode(checkIs3DRoute());
+  };
 
   // Fetch initial cases and reports
   useEffect(() => {
     fetch('/api/cases')
       .then((res) => res.json())
-      .then((data) => {
-        setCases(data);
-        if (data.length > 0) {
-          setSelectedCaseId(data[0].id);
-        }
-      })
+      .then((data) => setCases(data))
       .catch((err) => console.error('Failed to load cases:', err));
 
     fetch('/api/reports')
       .then((res) => res.json())
       .then((data) => setReports(data))
       .catch((err) => console.error('Failed to load reports:', err));
-
-    fetch('/api/simulation/events')
-      .then((res) => res.json())
-      .then((data) => setEvents(data))
-      .catch((err) => console.error('Failed to load events:', err));
   }, []);
-
-  // Setup WebSocket connection
-  useEffect(() => {
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${window.location.hostname}:8000/ws/simulation`;
-
-    const connectWs = () => {
-      try {
-        const socket = new WebSocket(wsUrl);
-        wsRef.current = socket;
-
-        socket.onopen = () => {
-          setIsWsConnected(true);
-        };
-
-        socket.onmessage = (event) => {
-          try {
-            const parsedEvent: HospitalEvent = JSON.parse(event.data);
-            handleIncomingEvent(parsedEvent);
-          } catch (e) {
-            console.error('Error parsing event payload:', e);
-          }
-        };
-
-        socket.onclose = () => {
-          setIsWsConnected(false);
-          setTimeout(connectWs, 3000);
-        };
-
-        socket.onerror = () => {
-          socket.close();
-        };
-      } catch (err) {
-        console.warn('WebSocket connection error:', err);
-      }
-    };
-
-    connectWs();
-
-    return () => {
-      if (wsRef.current) wsRef.current.close();
-    };
-  }, []);
-
-  // Update 3D scene representation when events arrive
-  const handleIncomingEvent = (evt: HospitalEvent) => {
-    setEvents((prev) => [...prev.slice(-100), evt]);
-
-    // Update 3D spatial positions based on event type
-    switch (evt.event_type) {
-      case 'PATIENT_ARRIVED':
-        setActiveDepartment('RECEPTION');
-        if (evt.payload.name) setCurrentPatientName(evt.payload.name);
-        break;
-
-      case 'NURSE_TRIAGE_STARTED':
-      case 'VITALS_RECORDED':
-        setActiveDepartment('NURSE_STATION');
-        if (evt.payload.heart_rate) {
-          setActiveVitals(evt.payload as VitalSigns);
-        }
-        break;
-
-      case 'DOCTOR_ASSIGNED':
-      case 'EXAMINATION_STARTED':
-      case 'PATIENT_INTERVIEWED':
-        setActiveDepartment('EXAMINATION_ROOM_1');
-        setDoctorPos([-5.5, 0, 1]);
-        setDoctorAction('Conducting Clinical Exam & Interview');
-        break;
-
-      case 'RAG_QUERY_INITIATED':
-      case 'RAG_KNOWLEDGE_RETRIEVED':
-        setDoctorAction("Querying Harrison's Internal Medicine");
-        break;
-
-      case 'LAB_ORDERED':
-      case 'LAB_RESULT_READY':
-        setActiveDepartment('LABORATORY');
-        setDoctorAction('Reviewing Lab Biomarkers');
-        break;
-
-      case 'DIAGNOSIS_MADE':
-      case 'TREATMENT_ORDERED':
-        setActiveDepartment('DOCTOR_STATION');
-        setDoctorPos([6.5, 0, 1]);
-        setDoctorAction('MedGemma Diagnosis Established');
-        break;
-
-      case 'PHARMACY_REVIEW_INITIATED':
-      case 'PHARMACY_REVIEW_COMPLETED':
-      case 'MEDICATION_DISPENSED':
-        setActiveDepartment('PHARMACY');
-        break;
-
-      case 'CLINICAL_REPORT_GENERATED':
-        setActiveDepartment('DOCTOR_STATION');
-        setDoctorAction('Report Finalized & Queued');
-        // Fetch updated reports list
-        fetch('/api/reports')
-          .then((res) => res.json())
-          .then((data) => setReports(data))
-          .catch(console.error);
-        break;
-    }
-  };
-
-  // Run a new clinical simulation encounter
-  const handleRunSimulation = async () => {
-    setIsRunning(true);
-    try {
-      const res = await fetch('/api/simulation/run', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ case_id: selectedCaseId }),
-      });
-      const data = await res.json();
-      if (data.report) {
-        setReports((prev) => [data.report, ...prev.filter((r) => r.id !== data.report.id)]);
-      }
-    } catch (err) {
-      console.error('Failed to run simulation:', err);
-    } finally {
-      setIsRunning(false);
-    }
-  };
 
   // Submit physician review
   const handleSubmitReview = async (reviewPayload: PhysicianReviewPayload) => {
-    const res = await fetch('/api/reviews', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(reviewPayload),
-    });
-    if (!res.ok) {
-      throw new Error('Failed to submit physician review');
+    setIsSubmittingReview(true);
+    try {
+      const res = await fetch('/api/reviews', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(reviewPayload),
+      });
+      if (!res.ok) {
+        throw new Error('Failed to submit physician review');
+      }
+      // Refresh reports list
+      const rRes = await fetch('/api/reports');
+      if (rRes.ok) {
+        const updated = await rRes.json();
+        setReports(updated);
+      }
+    } finally {
+      setIsSubmittingReview(false);
     }
   };
 
-  // Handle station interaction triggers (from pressing [E] or HUD click in 1st person)
-  const handleStationInteract = (stationId: string) => {
-    switch (stationId) {
-      case 'INTERNAL_MEDICINE':
-        setIsConsultOpen(true);
-        break;
-      case 'PHARMACY':
-        setIsPharmacyOpen(true);
-        break;
-      case 'LABORATORY':
-      case 'RADIOLOGY':
-      case 'NURSE_STATION':
-        setDepartmentStationId(stationId);
-        break;
+  const handlePatientAdmitted = (_patient: PatientRecord) => {
+    // Increment counter to trigger reload in patient directory
+    setPatientRefreshCounter((prev) => prev + 1);
+  };
+
+  const handleAdmitAndSimulate = async (caseId: string) => {
+    try {
+      await fetch('/api/simulation/run', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ case_id: caseId }),
+      });
+      // Refresh reports
+      const rRes = await fetch('/api/reports');
+      if (rRes.ok) {
+        const updated = await rRes.json();
+        setReports(updated);
+      }
+      setActiveTab('REPORTS');
+    } catch (err) {
+      console.error('Error simulating encounter:', err);
     }
   };
 
+  // =========================================================================
+  // View 1: Dedicated 3D Hospital Visualization Page (/3d)
+  // =========================================================================
+  if (is3DMode) {
+    return <Hospital3DPage onBackToPortal={() => navigateTo('/')} />;
+  }
+
+  // =========================================================================
+  // View 2: Hospital Operations & Clinical Management Portal (/)
+  // =========================================================================
   return (
-    <div className="w-screen h-screen flex flex-col bg-slate-950 overflow-hidden select-none font-sans">
-      {/* Top Header Bar */}
-      <CaseSelector
-        cases={cases}
-        selectedCaseId={selectedCaseId}
-        onSelectCase={(id) => setSelectedCaseId(id)}
-        onRunSimulation={handleRunSimulation}
-        isRunning={isRunning}
-        activeView={activeView}
-        onChangeView={(v) => setActiveView(v)}
-        reportsCount={reports.length}
-        onOpenConsult={() => setIsConsultOpen(true)}
-        onOpenPharmacy={() => setIsPharmacyOpen(true)}
-        onOpenRLDataset={() => setIsRLModalOpen(true)}
-        onOpenBenchmark={() => setIsBenchmarkOpen(true)}
-        onOpenInpatient={() => setIsInpatientOpen(true)}
-        isAudioMuted={isAudioMuted}
-        onToggleAudio={() => setIsAudioMuted(toggleGlobalMute())}
-      />
+    <div className="w-screen h-screen flex flex-col bg-slate-950 overflow-hidden font-sans select-none text-slate-100">
+      {/* Top Main Navigation Bar */}
+      <header className="h-16 bg-slate-900/95 border-b border-slate-800 px-6 flex items-center justify-between z-20 shrink-0 shadow-lg">
+        {/* Left: Branding & Subsystem Indicator */}
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/20 text-white font-bold text-lg">
+            🏥
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-black tracking-wider text-slate-100 uppercase">
+                AI Virtual Hospital
+              </span>
+              <span className="px-2 py-0.5 rounded-full bg-cyan-950 text-cyan-400 border border-cyan-800 text-[10px] font-mono font-semibold">
+                Clinical Operations Portal
+              </span>
+              <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-800 text-[10px] font-mono">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                DB Connected
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-400">
+              Autonomous Inpatient Management, Admissions & Specialist Consultation System
+            </p>
+          </div>
+        </div>
 
-      {/* Main Body View */}
-      <div className="flex-1 relative flex overflow-hidden">
-        {activeView === 'HOSPITAL_3D' ? (
-          <>
-            {/* 3D Hospital Canvas */}
-            <HospitalCanvas
-              activeDepartment={activeDepartment}
-              doctorPos={doctorPos}
-              doctorAction={doctorAction}
-              onDepartmentClick={(dept) => setActiveDepartment(dept)}
-              onStationInteract={handleStationInteract}
-            />
+        {/* Center/Right: Quick Actions & 3D Launcher Button */}
+        <div className="flex items-center gap-2.5">
+          {/* Central Telemetry Modal Button */}
+          <button
+            onClick={() => setIsInpatientOpen(true)}
+            className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-rose-900/50 text-rose-300 text-xs font-semibold flex items-center gap-1.5 transition shadow"
+            title="Open East Inpatient Wing 4-Bed Central Telemetry Console"
+          >
+            <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />
+            <span>Telemetry</span>
+          </button>
 
-            {/* Floating Glassmorphism Vitals Telemetry */}
-            <VitalsMonitorHUD vitals={activeVitals} patientName={currentPatientName} />
+          {/* Internal Medicine Specialist Consult */}
+          <button
+            onClick={() => setIsConsultOpen(true)}
+            className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-cyan-300 text-xs font-medium transition"
+          >
+            🩺 Dr. Vance RAG
+          </button>
 
-            {/* Floating Real-Time Event Feed */}
-            <EventStreamHUD events={events} isConnected={isWsConnected} />
-          </>
-        ) : (
-          /* Physician Review Dashboard */
+          {/* Clinical Pharmacy Review */}
+          <button
+            onClick={() => setIsPharmacyOpen(true)}
+            className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-amber-300 text-xs font-medium transition"
+          >
+            💊 Pharmacy Safety
+          </button>
+
+          {/* Audio Voice Toggle */}
+          <button
+            onClick={() => setIsAudioMuted(toggleGlobalMute())}
+            title={isAudioMuted ? 'Unmute Audio Voices' : 'Mute Audio Voices'}
+            className={`p-1.5 rounded-lg border text-xs transition ${
+              isAudioMuted
+                ? 'bg-slate-800 text-slate-500 border-slate-700'
+                : 'bg-cyan-950 text-cyan-300 border-cyan-800 shadow'
+            }`}
+          >
+            {isAudioMuted ? '🔇' : '🔊'}
+          </button>
+
+          <div className="h-5 w-px bg-slate-800 mx-1" />
+
+          {/* Prominent 3D Hospital Visualization Launcher */}
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => navigateTo('/3d')}
+              className="px-4 py-1.5 rounded-lg bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white text-xs font-bold shadow-lg shadow-sky-500/25 flex items-center gap-1.5 transition cursor-pointer"
+              title="Switch to Full-Screen 3D Hospital Visualization"
+            >
+              <span>🌐</span>
+              <span>Launch 3D Hospital (/3d)</span>
+            </button>
+
+            <button
+              onClick={() => window.open('/3d', '_blank')}
+              className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 text-xs border border-slate-700 transition"
+              title="Open 3D Visualization in New Window / Monitor"
+            >
+              ↗
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* Sub-Header: Portal Tab Navigation */}
+      <div className="bg-slate-900 border-b border-slate-800 px-6 flex items-center gap-1 overflow-x-auto shrink-0 shadow-inner">
+        <button
+          onClick={() => setActiveTab('INTAKE')}
+          className={`px-4 py-2.5 text-xs font-semibold flex items-center gap-2 border-b-2 transition whitespace-nowrap cursor-pointer ${
+            activeTab === 'INTAKE'
+              ? 'border-cyan-500 text-cyan-400 bg-slate-800/50'
+              : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800/20'
+          }`}
+        >
+          <span>📥</span>
+          <span>Case Intake & Admission</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('PATIENTS')}
+          className={`px-4 py-2.5 text-xs font-semibold flex items-center gap-2 border-b-2 transition whitespace-nowrap cursor-pointer ${
+            activeTab === 'PATIENTS'
+              ? 'border-cyan-500 text-cyan-400 bg-slate-800/50'
+              : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800/20'
+          }`}
+        >
+          <span>🛏️</span>
+          <span>Patient Directory & Bed Board</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('STAFF')}
+          className={`px-4 py-2.5 text-xs font-semibold flex items-center gap-2 border-b-2 transition whitespace-nowrap cursor-pointer ${
+            activeTab === 'STAFF'
+              ? 'border-cyan-500 text-cyan-400 bg-slate-800/50'
+              : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800/20'
+          }`}
+        >
+          <span>👥</span>
+          <span>Hospital Staff & Directory</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('REPORTS')}
+          className={`px-4 py-2.5 text-xs font-semibold flex items-center gap-2 border-b-2 transition whitespace-nowrap cursor-pointer ${
+            activeTab === 'REPORTS'
+              ? 'border-cyan-500 text-cyan-400 bg-slate-800/50'
+              : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800/20'
+          }`}
+        >
+          <span>📋</span>
+          <span>Clinical Reports & Reviews</span>
+          {reports.length > 0 && (
+            <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-cyan-950 text-cyan-400 border border-cyan-800">
+              {reports.length}
+            </span>
+          )}
+        </button>
+
+        <button
+          onClick={() => setActiveTab('KNOWLEDGE')}
+          className={`px-4 py-2.5 text-xs font-semibold flex items-center gap-2 border-b-2 transition whitespace-nowrap cursor-pointer ${
+            activeTab === 'KNOWLEDGE'
+              ? 'border-cyan-500 text-cyan-400 bg-slate-800/50'
+              : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800/20'
+          }`}
+        >
+          <span>📚</span>
+          <span>Harrison's RAG Search</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('BENCHMARK')}
+          className={`px-4 py-2.5 text-xs font-semibold flex items-center gap-2 border-b-2 transition whitespace-nowrap cursor-pointer ${
+            activeTab === 'BENCHMARK'
+              ? 'border-cyan-500 text-cyan-400 bg-slate-800/50'
+              : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800/20'
+          }`}
+        >
+          <span>⚖️</span>
+          <span>Policy Benchmarks & RL</span>
+        </button>
+      </div>
+
+      {/* Main Portal Viewport */}
+      <main className="flex-1 overflow-hidden flex flex-col relative">
+        {activeTab === 'INTAKE' && (
+          <CaseIntakeAdmissionSection
+            cases={cases}
+            onPatientAdmitted={handlePatientAdmitted}
+            onAdmitAndSimulate={handleAdmitAndSimulate}
+          />
+        )}
+
+        {activeTab === 'PATIENTS' && (
+          <PatientDirectorySection
+            onOpenConsult={() => setIsConsultOpen(true)}
+            refreshTrigger={patientRefreshCounter}
+          />
+        )}
+
+        {activeTab === 'STAFF' && <StaffManagementSection />}
+
+        {activeTab === 'REPORTS' && (
           <PhysicianReviewDashboard
             reports={reports}
             onSubmitReview={handleSubmitReview}
+            isSubmitting={isSubmittingReview}
           />
         )}
-      </div>
 
-      {/* Internal Medicine Specialist & Harrison's RAG Consultation Modal */}
+        {activeTab === 'KNOWLEDGE' && <KnowledgeSearchSection />}
+
+        {activeTab === 'BENCHMARK' && (
+          <div className="flex-1 p-6 bg-slate-900/60 overflow-y-auto max-w-6xl mx-auto flex flex-col justify-center items-center text-center">
+            <div className="max-w-xl p-8 bg-slate-800/50 border border-slate-800 rounded-2xl shadow-xl">
+              <div className="text-4xl mb-3">⚖️</div>
+              <h3 className="text-xl font-bold text-slate-100 mb-2">
+                RL Policy Benchmark & DPO Corpus
+              </h3>
+              <p className="text-xs text-slate-400 mb-6 leading-relaxed">
+                Compare unaligned MedGemma v0.1 against physician-guided RL DPO v0.3 across multi-case diagnostic accuracy, test appropriateness, and contraindication avoidance.
+              </p>
+              <div className="flex flex-wrap items-center justify-center gap-3">
+                <button
+                  onClick={() => setIsBenchmarkOpen(true)}
+                  className="px-5 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold text-xs rounded-xl shadow transition"
+                >
+                  Launch Policy Benchmark Console
+                </button>
+                <button
+                  onClick={() => setIsRLModalOpen(true)}
+                  className="px-5 py-2.5 bg-slate-700 hover:bg-slate-600 text-slate-200 font-semibold text-xs rounded-xl border border-slate-600 transition"
+                >
+                  Inspect DPO Preference Dataset
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </main>
+
+      {/* Global Modals */}
       <InternalMedicineConsultModal
         isOpen={isConsultOpen}
         onClose={() => setIsConsultOpen(false)}
       />
 
-      {/* Clinical Pharmacy & Medication Safety Modal */}
       <PharmacistModal
         isOpen={isPharmacyOpen}
         onClose={() => setIsPharmacyOpen(false)}
         cases={cases}
       />
 
-      {/* Department Station Inspector Modal (Lab / Radiology / Nurse Triage) */}
-      <DepartmentStationModal
-        stationId={departmentStationId}
-        isOpen={departmentStationId !== null}
-        onClose={() => setDepartmentStationId(null)}
-        cases={cases}
-        selectedCaseId={selectedCaseId}
-        onRunEncounter={handleRunSimulation}
-        isRunning={isRunning}
+      <InpatientTelemetryModal
+        isOpen={isInpatientOpen}
+        onClose={() => setIsInpatientOpen(false)}
       />
 
-      {/* Phase 6: RL / DPO Preference Alignment Corpus Modal */}
-      <RLDatasetModal
-        isOpen={isRLModalOpen}
-        onClose={() => setIsRLModalOpen(false)}
-      />
-
-      {/* Comparative Policy Evaluation Benchmark Modal (Base vs RL DPO) */}
       <PolicyBenchmarkModal
         isOpen={isBenchmarkOpen}
         onClose={() => setIsBenchmarkOpen(false)}
       />
 
-      {/* East Inpatient Wing Multi-Bed Central Telemetry Console */}
-      <InpatientTelemetryModal
-        isOpen={isInpatientOpen}
-        onClose={() => setIsInpatientOpen(false)}
+      <RLDatasetModal
+        isOpen={isRLModalOpen}
+        onClose={() => setIsRLModalOpen(false)}
       />
     </div>
-
   );
 };
 

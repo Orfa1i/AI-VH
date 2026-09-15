@@ -6,8 +6,10 @@ physician reviews, DPO pairs, and knowledge embeddings across PostgreSQL and SQL
 
 import json
 import logging
+import uuid
+import random
 from typing import Dict, List, Optional, Any
-from datetime import datetime
+from datetime import datetime, timezone
 
 from .connection import db_manager, DatabaseConnectionManager
 from .schema import SQLITE_SCHEMA, POSTGRES_SCHEMA
@@ -467,7 +469,352 @@ class DatabaseRepository:
             res = cur.fetchone()
             return res[0] if res else 0
 
+    # =========================================================================
+    # Patient Case Intake & Admission Repository
+    # =========================================================================
+
+    def admit_patient(self, case_data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Converts an incoming clinical case or manual intake form into an admitted
+        patient record with MRN, department assignment, and bed allocation.
+        """
+        patient_id = case_data.get("id") or f"PAT-{uuid.uuid4().hex[:8].upper()}"
+        mrn = case_data.get("mrn") or f"MRN-{random.randint(100000, 999999)}"
+        name = case_data.get("name", "Unknown Patient")
+        age = int(case_data.get("age", 50))
+        sex = case_data.get("sex", "Unknown")
+        acuity = case_data.get("triage_acuity", "URGENT")
+        complaint = case_data.get("chief_complaint", "Undifferentiated clinical presentation")
+        department = case_data.get("assigned_department", "EMERGENCY")
+        bed = case_data.get("bed_number") or f"{department[:3]}-BAY-01"
+        admitted_at = datetime.now(timezone.utc)
+        raw_json_str = json.dumps(case_data)
+
+        is_pg = self.manager.engine_type == "postgresql"
+        with self.manager.get_connection() as conn:
+            cur = conn.cursor()
+            if is_pg:
+                cur.execute(
+                    """
+                    INSERT INTO patients (
+                        id, mrn, name, age, sex, triage_acuity, chief_complaint,
+                        admission_status, assigned_department, bed_number, admitted_at, raw_json
+                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    ON CONFLICT (id) DO UPDATE SET
+                        admission_status = EXCLUDED.admission_status,
+                        assigned_department = EXCLUDED.assigned_department,
+                        bed_number = EXCLUDED.bed_number,
+                        raw_json = EXCLUDED.raw_json;
+                    """,
+                    (
+                        patient_id, mrn, name, age, sex, acuity, complaint,
+                        "ADMITTED", department, bed, admitted_at, raw_json_str
+                    )
+                )
+            else:
+                cur.execute(
+                    """
+                    INSERT OR REPLACE INTO patients (
+                        id, mrn, name, age, sex, triage_acuity, chief_complaint,
+                        admission_status, assigned_department, bed_number, admitted_at, raw_json
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+                    """,
+                    (
+                        patient_id, mrn, name, age, sex, acuity, complaint,
+                        "ADMITTED", department, bed, admitted_at.isoformat(), raw_json_str
+                    )
+                )
+
+        logger.info(f"Admitted patient {name} (ID: {patient_id}, MRN: {mrn}) to {department} {bed}.")
+        return {
+            "id": patient_id,
+            "mrn": mrn,
+            "name": name,
+            "age": age,
+            "sex": sex,
+            "triage_acuity": acuity,
+            "chief_complaint": complaint,
+            "admission_status": "ADMITTED",
+            "assigned_department": department,
+            "bed_number": bed,
+            "admitted_at": admitted_at.isoformat(),
+            "case_data": case_data,
+        }
+
+    def get_patient(self, patient_id: str) -> Optional[Dict[str, Any]]:
+        is_pg = self.manager.engine_type == "postgresql"
+        with self.manager.get_connection() as conn:
+            cur = conn.cursor()
+            query = "SELECT * FROM patients WHERE id = %s OR mrn = %s" if is_pg else "SELECT * FROM patients WHERE id = ? OR mrn = ?"
+            cur.execute(query, (patient_id, patient_id))
+            row = cur.fetchone()
+            if not row:
+                return None
+            d = dict(row)
+            if "raw_json" in d and isinstance(d["raw_json"], str):
+                try:
+                    d["case_data"] = json.loads(d.pop("raw_json"))
+                except Exception:
+                    pass
+            return d
+
+    def list_patients(self, status: Optional[str] = None, limit: int = 50, offset: int = 0) -> List[Dict[str, Any]]:
+        is_pg = self.manager.engine_type == "postgresql"
+        with self.manager.get_connection() as conn:
+            cur = conn.cursor()
+            if status:
+                query = "SELECT * FROM patients WHERE admission_status = %s ORDER BY admitted_at DESC LIMIT %s OFFSET %s" if is_pg else "SELECT * FROM patients WHERE admission_status = ? ORDER BY admitted_at DESC LIMIT ? OFFSET ?"
+                cur.execute(query, (status, limit, offset))
+            else:
+                query = "SELECT * FROM patients ORDER BY admitted_at DESC LIMIT %s OFFSET %s" if is_pg else "SELECT * FROM patients ORDER BY admitted_at DESC LIMIT ? OFFSET ?"
+                cur.execute(query, (limit, offset))
+            rows = cur.fetchall()
+            results = []
+            for r in rows:
+                d = dict(r)
+                if "raw_json" in d and isinstance(d["raw_json"], str):
+                    try:
+                        d["case_data"] = json.loads(d.pop("raw_json"))
+                    except Exception:
+                        pass
+                results.append(d)
+            return results
+
+    def discharge_patient(self, patient_id: str) -> bool:
+        is_pg = self.manager.engine_type == "postgresql"
+        with self.manager.get_connection() as conn:
+            cur = conn.cursor()
+            query = "UPDATE patients SET admission_status = 'DISCHARGED' WHERE id = %s OR mrn = %s" if is_pg else "UPDATE patients SET admission_status = 'DISCHARGED' WHERE id = ? OR mrn = ?"
+            cur.execute(query, (patient_id, patient_id))
+            return cur.rowcount > 0
+
+    def count_patients(self, status: Optional[str] = None) -> int:
+        is_pg = self.manager.engine_type == "postgresql"
+        with self.manager.get_connection() as conn:
+            cur = conn.cursor()
+            if status:
+                query = "SELECT COUNT(*) FROM patients WHERE admission_status = %s;" if is_pg else "SELECT COUNT(*) FROM patients WHERE admission_status = ?;"
+                cur.execute(query, (status,))
+            else:
+                cur.execute("SELECT COUNT(*) FROM patients;")
+            res = cur.fetchone()
+            return res[0] if res else 0
+
+    # =========================================================================
+    # Hospital Staff Management
+    # =========================================================================
+
+    def add_staff_member(self, staff: Dict[str, Any]) -> str:
+        staff_id = staff.get("id") or f"STAFF-{staff.get('name', 'USER').replace(' ', '').upper()[:8]}"
+        name = staff.get("name", "Medical Officer")
+        role = staff.get("role", "DOCTOR")
+        specialty = staff.get("specialty", "GENERAL_MEDICINE")
+        title = staff.get("title", "Clinical Specialist")
+        department = staff.get("department", "INTERNAL_MEDICINE")
+        status = staff.get("status", "ON_DUTY")
+        credentials = staff.get("credentials", "MD")
+        raw_json_str = json.dumps(staff)
+
+        is_pg = self.manager.engine_type == "postgresql"
+        with self.manager.get_connection() as conn:
+            cur = conn.cursor()
+            if is_pg:
+                cur.execute(
+                    """
+                    INSERT INTO hospital_staff (id, name, role, specialty, title, department, status, credentials, raw_json)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    ON CONFLICT (id) DO UPDATE SET
+                        title = EXCLUDED.title,
+                        department = EXCLUDED.department,
+                        status = EXCLUDED.status,
+                        raw_json = EXCLUDED.raw_json;
+                    """,
+                    (staff_id, name, role, specialty, title, department, status, credentials, raw_json_str)
+                )
+            else:
+                cur.execute(
+                    """
+                    INSERT OR REPLACE INTO hospital_staff (id, name, role, specialty, title, department, status, credentials, raw_json)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
+                    """,
+                    (staff_id, name, role, specialty, title, department, status, credentials, raw_json_str)
+                )
+        logger.info(f"Staff member {name} ({title}) updated in database.")
+        return staff_id
+
+    def get_staff_member(self, staff_id: str) -> Optional[Dict[str, Any]]:
+        is_pg = self.manager.engine_type == "postgresql"
+        with self.manager.get_connection() as conn:
+            cur = conn.cursor()
+            query = "SELECT * FROM hospital_staff WHERE id = %s" if is_pg else "SELECT * FROM hospital_staff WHERE id = ?"
+            cur.execute(query, (staff_id,))
+            row = cur.fetchone()
+            if not row:
+                return None
+            d = dict(row)
+            extra = {}
+            if "raw_json" in d and isinstance(d["raw_json"], str):
+                try:
+                    extra = json.loads(d.pop("raw_json"))
+                except Exception:
+                    pass
+            extra.update(d)
+            return extra
+
+    def list_staff(self, role: Optional[str] = None, department: Optional[str] = None) -> List[Dict[str, Any]]:
+        is_pg = self.manager.engine_type == "postgresql"
+        with self.manager.get_connection() as conn:
+            cur = conn.cursor()
+            query = "SELECT * FROM hospital_staff"
+            params = []
+            conditions = []
+            if role:
+                conditions.append("role = %s" if is_pg else "role = ?")
+                params.append(role)
+            if department:
+                conditions.append("department = %s" if is_pg else "department = ?")
+                params.append(department)
+            if conditions:
+                query += " WHERE " + " AND ".join(conditions)
+            query += " ORDER BY name ASC;"
+            cur.execute(query, tuple(params))
+            rows = cur.fetchall()
+            results = []
+            for r in rows:
+                d = dict(r)
+                extra = {}
+                if "raw_json" in d and isinstance(d["raw_json"], str):
+                    try:
+                        extra = json.loads(d.pop("raw_json"))
+                    except Exception:
+                        pass
+                extra.update(d)
+                results.append(extra)
+            return results
+
+    def update_staff_status(self, staff_id: str, status: str) -> bool:
+        is_pg = self.manager.engine_type == "postgresql"
+        with self.manager.get_connection() as conn:
+            cur = conn.cursor()
+            # Fetch existing raw_json to update it
+            fetch_query = "SELECT raw_json FROM hospital_staff WHERE id = %s" if is_pg else "SELECT raw_json FROM hospital_staff WHERE id = ?"
+            cur.execute(fetch_query, (staff_id,))
+            row = cur.fetchone()
+            if not row:
+                return False
+            raw_data = {}
+            if row[0]:
+                try:
+                    raw_data = json.loads(row[0])
+                except Exception:
+                    pass
+            raw_data["status"] = status
+            new_json_str = json.dumps(raw_data)
+
+            update_query = "UPDATE hospital_staff SET status = %s, raw_json = %s WHERE id = %s;" if is_pg else "UPDATE hospital_staff SET status = ?, raw_json = ? WHERE id = ?;"
+            cur.execute(update_query, (status, new_json_str, staff_id))
+            return cur.rowcount > 0
+
+    def count_staff(self) -> int:
+        with self.manager.get_connection() as conn:
+            cur = conn.cursor()
+            cur.execute("SELECT COUNT(*) FROM hospital_staff;")
+            res = cur.fetchone()
+            return res[0] if res else 0
+
+    def seed_default_staff(self):
+        """Populates the canonical AI-VH healthcare team if roster is uninitialized."""
+        if self.count_staff() > 0:
+            return
+
+        default_roster = [
+            {
+                "id": "STAFF-VANCE",
+                "name": "Dr. Marcus Vance",
+                "role": "DOCTOR",
+                "specialty": "INTERNAL_MEDICINE",
+                "title": "Chief of Internal Medicine & Clinical Reasoning Specialist",
+                "department": "INTERNAL_MEDICINE",
+                "status": "ON_DUTY",
+                "credentials": "MD, FACP",
+                "bio": "Attending physician specializing in diagnostic differentiation, Harrison's guideline adherence, and acute inpatient workups.",
+                "system_prompt": "Expert internal medicine consultant. Prioritizes evidence-grounded differential diagnosis and contraindication avoidance.",
+                "total_encounters": 142,
+            },
+            {
+                "id": "STAFF-JENKINS",
+                "name": "Sarah Jenkins",
+                "role": "NURSE",
+                "specialty": "TRIAGE_EMERGENCY",
+                "title": "Lead Triage Emergency Nurse",
+                "department": "EMERGENCY",
+                "status": "ON_DUTY",
+                "credentials": "BSN, RN, CEN",
+                "bio": "Emergency intake specialist conducting rapid vital assessments, ESI triage categorization, and patient stabilization.",
+                "system_prompt": "Emergency triage RN. Rapidly collects vitals, identifies critical red-flag symptoms, and assigns appropriate acuity.",
+                "total_encounters": 289,
+            },
+            {
+                "id": "STAFF-ROSTOVA",
+                "name": "Dr. Elena Rostova",
+                "role": "PHARMACIST",
+                "specialty": "PHARMACOTHERAPY",
+                "title": "Clinical Specialist Pharmacist",
+                "department": "PHARMACY",
+                "status": "ON_DUTY",
+                "credentials": "PharmD, BCPS",
+                "bio": "Critical care clinical pharmacist leading medication reconciliation, renal dosing adjustments, and drug-allergy contraindication checks.",
+                "system_prompt": "Clinical pharmacist vigilant against black-box warnings, severe drug-drug interactions, and renal dose limits.",
+                "total_encounters": 195,
+            },
+            {
+                "id": "STAFF-CHEN",
+                "name": "David Chen",
+                "role": "LAB_SCIENTIST",
+                "specialty": "CLINICAL_PATHOLOGY",
+                "title": "Chief Laboratory Scientist",
+                "department": "LABORATORY",
+                "status": "ON_DUTY",
+                "credentials": "MLS(ASCP)cm",
+                "bio": "Oversees high-throughput automated serum chemistries, cardiac biomarkers (hs-cTnT), hematology panels, and venous blood gas assays.",
+                "system_prompt": "Medical laboratory scientist reporting reference intervals, turnaround times, and critical panic values.",
+                "total_encounters": 312,
+            },
+            {
+                "id": "STAFF-HAYES",
+                "name": "Dr. Arthur Hayes",
+                "role": "RADIOLOGIST",
+                "specialty": "DIAGNOSTIC_RADIOLOGY",
+                "title": "Senior Diagnostic Radiologist",
+                "department": "RADIOLOGY",
+                "status": "ON_DUTY",
+                "credentials": "MD, FACR",
+                "bio": "Diagnostic imaging subspecialist reviewing high-resolution chest radiography, CT pulmonary angiograms, and abdominal imaging.",
+                "system_prompt": "Radiologist producing structured PACS findings, key study observations, and diagnostic impressions.",
+                "total_encounters": 178,
+            },
+            {
+                "id": "STAFF-PATEL",
+                "name": "Maya Patel",
+                "role": "RECEPTIONIST",
+                "specialty": "PATIENT_ADMISSIONS",
+                "title": "Patient Intake & Admissions Coordinator",
+                "department": "RECEPTION",
+                "status": "ON_DUTY",
+                "credentials": "CHAA",
+                "bio": "Coordinates initial patient intake, emergency department registration, insurance verification, and bed allocation tracking.",
+                "system_prompt": "Patient admissions registrar ensuring demographic accuracy and rapid routing to nurse triage.",
+                "total_encounters": 350,
+            },
+        ]
+
+        for s in default_roster:
+            self.add_staff_member(s)
+        logger.info(f"Initialized hospital staff roster with {len(default_roster)} clinical personnel.")
+
 
 # Global singleton repository
 db_repo = DatabaseRepository()
+db_repo.seed_default_staff()
+
 
