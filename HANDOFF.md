@@ -196,16 +196,29 @@ should not be called again without first understanding this** — it does not me
 preserve existing file content. A real fix (append/merge instead of overwrite, or a separate
 output path) is needed before this endpoint is used again for real physician-review exports.
 
+## 10. Session: PostgreSQL & pgvector Persistence Implementation (2026-09-15)
+
+- **Documentation Phase Audit**:
+  - Sequentially reviewed all 14 markdown files in `docs/` (`00-INDEX.md` through `13-roadmap-phases.md`).
+  - Identified that Phases 0–1 are 100% complete, Phases 2–6 are partially complete (core IM prototype running, secondary specialties and procedural case generator unbuilt), and Phase 7 (Scale) is deferred per user direction.
+  - Flagged major architectural gap: PostgreSQL and pgvector persistence from `docs/06-data-architecture.md` was unbuilt (everything was stored in volatile memory).
+- **Implemented Database Persistence Layer (`backend/database/`)**:
+  - `connection.py`: Dual-mode connection manager that targets PostgreSQL + `pgvector` when `DATABASE_URL` is set or PostgreSQL is running, with automatic transparent fallback to local persistent SQLite (`data/aivh.db`).
+  - `models.py`: Strongly typed relational record models for `ClinicalReportRecord`, `PhysicianReviewRecord`, `DPOFeedbackRecord`, `KnowledgeChunkRecord`, and `EncounterRecord`.
+  - `schema.py`: SQL DDL schemas for both PostgreSQL (JSONB, VECTOR) and SQLite (JSON text, REAL vector blobs) with indexing on `case_id`, `report_id`, `encounter_id`, and `specialty`.
+  - `repository.py`: Complete repository pattern providing thread-safe CRUD, model reconstruction, list pagination, and count operations.
+  - `init_db.py`: CLI database bootstrap and health verification script (`py -3.13 -m backend.database.init_db`).
+- **Wired Orchestrator & API**:
+  - `orchestrator.py`: Auto-persists completed clinical reports, physician reviews, and compiled DPO pairs to the database; restores existing records from database on startup.
+  - `router.py`: Added `GET /api/reports/history`, `GET /api/reviews/history`, and `GET /api/database/status`.
+- **Verification**:
+  - Created `backend/tests/test_database.py` with 7 comprehensive tests (schema init, report CRUD, review CRUD, DPO pair storage, knowledge chunk vector storage, cross-session disk persistence, API endpoints).
+  - All 39 backend tests passing (`py -3.13 -m pytest backend/tests/ -v`).
+  - Frontend production build clean (`pnpm build` -> exit code 0).
+
 ### Updated Next Steps
-- **Fix `orchestrator.export_dpo_dataset()` destructive overwrite** (see above) before using
-  it again — currently unsafe to call once a hand-curated dataset exists at the same path.
-- **Visual/click QA of the full IM-only flow in a real browser** — not done this session
-  (Claude-in-Chrome extension unavailable). Needs a pass through ER → triage → IM consult →
-  labs/radiology → pharmacy → report → physician review → RL benchmark dashboard, now with
-  the simplified IM-only 3D scene, with the extension connected or manually by the user.
-- Add multi-agent morning inpatient conference rounds (not started, not yet requested for
-  IM-only scope).
-- Continue expanding the DPO dataset further / via real physician review sessions as more
-  data becomes available — 10 pairs is still small; adapter converges near-instantly and is
-  prone to overfitting at these hyperparameters.
+- **Visual/click QA of the full IM-only flow in a real browser** — needs a pass through ER → triage → IM consult → labs/radiology → pharmacy → report → physician review → RL benchmark dashboard.
+- **Run benchmark evaluations with larger case bank** (expand beyond the current 4 benchmark cases).
+- **Deploy/connect live PostgreSQL instance with pgvector** (set `DATABASE_URL` in environment).
 - No GitHub remote configured on this repo — user declined auto-creating one this session.
+

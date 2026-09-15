@@ -27,6 +27,7 @@ from ..agents.pharmacist import PharmacistAgent
 from ..agents.specialists.internal_medicine import InternalMedicineSpecialistAgent
 from ..rag.specialists.internal_medicine_rag import InternalMedicineRAGAgent
 from ..rl.dpo_generator import DPOPreferenceGenerator, DPOPreferencePair
+from ..database.repository import db_repo
 
 logger = logging.getLogger("SimulationOrchestrator")
 
@@ -50,6 +51,31 @@ class HospitalOrchestrator:
         self.reports: Dict[str, ClinicalReport] = {}
         self.reviews: Dict[str, PhysicianReview] = {}
         
+        # Database persistence layer (PostgreSQL / SQLite)
+        self.db = db_repo
+        
+        # Restore any persisted reports and reviews from database
+        restored_reports = 0
+        for r_dict in self.db.list_reports(limit=500):
+            try:
+                rep_obj = ClinicalReport.model_validate(r_dict)
+                self.reports[rep_obj.id] = rep_obj
+                restored_reports += 1
+            except Exception as e:
+                logger.warning(f"Could not restore report from DB: {e}")
+
+        restored_reviews = 0
+        for rev_dict in self.db.list_reviews(limit=500):
+            try:
+                rev_obj = PhysicianReview.model_validate(rev_dict)
+                self.reviews[rev_obj.id] = rev_obj
+                restored_reviews += 1
+            except Exception as e:
+                logger.warning(f"Could not restore review from DB: {e}")
+
+        if restored_reports or restored_reviews:
+            logger.info(f"Restored {restored_reports} clinical reports and {restored_reviews} reviews from persistent database.")
+
         # Load Harrison's RAG index once
         logger.info("Initializing medical knowledge base from Harrison's Internal Medicine...")
         parser = HarrisonParser()
@@ -160,6 +186,13 @@ class HospitalOrchestrator:
         state.status = "REPORT_READY"
         state.report = report
         self.reports[report.id] = report
+
+        # Persist report to database
+        try:
+            self.db.save_report(report, case_id=case.id)
+        except Exception as db_err:
+            logger.error(f"Failed to persist clinical report to database: {db_err}", exc_info=True)
+
         logger.info(f"Encounter {encounter_id} completed. Report ID: {report.id}")
 
         return {
@@ -189,7 +222,15 @@ class HospitalOrchestrator:
     ) -> PhysicianReview:
         """Records structured expert physician evaluation and creates dataset entry."""
         if report_id not in self.reports:
-            raise ValueError(f"Report {report_id} not found")
+            # Check database if not in active memory
+            db_rep = self.db.get_report(report_id)
+            if db_rep:
+                try:
+                    self.reports[report_id] = ClinicalReport.model_validate(db_rep)
+                except Exception:
+                    pass
+            if report_id not in self.reports:
+                raise ValueError(f"Report {report_id} not found")
 
         report = self.reports[report_id]
         review = PhysicianReview(
@@ -213,6 +254,18 @@ class HospitalOrchestrator:
         if report.encounter_id in self.encounters:
             self.encounters[report.encounter_id].review = review
 
+        # Persist review and DPO pair to database
+        try:
+            self.db.save_review(review)
+            case = next((c for c in BENCHMARK_CASES if c.id == report.patient_id), None)
+            if not case:
+                case = next((c for c in BENCHMARK_CASES if c.name == report.patient_name), None)
+            if case:
+                dpo_pair = DPOPreferenceGenerator.build_preference_pair(report, review, case)
+                self.db.save_dpo_pair(dpo_pair)
+        except Exception as db_err:
+            logger.error(f"Failed to persist physician review/DPO pair to database: {db_err}", exc_info=True)
+
         logger.info(f"Physician review recorded for {report_id}. Approved: {approved}, Score: {overall_score}/5")
         return review
 
@@ -221,11 +274,13 @@ class HospitalOrchestrator:
 
     def get_report(self, report_id: str) -> Optional[Dict[str, Any]]:
         report = self.reports.get(report_id)
-        return report.model_dump() if report else None
+        if report:
+            return report.model_dump()
+        return self.db.get_report(report_id)
 
     def get_analytics(self) -> Dict[str, Any]:
-        total_reports = len(self.reports)
-        total_reviews = len(self.reviews)
+        total_reports = max(len(self.reports), self.db.count_reports())
+        total_reviews = max(len(self.reviews), self.db.count_reviews())
         approved_count = sum(1 for r in self.reviews.values() if r.approved)
         avg_score = (sum(r.overall_score for r in self.reviews.values()) / max(total_reviews, 1)) if total_reviews > 0 else 0.0
 
@@ -235,6 +290,7 @@ class HospitalOrchestrator:
             "total_reviews": total_reviews,
             "approval_rate": round(approved_count / max(total_reviews, 1) * 100, 1) if total_reviews > 0 else 0.0,
             "average_physician_score": round(avg_score, 2),
+            "database_status": self.db.manager.get_status(),
             "available_cases": [
                 {"id": c.id, "name": c.name, "age": c.age, "complaint": c.chief_complaint, "acuity": c.triage_acuity.value}
                 for c in BENCHMARK_CASES

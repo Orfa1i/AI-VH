@@ -127,6 +127,50 @@ async def get_reports():
     return orchestrator.get_all_reports()
 
 
+@api_router.get("/reports/history")
+async def get_reports_history(case_id: Optional[str] = None, limit: int = 50, offset: int = 0):
+    """Retrieves persistent clinical reports from the database with pagination and case filtering."""
+    try:
+        reports = orchestrator.db.list_reports(case_id=case_id, limit=limit, offset=offset)
+        total = orchestrator.db.count_reports()
+        return {
+            "total": total,
+            "limit": limit,
+            "offset": offset,
+            "reports": reports,
+        }
+    except Exception as e:
+        logger.error(f"Error fetching report history: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/reviews/history")
+async def get_reviews_history(limit: int = 50, offset: int = 0):
+    """Retrieves persistent physician reviews from the database."""
+    try:
+        reviews = orchestrator.db.list_reviews(limit=limit, offset=offset)
+        total = orchestrator.db.count_reviews()
+        return {
+            "total": total,
+            "limit": limit,
+            "offset": offset,
+            "reviews": reviews,
+        }
+    except Exception as e:
+        logger.error(f"Error fetching review history: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/database/status")
+async def get_database_status():
+    """Returns the operational status of the PostgreSQL / SQLite database persistence layer."""
+    status = orchestrator.db.manager.get_status()
+    status["total_reports"] = orchestrator.db.count_reports()
+    status["total_reviews"] = orchestrator.db.count_reviews()
+    status["total_knowledge_chunks"] = orchestrator.db.count_knowledge_chunks()
+    return status
+
+
 @api_router.get("/reports/{report_id}")
 async def get_report_detail(report_id: str):
     report = orchestrator.get_report(report_id)
