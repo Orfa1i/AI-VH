@@ -17,7 +17,7 @@ from ..clinical.cases import PatientGroundTruth, get_benchmark_case, BENCHMARK_C
 from ..clinical.tools import ClinicalToolkit
 from ..rag.book_parser import HarrisonParser
 from ..rag.vector_index import MedicalKnowledgeIndex
-from ..llm.medgemma_service import MedGemmaService
+from ..llm.medgemma_service import medgemma_service
 from ..agents.patient import PatientAgent
 from ..agents.nurse import NurseAgent
 from ..agents.doctor import DoctorAgent
@@ -82,8 +82,14 @@ class HospitalOrchestrator:
         chunks = parser.load_or_extract_chunks(max_pages_per_chapter=2)
         self.rag_index = MedicalKnowledgeIndex(chunks)
 
-        # Initialize shared MedGemma service and dedicated Internal Medicine RAG Agent
-        self.medgemma = MedGemmaService(enable_gpu=enable_gpu)
+        # Reuse the module-level MedGemma singleton (loaded once at FastAPI startup in
+        # main.py) instead of constructing a separate, never-loaded instance -- a
+        # previous version of this line created its own `MedGemmaService(enable_gpu=...)`
+        # whose self.model always stayed None, so every real clinical encounter silently
+        # ran the 2-branch keyword heuristic engine instead of the real GPU model, even
+        # though live GPU inference had been verified working for the RL benchmark
+        # endpoints (which used this same singleton directly).
+        self.medgemma = medgemma_service
         self.im_rag_agent = InternalMedicineRAGAgent()
         self.im_specialist = InternalMedicineSpecialistAgent(
             medgemma_service=self.medgemma,

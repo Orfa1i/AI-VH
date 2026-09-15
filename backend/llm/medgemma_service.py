@@ -236,11 +236,32 @@ Provide your clinical assessment and plan."""
         }
 
     def _parse_or_supplement_output(self, raw_output: str, chief_complaint: str, lab_results: List[Dict[str, Any]], rag_context: List[Dict[str, Any]]) -> Dict[str, Any]:
-        # Supplement GPU generated text with structured fields
+        # Structural template (differential/confidence/disposition shape) from the
+        # deterministic engine, but the real generated diagnosis/treatment take priority
+        # when available -- the heuristic only recognizes chest-pain/DKA keyword patterns
+        # and previously always won even when real GPU generation produced a correct,
+        # different diagnosis (e.g. "pleuritic chest pain" in a PE case false-matched the
+        # cardiac branch and silently overrode the real PE diagnosis with NSTEMI).
         heuristic = self._heuristic_medical_synthesis(chief_complaint, "", "", {}, lab_results, rag_context)
-        if len(raw_output) > 50:
-            heuristic["clinical_reasoning"] = raw_output[:500] + "..."
-        return heuristic
+        if len(raw_output) < 50:
+            return heuristic
+
+        parsed = self._parse_llm_text_to_structured_output(raw_output)
+        result = dict(heuristic)
+        result["clinical_reasoning"] = raw_output[:500] + "..."
+
+        if parsed["primary_diagnosis"] != "Undifferentiated Acute Medical Illness":
+            result["primary_diagnosis"] = parsed["primary_diagnosis"]
+            result["differential"] = [{
+                "condition": parsed["primary_diagnosis"],
+                "likelihood": 0.85,
+                "supporting_points": ["Derived from live MedGemma-generated clinical assessment."],
+                "opposing_points": [],
+            }]
+            if parsed["treatment_plan"]:
+                result["treatment_plan"] = parsed["treatment_plan"]
+
+        return result
 
     def _infer_with_gpu_raw(self, model, chief_complaint: str, hpi: str, vitals_summary: str, exam_findings: Dict[str, str], lab_results: List[Dict[str, Any]], rag_context: List[Dict[str, Any]]) -> Dict[str, Any]:
         import torch
@@ -277,17 +298,62 @@ Provide Assessment and Plan."""
         # Strip markdown emphasis markers so section headers and their content aren't
         # split apart by a stray "**" landing right after the colon (e.g. "**Assessment:**\n\n*   **Dx**").
         clean = re.sub(r'\*\*|__', '', text)
+        diagnosis_found = False
 
-        # Only match "Assessment:" / "Diagnosis:" as a standalone header line (not a mid-sentence
-        # mention like "...here is a potential assessment and plan..."), then take the next bullet.
-        header_match = re.search(r'(?im)^\s*(?:primary\s+diagnosis|assessment|diagnosis)\s*:\s*$', clean)
-        if header_match:
-            after = clean[header_match.end():]
-            bullet_match = re.search(r'[^\S\n]*(?:[-*\d.\s]+)?([A-Z][^\n:]{4,140})', after)
-            if bullet_match:
-                candidate = bullet_match.group(1).strip().rstrip('.:')
-                if candidate:
+        # Strategy 1: diagnostic phrasing. The model most often states the diagnosis in
+        # plain prose ("...high clinical suspicion for acute pulmonary embolism (PE)
+        # based on...") rather than bolding it or putting it under a clean header -- try
+        # these common phrasings first, in order of specificity.
+        phrase_patterns = [
+            r'(?i)high clinical suspicion for\s+(.+?)(?:\s+based on|\s+given|\.|,|\n)',
+            r'(?i)clinical suspicion for\s+(.+?)(?:\s+based on|\s+given|\.|,|\n)',
+            r'(?i)(?:most\s+)?likely diagnosis is\s+(.+?)(?:\.|,|\n)',
+            r'(?i)diagnosis of\s+(.+?)(?:\.|,|\n)',
+            r'(?i)diagnosed with\s+(.+?)(?:\.|,|\n)',
+            r'(?i)consistent with\s+(.+?)(?:\.|,|\n)',
+        ]
+        for pattern in phrase_patterns:
+            m = re.search(pattern, clean)
+            if m:
+                candidate = m.group(1).strip().rstrip('.:')
+                if 4 <= len(candidate) <= 100:
                     result["primary_diagnosis"] = candidate
+                    diagnosis_found = True
+                    break
+
+        # Strategy 2: bolded condition name (used when the model does bold the
+        # diagnosis instead, e.g. "...suspicion for **Pulmonary Embolism (PE)**.").
+        # Skip spans that are themselves section labels rather than a condition.
+        if not diagnosis_found:
+            label_terms = {
+                "clinical assessment", "differential diagnosis", "primary diagnosis",
+                "assessment", "diagnosis", "symptoms", "risk factors", "vitals",
+                "physical exam", "investigations", "treatment", "plan", "reasoning",
+                "assessment and plan", "evidence-based decision", "suboptimal reasoning",
+                "history", "key findings", "hemodynamic status", "findings",
+                "presentation", "labs", "exam", "management", "workup",
+                "clinical reasoning", "evidence-based decision & reasoning",
+            }
+            for span in re.findall(r'\*\*([^*]{3,90})\*\*', text):
+                candidate = span.strip().rstrip(':').strip()
+                if len(candidate) < 4 or candidate.lower() in label_terms:
+                    continue
+                result["primary_diagnosis"] = candidate
+                diagnosis_found = True
+                break
+
+        # Strategy 3: fallback for output with no bold markers and no recognized
+        # phrasing -- match "Assessment:" / "Diagnosis:" as a standalone header line,
+        # then take the next bullet.
+        if not diagnosis_found:
+            header_match = re.search(r'(?im)^\s*(?:primary\s+diagnosis|assessment|diagnosis)\s*:\s*$', clean)
+            if header_match:
+                after = clean[header_match.end():]
+                bullet_match = re.search(r'[^\S\n]*(?:[-*\d.\s]+)?([A-Z][^\n:]{4,140})', after)
+                if bullet_match:
+                    candidate = bullet_match.group(1).strip().rstrip('.:')
+                    if candidate:
+                        result["primary_diagnosis"] = candidate
 
         plan_match = re.search(r'(?i)(?:plan|treatment)\s*:?\s*\n(.*)', clean, re.DOTALL)
         if plan_match:
