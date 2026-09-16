@@ -6,6 +6,7 @@ to deliver guideline-directed clinical consultations and full hospital encounter
 
 from typing import Dict, List, Any, Optional
 import logging
+import asyncio
 from ..base import BaseAgent
 from ..doctor import DoctorAgent
 from ...simulation.events import HospitalEvent, EventType
@@ -73,7 +74,8 @@ class InternalMedicineSpecialistAgent(DoctorAgent):
         )
 
         # 2. Synthesize Specialist Consult Note combining Harrison's RAG & MedGemma reasoning
-        medgemma_decision = self.llm.generate_clinical_decision(
+        medgemma_decision = await asyncio.to_thread(
+            self.llm.generate_clinical_decision,
             chief_complaint=clinical_scenario,
             hpi="",
             vitals_summary="Assessed during specialist consult",
@@ -114,11 +116,12 @@ class InternalMedicineSpecialistAgent(DoctorAgent):
         # 1. Semantic retrieval from Harrison's RAG knowledge base
         citations = self.rag_agent.retrieve_evidence(user_message, top_k=3)
 
-        # 2. Invoke MedGemma for conversational clinical synthesis
+        # 2. Invoke MedGemma for conversational clinical synthesis off the main event loop
         chat_history = conversation_history or []
         chat_history_with_msg = chat_history + [{"role": "user", "content": user_message}]
 
-        response = self.llm.generate_doctor_chat_response(
+        response = await asyncio.to_thread(
+            self.llm.generate_doctor_chat_response,
             messages=chat_history_with_msg,
             rag_context=citations,
             patient_context=patient_context,

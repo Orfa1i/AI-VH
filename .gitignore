@@ -27,6 +27,12 @@ models/**/*.pt
 # Large Raw Books (keep directory, ignore giant binary PDFs)
 *.pdf
 
+# Knowledge Embeddings & Dumps
+*.npy
+data/knowledge/harrison_embeddings.npy
+data/knowledge/harrison_full_collection.json
+data/knowledge/*checkpoint*.json
+
 # Node / Frontend
 node_modules/
 dist/

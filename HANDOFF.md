@@ -4,7 +4,31 @@
 AI-VH is an autonomous multi-agent healthcare simulation and reinforcement learning platform designed to study whether autonomous medical AI agents (Doctors, Nurses, Patients, Laboratory Scientists, Radiologists, Pharmacists) can improve clinical decision-making through expert physician feedback and reinforcement learning. The system is backed by local 4-bit quantized MedGemma running on an RTX 4060 GPU, Harrison's Principles of Internal Medicine (21st Ed) textbook RAG, an asynchronous event bus, an interactive 3D virtual hospital environment (Three.js / React Three Fiber), and a structured physician review dashboard.
 
 ## 2. Accomplished This Session
-- **Phase Completion Audit & Documentation Roadmap**:
+- **Dr. Marcus Vance Live Chat HTTP 502 Resolution**:
+  - Identified root-cause: synchronous GPU MedGemma generation on the main FastAPI event loop combined with short Vite proxy timeouts caused HTTP 502 gateway timeouts.
+  - Offloaded generation to background worker thread via `asyncio.to_thread`.
+  - Extended Vite proxy timeout to 300,000ms (5 minutes) in `frontend/vite.config.ts`.
+  - Calibrated MedGemma max generation tokens to 220, reducing response latency from ~75s down to ~15-20s.
+  - Enhanced output cleaning to strip scratchpad `<thought>` tags and unused tokens.
+- **Harrison's Principles of Internal Medicine (21st Edition) Full Book Ingestion & Dense Embedding**:
+  - Successfully extracted, chunked, embedded, and stored the entire 4,132-page textbook (`Harrison's_Internal_Medicine_2022,_21th_Edition_Vol_1_&_Vol_2_.pdf`).
+  - Extracted 578 Table of Contents entries mapping all 4,132 pages to their exact Parts, Sections, and 492 Chapters.
+  - Built `backend/rag/full_book_embedder.py` with PyMuPDF (`fitz`) and batch GPU vector embedder (`sentence-transformers/all-MiniLM-L6-v2`, 384 dimensions).
+  - Embedded all 31,427 chunks at ~360 chunks/sec on NVIDIA GeForce RTX 4060 GPU in 150.65 seconds (2.51 minutes).
+  - Stored all 31,427 chunks and vectors in:
+    - SQLite database table `knowledge_chunks` in `data/aivh.db` via `batch_save_knowledge_chunks`.
+    - JSON collection at `data/knowledge/harrison_full_collection.json`.
+    - Dense NumPy matrix at `data/knowledge/harrison_embeddings.npy` (shape: `(31427, 384)`).
+    - Checkpoint file at `data/knowledge/harrison_checkpoint.json`.
+- **Hybrid Dense/Sparse RAG Retrieval Engine**:
+  - Upgraded `backend/rag/vector_index.py` (`MedicalKnowledgeIndex`) to perform hybrid BM25 + dense cosine similarity search over all 31,427 chunks.
+  - Upgraded `InternalMedicineRAGAgent` to automatically bind to the 31,427-chunk index and database store.
+  - Verified exact citation retrieval (e.g. Chapter 310 Acute Kidney Injury, p. 2347-2348, and Chapter 53 Fluid and Electrolyte Disturbances, p. 396 for AKI/ACE-inhibitor presentation).
+- **Automated Verification & Test Suites**:
+  - Created `backend/tests/test_harrison_full_embedding.py` (6 tests: existence, vector dimensions, SQLite row count >= 30,000, and clinical retrieval for AKI, ACS, DKA) -> 6/6 PASSED.
+  - Ran `backend/tests/test_internal_medicine_chat.py` and `backend/tests/test_internal_medicine_rag.py` -> 9/9 PASSED.
+  - Verified frontend production build: `npm run build` -> exit code 0.
+  - Live server restarted with full 31,427-chunk index running on `http://127.0.0.1:8000`.
   - Validated that Phases 0 through 6 are 100% complete and operational, with Phase 7 (Scale) foundational departments live.
   - Updated root `README.md` roadmap to reflect verified deliverables.
 - **Comparative Policy Evaluation & Benchmarking (Commit `637e20e`)**:

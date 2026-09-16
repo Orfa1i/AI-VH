@@ -757,7 +757,7 @@ Provide Assessment and Plan."""
                 with torch.inference_mode():
                     output = self.model.generate(
                         **inputs,
-                        max_new_tokens=450,
+                        max_new_tokens=220,
                         do_sample=False,
                     )
                 reply_text = self.processor.decode(
@@ -765,8 +765,10 @@ Provide Assessment and Plan."""
                 ).strip()
 
                 # Clean special tokens, thinking preambles, and unused markers
-                if "<unused" in reply_text or "thought\n" in reply_text:
-                    reply_text = re.sub(r"(?:<unused\d+>)?thought[\s\S]*?(?:</thought>|\n\n(?=[A-Z0-9]))", "", reply_text).strip()
+                if "<unused" in reply_text or "thought" in reply_text.lower():
+                    reply_text = re.sub(r"(?:<unused\d+>)?thought[\s\S]*?(?:</thought>|\n\n(?=[A-Z0-9*#]))", "", reply_text, flags=re.IGNORECASE).strip()
+                    reply_text = re.sub(r"^thought\b.*?\n\n", "", reply_text, flags=re.DOTALL | re.IGNORECASE).strip()
+                    reply_text = re.sub(r"^thought\s+", "", reply_text, flags=re.IGNORECASE).strip()
                     reply_text = re.sub(r"<unused\d+>", "", reply_text).strip()
 
                 if len(reply_text) > 40:

@@ -343,6 +343,54 @@ class DatabaseRepository:
                 )
             return chunk_id
 
+    def batch_save_knowledge_chunks(self, chunks: List[Dict[str, Any]]) -> int:
+        """Batch inserts or replaces medical knowledge chunks for high throughput."""
+        if not chunks:
+            return 0
+        is_pg = self.manager.engine_type == "postgresql"
+        rows = []
+        for c in chunks:
+            chunk_id = c["id"]
+            specialty = c.get("specialty", "Internal Medicine")
+            book_title = c.get("book_title") or c.get("book", "Harrison's Principles of Internal Medicine, 21st Edition (2022)")
+            chapter = c.get("chapter", "Harrison's Internal Medicine")
+            topic = c.get("topic", "")
+            content = c.get("content") or c.get("text", "")
+            embedding = c.get("embedding")
+            emb_data = embedding if is_pg and self.manager.pgvector_enabled else (json.dumps(embedding) if embedding else None)
+            metadata = c.get("metadata") or {
+                "page": c.get("page"),
+                "chapter": chapter,
+                "topic": topic,
+            }
+            meta_json = json.dumps(metadata)
+            rows.append((chunk_id, specialty, book_title, chapter, topic, content, emb_data, meta_json))
+
+        with self.manager.get_connection() as conn:
+            cur = conn.cursor()
+            if is_pg:
+                cur.executemany(
+                    """
+                    INSERT INTO knowledge_chunks (id, specialty, book_title, chapter, topic, content, embedding, metadata)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                    ON CONFLICT (id) DO UPDATE SET
+                        content = EXCLUDED.content,
+                        embedding = EXCLUDED.embedding,
+                        metadata = EXCLUDED.metadata;
+                    """,
+                    rows
+                )
+            else:
+                cur.executemany(
+                    """
+                    INSERT OR REPLACE INTO knowledge_chunks (id, specialty, book_title, chapter, topic, content, embedding, metadata)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+                    """,
+                    rows
+                )
+            conn.commit()
+            return len(rows)
+
     @staticmethod
     def compute_embedding(text: str, dim: int = 128) -> List[float]:
         """Computes a normalized dense semantic representation for medical text retrieval."""
@@ -371,6 +419,7 @@ class DatabaseRepository:
         query: str,
         specialty: Optional[str] = None,
         top_k: int = 3,
+        query_vector: Optional[List[float]] = None,
     ) -> List[Dict[str, Any]]:
         """
         Performs semantic cosine similarity search over medical knowledge chunks.
@@ -378,7 +427,7 @@ class DatabaseRepository:
         """
         import math
         import re
-        q_vec = self.compute_embedding(query)
+        q_vec = query_vector if (query_vector is not None and len(query_vector) > 0) else self.compute_embedding(query)
         q_tokens = set(re.findall(r"[a-z0-9]+(?:-[a-z0-9]+)?", query.lower()))
         is_pg = self.manager.engine_type == "postgresql"
 
@@ -740,6 +789,202 @@ class DatabaseRepository:
             cur.execute("SELECT COUNT(*) FROM hospital_staff;")
             res = cur.fetchone()
             return res[0] if res else 0
+
+    # =========================================================================
+    # Knowledge Chunks & Vector Store
+    # =========================================================================
+
+    def compute_embedding(self, text: str) -> List[float]:
+        """Computes 384-dimensional dense semantic embedding using all-MiniLM-L6-v2."""
+        from ..rag.vector_embedder import get_vector_embedder
+        embedder = get_vector_embedder()
+        return embedder.embed_query(text)
+
+    def compute_embeddings_batch(self, texts: List[str], batch_size: int = 64) -> List[List[float]]:
+        """Computes dense semantic embeddings for batch of texts on GPU."""
+        from ..rag.vector_embedder import get_vector_embedder
+        embedder = get_vector_embedder()
+        return embedder.embed_texts(texts, batch_size=batch_size)
+
+    def save_knowledge_chunk(
+        self,
+        chunk_id: str,
+        specialty: str,
+        book_title: str,
+        chapter: str,
+        topic: str,
+        content: str,
+        embedding: Optional[List[float]] = None,
+        metadata: Optional[Dict[str, Any]] = None,
+    ) -> bool:
+        is_pg = self.manager.engine_type == "postgresql"
+        emb_val = json.dumps(embedding) if embedding and not is_pg else embedding
+        meta_val = json.dumps(metadata or {})
+        with self.manager.get_connection() as conn:
+            cur = conn.cursor()
+            if is_pg:
+                cur.execute(
+                    """
+                    INSERT INTO knowledge_chunks (id, specialty, book_title, chapter, topic, content, embedding, metadata)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                    ON CONFLICT (id) DO UPDATE SET
+                        content = EXCLUDED.content,
+                        embedding = EXCLUDED.embedding,
+                        metadata = EXCLUDED.metadata;
+                    """,
+                    (chunk_id, specialty, book_title, chapter, topic, content, emb_val, meta_val)
+                )
+            else:
+                cur.execute(
+                    """
+                    INSERT OR REPLACE INTO knowledge_chunks (id, specialty, book_title, chapter, topic, content, embedding, metadata)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+                    """,
+                    (chunk_id, specialty, book_title, chapter, topic, content, emb_val, meta_val)
+                )
+            return True
+
+    def batch_save_knowledge_chunks(self, chunks: List[Dict[str, Any]]) -> int:
+        """Batch inserts knowledge chunks with vectors into the active database."""
+        if not chunks:
+            return 0
+        is_pg = self.manager.engine_type == "postgresql"
+        rows = []
+        for c in chunks:
+            emb = c.get("embedding")
+            emb_val = json.dumps(emb) if emb and not is_pg else emb
+            meta = dict(c.get("metadata", {}))
+            if "page" not in meta and "page" in c:
+                meta["page"] = c["page"]
+            meta_val = json.dumps(meta)
+            rows.append((
+                c["id"],
+                c.get("specialty", "INTERNAL_MEDICINE"),
+                c.get("book_title", "Harrison's Principles of Internal Medicine, 21st Edition (2022)"),
+                c.get("chapter", "General"),
+                c.get("topic", "Clinical Medicine"),
+                c.get("content", c.get("text", "")),
+                emb_val,
+                meta_val
+            ))
+
+        with self.manager.get_connection() as conn:
+            cur = conn.cursor()
+            if is_pg:
+                for r in rows:
+                    cur.execute(
+                        """
+                        INSERT INTO knowledge_chunks (id, specialty, book_title, chapter, topic, content, embedding, metadata)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                        ON CONFLICT (id) DO UPDATE SET
+                            content = EXCLUDED.content,
+                            embedding = EXCLUDED.embedding,
+                            metadata = EXCLUDED.metadata;
+                        """,
+                        r
+                    )
+            else:
+                cur.executemany(
+                    """
+                    INSERT OR REPLACE INTO knowledge_chunks (id, specialty, book_title, chapter, topic, content, embedding, metadata)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+                    """,
+                    rows
+                )
+            return len(rows)
+
+    def count_knowledge_chunks(self) -> int:
+        with self.manager.get_connection() as conn:
+            cur = conn.cursor()
+            cur.execute("SELECT COUNT(*) FROM knowledge_chunks;")
+            res = cur.fetchone()
+            return res[0] if res else 0
+
+    def search_knowledge_vectors(
+        self,
+        query_embedding: List[float],
+        top_k: int = 5,
+        specialty: Optional[str] = None
+    ) -> List[Dict[str, Any]]:
+        """Searches knowledge chunks using vector cosine similarity."""
+        is_pg = self.manager.engine_type == "postgresql"
+        if not query_embedding:
+            return []
+
+        with self.manager.get_connection() as conn:
+            cur = conn.cursor()
+            if is_pg and self.manager.pgvector_enabled:
+                cur.execute(
+                    """
+                    SELECT id, specialty, book_title, chapter, topic, content, metadata,
+                           1 - (embedding <=> %s::vector) AS similarity
+                    FROM knowledge_chunks
+                    ORDER BY similarity DESC
+                    LIMIT %s;
+                    """,
+                    (query_embedding, top_k)
+                )
+                rows = cur.fetchall()
+                results = []
+                for r in rows:
+                    meta = r[6] if isinstance(r[6], dict) else json.loads(r[6] or "{}")
+                    results.append({
+                        "id": r[0],
+                        "specialty": r[1],
+                        "book": r[2],
+                        "chapter": r[3],
+                        "topic": r[4],
+                        "text": r[5],
+                        "page": meta.get("page", 0),
+                        "similarity": round(float(r[7]), 3),
+                    })
+                return results
+
+            # SQLite fallback: in-memory cosine similarity calculation
+            cur.execute("SELECT id, specialty, book_title, chapter, topic, content, embedding, metadata FROM knowledge_chunks;")
+            rows = cur.fetchall()
+
+            import numpy as np
+
+            q_vec = np.array(query_embedding, dtype=np.float32)
+            q_norm = np.linalg.norm(q_vec)
+            if q_norm == 0:
+                return []
+
+            scored = []
+            for r in rows:
+                emb_raw = r[6]
+                if not emb_raw:
+                    continue
+                try:
+                    vec = np.array(json.loads(emb_raw) if isinstance(emb_raw, str) else emb_raw, dtype=np.float32)
+                    v_norm = np.linalg.norm(vec)
+                    if v_norm > 0:
+                        sim = float(np.dot(q_vec, vec) / (q_norm * v_norm))
+                        scored.append((sim, r))
+                except Exception:
+                    continue
+
+            scored.sort(key=lambda x: x[0], reverse=True)
+            results = []
+            for sim, r in scored[:top_k]:
+                meta = {}
+                if r[7]:
+                    try:
+                        meta = json.loads(r[7])
+                    except Exception:
+                        pass
+                results.append({
+                    "id": r[0],
+                    "specialty": r[1],
+                    "book": r[2],
+                    "chapter": r[3],
+                    "topic": r[4],
+                    "text": r[5],
+                    "page": meta.get("page", 0),
+                    "similarity": round(sim, 3),
+                })
+            return results
 
     def seed_default_staff(self):
         """Populates the canonical AI-VH healthcare team (Internal Medicine specialist Dr. Marcus Vance)."""

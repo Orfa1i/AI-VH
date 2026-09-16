@@ -16,6 +16,8 @@ from ..vector_index import MedicalKnowledgeIndex
 logger = logging.getLogger("InternalMedicineRAG")
 
 IM_CACHE_PATH = Path("data/knowledge/internal_medicine_collection.json")
+FULL_COLLECTION_PATH = Path("data/knowledge/harrison_full_collection.json")
+EMBEDDINGS_PATH = Path("data/knowledge/harrison_embeddings.npy")
 
 # Domain-specific internal medicine medical acronyms & clinical query expansion dictionary
 MEDICAL_SYNONYM_MAP: Dict[str, List[str]] = {
@@ -68,10 +70,22 @@ class InternalMedicineRAGAgent:
         self.cache_path = cache_path
         self.parser = HarrisonParser()
         self.chunks = self._load_or_build_collection()
-        self.index = MedicalKnowledgeIndex(self.chunks)
-        logger.info(f"Internal Medicine RAG Agent ready with {len(self.chunks)} knowledge chunks.")
+        emb_p = EMBEDDINGS_PATH if EMBEDDINGS_PATH.exists() else None
+        self.index = MedicalKnowledgeIndex(self.chunks, embeddings_path=emb_p)
+        logger.info(f"Internal Medicine RAG Agent ready with {len(self.chunks)} knowledge chunks (Dense vectors: {emb_p is not None}).")
 
     def _load_or_build_collection(self) -> List[Dict[str, Any]]:
+        # Prioritize full book collection if available
+        if FULL_COLLECTION_PATH.exists():
+            try:
+                with open(FULL_COLLECTION_PATH, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    if len(data) > 0:
+                        logger.info(f"Loaded {len(data)} full textbook chunks from {FULL_COLLECTION_PATH}")
+                        return data
+            except Exception as e:
+                logger.warning(f"Failed to read full collection ({e}), trying cache...")
+
         if self.cache_path.exists():
             try:
                 with open(self.cache_path, "r", encoding="utf-8") as f:
