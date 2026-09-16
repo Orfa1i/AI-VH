@@ -715,6 +715,25 @@ class DatabaseRepository:
             cur.execute(update_query, (status, new_json_str, staff_id))
             return cur.rowcount > 0
 
+    def delete_staff_member(self, staff_id: str) -> bool:
+        is_pg = self.manager.engine_type == "postgresql"
+        with self.manager.get_connection() as conn:
+            cur = conn.cursor()
+            query = "DELETE FROM hospital_staff WHERE id = %s;" if is_pg else "DELETE FROM hospital_staff WHERE id = ?;"
+            cur.execute(query, (staff_id,))
+            return cur.rowcount > 0
+
+    def delete_all_staff_except(self, keep_ids: List[str]) -> int:
+        if not keep_ids:
+            return 0
+        is_pg = self.manager.engine_type == "postgresql"
+        placeholders = ", ".join(["%s" if is_pg else "?" for _ in keep_ids])
+        with self.manager.get_connection() as conn:
+            cur = conn.cursor()
+            query = f"DELETE FROM hospital_staff WHERE id NOT IN ({placeholders});"
+            cur.execute(query, tuple(keep_ids))
+            return cur.rowcount
+
     def count_staff(self) -> int:
         with self.manager.get_connection() as conn:
             cur = conn.cursor()
@@ -723,7 +742,7 @@ class DatabaseRepository:
             return res[0] if res else 0
 
     def seed_default_staff(self):
-        """Populates the canonical AI-VH healthcare team if roster is uninitialized."""
+        """Populates the canonical AI-VH healthcare team (Internal Medicine specialist Dr. Marcus Vance)."""
         if self.count_staff() > 0:
             return
 
@@ -741,80 +760,16 @@ class DatabaseRepository:
                 "system_prompt": "Expert internal medicine consultant. Prioritizes evidence-grounded differential diagnosis and contraindication avoidance.",
                 "total_encounters": 142,
             },
-            {
-                "id": "STAFF-JENKINS",
-                "name": "Sarah Jenkins",
-                "role": "NURSE",
-                "specialty": "TRIAGE_EMERGENCY",
-                "title": "Lead Triage Emergency Nurse",
-                "department": "EMERGENCY",
-                "status": "ON_DUTY",
-                "credentials": "BSN, RN, CEN",
-                "bio": "Emergency intake specialist conducting rapid vital assessments, ESI triage categorization, and patient stabilization.",
-                "system_prompt": "Emergency triage RN. Rapidly collects vitals, identifies critical red-flag symptoms, and assigns appropriate acuity.",
-                "total_encounters": 289,
-            },
-            {
-                "id": "STAFF-ROSTOVA",
-                "name": "Dr. Elena Rostova",
-                "role": "PHARMACIST",
-                "specialty": "PHARMACOTHERAPY",
-                "title": "Clinical Specialist Pharmacist",
-                "department": "PHARMACY",
-                "status": "ON_DUTY",
-                "credentials": "PharmD, BCPS",
-                "bio": "Critical care clinical pharmacist leading medication reconciliation, renal dosing adjustments, and drug-allergy contraindication checks.",
-                "system_prompt": "Clinical pharmacist vigilant against black-box warnings, severe drug-drug interactions, and renal dose limits.",
-                "total_encounters": 195,
-            },
-            {
-                "id": "STAFF-CHEN",
-                "name": "David Chen",
-                "role": "LAB_SCIENTIST",
-                "specialty": "CLINICAL_PATHOLOGY",
-                "title": "Chief Laboratory Scientist",
-                "department": "LABORATORY",
-                "status": "ON_DUTY",
-                "credentials": "MLS(ASCP)cm",
-                "bio": "Oversees high-throughput automated serum chemistries, cardiac biomarkers (hs-cTnT), hematology panels, and venous blood gas assays.",
-                "system_prompt": "Medical laboratory scientist reporting reference intervals, turnaround times, and critical panic values.",
-                "total_encounters": 312,
-            },
-            {
-                "id": "STAFF-HAYES",
-                "name": "Dr. Arthur Hayes",
-                "role": "RADIOLOGIST",
-                "specialty": "DIAGNOSTIC_RADIOLOGY",
-                "title": "Senior Diagnostic Radiologist",
-                "department": "RADIOLOGY",
-                "status": "ON_DUTY",
-                "credentials": "MD, FACR",
-                "bio": "Diagnostic imaging subspecialist reviewing high-resolution chest radiography, CT pulmonary angiograms, and abdominal imaging.",
-                "system_prompt": "Radiologist producing structured PACS findings, key study observations, and diagnostic impressions.",
-                "total_encounters": 178,
-            },
-            {
-                "id": "STAFF-PATEL",
-                "name": "Maya Patel",
-                "role": "RECEPTIONIST",
-                "specialty": "PATIENT_ADMISSIONS",
-                "title": "Patient Intake & Admissions Coordinator",
-                "department": "RECEPTION",
-                "status": "ON_DUTY",
-                "credentials": "CHAA",
-                "bio": "Coordinates initial patient intake, emergency department registration, insurance verification, and bed allocation tracking.",
-                "system_prompt": "Patient admissions registrar ensuring demographic accuracy and rapid routing to nurse triage.",
-                "total_encounters": 350,
-            },
         ]
 
         for s in default_roster:
             self.add_staff_member(s)
-        logger.info(f"Initialized hospital staff roster with {len(default_roster)} clinical personnel.")
+        logger.info(f"Initialized hospital staff roster with {len(default_roster)} clinical personnel (Dr. Marcus Vance).")
 
 
 # Global singleton repository
 db_repo = DatabaseRepository()
 db_repo.seed_default_staff()
+
 
 

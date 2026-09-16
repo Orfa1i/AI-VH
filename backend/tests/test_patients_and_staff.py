@@ -96,13 +96,13 @@ def test_patient_admission_and_discharge_repo(temp_db):
 
 
 def test_staff_management_repo(temp_db):
-    """Verifies staff default seeding, registration, and status updating in repo."""
+    """Verifies staff default seeding, registration, status updating, and deletion in repo."""
     # Initially empty before seeding
     assert temp_db.count_staff() == 0
 
-    # Seed default hospital team
+    # Seed default hospital team (Dr. Marcus Vance)
     temp_db.seed_default_staff()
-    assert temp_db.count_staff() >= 6
+    assert temp_db.count_staff() >= 1
 
     # Verify Dr. Marcus Vance is present
     vance = temp_db.get_staff_member("STAFF-VANCE")
@@ -111,11 +111,6 @@ def test_staff_management_repo(temp_db):
     assert vance["role"] == "DOCTOR"
     assert vance["specialty"] == "INTERNAL_MEDICINE"
     assert vance["status"] == "ON_DUTY"
-
-    # Verify Sarah Jenkins is present
-    jenkins = temp_db.get_staff_member("STAFF-JENKINS")
-    assert jenkins is not None
-    assert jenkins["role"] == "NURSE"
 
     # Filter by role
     doctors = temp_db.list_staff(role="DOCTOR")
@@ -144,6 +139,12 @@ def test_staff_management_repo(temp_db):
 
     fetched = temp_db.get_staff_member("STAFF-CHOWDHURY")
     assert fetched["status"] == "IN_CONSULT"
+
+    # Delete staff member
+    deleted = temp_db.delete_staff_member("STAFF-CHOWDHURY")
+    assert deleted is True
+    assert temp_db.get_staff_member("STAFF-CHOWDHURY") is None
+
 
 
 def test_patient_api_endpoints():
@@ -215,9 +216,8 @@ def test_staff_api_endpoints():
     resp = client.get("/api/staff")
     assert resp.status_code == 200
     roster_data = resp.json()
-    assert roster_data["total"] >= 6
+    assert roster_data["total"] >= 1
     assert any(s["id"] == "STAFF-VANCE" for s in roster_data["staff"])
-    assert any(s["id"] == "STAFF-JENKINS" for s in roster_data["staff"])
 
     # 2. Get specific staff member
     resp_vance = client.get("/api/staff/STAFF-VANCE")
@@ -256,6 +256,15 @@ def test_staff_api_endpoints():
     assert resp_check.status_code == 200
     assert resp_check.json()["status"] == "OFF_DUTY"
 
-    # 6. Verify 404 for missing staff
+    # 6. Delete staff member via API
+    resp_del = client.delete(f"/api/staff/{created_id}")
+    assert resp_del.status_code == 200
+    assert resp_del.json()["status"] == "DELETED"
+
+    # 7. Verify 404 after deletion and for missing staff
+    resp_deleted_check = client.get(f"/api/staff/{created_id}")
+    assert resp_deleted_check.status_code == 404
+
     resp_404 = client.get("/api/staff/STAFF-DOESNOTEXIST")
     assert resp_404.status_code == 404
+

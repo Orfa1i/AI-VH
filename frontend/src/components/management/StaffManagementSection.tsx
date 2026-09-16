@@ -59,6 +59,20 @@ export const StaffManagementSection: React.FC = () => {
     }
   };
 
+  const handleDeleteStaff = async (staffId: string, name: string) => {
+    if (!confirm(`Are you sure you want to remove ${name} from the hospital staff directory?`)) return;
+    try {
+      const res = await fetch(`/api/staff/${staffId}`, { method: 'DELETE' });
+      if (res.ok) {
+        setStaffList((prev) => prev.filter((s) => s.id !== staffId));
+      } else {
+        alert('Failed to delete staff member.');
+      }
+    } catch (err) {
+      console.error('Error deleting staff member:', err);
+    }
+  };
+
   const handleRegisterStaff = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newName.trim() || !newTitle.trim()) {
@@ -308,6 +322,15 @@ export const StaffManagementSection: React.FC = () => {
                     >
                       OFF DUTY
                     </button>
+                    {staff.id !== 'STAFF-VANCE' && (
+                      <button
+                        onClick={() => handleDeleteStaff(staff.id, staff.name)}
+                        className="p-1 text-slate-500 hover:text-rose-400 text-xs transition ml-1"
+                        title="Delete staff member from directory"
+                      >
+                        🗑️
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>

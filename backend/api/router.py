@@ -447,6 +447,22 @@ async def update_staff_status_endpoint(staff_id: str, req: StaffStatusUpdateRequ
     return {"staff_id": staff_id, "status": req.status}
 
 
+@api_router.delete("/staff/{staff_id}")
+async def delete_staff_endpoint(staff_id: str):
+    """Removes an individual staff member from the hospital directory."""
+    success = orchestrator.db.delete_staff_member(staff_id)
+    if not success:
+        raise HTTPException(status_code=404, detail=f"Staff member '{staff_id}' not found")
+    return {"status": "DELETED", "staff_id": staff_id}
+
+
+@api_router.delete("/staff")
+async def delete_all_staff_except_endpoint(keep_id: str = "STAFF-VANCE"):
+    """Prunes the hospital staff directory, keeping only the specified staff member (default: Dr. Marcus Vance)."""
+    deleted_count = orchestrator.db.delete_all_staff_except([keep_id])
+    return {"status": "PRUNED", "deleted_count": deleted_count, "kept_id": keep_id}
+
+
 @api_router.get("/inpatient/rooms")
 async def get_inpatient_rooms():
 
