@@ -112,6 +112,19 @@ class HospitalOrchestrator:
             abnormal_labs=abnormal_labs,
         )
 
+    async def chat_with_dr_vance(
+        self,
+        user_message: str,
+        conversation_history: Optional[List[Dict[str, str]]] = None,
+        patient_context: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
+        """Provides direct conversational communication with Dr. Marcus Vance, MD, FACP."""
+        return await self.im_specialist.chat_with_specialist(
+            user_message=user_message,
+            conversation_history=conversation_history,
+            patient_context=patient_context,
+        )
+
     async def review_medication_orders(
         self,
         prescriptions: List[str],

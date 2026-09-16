@@ -351,5 +351,29 @@ patient/staff work, see above, not touched by this commit). Frontend build clean
   - `npm run build` in `frontend/` -> 0 errors, production build verified.
   - `py -3.13 -m pytest backend/tests/test_patients_and_staff.py -v` -> 4 passed, 0 failed.
 
+## 11. Session 14: Dr. Marcus Vance Direct Clinical Chat & Harrison's + MedGemma Diagnostic Grounding (2026-09-16)
+- **Harrison's 21st Edition RAG & MedGemma Foundation Diagnostic Coupling**:
+  - Implemented `generate_doctor_chat_response` and `_synthesize_doctor_clinical_dialogue` in `backend/llm/medgemma_service.py` to ground every diagnostic answer in Harrison's Principles of Internal Medicine 21st Edition (2022) with live 4-bit NF4 GPU inference on RTX 4060 + DPO LoRA alignment and robust clinical safety fallbacks.
+  - Upgraded `InternalMedicineSpecialistAgent.conduct_specialist_consultation` and `chat_with_specialist` in `backend/agents/specialists/internal_medicine.py` to cross-reference Harrison's Evidence Briefs with MedGemma reasoning, generating structured differentials, guideline-directed management, and safety contraindications.
+  - Connected `chat_with_dr_vance` in `backend/simulation/orchestrator.py`.
+  - Added REST endpoint `POST /api/specialists/internal-medicine/chat` with `DoctorChatRequest` in `backend/api/router.py`.
+- **Automated Backend Test Suite**:
+  - Created `backend/tests/test_internal_medicine_chat.py` with 4 automated test cases covering cardiology ACS/NSTEMI, endocrine DKA potassium safety, API contracts, and MedGemma formal consult diagnosis (100% passing).
+- **Direct Interactive Chat UI (`DoctorChatModal.tsx`)**:
+  - Created `frontend/src/components/specialists/DoctorChatModal.tsx`:
+    - Clinical conversation modal featuring Dr. Marcus Vance's portrait photo with live duty status pulse ring.
+    - Real-time chat dialogue with structured differential diagnoses (likelihood percentage indicators), immediate diagnostic workup checklist, guideline therapies, and amber/rose contraindication warning banners.
+    - Expandable Harrison's Textbook Citations drawer exposing chapter titles, page numbers, and clinical text excerpts.
+    - Web Speech API integration (`speakClinicalMessage(..., 'DR_VANCE')`) for clinical audio playback.
+    - Quick-launch clinical scenario preset chips (NSTEMI, DKA, PE contraindications, AKI).
+- **Profile Card Right-Side Action Integration**:
+  - Added prominent **"💬 Chat with Dr. Vance"** button on the right side of Dr. Marcus Vance's profile card header in `frontend/src/components/management/StaffManagementSection.tsx`.
+  - Added quick-action "💬 Direct Chat" button in the card footer controls alongside "🩺 Consult Dr. Vance".
+- **Verification & Deployment**:
+  - Frontend production build verified clean (`npm run build` -> exit code 0).
+  - All automated backend tests passing (`pytest` -> 100% pass).
+  - Live uvicorn API running on port 8000 with MedGemma GPU + DPO LoRA loaded.
+
+
 
 

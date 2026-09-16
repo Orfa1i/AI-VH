@@ -72,22 +72,59 @@ class InternalMedicineSpecialistAgent(DoctorAgent):
             payload={"citations_count": len(brief.citations), "top_citation": brief.citations[0] if brief.citations else None}
         )
 
-        # 2. Synthesize Specialist Consult Note
+        # 2. Synthesize Specialist Consult Note combining Harrison's RAG & MedGemma reasoning
+        medgemma_decision = self.llm.generate_clinical_decision(
+            chief_complaint=clinical_scenario,
+            hpi="",
+            vitals_summary="Assessed during specialist consult",
+            exam_findings={},
+            lab_results=[{"test_type": "Abnormal Labs", "values": abnormal_labs or []}],
+            rag_context=brief.citations,
+        )
+
         consult_result = {
             "specialist": self.name,
             "specialty": self.specialty,
             "domain": brief.domain,
+            "primary_diagnosis": medgemma_decision.get("primary_diagnosis"),
+            "differential": medgemma_decision.get("differential", []),
+            "clinical_reasoning": medgemma_decision.get("clinical_reasoning", brief.clinical_summary),
             "evidence_brief": brief.to_dict(),
             "recommendations": {
                 "immediate_workup": brief.recommended_workup,
-                "guideline_therapy": brief.recommended_therapy,
+                "guideline_therapy": medgemma_decision.get("treatment_plan") or brief.recommended_therapy,
                 "contraindications": brief.contraindications,
             },
             "citations": brief.citations,
+            "model_provenance": "google/medgemma-4b + Harrison's Principles of Internal Medicine (21st Ed)",
         }
 
         self.consultation_history.append(consult_result)
         return consult_result
+
+    async def chat_with_specialist(
+        self,
+        user_message: str,
+        conversation_history: Optional[List[Dict[str, str]]] = None,
+        patient_context: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
+        """Provides direct conversational communication with Dr. Marcus Vance, MD, FACP."""
+        logger.info(f"{self.name} received chat message: '{user_message[:80]}...'")
+
+        # 1. Semantic retrieval from Harrison's RAG knowledge base
+        citations = self.rag_agent.retrieve_evidence(user_message, top_k=3)
+
+        # 2. Invoke MedGemma for conversational clinical synthesis
+        chat_history = conversation_history or []
+        chat_history_with_msg = chat_history + [{"role": "user", "content": user_message}]
+
+        response = self.llm.generate_doctor_chat_response(
+            messages=chat_history_with_msg,
+            rag_context=citations,
+            patient_context=patient_context,
+        )
+
+        return response
 
     async def conduct_clinical_encounter(self, encounter_id: str, toolkit: ClinicalToolkit) -> ClinicalReport:
         """Enhanced encounter runner integrating the dedicated Harrison's RAG Agent."""

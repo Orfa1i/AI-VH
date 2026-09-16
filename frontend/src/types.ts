@@ -130,6 +130,53 @@ export interface SpecialistConsultResponse {
   citations: MedicalCitation[];
 }
 
+export interface DoctorDifferentialItem {
+  condition: string;
+  likelihood: number;
+  notes?: string;
+}
+
+export interface DoctorChatMessage {
+  id: string;
+  sender: 'USER' | 'DOCTOR';
+  content: string;
+  timestamp: string;
+  differential?: DoctorDifferentialItem[];
+  immediate_workup?: string[];
+  guideline_therapy?: string[];
+  contraindications?: string[];
+  citations?: MedicalCitation[];
+  telemetry?: {
+    live_gpu_inference: boolean;
+    model: string;
+    knowledge_source: string;
+    latency_ms: number;
+  };
+}
+
+export interface DoctorChatRequest {
+  message: string;
+  conversation_history?: Array<{ role: string; content: string }>;
+  patient_context?: Record<string, any>;
+}
+
+export interface DoctorChatResponse {
+  doctor: string;
+  title: string;
+  reply: string;
+  differential: DoctorDifferentialItem[];
+  immediate_workup: string[];
+  guideline_therapy: string[];
+  contraindications: string[];
+  citations: MedicalCitation[];
+  telemetry: {
+    live_gpu_inference: boolean;
+    model: string;
+    knowledge_source: string;
+    latency_ms: number;
+  };
+}
+
 export interface PhysicianReviewPayload {
   report_id: string;
   physician_name: string;

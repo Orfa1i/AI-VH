@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { HospitalStaffRecord } from '../../types';
 import drMarcusPhoto from '../../assets/dr_marcus_vance.jpg';
+import { DoctorChatModal } from '../specialists/DoctorChatModal';
 
 interface StaffManagementSectionProps {
   onOpenConsult?: () => void;
@@ -12,6 +13,7 @@ export const StaffManagementSection: React.FC<StaffManagementSectionProps> = ({ 
   const [roleFilter, setRoleFilter] = useState<string>('ALL');
   const [departmentFilter, setDepartmentFilter] = useState<string>('ALL');
   const [isRegisterOpen, setIsRegisterOpen] = useState<boolean>(false);
+  const [isDoctorChatOpen, setIsDoctorChatOpen] = useState<boolean>(false);
   const [selectedPhoto, setSelectedPhoto] = useState<{ src: string; name: string; title: string } | null>(null);
 
   // New staff form state
@@ -357,6 +359,21 @@ export const StaffManagementSection: React.FC<StaffManagementSectionProps> = ({ 
                         </span>
                       </div>
                     </div>
+
+                    {/* Right Side: Direct Chat Button for Dr. Marcus Vance */}
+                    {isVance && (
+                      <div className="sm:self-start shrink-0 flex items-center gap-2 mt-3 sm:mt-0">
+                        <button
+                          onClick={() => setIsDoctorChatOpen(true)}
+                          className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-cyan-600 via-teal-600 to-cyan-600 hover:from-cyan-500 hover:to-teal-500 text-white font-bold text-xs sm:text-sm shadow-lg shadow-cyan-950/80 border border-cyan-400/60 flex items-center gap-2 transition-all transform hover:scale-[1.03] active:scale-[0.98] cursor-pointer"
+                          title="Open direct clinical chat with Dr. Marcus Vance"
+                        >
+                          <span className="text-base">💬</span>
+                          <span>Chat with Dr. Vance</span>
+                          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                        </button>
+                      </div>
+                    )}
                   </div>
 
                   {/* Clinical Biography */}
@@ -422,11 +439,22 @@ export const StaffManagementSection: React.FC<StaffManagementSectionProps> = ({ 
                   </div>
 
                   <div className="flex items-center gap-2">
+                    {/* Direct Chat Shortcut */}
+                    {isVance && (
+                      <button
+                        onClick={() => setIsDoctorChatOpen(true)}
+                        className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-cyan-600 to-teal-600 hover:from-cyan-500 hover:to-teal-500 text-white text-xs font-bold shadow-md shadow-cyan-950/70 border border-cyan-400/60 transition flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <span>💬</span>
+                        <span>Direct Chat</span>
+                      </button>
+                    )}
+
                     {/* Launch Consult shortcut */}
                     {onOpenConsult && (
                       <button
                         onClick={onOpenConsult}
-                        className="px-3.5 py-1.5 rounded-xl bg-cyan-950 hover:bg-cyan-900 border border-cyan-700/80 text-cyan-300 text-xs font-bold shadow transition flex items-center gap-1.5"
+                        className="px-3.5 py-1.5 rounded-xl bg-cyan-950 hover:bg-cyan-900 border border-cyan-700/80 text-cyan-300 text-xs font-bold shadow transition flex items-center gap-1.5 cursor-pointer"
                       >
                         <span>🩺</span>
                         <span>Consult Dr. Vance</span>
@@ -630,6 +658,12 @@ export const StaffManagementSection: React.FC<StaffManagementSectionProps> = ({ 
           </div>
         </div>
       )}
+
+      {/* Direct Clinical Chat with Dr. Marcus Vance */}
+      <DoctorChatModal
+        isOpen={isDoctorChatOpen}
+        onClose={() => setIsDoctorChatOpen(false)}
+      />
     </div>
   );
 };

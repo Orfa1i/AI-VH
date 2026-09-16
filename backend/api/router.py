@@ -30,6 +30,12 @@ class SpecialistConsultRequest(BaseModel):
     patient_id: Optional[str] = "PAT-CONSULT"
 
 
+class DoctorChatRequest(BaseModel):
+    message: str
+    conversation_history: Optional[List[Dict[str, str]]] = []
+    patient_context: Optional[Dict[str, Any]] = None
+
+
 class PharmacyReviewRequest(BaseModel):
     prescriptions: List[str]
     patient_id: Optional[str] = "CASE-101"
@@ -106,6 +112,21 @@ async def consult_internal_medicine(req: SpecialistConsultRequest):
         return result
     except Exception as e:
         logger.error(f"Specialist consult error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.post("/specialists/internal-medicine/chat")
+async def chat_internal_medicine(req: DoctorChatRequest):
+    """Direct conversational clinical consultation with Dr. Marcus Vance, MD, FACP."""
+    try:
+        result = await orchestrator.chat_with_dr_vance(
+            user_message=req.message,
+            conversation_history=req.conversation_history,
+            patient_context=req.patient_context,
+        )
+        return result
+    except Exception as e:
+        logger.error(f"Doctor Marcus Vance chat error: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 
