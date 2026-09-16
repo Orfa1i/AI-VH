@@ -129,6 +129,25 @@ class InternalMedicineSpecialistAgent(DoctorAgent):
 
         return response
 
+    async def stream_chat_with_specialist(
+        self,
+        user_message: str,
+        conversation_history: Optional[List[Dict[str, str]]] = None,
+        patient_context: Optional[Dict[str, Any]] = None,
+    ):
+        """Asynchronously streams conversational clinical consultation tokens from Dr. Marcus Vance."""
+        logger.info(f"{self.name} streaming chat for message: '{user_message[:80]}...'")
+        citations = self.rag_agent.retrieve_evidence(user_message, top_k=3)
+        chat_history = conversation_history or []
+        chat_history_with_msg = chat_history + [{"role": "user", "content": user_message}]
+
+        async for chunk in self.llm.stream_doctor_chat_response(
+            messages=chat_history_with_msg,
+            rag_context=citations,
+            patient_context=patient_context,
+        ):
+            yield chunk
+
     async def conduct_clinical_encounter(self, encounter_id: str, toolkit: ClinicalToolkit) -> ClinicalReport:
         """Enhanced encounter runner integrating the dedicated Harrison's RAG Agent."""
         patient_info = toolkit.get_patient_history()

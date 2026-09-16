@@ -29,8 +29,8 @@ models/**/*.pt
 
 # Knowledge Embeddings & Dumps
 *.npy
-data/knowledge/harrison_embeddings.npy
-data/knowledge/harrison_full_collection.json
+data/knowledge/*.npy
+data/knowledge/*_collection.json
 data/knowledge/*checkpoint*.json
 
 # Node / Frontend

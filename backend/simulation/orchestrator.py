@@ -125,6 +125,20 @@ class HospitalOrchestrator:
             patient_context=patient_context,
         )
 
+    async def stream_chat_with_dr_vance(
+        self,
+        user_message: str,
+        conversation_history: Optional[List[Dict[str, str]]] = None,
+        patient_context: Optional[Dict[str, Any]] = None,
+    ):
+        """Streams real-time clinical consultation tokens from Dr. Marcus Vance."""
+        async for chunk in self.im_specialist.stream_chat_with_specialist(
+            user_message=user_message,
+            conversation_history=conversation_history,
+            patient_context=patient_context,
+        ):
+            yield chunk
+
     async def review_medication_orders(
         self,
         prescriptions: List[str],

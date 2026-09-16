@@ -803,6 +803,107 @@ Provide Assessment and Plan."""
             }
         }
 
+    async def stream_doctor_chat_response(
+        self,
+        messages: List[Dict[str, str]],
+        rag_context: Optional[List[Dict[str, Any]]] = None,
+        patient_context: Optional[Dict[str, Any]] = None,
+    ):
+        """
+        Asynchronously streams conversational clinical diagnostic tokens as Dr. Marcus Vance, MD, FACP.
+        Yields JSON strings formatted for Server-Sent Events (SSE).
+        """
+        import asyncio
+        start_time = time.perf_counter()
+        rag_context = rag_context or []
+        user_query = ""
+        for m in reversed(messages):
+            if m.get("role") == "user":
+                user_query = m.get("content", "")
+                break
+
+        synth_reply, diff, workup, rx, contra = self._synthesize_doctor_clinical_dialogue(
+            user_query=user_query,
+            rag_context=rag_context,
+            patient_context=patient_context,
+        )
+
+        streamed_live = False
+
+        if self.model is not None and self.processor is not None:
+            try:
+                import torch
+                from transformers import TextIteratorStreamer
+                from threading import Thread
+
+                rag_passages = []
+                for i, c in enumerate(rag_context[:3]):
+                    ch = c.get("chapter", "Harrison's Internal Medicine")
+                    pg = c.get("page", "")
+                    snippet = c.get("text", "")[:350].strip()
+                    rag_passages.append(f"[{i+1}] {ch} (p. {pg}): \"{snippet}\"")
+                rag_evidence_text = "\n".join(rag_passages) if rag_passages else "General Internal Medicine guidelines applied."
+                patient_info_str = f"\nPatient Context: {json.dumps(patient_context)}\n" if patient_context else ""
+
+                doctor_prompt = (
+                    "You are Dr. Marcus Vance, MD, FACP, Chief Attending Physician of Internal Medicine at the AI Virtual Hospital.\n"
+                    "You provide evidence-based clinical reasoning referencing Harrison's Principles of Internal Medicine (21st Edition).\n"
+                    "Address the user's clinical inquiry with diagnostic accuracy, differential diagnosis, guideline-directed management, and safety warnings.\n\n"
+                    f"Evidence from Harrison's Internal Medicine:\n{rag_evidence_text}\n"
+                    f"{patient_info_str}\n"
+                    f"User Query:\n{user_query}\n\n"
+                    "Dr. Marcus Vance Response:"
+                )
+
+                conv = [{"role": "user", "content": [{"type": "text", "text": doctor_prompt}]}]
+                inputs = self.processor.apply_chat_template(
+                    conv,
+                    add_generation_prompt=True,
+                    tokenize=True,
+                    return_dict=True,
+                    return_tensors="pt",
+                ).to("cuda")
+
+                streamer = TextIteratorStreamer(self.processor.tokenizer, skip_prompt=True, skip_special_tokens=True)
+                generation_kwargs = dict(**inputs, streamer=streamer, max_new_tokens=220, do_sample=False)
+                thread = Thread(target=self.model.generate, kwargs=generation_kwargs)
+                thread.start()
+
+                in_thought = False
+                thought_buffer = ""
+                full_streamed_text = ""
+
+                for text_chunk in streamer:
+                    full_streamed_text += text_chunk
+                    if "thought" in text_chunk.lower() and len(full_streamed_text) < 80:
+                        in_thought = True
+                        thought_buffer += text_chunk
+                        continue
+                    if in_thought:
+                        thought_buffer += text_chunk
+                        if "\n\n" in thought_buffer or "</thought>" in thought_buffer:
+                            in_thought = False
+                        continue
+
+                    clean_chunk = re.sub(r"<unused\d+>", "", text_chunk)
+                    if clean_chunk:
+                        streamed_live = True
+                        yield f"data: {json.dumps({'token': clean_chunk})}\n\n"
+
+                thread.join()
+            except Exception as e:
+                logger.warning(f"Live GPU streaming fallback ({e})")
+
+        if not streamed_live:
+            words = synth_reply.split(" ")
+            for i, word in enumerate(words):
+                prefix = "" if i == 0 else " "
+                yield f"data: {json.dumps({'token': prefix + word})}\n\n"
+                await asyncio.sleep(0.015)
+
+        elapsed_ms = (time.perf_counter() - start_time) * 1000
+        yield f"data: {json.dumps({'done': True, 'doctor': 'Dr. Marcus Vance, MD, FACP', 'title': 'Chief Attending Physician, Internal Medicine', 'differential': diff, 'immediate_workup': workup, 'guideline_therapy': rx, 'contraindications': contra, 'citations': rag_context, 'telemetry': {'live_gpu_inference': streamed_live, 'model': 'google/medgemma-4b (NF4 LoRA Aligned)' if streamed_live else 'MedGemma Clinical Knowledge Engine', 'knowledge_source': 'Harrison\'s Principles of Internal Medicine & Braunwald\'s Heart Disease', 'latency_ms': round(elapsed_ms, 1)}})}\n\n"
+
     def _synthesize_doctor_clinical_dialogue(
         self,
         user_query: str,

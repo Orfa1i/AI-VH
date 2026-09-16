@@ -128,6 +128,9 @@ export const DoctorChatModal: React.FC<DoctorChatModalProps> = ({
     setInputText('');
     setIsLoading(true);
 
+    const doctorMsgId = `msg-doc-${Date.now()}`;
+    const timestampStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
     try {
       const historyForApi = messages
         .filter((m) => m.id !== 'msg-welcome')
@@ -137,44 +140,127 @@ export const DoctorChatModal: React.FC<DoctorChatModalProps> = ({
           content: m.content,
         }));
 
-      const res = await fetch('/api/specialists/internal-medicine/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: query,
-          conversation_history: historyForApi,
-          patient_context: patientContext,
-        }),
-      });
+      // Add blank doctor message for real-time token accumulation
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: doctorMsgId,
+          sender: 'DOCTOR',
+          content: '',
+          timestamp: timestampStr,
+        },
+      ]);
 
-      if (!res.ok) {
-        throw new Error(`Server returned HTTP ${res.status}`);
+      // Attempt high-speed streaming endpoint
+      let streamedSuccess = false;
+      try {
+        const streamRes = await fetch('/api/specialists/internal-medicine/chat/stream', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: query,
+            conversation_history: historyForApi,
+            patient_context: patientContext,
+          }),
+        });
+
+        if (streamRes.ok && streamRes.body) {
+          const reader = streamRes.body.getReader();
+          const decoder = new TextDecoder('utf-8');
+          let buffer = '';
+          let accumulatedContent = '';
+
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split('\n');
+            buffer = lines.pop() || '';
+
+            for (const line of lines) {
+              const trimmed = line.trim();
+              if (!trimmed.startsWith('data: ')) continue;
+              try {
+                const payload = JSON.parse(trimmed.slice(6));
+                if (payload.token) {
+                  accumulatedContent += payload.token;
+                  setMessages((prev) =>
+                    prev.map((m) => (m.id === doctorMsgId ? { ...m, content: accumulatedContent } : m))
+                  );
+                }
+                if (payload.done) {
+                  streamedSuccess = true;
+                  setMessages((prev) =>
+                    prev.map((m) =>
+                      m.id === doctorMsgId
+                        ? {
+                            ...m,
+                            differential: payload.differential,
+                            immediate_workup: payload.immediate_workup,
+                            guideline_therapy: payload.guideline_therapy,
+                            contraindications: payload.contraindications,
+                            citations: payload.citations,
+                            telemetry: payload.telemetry,
+                          }
+                        : m
+                    )
+                  );
+                }
+              } catch {
+                // Ignore incomplete line parse
+              }
+            }
+          }
+        }
+      } catch (streamErr) {
+        console.warn('Streaming fetch failed, falling back to standard endpoint:', streamErr);
       }
 
-      const data: DoctorChatResponse = await res.json();
+      // If streaming didn't complete, fallback to standard synchronous endpoint
+      if (!streamedSuccess) {
+        const res = await fetch('/api/specialists/internal-medicine/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: query,
+            conversation_history: historyForApi,
+            patient_context: patientContext,
+          }),
+        });
 
-      const doctorMessage: DoctorChatMessage = {
-        id: `msg-doc-${Date.now()}`,
-        sender: 'DOCTOR',
-        content: data.reply,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        differential: data.differential,
-        immediate_workup: data.immediate_workup,
-        guideline_therapy: data.guideline_therapy,
-        contraindications: data.contraindications,
-        citations: data.citations,
-        telemetry: data.telemetry,
-      };
+        if (!res.ok) {
+          throw new Error(`Server returned HTTP ${res.status}`);
+        }
 
-      setMessages((prev) => [...prev, doctorMessage]);
+        const data: DoctorChatResponse = await res.json();
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === doctorMsgId
+              ? {
+                  ...m,
+                  content: data.reply,
+                  differential: data.differential,
+                  immediate_workup: data.immediate_workup,
+                  guideline_therapy: data.guideline_therapy,
+                  contraindications: data.contraindications,
+                  citations: data.citations,
+                  telemetry: data.telemetry,
+                }
+              : m
+          )
+        );
+      }
     } catch (err: any) {
-      const errorMessage: DoctorChatMessage = {
-        id: `msg-err-${Date.now()}`,
-        sender: 'DOCTOR',
-        content: `Clinical consultation error: ${err.message || 'Unable to connect to diagnostic engine'}. Please retry.`,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      };
-      setMessages((prev) => [...prev, errorMessage]);
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === doctorMsgId
+            ? {
+                ...m,
+                content: `Clinical consultation error: ${err.message || 'Unable to connect to diagnostic engine'}. Please retry.`,
+              }
+            : m
+        )
+      );
     } finally {
       setIsLoading(false);
     }

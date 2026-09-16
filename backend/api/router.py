@@ -5,6 +5,7 @@ Exposes endpoints for simulation control, clinical reports, physician review, an
 
 from typing import Dict, Any, List, Optional
 from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 import asyncio
 import json
@@ -127,6 +128,21 @@ async def chat_internal_medicine(req: DoctorChatRequest):
         return result
     except Exception as e:
         logger.error(f"Doctor Marcus Vance chat error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.post("/specialists/internal-medicine/chat/stream")
+async def chat_internal_medicine_stream(req: DoctorChatRequest):
+    """Streams real-time clinical diagnostic consultation tokens with Dr. Marcus Vance, MD, FACP."""
+    try:
+        generator = orchestrator.stream_chat_with_dr_vance(
+            user_message=req.message,
+            conversation_history=req.conversation_history,
+            patient_context=req.patient_context,
+        )
+        return StreamingResponse(generator, media_type="text/event-stream")
+    except Exception as e:
+        logger.error(f"Doctor Marcus Vance streaming error: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 
