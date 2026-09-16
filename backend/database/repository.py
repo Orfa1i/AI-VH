@@ -758,6 +758,7 @@ class DatabaseRepository:
                 "credentials": "MD, FACP",
                 "bio": "Attending physician specializing in diagnostic differentiation, Harrison's guideline adherence, and acute inpatient workups.",
                 "system_prompt": "Expert internal medicine consultant. Prioritizes evidence-grounded differential diagnosis and contraindication avoidance.",
+                "avatar_url": "/assets/dr_marcus_vance.jpg",
                 "total_encounters": 142,
             },
         ]

@@ -1,12 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import type { HospitalStaffRecord } from '../../types';
+import drMarcusPhoto from '../../assets/dr_marcus_vance.jpg';
 
-export const StaffManagementSection: React.FC = () => {
+interface StaffManagementSectionProps {
+  onOpenConsult?: () => void;
+}
+
+export const StaffManagementSection: React.FC<StaffManagementSectionProps> = ({ onOpenConsult }) => {
   const [staffList, setStaffList] = useState<HospitalStaffRecord[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [roleFilter, setRoleFilter] = useState<string>('ALL');
   const [departmentFilter, setDepartmentFilter] = useState<string>('ALL');
   const [isRegisterOpen, setIsRegisterOpen] = useState<boolean>(false);
+  const [selectedPhoto, setSelectedPhoto] = useState<{ src: string; name: string; title: string } | null>(null);
 
   // New staff form state
   const [newName, setNewName] = useState('');
@@ -39,7 +45,6 @@ export const StaffManagementSection: React.FC = () => {
   }, []);
 
   const handleUpdateStatus = async (staffId: string, status: 'ON_DUTY' | 'IN_CONSULT' | 'OFF_DUTY') => {
-    // Optimistic UI update
     setStaffList((prev) =>
       prev.map((s) => (s.id === staffId ? { ...s, status } : s))
     );
@@ -55,7 +60,7 @@ export const StaffManagementSection: React.FC = () => {
       }
     } catch (err) {
       console.error('Error updating staff status:', err);
-      fetchStaff(); // Revert on failure
+      fetchStaff();
     }
   };
 
@@ -105,7 +110,6 @@ export const StaffManagementSection: React.FC = () => {
       }
 
       setIsRegisterOpen(false);
-      // Reset form
       setNewName('');
       setNewBio('');
       setNewSystemPrompt('');
@@ -127,18 +131,18 @@ export const StaffManagementSection: React.FC = () => {
   const inConsultCount = staffList.filter((s) => s.status === 'IN_CONSULT').length;
 
   return (
-    <div className="flex-1 p-6 bg-slate-900/60 overflow-y-auto max-w-7xl mx-auto">
+    <div className="flex-1 p-6 bg-slate-900/60 overflow-y-auto max-w-7xl mx-auto w-full">
       {/* Top Banner & Header */}
       <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-800 pb-5">
         <div>
           <div className="flex items-center gap-2">
-            <span className="text-2xl font-bold text-slate-100">Hospital Personnel & Clinical Staff</span>
-            <span className="px-2.5 py-0.5 text-xs font-semibold bg-blue-950 text-blue-400 border border-blue-800 rounded-full">
-              Active Roster
+            <span className="text-2xl font-bold text-slate-100">Hospital Personnel & Clinical Staff Directory</span>
+            <span className="px-2.5 py-0.5 text-xs font-semibold bg-cyan-950 text-cyan-400 border border-cyan-800 rounded-full">
+              Attending Registry
             </span>
           </div>
           <p className="text-xs text-slate-400 mt-1">
-            Manage multi-disciplinary clinical team: attending physicians, emergency triage nurses, clinical pharmacists, lab scientists, and radiologists.
+            Credentialed medical staff directory, shift statuses, clinical reasoning models, and Harrison's RAG specialists.
           </p>
         </div>
 
@@ -147,7 +151,7 @@ export const StaffManagementSection: React.FC = () => {
             onClick={() => setIsRegisterOpen(true)}
             className="px-4 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white text-xs font-semibold rounded-lg shadow transition flex items-center gap-2"
           >
-            <span>+</span> Register New Healthcare Professional
+            <span>+</span> Register Healthcare Professional
           </button>
         </div>
       </div>
@@ -155,27 +159,27 @@ export const StaffManagementSection: React.FC = () => {
       {/* Summary KPI Counters */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
         <div className="bg-slate-800/60 border border-slate-800 p-4 rounded-xl">
-          <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Total Staff Roster</div>
+          <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Credentialed Staff</div>
           <div className="text-2xl font-bold text-slate-100 mt-1">{staffList.length}</div>
-          <div className="text-[10px] text-slate-500 mt-0.5">Credentialed personnel</div>
+          <div className="text-[10px] text-slate-500 mt-0.5">Active in hospital database</div>
         </div>
 
         <div className="bg-slate-800/60 border border-slate-800 p-4 rounded-xl">
-          <div className="text-[11px] font-semibold text-emerald-400 uppercase tracking-wider">On Duty</div>
+          <div className="text-[11px] font-semibold text-emerald-400 uppercase tracking-wider">On Duty Status</div>
           <div className="text-2xl font-bold text-emerald-400 mt-1">{onDutyCount}</div>
-          <div className="text-[10px] text-emerald-500/80 mt-0.5">Available for encounters</div>
+          <div className="text-[10px] text-emerald-500/80 mt-0.5">Ready for patient encounters</div>
         </div>
 
         <div className="bg-slate-800/60 border border-slate-800 p-4 rounded-xl">
-          <div className="text-[11px] font-semibold text-amber-400 uppercase tracking-wider">In Active Consult</div>
+          <div className="text-[11px] font-semibold text-amber-400 uppercase tracking-wider">Active Consultations</div>
           <div className="text-2xl font-bold text-amber-400 mt-1">{inConsultCount}</div>
-          <div className="text-[10px] text-amber-500/80 mt-0.5">Patient interaction</div>
+          <div className="text-[10px] text-amber-500/80 mt-0.5">In-progress clinical reviews</div>
         </div>
 
         <div className="bg-slate-800/60 border border-slate-800 p-4 rounded-xl">
-          <div className="text-[11px] font-semibold text-cyan-400 uppercase tracking-wider">Clinical Disciplines</div>
-          <div className="text-2xl font-bold text-cyan-400 mt-1">6</div>
-          <div className="text-[10px] text-cyan-500/80 mt-0.5">IM, Triage, Pharm, Lab, Rad, Admin</div>
+          <div className="text-[11px] font-semibold text-cyan-400 uppercase tracking-wider">Internal Medicine Core</div>
+          <div className="text-2xl font-bold text-cyan-400 mt-1">Active</div>
+          <div className="text-[10px] text-cyan-500/80 mt-0.5">Harrison's 21st Edition RAG</div>
         </div>
       </div>
 
@@ -183,7 +187,7 @@ export const StaffManagementSection: React.FC = () => {
       <div className="bg-slate-800/40 border border-slate-800 p-3.5 rounded-xl mb-6 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1.5 text-xs text-slate-400">
-            <span>Filter Role:</span>
+            <span>Role Filter:</span>
             <select
               value={roleFilter}
               onChange={(e) => setRoleFilter(e.target.value)}
@@ -195,7 +199,7 @@ export const StaffManagementSection: React.FC = () => {
               <option value="PHARMACIST">Pharmacists (PharmD)</option>
               <option value="LAB_SCIENTIST">Lab Scientists (MLS)</option>
               <option value="RADIOLOGIST">Radiologists (MD)</option>
-              <option value="RECEPTIONIST">Admissions Coordinators</option>
+              <option value="RECEPTIONIST">Admissions</option>
             </select>
           </div>
 
@@ -218,32 +222,95 @@ export const StaffManagementSection: React.FC = () => {
         </div>
 
         <div className="text-xs text-slate-500">
-          Showing {filteredStaff.length} of {staffList.length} staff
+          Showing {filteredStaff.length} of {staffList.length} staff member{filteredStaff.length === 1 ? '' : 's'}
         </div>
       </div>
 
-      {/* Staff Roster Cards Grid */}
+      {/* Staff Roster Cards Display */}
       {loading ? (
         <div className="py-16 text-center text-slate-400 text-xs flex flex-col items-center justify-center gap-2">
-          <span className="w-5 h-5 border-2 border-blue-500/30 border-t-blue-500 rounded-full animate-spin" />
-          <span>Loading hospital staff roster...</span>
+          <span className="w-5 h-5 border-2 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin" />
+          <span>Loading hospital staff directory...</span>
+        </div>
+      ) : filteredStaff.length === 0 ? (
+        <div className="py-16 text-center bg-slate-800/20 border border-slate-800 rounded-2xl p-8">
+          <div className="text-3xl mb-2">👨‍⚕️</div>
+          <h4 className="text-sm font-semibold text-slate-300">No Staff Members Found</h4>
+          <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
+            No matching staff records were found. Use the register button above to add personnel.
+          </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        /* Render Grid / Executive Featured Card */
+        <div
+          className={
+            filteredStaff.length === 1
+              ? 'max-w-4xl mx-auto w-full'
+              : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'
+          }
+        >
           {filteredStaff.map((staff) => {
+            const isVance = staff.id === 'STAFF-VANCE' || staff.name.includes('Marcus Vance');
             const isOnDuty = staff.status === 'ON_DUTY';
             const isInConsult = staff.status === 'IN_CONSULT';
+            const photoSrc = isVance ? (staff.avatar_url || drMarcusPhoto) : staff.avatar_url;
 
             return (
               <div
                 key={staff.id}
-                className="bg-slate-800/50 hover:bg-slate-800/80 border border-slate-800 hover:border-slate-700 rounded-xl p-5 transition shadow-sm flex flex-col justify-between"
+                className={`transition-all duration-300 rounded-2xl shadow-xl flex flex-col justify-between relative overflow-hidden ${
+                  isVance
+                    ? 'bg-gradient-to-br from-slate-900/95 via-slate-800/90 to-slate-900/95 border-2 border-cyan-500/40 hover:border-cyan-400 p-6 sm:p-7 backdrop-blur-md ring-1 ring-cyan-500/20'
+                    : 'bg-slate-800/50 hover:bg-slate-800/80 border border-slate-800 hover:border-slate-700 p-5'
+                }`}
               >
+                {/* Subtle decorative glow for Attending Physician */}
+                {isVance && (
+                  <div className="absolute top-0 right-0 w-72 h-72 bg-cyan-500/5 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
+                )}
+
                 <div>
-                  {/* Top: Avatar/Badge + Name & Title */}
-                  <div className="flex items-start justify-between gap-3 mb-3">
-                    <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-slate-700 to-slate-800 border border-slate-600 flex items-center justify-center text-lg shadow-inner">
+                  {/* Top Section: Photo & Identity Header */}
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-5 mb-5">
+                    {/* Portrait Photo Container */}
+                    {photoSrc ? (
+                      <div className="relative shrink-0 group/photo">
+                        <img
+                          src={photoSrc}
+                          alt={staff.name}
+                          onClick={() =>
+                            setSelectedPhoto({
+                              src: photoSrc,
+                              name: staff.name,
+                              title: staff.title,
+                            })
+                          }
+                          className={`rounded-2xl object-cover object-top border-2 shadow-2xl cursor-pointer transition-all duration-300 group-hover/photo:scale-[1.03] ${
+                            isVance
+                              ? 'w-28 h-28 sm:w-32 sm:h-32 border-cyan-400 shadow-cyan-950/80 ring-4 ring-cyan-500/20'
+                              : 'w-20 h-20 sm:w-24 sm:h-24 border-slate-600 shadow-black/60'
+                          }`}
+                          title="Click to view full portrait"
+                        />
+                        {/* Status Dot */}
+                        <span
+                          className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-slate-900 shadow-md ${
+                            isOnDuty
+                              ? 'bg-emerald-400 animate-pulse'
+                              : isInConsult
+                              ? 'bg-amber-400'
+                              : 'bg-slate-500'
+                          }`}
+                          title={`Status: ${staff.status}`}
+                        />
+                        {/* Hover Zoom Hint */}
+                        <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover/photo:opacity-100 rounded-2xl flex items-center justify-center text-xs font-semibold text-white transition-opacity pointer-events-none">
+                          🔍 Zoom
+                        </div>
+                      </div>
+                    ) : (
+                      /* Fallback Role Icon */
+                      <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-slate-700 to-slate-800 border border-slate-600 flex items-center justify-center text-3xl shadow-inner shrink-0">
                         {staff.role === 'DOCTOR' && '👨‍⚕️'}
                         {staff.role === 'NURSE' && '👩‍⚕️'}
                         {staff.role === 'PHARMACIST' && '💊'}
@@ -251,84 +318,129 @@ export const StaffManagementSection: React.FC = () => {
                         {staff.role === 'RADIOLOGIST' && '🩻'}
                         {staff.role === 'RECEPTIONIST' && '📋'}
                       </div>
-                      <div>
-                        <h4 className="text-sm font-bold text-slate-100 flex items-center gap-1.5">
+                    )}
+
+                    {/* Name, Title, and Medical Badges */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h3 className="text-xl sm:text-2xl font-black text-slate-100 tracking-tight flex items-center gap-2">
                           <span>{staff.name}</span>
-                          <span className="text-xs font-semibold text-cyan-400">{staff.credentials}</span>
-                        </h4>
-                        <div className="text-xs text-slate-400 line-clamp-1">{staff.title}</div>
+                        </h3>
+                        <span className="px-2 py-0.5 text-xs font-bold bg-cyan-950 text-cyan-300 border border-cyan-700/80 rounded-md">
+                          {staff.credentials}
+                        </span>
+                        {isVance && (
+                          <span className="px-2.5 py-0.5 text-[11px] font-bold bg-emerald-950/90 text-emerald-300 border border-emerald-700/80 rounded-full flex items-center gap-1.5 shadow-sm">
+                            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                            Chief Attending Physician
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="text-xs sm:text-sm font-semibold text-cyan-300/90 mt-1">
+                        {staff.title}
+                      </div>
+
+                      {/* Department & Specialty Pills */}
+                      <div className="flex flex-wrap items-center gap-2 mt-2.5">
+                        <span className="px-2.5 py-1 text-[10px] font-semibold bg-slate-900/90 text-cyan-400 border border-cyan-800/70 rounded-lg">
+                          🏥 {staff.department.replace(/_/g, ' ')}
+                        </span>
+                        <span className="px-2.5 py-1 text-[10px] font-medium bg-slate-900/90 text-slate-300 border border-slate-700 rounded-lg">
+                          🔬 {staff.specialty.replace(/_/g, ' ')}
+                        </span>
+                        <span className="px-2.5 py-1 text-[10px] font-mono text-purple-300 bg-purple-950/40 border border-purple-800/60 rounded-lg flex items-center gap-1">
+                          📖 Harrison's RAG Guided
+                        </span>
+                        <span className="px-2.5 py-1 text-[10px] font-mono text-slate-300 bg-slate-900/90 border border-slate-700 rounded-lg">
+                          📊 {staff.total_encounters} Encounters
+                        </span>
                       </div>
                     </div>
                   </div>
 
-                  {/* Department & Specialty Pills */}
-                  <div className="flex flex-wrap items-center gap-2 mb-3">
-                    <span className="px-2 py-0.5 text-[10px] font-semibold bg-slate-900 text-cyan-300 border border-slate-700 rounded">
-                      {staff.department.replace(/_/g, ' ')}
+                  {/* Clinical Biography */}
+                  <div className="bg-slate-950/60 p-4 rounded-xl border border-slate-800 mb-3 shadow-inner">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+                      Clinical Biography & Background
                     </span>
-                    <span className="px-2 py-0.5 text-[10px] font-medium bg-slate-900 text-slate-400 border border-slate-800 rounded">
-                      {staff.specialty.replace(/_/g, ' ')}
-                    </span>
-                    <span className="px-2 py-0.5 text-[10px] font-mono bg-slate-900 text-slate-400 border border-slate-800 rounded">
-                      {staff.total_encounters} Encounters
-                    </span>
+                    <p className="text-xs text-slate-200 leading-relaxed">
+                      {staff.bio}
+                    </p>
                   </div>
 
-                  {/* Bio */}
-                  <p className="text-xs text-slate-300 bg-slate-900/60 p-3 rounded-lg border border-slate-800/80 mb-3 leading-relaxed">
-                    {staff.bio}
-                  </p>
-
-                  {/* System Prompt / Guideline Persona */}
+                  {/* System Prompt & Diagnostic Protocol */}
                   {staff.system_prompt && (
-                    <div className="text-[11px] text-slate-400/90 font-mono bg-slate-950/40 p-2 rounded border border-slate-900">
-                      <span className="text-cyan-400 font-semibold block text-[10px] uppercase">Clinical Prompt / Standard:</span>
-                      {staff.system_prompt}
+                    <div className="text-[11px] text-slate-300 font-mono bg-slate-950/80 p-3.5 rounded-xl border border-slate-800/90 mb-4">
+                      <span className="text-cyan-400 font-bold block text-[10px] uppercase tracking-wider mb-1 flex items-center gap-1.5">
+                        <span>⚡</span>
+                        <span>Clinical Reasoning Protocol & Guideline Directive</span>
+                      </span>
+                      <p className="text-slate-300 leading-relaxed">
+                        {staff.system_prompt}
+                      </p>
                     </div>
                   )}
                 </div>
 
-                {/* Duty Status Selector */}
-                <div className="mt-4 pt-3 border-t border-slate-800 flex items-center justify-between">
-                  <span className="text-[11px] text-slate-400 font-medium">Duty Status:</span>
-                  <div className="flex items-center gap-1">
-                    <button
-                      onClick={() => handleUpdateStatus(staff.id, 'ON_DUTY')}
-                      className={`px-2 py-1 text-[10px] font-bold rounded transition border ${
-                        isOnDuty
-                          ? 'bg-emerald-950 text-emerald-400 border-emerald-700 shadow-sm'
-                          : 'bg-slate-900 text-slate-500 border-slate-800 hover:text-slate-300'
-                      }`}
-                    >
-                      ON DUTY
-                    </button>
-                    <button
-                      onClick={() => handleUpdateStatus(staff.id, 'IN_CONSULT')}
-                      className={`px-2 py-1 text-[10px] font-bold rounded transition border ${
-                        isInConsult
-                          ? 'bg-amber-950 text-amber-400 border-amber-700 shadow-sm'
-                          : 'bg-slate-900 text-slate-500 border-slate-800 hover:text-slate-300'
-                      }`}
-                    >
-                      CONSULT
-                    </button>
-                    <button
-                      onClick={() => handleUpdateStatus(staff.id, 'OFF_DUTY')}
-                      className={`px-2 py-1 text-[10px] font-bold rounded transition border ${
-                        staff.status === 'OFF_DUTY'
-                          ? 'bg-slate-800 text-slate-300 border-slate-600 shadow-sm'
-                          : 'bg-slate-900 text-slate-500 border-slate-800 hover:text-slate-300'
-                      }`}
-                    >
-                      OFF DUTY
-                    </button>
-                    {staff.id !== 'STAFF-VANCE' && (
+                {/* Footer Controls & Duty Switcher */}
+                <div className="mt-2 pt-4 border-t border-slate-800/90 flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-slate-400 font-medium">Shift Status:</span>
+                    <div className="flex items-center gap-1 bg-slate-950/80 p-1 rounded-xl border border-slate-800">
+                      <button
+                        onClick={() => handleUpdateStatus(staff.id, 'ON_DUTY')}
+                        className={`px-3 py-1 text-[10px] font-bold rounded-lg transition border ${
+                          isOnDuty
+                            ? 'bg-emerald-950 text-emerald-300 border-emerald-600 shadow-md shadow-emerald-950/80'
+                            : 'bg-transparent text-slate-500 border-transparent hover:text-slate-300'
+                        }`}
+                      >
+                        ● ON DUTY
+                      </button>
+                      <button
+                        onClick={() => handleUpdateStatus(staff.id, 'IN_CONSULT')}
+                        className={`px-3 py-1 text-[10px] font-bold rounded-lg transition border ${
+                          isInConsult
+                            ? 'bg-amber-950 text-amber-300 border-amber-600 shadow-md shadow-amber-950/80'
+                            : 'bg-transparent text-slate-500 border-transparent hover:text-slate-300'
+                        }`}
+                      >
+                        ● IN CONSULT
+                      </button>
+                      <button
+                        onClick={() => handleUpdateStatus(staff.id, 'OFF_DUTY')}
+                        className={`px-3 py-1 text-[10px] font-bold rounded-lg transition border ${
+                          staff.status === 'OFF_DUTY'
+                            ? 'bg-slate-800 text-slate-300 border-slate-600 shadow-md'
+                            : 'bg-transparent text-slate-500 border-transparent hover:text-slate-300'
+                        }`}
+                      >
+                        ● OFF DUTY
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    {/* Launch Consult shortcut */}
+                    {onOpenConsult && (
+                      <button
+                        onClick={onOpenConsult}
+                        className="px-3.5 py-1.5 rounded-xl bg-cyan-950 hover:bg-cyan-900 border border-cyan-700/80 text-cyan-300 text-xs font-bold shadow transition flex items-center gap-1.5"
+                      >
+                        <span>🩺</span>
+                        <span>Consult Dr. Vance</span>
+                      </button>
+                    )}
+
+                    {/* Delete button (only for non-Vance staff) */}
+                    {!isVance && (
                       <button
                         onClick={() => handleDeleteStaff(staff.id, staff.name)}
-                        className="p-1 text-slate-500 hover:text-rose-400 text-xs transition ml-1"
-                        title="Delete staff member from directory"
+                        className="p-1.5 text-slate-500 hover:text-rose-400 text-xs rounded border border-slate-700 hover:border-rose-700 transition"
+                        title="Remove staff member from directory"
                       >
-                        🗑️
+                        🗑️ Remove
                       </button>
                     )}
                   </div>
@@ -336,6 +448,40 @@ export const StaffManagementSection: React.FC = () => {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* Lightbox Modal for High-Resolution Photo Zoom */}
+      {selectedPhoto && (
+        <div
+          className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200"
+          onClick={() => setSelectedPhoto(null)}
+        >
+          <div
+            className="bg-slate-900 border border-slate-700 rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl relative p-6 text-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setSelectedPhoto(null)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-100 text-xl w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center transition"
+            >
+              ✕
+            </button>
+
+            <div className="relative inline-block mb-4">
+              <img
+                src={selectedPhoto.src}
+                alt={selectedPhoto.name}
+                className="w-72 h-72 sm:w-80 sm:h-80 object-cover object-top rounded-2xl border-2 border-cyan-400 shadow-2xl shadow-cyan-950 ring-4 ring-cyan-500/20 mx-auto"
+              />
+            </div>
+
+            <h3 className="text-xl font-black text-slate-100">{selectedPhoto.name}</h3>
+            <p className="text-xs text-cyan-300 font-semibold mt-1">{selectedPhoto.title}</p>
+            <p className="text-[11px] text-slate-400 mt-2 font-mono">
+              Chief of Internal Medicine • AI Virtual Hospital
+            </p>
+          </div>
         </div>
       )}
 
@@ -350,9 +496,9 @@ export const StaffManagementSection: React.FC = () => {
               ✕
             </button>
 
-            <h3 className="text-lg font-bold text-slate-100 mb-1">Register New Healthcare Professional</h3>
+            <h3 className="text-lg font-bold text-slate-100 mb-1">Register Healthcare Professional</h3>
             <p className="text-xs text-slate-400 mb-4">
-              Add an attending physician, triage nurse, clinical pharmacist, or pathologist to the AI-VH directory.
+              Add a specialist, attending physician, or medical officer to the directory.
             </p>
 
             <form onSubmit={handleRegisterStaff} className="space-y-4 text-xs">
@@ -363,7 +509,7 @@ export const StaffManagementSection: React.FC = () => {
                     type="text"
                     value={newName}
                     onChange={(e) => setNewName(e.target.value)}
-                    placeholder="e.g., Dr. Miriam O'Connor"
+                    placeholder="e.g., Dr. Sophia Lin"
                     className="w-full bg-slate-950 border border-slate-700 text-slate-100 text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-cyan-500"
                     required
                   />
@@ -475,7 +621,7 @@ export const StaffManagementSection: React.FC = () => {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs rounded-lg shadow transition disabled:opacity-50"
+                  className="px-5 py-2 bg-cyan-600 hover:bg-cyan-500 text-white font-medium text-xs rounded-lg shadow transition disabled:opacity-50"
                 >
                   {isSubmitting ? 'Registering...' : 'Register Professional'}
                 </button>

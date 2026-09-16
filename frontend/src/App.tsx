@@ -331,7 +331,9 @@ export const App: React.FC = () => {
           />
         )}
 
-        {activeTab === 'STAFF' && <StaffManagementSection />}
+        {activeTab === 'STAFF' && (
+          <StaffManagementSection onOpenConsult={() => setIsConsultOpen(true)} />
+        )}
 
         {activeTab === 'REPORTS' && (
           <PhysicianReviewDashboard

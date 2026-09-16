@@ -332,4 +332,24 @@ patient/staff work, see above, not touched by this commit). Frontend build clean
   - `npm run build` in `frontend/` -> 0 errors (`tsc -b && vite build` built in 1.23s).
   - Git commit `0d166b7`: clean working tree.
 
+## 10. Session 13: Dr. Marcus Vance Portrait Integration & Roster Refinement (2026-09-16)
+- **Staff Roster Directory Refinement**:
+  - Pruned previous demo staff members to keep Dr. Marcus Vance as the exclusive attending physician and clinical core of the Virtual Hospital.
+  - Updated `backend/database/repository.py` seed data and live SQLite database (`data/aivh.db`) with `avatar_url: "/assets/dr_marcus_vance.jpg"`.
+  - Added `avatar_url?: string;` to `HospitalStaffRecord` in `frontend/src/types.ts`.
+- **Dr. Marcus Vance Portrait Integration**:
+  - Ingested and deployed the provided clinical portrait (`Gemini_Generated_Image_rcq36rcq36rcq36r.jpg`) to both `frontend/public/assets/dr_marcus_vance.jpg` and `frontend/src/assets/dr_marcus_vance.jpg`.
+  - Styled Dr. Marcus Vance's card in `frontend/src/components/management/StaffManagementSection.tsx`:
+    - Large high-definition portrait display (`w-28 h-28 sm:w-32 sm:h-32`) with rounded-2xl geometry, cyan-400 glowing border, and drop shadow.
+    - Integrated live duty indicator pulse dot anchored to the portrait corner.
+    - Interactive full-resolution Lightbox Photo Zoom modal on portrait click.
+    - Executive presentation with credentials (`MD, FACP`, `Chief Attending Physician`, `Internal Medicine Specialist`), Harrison's 21st Edition RAG badge, clinical biography, reasoning directives, and interactive shift switcher.
+- **Cross-Modal Consistency**:
+  - Connected the "Consult Dr. Vance" action button on his card in `frontend/src/App.tsx` directly to the `InternalMedicineConsultModal`.
+  - Upgraded `frontend/src/components/specialists/InternalMedicineConsultModal.tsx` header to showcase Dr. Marcus Vance's portrait photo alongside his title and credentials.
+- **Build & Test Verification**:
+  - `npm run build` in `frontend/` -> 0 errors, production build verified.
+  - `py -3.13 -m pytest backend/tests/test_patients_and_staff.py -v` -> 4 passed, 0 failed.
+
+
 

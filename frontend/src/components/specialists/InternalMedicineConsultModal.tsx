@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import type { SpecialistConsultResponse } from '../../types';
 import {
-  Stethoscope,
   BookOpen,
   Send,
   Loader2,
@@ -15,6 +14,7 @@ import {
   VolumeX,
 } from 'lucide-react';
 import { speakClinicalMessage, stopClinicalSpeech } from '../../utils/speechSynthesis';
+import drMarcusPhoto from '../../assets/dr_marcus_vance.jpg';
 
 interface InternalMedicineConsultProps {
   isOpen: boolean;
@@ -119,8 +119,13 @@ export const InternalMedicineConsultModal: React.FC<InternalMedicineConsultProps
         {/* Modal Header */}
         <div className="p-5 border-b border-slate-800 bg-slate-900/90 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center shadow-lg shadow-emerald-500/20 text-white font-bold">
-              <Stethoscope className="w-5 h-5" />
+            <div className="relative shrink-0">
+              <img
+                src={drMarcusPhoto}
+                alt="Dr. Marcus Vance"
+                className="w-11 h-11 rounded-xl object-cover object-top border-2 border-emerald-500/60 shadow-lg shadow-emerald-500/20 ring-2 ring-emerald-500/20"
+              />
+              <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full bg-emerald-400 border-2 border-slate-900 shadow-sm animate-pulse" />
             </div>
             <div>
               <div className="flex items-center gap-2">

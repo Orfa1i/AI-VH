@@ -206,6 +206,7 @@ export interface HospitalStaffRecord {
   credentials: string;
   bio: string;
   system_prompt?: string;
+  avatar_url?: string;
   assigned_patients?: string[];
   total_encounters: number;
   created_at?: string;
