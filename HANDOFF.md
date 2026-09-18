@@ -413,6 +413,25 @@ patient/staff work, see above, not touched by this commit). Frontend build clean
   - All automated backend tests passing (`pytest` -> 100% pass).
   - Live uvicorn API running on port 8000 with MedGemma GPU + DPO LoRA loaded.
 
-
-
-
+## 12. Session 15: Dummy Data Purge & Dynamic Manual Patient Intake (2026-09-18 / 2026-09-19)
+- **Database Dummy Data Purge & Core Knowledge Preservation**:
+  - Full safety backup created at `data/aivh.db.backup` (493,252,608 bytes) and excluded in `.gitignore`.
+  - Safely cleared all dummy / sample records via transactional SQL deletion:
+    - `patients`: 0 rows
+    - `clinical_reports`: 0 rows
+    - `encounters`: 0 rows
+    - `physician_reviews`: 0 rows
+    - `dpo_feedback_pairs`: 0 rows
+  - **100% Retained Foundation**:
+    - `knowledge_chunks`: **47,806 chunks** fully intact (Harrison's Principles of Internal Medicine 21st Edition + Braunwald's Heart Disease dense vector embeddings).
+    - `hospital_staff`: **1 record** fully intact (Dr. Marcus Vance, MD, FACP, Chief Attending Physician).
+- **Backend Dynamic Case Architecture**:
+  - Upgraded `GET /api/cases` in `backend/api/router.py` to query live database patients (`db_repo.list_patients()`), returning `[]` when the system is clean and dynamically rendering manually admitted patients.
+  - Enhanced `get_benchmark_case(case_id)` in `backend/clinical/cases.py` to seamlessly build a `PatientGroundTruth` model from any manually admitted database patient, allowing real manual admissions to run through full multi-agent clinical simulations.
+- **Frontend Clean Intake & Diagram Empty State**:
+  - Updated `CaseIntakeAdmissionSection.tsx`: fields initialize clean/empty (name, age, complaint, HPI, PMHx, meds, allergies, bed number). When no cases exist, displays a pulsating cyan badge: `Manual Entry Mode: Ready for Real Patient Data`. Post-admission button dynamically links to `Start Clinical Encounter with {name} →`.
+  - Updated `HospitalFlowDiagram.tsx`: displays an empty state in the Cases Processing Area directing the user to admit patients in the Case Intake tab.
+- **Verification & Status**:
+  - Frontend production build passed (`tsc -b && vite build` in <1s, 0 errors).
+  - Live backend (`http://127.0.0.1:8000`) and frontend (`http://localhost:5173`) running and verified.
+  - Git commit: `41aace0`.
