@@ -87,8 +87,9 @@ AI-VH is an autonomous multi-agent healthcare simulation and reinforcement learn
   - Features an interactive Cases Processing Area displaying all benchmark and inpatient cases with one-click routing.
   - Visualizes patient progression with animated SVG trajectory paths connecting Intake → Department & Doctor → Cases Area → Patient Exit Hub / Discharge Gate.
   - Upgraded `frontend/src/components/hospital3d/Hospital3DPage.tsx` with a dual-view switcher (`Flow Diagram (Default)` / `3D Spatial View`), keeping 3D backward compatibility while prioritizing clarity.
+  - Implemented dynamic animated patient avatar pin traversing the sequence bar with percentage tracking, acuity tags, and real-time clinical location banners.
   - Updated `frontend/src/App.tsx` navigation buttons and labels.
-  - Verified frontend build (`tsc -b && vite build` -> 0 errors, 1.00s) and full backend test suite (`pytest` -> 58/58 passed).
+  - Verified frontend build (`tsc -b && vite build` -> 0 errors, 1.29s) and full backend test suite (`pytest` -> 58/58 passed).
 
 ## 3. Current State of the Work
 - 2D Hospital Clinical Flow Diagram is deployed as the default operational view at `/3d` with real-time WebSocket event and vitals streaming.
