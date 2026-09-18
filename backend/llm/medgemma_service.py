@@ -118,6 +118,70 @@ class MedGemmaService:
             chief_complaint, hpi, vitals_summary, exam_findings, lab_results, rag_context
         )
 
+    def _build_evaluation_prompt(
+        self,
+        chief_complaint: str,
+        hpi: str,
+        vitals_summary: str,
+        exam_findings: Dict[str, str],
+        lab_results: List[Dict[str, Any]],
+        rag_context: List[Dict[str, Any]],
+    ) -> str:
+        """Constructs standardized MedGemma clinical evaluation prompt with strict JSON output schema."""
+        rag_passages = []
+        for c in (rag_context or [])[:3]:
+            ch = c.get("chapter", "Harrison's Internal Medicine")
+            pg = f", p.{c.get('page')}" if c.get("page") else ""
+            txt = c.get("text", "")[:350].strip()
+            rag_passages.append(f"- [{ch}{pg}]: {txt}")
+        rag_text = "\n".join(rag_passages) if rag_passages else "Clinical practice guidelines from Harrison's Principles of Internal Medicine."
+
+        labs_lines = [f"- {r.get('test_type')}: {r.get('values')}" for r in (lab_results or [])]
+        labs_text = "\n".join(labs_lines) if labs_lines else "None recorded."
+
+        exam_str = json.dumps(exam_findings) if exam_findings else "Unremarkable."
+
+        patient_data = (
+            f"Chief Complaint: {chief_complaint}\n"
+            f"History of Present Illness (HPI): {hpi}\n"
+            f"Vitals: {vitals_summary}\n"
+            f"Physical Exam: {exam_str}\n"
+            f"Diagnostic Investigations & Labs:\n{labs_text}"
+        )
+
+        prompt = f"""You are an expert Internal Medicine Physician (MedGemma). Your task is to evaluate a patient's clinical presentation based EXCLUSIVELY on the provided "Patient Data" and the medical evidence retrieved from "Harrison's Principles of Internal Medicine".
+
+### INPUTS
+1. Patient Data:
+{patient_data}
+
+2. Medical Reference (Harrison's):
+{rag_text}
+
+### STRICT INSTRUCTIONS
+1. DO NOT output any internal thought processes, reasoning steps, or tags like `<unused94>thought`.
+2. NO HALLUCINATIONS: Do not alter, assume, or invent vital signs, pain levels, or symptoms not explicitly stated in the Patient Data.
+3. PRIMARY DIAGNOSIS: This must be a specific medical disease or condition (e.g., "Acute Appendicitis"), NOT a generic category like "Clinical Presentation".
+4. Base your clinical reasoning strictly on the provided Harrison's reference.
+
+### OUTPUT FORMAT
+Provide your final evaluation EXACTLY in the following JSON format, with no additional conversational text before or after:
+
+{{
+  "primary_diagnosis": "Specific medical condition based on evidence",
+  "confidence_score": "e.g., 85%",
+  "differential_diagnoses": [
+    "Condition 1",
+    "Condition 2"
+  ],
+  "treatment_regimen": [
+    "Step 1 (e.g., Establish peripheral IV access)",
+    "Step 2",
+    "Step 3"
+  ]
+}}"""
+        return prompt
+
     def _infer_with_gpu(
         self,
         chief_complaint: str,
@@ -129,22 +193,9 @@ class MedGemmaService:
     ) -> Dict[str, Any]:
         import torch
 
-        rag_text = "\n".join([f"- [{c.get('chapter', '')}, p.{c.get('page', '')}]: {c.get('text', '')[:300]}" for c in rag_context[:2]])
-        labs_text = "\n".join([f"- {r.get('test_type')}: {r.get('values')}" for r in lab_results])
-
-        prompt = f"""You are an expert Internal Medicine physician in an ER simulation.
-Evaluate this clinical presentation:
-Patient Chief Complaint: {chief_complaint}
-HPI: {hpi}
-Vitals: {vitals_summary}
-Physical Exam: {json.dumps(exam_findings)}
-Investigations:
-{labs_text}
-
-Evidence from Harrison's Internal Medicine:
-{rag_text}
-
-Provide your clinical assessment and plan."""
+        prompt = self._build_evaluation_prompt(
+            chief_complaint, hpi, vitals_summary, exam_findings, lab_results, rag_context
+        )
 
         messages = [
             {"role": "user", "content": [{"type": "text", "text": prompt}]}
@@ -253,12 +304,23 @@ Provide your clinical assessment and plan."""
 
         if parsed["primary_diagnosis"] != "Undifferentiated Acute Medical Illness":
             result["primary_diagnosis"] = parsed["primary_diagnosis"]
-            result["differential"] = [{
-                "condition": parsed["primary_diagnosis"],
-                "likelihood": 0.85,
-                "supporting_points": ["Derived from live MedGemma-generated clinical assessment."],
-                "opposing_points": [],
-            }]
+            if parsed.get("differential_diagnoses"):
+                result["differential"] = [
+                    {
+                        "condition": d,
+                        "likelihood": 0.85 if i == 0 else max(0.20, round(0.70 - (i * 0.15), 2)),
+                        "supporting_points": ["Derived from evidence-based MedGemma clinical assessment."],
+                        "opposing_points": [],
+                    }
+                    for i, d in enumerate(parsed["differential_diagnoses"])
+                ]
+            else:
+                result["differential"] = [{
+                    "condition": parsed["primary_diagnosis"],
+                    "likelihood": 0.85,
+                    "supporting_points": ["Derived from live MedGemma-generated clinical assessment."],
+                    "opposing_points": [],
+                }]
             if parsed["treatment_plan"]:
                 result["treatment_plan"] = parsed["treatment_plan"]
 
@@ -266,45 +328,79 @@ Provide your clinical assessment and plan."""
 
     def _infer_with_gpu_raw(self, model, chief_complaint: str, hpi: str, vitals_summary: str, exam_findings: Dict[str, str], lab_results: List[Dict[str, Any]], rag_context: List[Dict[str, Any]]) -> Dict[str, Any]:
         import torch
-        rag_text = "\n".join([f"- [{c.get('chapter', '')}, p.{c.get('page', '')}]: {c.get('text', '')[:300]}" for c in rag_context[:2]])
-        labs_text = "\n".join([f"- {r.get('test_type')}: {r.get('values')}" for r in lab_results])
-
-        prompt = f"""You are an expert Internal Medicine physician. Evaluate this case:
-Complaint: {chief_complaint}
-HPI: {hpi}
-Vitals: {vitals_summary}
-Exam: {json.dumps(exam_findings)}
-Labs: {labs_text}
-Evidence: {rag_text}
-
-Provide Assessment and Plan."""
+        prompt = self._build_evaluation_prompt(
+            chief_complaint, hpi, vitals_summary, exam_findings, lab_results, rag_context
+        )
 
         messages = [{"role": "user", "content": [{"type": "text", "text": prompt}]}]
         inputs = self.processor.apply_chat_template(messages, add_generation_prompt=True, tokenize=True, return_dict=True, return_tensors="pt").to("cuda")
 
         with torch.inference_mode():
-            output = model.generate(**inputs, max_new_tokens=250, do_sample=False)
+            output = model.generate(**inputs, max_new_tokens=300, do_sample=False)
 
         raw_output = self.processor.decode(output[0][inputs["input_ids"].shape[-1]:], skip_special_tokens=True)
         return {"raw_output": raw_output}
 
     def _parse_llm_text_to_structured_output(self, text: str) -> Dict[str, Any]:
         import re
+        import json
+
+        # Strip internal thought tags and unused tokens if model leaked them
+        clean = re.sub(r'<unused\d+>thought|<unused\d+>|</?thought>', '', text, flags=re.IGNORECASE).strip()
+
         result = {
             "primary_diagnosis": "Undifferentiated Acute Medical Illness",
-            "clinical_reasoning": text,
+            "clinical_reasoning": clean,
             "treatment_plan": [],
+            "differential_diagnoses": [],
+            "confidence_score": "75%",
+            "treatment_regimen": [],
         }
 
-        # Strip markdown emphasis markers so section headers and their content aren't
-        # split apart by a stray "**" landing right after the colon (e.g. "**Assessment:**\n\n*   **Dx**").
-        clean = re.sub(r'\*\*|__', '', text)
+        # Strategy 0: JSON extraction
+        json_obj = None
+        try:
+            json_obj = json.loads(clean)
+        except Exception:
+            json_match = re.search(r'(\{[\s\S]*\})', clean)
+            if json_match:
+                try:
+                    json_obj = json.loads(json_match.group(1))
+                except Exception:
+                    pass
+
+        if isinstance(json_obj, dict):
+            raw_dx = str(json_obj.get("primary_diagnosis", "")).strip()
+            placeholder_phrases = [
+                "specific medical condition based on evidence",
+                "clinical presentation",
+                "undifferentiated acute medical illness",
+            ]
+            if raw_dx and raw_dx.lower() not in placeholder_phrases:
+                result["primary_diagnosis"] = raw_dx
+
+            if "confidence_score" in json_obj:
+                result["confidence_score"] = str(json_obj["confidence_score"])
+
+            diffs = json_obj.get("differential_diagnoses", [])
+            if isinstance(diffs, list):
+                result["differential_diagnoses"] = [str(d).strip() for d in diffs if str(d).strip()]
+
+            regimen = json_obj.get("treatment_regimen", [])
+            if isinstance(regimen, list):
+                clean_regimen = [re.sub(r'^[\-\*\d\.]+\s*', '', str(r)).strip() for r in regimen if str(r).strip()]
+                if clean_regimen:
+                    result["treatment_plan"] = clean_regimen[:5]
+                    result["treatment_regimen"] = clean_regimen[:5]
+
+            # If primary diagnosis was successfully extracted from JSON, return early
+            if result["primary_diagnosis"] != "Undifferentiated Acute Medical Illness":
+                return result
+
+        # Strategy 1: diagnostic phrasing fallback for prose/markdown text
+        clean_text = re.sub(r'\*\*|__', '', clean)
         diagnosis_found = False
 
-        # Strategy 1: diagnostic phrasing. The model most often states the diagnosis in
-        # plain prose ("...high clinical suspicion for acute pulmonary embolism (PE)
-        # based on...") rather than bolding it or putting it under a clean header -- try
-        # these common phrasings first, in order of specificity.
         phrase_patterns = [
             r'(?i)high clinical suspicion for\s+(.+?)(?:\s+based on|\s+given|\.|,|\n)',
             r'(?i)clinical suspicion for\s+(.+?)(?:\s+based on|\s+given|\.|,|\n)',
@@ -314,7 +410,7 @@ Provide Assessment and Plan."""
             r'(?i)consistent with\s+(.+?)(?:\.|,|\n)',
         ]
         for pattern in phrase_patterns:
-            m = re.search(pattern, clean)
+            m = re.search(pattern, clean_text)
             if m:
                 candidate = m.group(1).strip().rstrip('.:')
                 if 4 <= len(candidate) <= 100:
@@ -322,9 +418,7 @@ Provide Assessment and Plan."""
                     diagnosis_found = True
                     break
 
-        # Strategy 2: bolded condition name (used when the model does bold the
-        # diagnosis instead, e.g. "...suspicion for **Pulmonary Embolism (PE)**.").
-        # Skip spans that are themselves section labels rather than a condition.
+        # Strategy 2: bolded condition name
         if not diagnosis_found:
             label_terms = {
                 "clinical assessment", "differential diagnosis", "primary diagnosis",
@@ -335,7 +429,7 @@ Provide Assessment and Plan."""
                 "presentation", "labs", "exam", "management", "workup",
                 "clinical reasoning", "evidence-based decision & reasoning",
             }
-            for span in re.findall(r'\*\*([^*]{3,90})\*\*', text):
+            for span in re.findall(r'\*\*([^*]{3,90})\*\*', clean):
                 candidate = span.strip().rstrip(':').strip()
                 if len(candidate) < 4 or candidate.lower() in label_terms:
                     continue
@@ -343,26 +437,27 @@ Provide Assessment and Plan."""
                 diagnosis_found = True
                 break
 
-        # Strategy 3: fallback for output with no bold markers and no recognized
-        # phrasing -- match "Assessment:" / "Diagnosis:" as a standalone header line,
-        # then take the next bullet.
+        # Strategy 3: standalone header line
         if not diagnosis_found:
-            header_match = re.search(r'(?im)^\s*(?:primary\s+diagnosis|assessment|diagnosis)\s*:\s*$', clean)
+            header_match = re.search(r'(?im)^\s*(?:primary\s+diagnosis|assessment|diagnosis)\s*:\s*$', clean_text)
             if header_match:
-                after = clean[header_match.end():]
+                after = clean_text[header_match.end():]
                 bullet_match = re.search(r'[^\S\n]*(?:[-*\d.\s]+)?([A-Z][^\n:]{4,140})', after)
                 if bullet_match:
                     candidate = bullet_match.group(1).strip().rstrip('.:')
                     if candidate:
                         result["primary_diagnosis"] = candidate
 
-        plan_match = re.search(r'(?i)(?:plan|treatment)\s*:?\s*\n(.*)', clean, re.DOTALL)
-        if plan_match:
-            plan_text = plan_match.group(1).strip()
-            lines = plan_text.split('\n')
-            items = [re.sub(r'^[\-\*\d\.]+\s*', '', line).strip() for line in lines if line.strip()]
-            if items:
-                result["treatment_plan"] = items[:5]
+        # Plan/regimen extraction for prose
+        if not result["treatment_plan"]:
+            plan_match = re.search(r'(?i)(?:plan|treatment|treatment_regimen)\s*:?\s*\n(.*)', clean_text, re.DOTALL)
+            if plan_match:
+                plan_text = plan_match.group(1).strip()
+                lines = plan_text.split('\n')
+                items = [re.sub(r'^[\-\*\d\.]+\s*', '', line).strip() for line in lines if line.strip()]
+                if items:
+                    result["treatment_plan"] = items[:5]
+                    result["treatment_regimen"] = items[:5]
 
         return result
 
