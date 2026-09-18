@@ -80,14 +80,19 @@ AI-VH is an autonomous multi-agent healthcare simulation and reinforcement learn
     - Counterbalanced shoulder-joint arm swinging (`-Math.sin(cycle) * 0.38`).
     - Subtle vertical stepping bounce during motion (`Math.abs(Math.sin(cycle)) * 0.03`).
     - Smooth decay and lerp back into resting idle posture and department station orientation when stationary.
-- **Verification & Deployment**:
-  - All 28 automated backend tests passing (`py -3.13 -m pytest backend/tests/ -v`).
-  - Production frontend build clean with zero warnings (`pnpm build` -> exit code 0).
-  - Live backend running on `http://127.0.0.1:8000` (task-52).
-  - Live frontend running on `http://localhost:5173` (task-53).
+- **2D Hospital Clinical Flow Diagram (Replacing 3D View as Primary)**:
+  - Designed and implemented `frontend/src/components/diagram/HospitalFlowDiagram.tsx` to streamline the complex 3D Three.js hospital scene into a clean, intuitive 2D process diagram.
+  - Features high-resolution photo of Dr. Marcus Vance (`dr_marcus_vance.jpg`), doctor credentials (MD, FACP), real-time status badge, and dynamic physician activity ticker.
+  - Renders distinct department containers (Internal Medicine, Triage, Nurse Station, Clinical Lab, Pharmacy Safety).
+  - Features an interactive Cases Processing Area displaying all benchmark and inpatient cases with one-click routing.
+  - Visualizes patient progression with animated SVG trajectory paths connecting Intake → Department & Doctor → Cases Area → Patient Exit Hub / Discharge Gate.
+  - Upgraded `frontend/src/components/hospital3d/Hospital3DPage.tsx` with a dual-view switcher (`Flow Diagram (Default)` / `3D Spatial View`), keeping 3D backward compatibility while prioritizing clarity.
+  - Updated `frontend/src/App.tsx` navigation buttons and labels.
+  - Verified frontend build (`tsc -b && vite build` -> 0 errors, 1.00s) and full backend test suite (`pytest` -> 58/58 passed).
 
 ## 3. Current State of the Work
-- Both servers are active in background tasks and responding with HTTP 200/101 (WebSocket).
+- 2D Hospital Clinical Flow Diagram is deployed as the default operational view at `/3d` with real-time WebSocket event and vitals streaming.
+- Both servers active in background tasks and responding with HTTP 200/101 (WebSocket).
 - Top navigation bar provides full access to Clinical Encounter Runner, IM Consult, Pharmacy Safety, Telemetry, Policy Benchmark, and RL Corpus.
 - The 3D virtual hospital renders the fully articulated male patient in authentic hospital gown, non-skid socks, IV cannula, and barcode wristband alongside clinical staff, with live walking stride locomotion when moving.
 - Live streaming vitals are fully operational via WebSockets in the East Wing Telemetry Console.
