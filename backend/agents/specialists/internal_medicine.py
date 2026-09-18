@@ -11,9 +11,10 @@ from ..base import BaseAgent
 from ..doctor import DoctorAgent
 from ...simulation.events import HospitalEvent, EventType
 from ...clinical.tools import ClinicalToolkit
-from ...clinical.models import DifferentialItem, ClinicalReport, LabTestType
+from ...clinical.models import ClinicalReport, LabTestType, DifferentialItem
 from ...llm.medgemma_service import MedGemmaService
 from ...rag.specialists.internal_medicine_rag import InternalMedicineRAGAgent, EvidenceBrief
+from ...clinical.intent import is_clinical_query
 
 logger = logging.getLogger("InternalMedicineSpecialist")
 
@@ -113,8 +114,11 @@ class InternalMedicineSpecialistAgent(DoctorAgent):
         """Provides direct conversational communication with Dr. Marcus Vance, MD, FACP."""
         logger.info(f"{self.name} received chat message: '{user_message[:80]}...'")
 
-        # 1. Semantic retrieval from Harrison's RAG knowledge base
-        citations = self.rag_agent.retrieve_evidence(user_message, top_k=3)
+        # 1. Semantic retrieval from Harrison's RAG knowledge base ONLY if clinical query
+        if is_clinical_query(user_message, patient_context):
+            citations = self.rag_agent.retrieve_evidence(user_message, top_k=3)
+        else:
+            citations = []
 
         # 2. Invoke MedGemma for conversational clinical synthesis off the main event loop
         chat_history = conversation_history or []
@@ -137,7 +141,10 @@ class InternalMedicineSpecialistAgent(DoctorAgent):
     ):
         """Asynchronously streams conversational clinical consultation tokens from Dr. Marcus Vance."""
         logger.info(f"{self.name} streaming chat for message: '{user_message[:80]}...'")
-        citations = self.rag_agent.retrieve_evidence(user_message, top_k=3)
+        if is_clinical_query(user_message, patient_context):
+            citations = self.rag_agent.retrieve_evidence(user_message, top_k=3)
+        else:
+            citations = []
         chat_history = conversation_history or []
         chat_history_with_msg = chat_history + [{"role": "user", "content": user_message}]
 

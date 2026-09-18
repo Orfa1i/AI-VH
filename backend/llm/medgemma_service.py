@@ -11,6 +11,7 @@ import logging
 import time
 from typing import Dict, List, Any, Optional, Tuple
 from pathlib import Path
+from ..clinical.intent import is_clinical_query, clean_doctor_dialogue_text
 
 logger = logging.getLogger("MedGemmaService")
 
@@ -813,7 +814,11 @@ Provide your final evaluation EXACTLY in the following JSON format, with no addi
                 user_query = m.get("content", "")
                 break
 
-        # Format Harrison's evidence citations
+        is_clinical = is_clinical_query(user_query, patient_context)
+        if not is_clinical:
+            rag_context = []
+
+        # Format Harrison's evidence citations (only if clinical)
         rag_passages = []
         for i, c in enumerate(rag_context[:3]):
             ch = c.get("chapter", "Harrison's Internal Medicine")
@@ -830,15 +835,31 @@ Provide your final evaluation EXACTLY in the following JSON format, with no addi
             try:
                 import torch
                 patient_info_str = f"\nPatient Context: {json.dumps(patient_context)}\n" if patient_context else ""
-                doctor_prompt = (
-                    "You are Dr. Marcus Vance, MD, FACP, Chief Attending Physician of Internal Medicine at the AI Virtual Hospital.\n"
-                    "You provide evidence-based clinical reasoning referencing Harrison's Principles of Internal Medicine (21st Edition).\n"
-                    "Address the user's clinical inquiry with diagnostic accuracy, differential diagnosis, guideline-directed management, and safety warnings.\n\n"
-                    f"Evidence from Harrison's Internal Medicine:\n{rag_evidence_text}\n"
-                    f"{patient_info_str}\n"
-                    f"User Query:\n{user_query}\n\n"
-                    "Dr. Marcus Vance Response:"
-                )
+
+                if not is_clinical:
+                    doctor_prompt = (
+                        "You are Dr. Marcus Vance, MD, FACP, Chief Attending Physician of Internal Medicine at the AI Virtual Hospital.\n\n"
+                        "### INPUT CLASSIFICATION & INSTRUCTIONS:\n"
+                        "- If the user input is a conversational greeting, question about your identity, or non-clinical chatter (e.g., 'hi', 'how are you'), "
+                        "respond naturally in 1-2 sentences as Dr. Marcus Vance. DO NOT output JSON. DO NOT output diagnostic UI elements. DO NOT list your thought process.\n"
+                        "- If the user input contains medical symptoms, a patient case, or asks for a diagnosis, ONLY then strictly apply the clinical JSON format provided below.\n\n"
+                        f"User Message:\n{user_query}\n\n"
+                        "Dr. Marcus Vance:"
+                    )
+                else:
+                    doctor_prompt = (
+                        "You are Dr. Marcus Vance, MD, FACP, Chief Attending Physician of Internal Medicine at the AI Virtual Hospital.\n"
+                        "You provide evidence-based clinical reasoning referencing Harrison's Principles of Internal Medicine (21st Edition).\n\n"
+                        "### INPUT CLASSIFICATION & INSTRUCTIONS:\n"
+                        "- If the user input is a conversational greeting, question about your identity, or non-clinical chatter (e.g., 'hi', 'how are you'), "
+                        "respond naturally in 1-2 sentences as Dr. Marcus Vance. DO NOT output JSON. DO NOT output diagnostic UI elements. DO NOT list your thought process.\n"
+                        "- If the user input contains medical symptoms, a patient case, or asks for a diagnosis, ONLY then strictly apply the clinical JSON format provided below.\n"
+                        "- Speak directly to the clinician in first-person as Dr. Marcus Vance. DO NOT output numbered meta-reasoning steps or chain-of-thought planning lists (such as '1. Identify the core clinical problem').\n\n"
+                        f"Evidence from Harrison's Internal Medicine:\n{rag_evidence_text}\n"
+                        f"{patient_info_str}\n"
+                        f"User Query:\n{user_query}\n\n"
+                        "Dr. Marcus Vance Response:"
+                    )
 
                 conv = [{"role": "user", "content": [{"type": "text", "text": doctor_prompt}]}]
                 inputs = self.processor.apply_chat_template(
@@ -859,14 +880,9 @@ Provide your final evaluation EXACTLY in the following JSON format, with no addi
                     output[0][inputs["input_ids"].shape[-1]:], skip_special_tokens=True
                 ).strip()
 
-                # Clean special tokens, thinking preambles, and unused markers
-                if "<unused" in reply_text or "thought" in reply_text.lower():
-                    reply_text = re.sub(r"(?:<unused\d+>)?thought[\s\S]*?(?:</thought>|\n\n(?=[A-Z0-9*#]))", "", reply_text, flags=re.IGNORECASE).strip()
-                    reply_text = re.sub(r"^thought\b.*?\n\n", "", reply_text, flags=re.DOTALL | re.IGNORECASE).strip()
-                    reply_text = re.sub(r"^thought\s+", "", reply_text, flags=re.IGNORECASE).strip()
-                    reply_text = re.sub(r"<unused\d+>", "", reply_text).strip()
-
-                if len(reply_text) > 40:
+                reply_text = clean_doctor_dialogue_text(reply_text)
+                min_len = 10 if not is_clinical else 30
+                if len(reply_text) >= min_len:
                     live_gpu = True
             except Exception as e:
                 logger.warning(f"Live GPU chat generation failed ({e}). Utilizing Harrison's clinical knowledge synthesis.")
@@ -876,9 +892,11 @@ Provide your final evaluation EXACTLY in the following JSON format, with no addi
             user_query=user_query,
             rag_context=rag_context,
             patient_context=patient_context,
+            is_clinical=is_clinical,
         )
 
-        final_reply = reply_text if live_gpu and len(reply_text) > 40 else synth_reply
+        min_len = 10 if not is_clinical else 30
+        final_reply = reply_text if live_gpu and len(reply_text) >= min_len else synth_reply
         elapsed_ms = (time.perf_counter() - start_time) * 1000
 
         return {
@@ -893,7 +911,7 @@ Provide your final evaluation EXACTLY in the following JSON format, with no addi
             "telemetry": {
                 "live_gpu_inference": live_gpu,
                 "model": "google/medgemma-4b (NF4 LoRA Aligned)" if live_gpu else "MedGemma Clinical Knowledge Engine",
-                "knowledge_source": "Harrison's Principles of Internal Medicine (21st Ed, 2022)",
+                "knowledge_source": "Harrison's Principles of Internal Medicine (21st Ed, 2022)" if is_clinical else "Direct Conversational Interaction",
                 "latency_ms": round(elapsed_ms, 1),
             }
         }
@@ -917,10 +935,15 @@ Provide your final evaluation EXACTLY in the following JSON format, with no addi
                 user_query = m.get("content", "")
                 break
 
+        is_clinical = is_clinical_query(user_query, patient_context)
+        if not is_clinical:
+            rag_context = []
+
         synth_reply, diff, workup, rx, contra = self._synthesize_doctor_clinical_dialogue(
             user_query=user_query,
             rag_context=rag_context,
             patient_context=patient_context,
+            is_clinical=is_clinical,
         )
 
         streamed_live = False
@@ -940,15 +963,30 @@ Provide your final evaluation EXACTLY in the following JSON format, with no addi
                 rag_evidence_text = "\n".join(rag_passages) if rag_passages else "General Internal Medicine guidelines applied."
                 patient_info_str = f"\nPatient Context: {json.dumps(patient_context)}\n" if patient_context else ""
 
-                doctor_prompt = (
-                    "You are Dr. Marcus Vance, MD, FACP, Chief Attending Physician of Internal Medicine at the AI Virtual Hospital.\n"
-                    "You provide evidence-based clinical reasoning referencing Harrison's Principles of Internal Medicine (21st Edition).\n"
-                    "Address the user's clinical inquiry with diagnostic accuracy, differential diagnosis, guideline-directed management, and safety warnings.\n\n"
-                    f"Evidence from Harrison's Internal Medicine:\n{rag_evidence_text}\n"
-                    f"{patient_info_str}\n"
-                    f"User Query:\n{user_query}\n\n"
-                    "Dr. Marcus Vance Response:"
-                )
+                if not is_clinical:
+                    doctor_prompt = (
+                        "You are Dr. Marcus Vance, MD, FACP, Chief Attending Physician of Internal Medicine at the AI Virtual Hospital.\n\n"
+                        "### INPUT CLASSIFICATION & INSTRUCTIONS:\n"
+                        "- If the user input is a conversational greeting, question about your identity, or non-clinical chatter (e.g., 'hi', 'how are you'), "
+                        "respond naturally in 1-2 sentences as Dr. Marcus Vance. DO NOT output JSON. DO NOT output diagnostic UI elements. DO NOT list your thought process.\n"
+                        "- If the user input contains medical symptoms, a patient case, or asks for a diagnosis, ONLY then strictly apply the clinical JSON format provided below.\n\n"
+                        f"User Message:\n{user_query}\n\n"
+                        "Dr. Marcus Vance:"
+                    )
+                else:
+                    doctor_prompt = (
+                        "You are Dr. Marcus Vance, MD, FACP, Chief Attending Physician of Internal Medicine at the AI Virtual Hospital.\n"
+                        "You provide evidence-based clinical reasoning referencing Harrison's Principles of Internal Medicine (21st Edition).\n\n"
+                        "### INPUT CLASSIFICATION & INSTRUCTIONS:\n"
+                        "- If the user input is a conversational greeting, question about your identity, or non-clinical chatter (e.g., 'hi', 'how are you'), "
+                        "respond naturally in 1-2 sentences as Dr. Marcus Vance. DO NOT output JSON. DO NOT output diagnostic UI elements. DO NOT list your thought process.\n"
+                        "- If the user input contains medical symptoms, a patient case, or asks for a diagnosis, ONLY then strictly apply the clinical JSON format provided below.\n"
+                        "- Speak directly to the clinician in first-person as Dr. Marcus Vance. DO NOT output numbered meta-reasoning steps or chain-of-thought planning lists (such as '1. Identify the core clinical problem').\n\n"
+                        f"Evidence from Harrison's Internal Medicine:\n{rag_evidence_text}\n"
+                        f"{patient_info_str}\n"
+                        f"User Query:\n{user_query}\n\n"
+                        "Dr. Marcus Vance Response:"
+                    )
 
                 conv = [{"role": "user", "content": [{"type": "text", "text": doctor_prompt}]}]
                 inputs = self.processor.apply_chat_template(
@@ -997,17 +1035,28 @@ Provide your final evaluation EXACTLY in the following JSON format, with no addi
                 await asyncio.sleep(0.015)
 
         elapsed_ms = (time.perf_counter() - start_time) * 1000
-        yield f"data: {json.dumps({'done': True, 'doctor': 'Dr. Marcus Vance, MD, FACP', 'title': 'Chief Attending Physician, Internal Medicine', 'differential': diff, 'immediate_workup': workup, 'guideline_therapy': rx, 'contraindications': contra, 'citations': rag_context, 'telemetry': {'live_gpu_inference': streamed_live, 'model': 'google/medgemma-4b (NF4 LoRA Aligned)' if streamed_live else 'MedGemma Clinical Knowledge Engine', 'knowledge_source': 'Harrison\'s Principles of Internal Medicine & Braunwald\'s Heart Disease', 'latency_ms': round(elapsed_ms, 1)}})}\n\n"
+        yield f"data: {json.dumps({'done': True, 'doctor': 'Dr. Marcus Vance, MD, FACP', 'title': 'Chief Attending Physician, Internal Medicine', 'differential': diff, 'immediate_workup': workup, 'guideline_therapy': rx, 'contraindications': contra, 'citations': rag_context, 'telemetry': {'live_gpu_inference': streamed_live, 'model': 'google/medgemma-4b (NF4 LoRA Aligned)' if streamed_live else 'MedGemma Clinical Knowledge Engine', 'knowledge_source': 'Harrison\'s Principles of Internal Medicine & Braunwald\'s Heart Disease' if is_clinical else 'Direct Conversational Interaction', 'latency_ms': round(elapsed_ms, 1)}})}\n\n"
 
     def _synthesize_doctor_clinical_dialogue(
         self,
         user_query: str,
         rag_context: List[Dict[str, Any]],
         patient_context: Optional[Dict[str, Any]] = None,
+        is_clinical: Optional[bool] = None,
     ) -> Tuple[str, List[Dict[str, Any]], List[str], List[str], List[str]]:
         """
         Synthesizes expert clinical dialogue, differential diagnoses, workup, therapy, and contraindications.
         """
+        if is_clinical is None:
+            is_clinical = is_clinical_query(user_query, patient_context)
+
+        # 0. Conversational greetings and pleasantries -> Zero over-medicalization
+        if not is_clinical:
+            reply = (
+                "Hello! I am Dr. Marcus Vance, Chief Attending Physician in Internal Medicine. "
+                "How can I assist you with a patient case, diagnostic workup, or clinical question today?"
+            )
+            return reply, [], [], [], []
         q = user_query.lower()
 
         # 1. Cardiovascular / Chest Pain / ACS / NSTEMI / Dissection
