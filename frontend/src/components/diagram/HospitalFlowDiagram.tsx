@@ -16,7 +16,8 @@ import {
   Stethoscope,
   Sparkles,
   Layers,
-  Building2
+  Building2,
+  User
 } from 'lucide-react';
 
 interface HospitalFlowDiagramProps {
@@ -66,6 +67,29 @@ export const HospitalFlowDiagram: React.FC<HospitalFlowDiagramProps> = ({
   const isLabActive = isRunning && activeDepartment === 'LABORATORY';
   const isPharmacyActive = isRunning && activeDepartment === 'PHARMACY';
   const isDischargeActive = events.some((e) => e.event_type === 'CLINICAL_REPORT_GENERATED' || e.event_type === 'TREATMENT_ORDERED');
+
+  // Dynamic patient trajectory position percentage (0% to 100%)
+  const getPatientProgress = () => {
+    if (isDischargeActive) return 96;
+    if (isPharmacyActive) return 76;
+    if (isLabActive) return 60;
+    if (isDoctorActive) return 40;
+    if (isTriageActive) return 14;
+    if (isRunning) return 28;
+    return 6;
+  };
+
+  const patientProgress = getPatientProgress();
+
+  const getStageDescription = () => {
+    if (isDischargeActive) return 'Discharge Gate Cleared & Disposition Finalized';
+    if (isPharmacyActive) return 'Pharmacist Medication Safety & Contraindication Review';
+    if (isLabActive) return 'Clinical Laboratory Biomarker Analysis';
+    if (isDoctorActive) return 'Attending Physician Examination (Dr. Marcus Vance)';
+    if (isTriageActive) return 'Nurse Triage & Objective Vital Telemetry Capture';
+    if (isRunning) return 'Routing to Assigned Clinical Station...';
+    return 'Patient Admitted & Queued in Clinical Pathway';
+  };
 
   return (
     <div className="w-full h-full flex flex-col bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-slate-100 overflow-y-auto p-4 md:p-6 select-none relative isolate">
@@ -518,16 +542,40 @@ export const HospitalFlowDiagram: React.FC<HospitalFlowDiagramProps> = ({
             )}
           </div>
 
-          {/* Connected Progress Line */}
-          <div className="relative flex items-center justify-between w-full px-4 py-2">
+          {/* Connected Progress Line with Animated Patient Avatar */}
+          <div className="relative flex items-center justify-between w-full px-4 py-3 min-h-[68px]">
             {/* Connecting Track Line */}
-            <div className="absolute left-8 right-8 top-1/2 -translate-y-1/2 h-1 bg-slate-800 z-0">
+            <div className="absolute left-8 right-8 top-1/2 -translate-y-1/2 h-1.5 bg-slate-800 rounded-full z-0 overflow-hidden">
               <div 
-                className="h-full bg-gradient-to-r from-cyan-500 via-indigo-500 to-emerald-500 transition-all duration-700"
+                className="h-full bg-gradient-to-r from-cyan-500 via-indigo-500 to-emerald-500 transition-all duration-1000 ease-out"
                 style={{
-                  width: isDischargeActive ? '100%' : isDoctorActive ? '66%' : isTriageActive ? '33%' : '10%'
+                  width: `${patientProgress}%`
                 }}
               />
+            </div>
+
+            {/* Dynamic Animated Patient Node Traversing the Path */}
+            <div 
+              className="absolute top-1/2 -translate-y-1/2 z-20 transition-all duration-1000 ease-out pointer-events-none"
+              style={{ left: `calc(${patientProgress}% - 14px)` }}
+            >
+              <div className="flex flex-col items-center">
+                {/* Floating Name Badge */}
+                <div className="px-2 py-0.5 rounded-full bg-cyan-400 text-slate-950 font-bold text-[9px] shadow-lg shadow-cyan-400/50 whitespace-nowrap mb-1 flex items-center gap-1 animate-bounce">
+                  <span>🚶</span>
+                  <span>{currentCase?.name || 'Patient'}</span>
+                  <span className="opacity-75">({patientProgress}%)</span>
+                </div>
+                {/* Patient Avatar Pulse Pin */}
+                <div className="relative">
+                  <div className="w-7 h-7 rounded-full bg-cyan-400 border-2 border-slate-950 shadow-lg shadow-cyan-400/60 flex items-center justify-center text-slate-950">
+                    <User className="w-4 h-4 fill-slate-950" />
+                  </div>
+                  {isRunning && (
+                    <span className="absolute -inset-1 rounded-full border-2 border-cyan-400/60 animate-ping" />
+                  )}
+                </div>
+              </div>
             </div>
 
             {/* Step 1: Intake */}
@@ -576,6 +624,18 @@ export const HospitalFlowDiagram: React.FC<HospitalFlowDiagramProps> = ({
                 4
               </div>
               <span className="text-[10px] font-semibold text-slate-300 mt-1.5">Patient Exit</span>
+            </div>
+          </div>
+
+          {/* Real-Time Location & Stage Status Banner */}
+          <div className="mt-2 pt-2.5 border-t border-slate-800/80 flex flex-wrap items-center justify-between text-xs text-slate-400">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+              <span className="text-slate-400 font-medium">Live Patient Position:</span>
+              <span className="text-cyan-300 font-semibold">{getStageDescription()}</span>
+            </div>
+            <div className="font-mono text-[11px] text-slate-500">
+              Acuity: <span className="text-slate-300">{currentCase?.acuity || 'Standard'}</span> | Age: <span className="text-slate-300">{currentCase?.age}yo {currentCase?.sex}</span>
             </div>
           </div>
         </div>
