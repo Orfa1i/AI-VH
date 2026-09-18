@@ -163,17 +163,25 @@ async def review_medications_pharmacy(req: PharmacyReviewRequest):
 
 @api_router.get("/cases")
 async def list_cases():
-    return [
-        {
-            "id": c.id,
-            "name": c.name,
-            "age": c.age,
-            "sex": c.sex,
-            "chief_complaint": c.chief_complaint,
-            "acuity": c.triage_acuity.value,
-        }
-        for c in BENCHMARK_CASES
-    ]
+    """Returns active patient cases from the database (starts empty for fresh manual entry)."""
+    try:
+        patients = orchestrator.db.list_patients(limit=100)
+        return [
+            {
+                "id": p["id"],
+                "name": p["name"],
+                "age": p["age"],
+                "sex": p["sex"],
+                "chief_complaint": p["chief_complaint"],
+                "acuity": p.get("triage_acuity", "URGENT"),
+                "department": p.get("assigned_department", "EMERGENCY"),
+                "bed_number": p.get("bed_number", ""),
+            }
+            for p in patients
+        ]
+    except Exception as e:
+        logger.error(f"Error listing cases from patients: {e}", exc_info=True)
+        return []
 
 
 @api_router.post("/simulation/run")

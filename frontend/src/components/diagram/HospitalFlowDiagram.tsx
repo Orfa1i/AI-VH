@@ -198,15 +198,17 @@ export const HospitalFlowDiagram: React.FC<HospitalFlowDiagramProps> = ({
                 <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800/80">
                   <div className="flex items-center justify-between text-[11px] text-slate-400 mb-1">
                     <span>Active Case Entry</span>
-                    <span className="font-mono text-cyan-400">{currentCase?.id}</span>
+                    <span className="font-mono text-cyan-400">{currentCase?.id || 'READY'}</span>
                   </div>
                   <div className="font-semibold text-slate-200 text-sm">
-                    {currentCase?.name || 'Incoming Patient'}
+                    {currentCase?.name || 'Awaiting Patient Admission'}
                   </div>
                   <div className="text-xs text-slate-400 mt-1 flex items-center gap-1.5">
                     <Clock className="w-3 h-3 text-cyan-400" />
                     <span>Chief Complaint:</span>
-                    <span className="text-slate-300 font-medium truncate">{currentCase?.chief_complaint}</span>
+                    <span className="text-slate-300 font-medium truncate">
+                      {currentCase?.chief_complaint || 'Queue is ready for manual admissions'}
+                    </span>
                   </div>
                 </div>
 
@@ -404,45 +406,57 @@ export const HospitalFlowDiagram: React.FC<HospitalFlowDiagramProps> = ({
               </div>
 
               <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
-                {cases.map((c) => {
-                  const isSelected = c.id === selectedCaseId;
-                  return (
-                    <div
-                      key={c.id}
-                      onClick={() => onSelectCase(c.id)}
-                      className={`p-2.5 rounded-xl border text-xs cursor-pointer transition-all ${
-                        isSelected
-                          ? 'bg-sky-950/60 border-sky-500 shadow-md shadow-sky-500/10'
-                          : 'bg-slate-950/40 border-slate-800/80 hover:bg-slate-800/40 hover:border-slate-700'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-1">
-                        <div className="flex items-center gap-1.5">
-                          <span className="font-mono text-[10px] font-bold text-sky-400">{c.id}</span>
-                          <span className="font-semibold text-slate-200">{c.name}</span>
-                        </div>
-                        <span className={`text-[9px] px-1.5 py-0.2 rounded font-bold uppercase ${
-                          c.acuity === 'Critical'
-                            ? 'bg-rose-950 text-rose-400 border border-rose-800'
-                            : 'bg-amber-950 text-amber-400 border border-amber-800'
-                        }`}>
-                          {c.acuity}
-                        </span>
-                      </div>
-                      <p className="text-[11px] text-slate-400 truncate">
-                        {c.chief_complaint}
-                      </p>
-                      <div className="mt-1.5 flex items-center justify-between text-[10px] text-slate-500">
-                        <span>{c.age}yo {c.sex}</span>
-                        {isSelected && (
-                          <span className="text-sky-400 font-semibold flex items-center gap-0.5">
-                            Selected <ChevronRight className="w-2.5 h-2.5" />
-                          </span>
-                        )}
-                      </div>
+                {cases.length === 0 ? (
+                  <div className="p-4 rounded-xl bg-slate-950/40 border border-dashed border-slate-800 text-center flex flex-col items-center justify-center">
+                    <div className="w-8 h-8 rounded-full bg-sky-500/10 border border-sky-500/30 text-sky-400 flex items-center justify-center mb-2">
+                      <FileText className="w-4 h-4" />
                     </div>
-                  );
-                })}
+                    <div className="text-xs font-semibold text-slate-200">No Patient Records Yet</div>
+                    <p className="text-[10px] text-slate-400 mt-1 leading-relaxed">
+                      Platform is fresh and ready. Admit real patient records in the Management Portal to route through the hospital flow.
+                    </p>
+                  </div>
+                ) : (
+                  cases.map((c) => {
+                    const isSelected = c.id === selectedCaseId;
+                    return (
+                      <div
+                        key={c.id}
+                        onClick={() => onSelectCase(c.id)}
+                        className={`p-2.5 rounded-xl border text-xs cursor-pointer transition-all ${
+                          isSelected
+                            ? 'bg-sky-950/60 border-sky-500 shadow-md shadow-sky-500/10'
+                            : 'bg-slate-950/40 border-slate-800/80 hover:bg-slate-800/40 hover:border-slate-700'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-mono text-[10px] font-bold text-sky-400">{c.id}</span>
+                            <span className="font-semibold text-slate-200">{c.name}</span>
+                          </div>
+                          <span className={`text-[9px] px-1.5 py-0.2 rounded font-bold uppercase ${
+                            c.acuity === 'Critical'
+                              ? 'bg-rose-950 text-rose-400 border border-rose-800'
+                              : 'bg-amber-950 text-amber-400 border border-amber-800'
+                          }`}>
+                            {c.acuity}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-400 truncate">
+                          {c.chief_complaint}
+                        </p>
+                        <div className="mt-1.5 flex items-center justify-between text-[10px] text-slate-500">
+                          <span>{c.age}yo {c.sex}</span>
+                          {isSelected && (
+                            <span className="text-sky-400 font-semibold flex items-center gap-0.5">
+                              Selected <ChevronRight className="w-2.5 h-2.5" />
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
               </div>
 
               {/* Transition to Exit Point */}

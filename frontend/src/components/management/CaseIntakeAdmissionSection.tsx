@@ -14,11 +14,11 @@ export const CaseIntakeAdmissionSection: React.FC<CaseIntakeAdmissionSectionProp
 }) => {
   // Form fields
   const [name, setName] = useState('');
-  const [age, setAge] = useState<number>(55);
+  const [age, setAge] = useState<number | ''>('');
   const [sex, setSex] = useState<'Male' | 'Female' | 'Other'>('Male');
   const [triageAcuity, setTriageAcuity] = useState<string>('URGENT');
   const [assignedDepartment, setAssignedDepartment] = useState<string>('EMERGENCY');
-  const [bedNumber, setBedNumber] = useState<string>('ED-BAY-03');
+  const [bedNumber, setBedNumber] = useState<string>('');
   const [chiefComplaint, setChiefComplaint] = useState('');
   const [hpi, setHpi] = useState('');
   const [pastMedicalHistory, setPastMedicalHistory] = useState('');
@@ -26,19 +26,41 @@ export const CaseIntakeAdmissionSection: React.FC<CaseIntakeAdmissionSectionProp
   const [allergies, setAllergies] = useState('');
 
   // Vitals
-  const [heartRate, setHeartRate] = useState<number>(98);
-  const [systolicBp, setSystolicBp] = useState<number>(134);
-  const [diastolicBp, setDiastolicBp] = useState<number>(84);
-  const [respiratoryRate, setRespiratoryRate] = useState<number>(18);
-  const [spo2, setSpo2] = useState<number>(97.0);
-  const [temperature, setTemperature] = useState<number>(37.2);
+  const [heartRate, setHeartRate] = useState<number>(75);
+  const [systolicBp, setSystolicBp] = useState<number>(120);
+  const [diastolicBp, setDiastolicBp] = useState<number>(80);
+  const [respiratoryRate, setRespiratoryRate] = useState<number>(16);
+  const [spo2, setSpo2] = useState<number>(98.0);
+  const [temperature, setTemperature] = useState<number>(37.0);
 
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [lastAdmitted, setLastAdmitted] = useState<PatientRecord | null>(null);
   const [selectedPresetId, setSelectedPresetId] = useState<string>('');
 
-  // Pre-fill form from selected clinical preset
+  const handleResetForm = () => {
+    setName('');
+    setAge('');
+    setSex('Male');
+    setTriageAcuity('URGENT');
+    setAssignedDepartment('EMERGENCY');
+    setBedNumber('');
+    setChiefComplaint('');
+    setHpi('');
+    setPastMedicalHistory('');
+    setMedications('');
+    setAllergies('');
+    setHeartRate(75);
+    setSystolicBp(120);
+    setDiastolicBp(80);
+    setRespiratoryRate(16);
+    setSpo2(98.0);
+    setTemperature(37.0);
+    setSelectedPresetId('');
+    setSuccessMessage(null);
+  };
+
+  // Pre-fill form from selected clinical preset (if available)
   const handleSelectPreset = (caseId: string) => {
     setSelectedPresetId(caseId);
     if (!caseId) return;
@@ -176,8 +198,8 @@ export const CaseIntakeAdmissionSection: React.FC<CaseIntakeAdmissionSectionProp
   };
 
   const handleQuickEncounter = () => {
-    if (selectedPresetId && onAdmitAndSimulate) {
-      onAdmitAndSimulate(selectedPresetId);
+    if (lastAdmitted && onAdmitAndSimulate) {
+      onAdmitAndSimulate(lastAdmitted.id);
     }
   };
 
@@ -197,22 +219,29 @@ export const CaseIntakeAdmissionSection: React.FC<CaseIntakeAdmissionSectionProp
           </p>
         </div>
 
-        {/* Preset Selector */}
-        <div className="flex items-center gap-2 bg-slate-800/80 p-2 rounded-lg border border-slate-700">
-          <span className="text-xs text-slate-400 font-medium whitespace-nowrap">Load Preset:</span>
-          <select
-            value={selectedPresetId}
-            onChange={(e) => handleSelectPreset(e.target.value)}
-            className="bg-slate-900 text-cyan-300 text-xs rounded px-2.5 py-1.5 border border-slate-700 focus:outline-none focus:border-cyan-500"
-          >
-            <option value="">-- Choose Benchmark Case --</option>
-            {cases.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.id}: {c.name} ({c.acuity})
-              </option>
-            ))}
-          </select>
-        </div>
+        {/* Preset Selector or Fresh Platform Badge */}
+        {cases.length > 0 ? (
+          <div className="flex items-center gap-2 bg-slate-800/80 p-2 rounded-lg border border-slate-700">
+            <span className="text-xs text-slate-400 font-medium whitespace-nowrap">Load Preset:</span>
+            <select
+              value={selectedPresetId}
+              onChange={(e) => handleSelectPreset(e.target.value)}
+              className="bg-slate-900 text-cyan-300 text-xs rounded px-2.5 py-1.5 border border-slate-700 focus:outline-none focus:border-cyan-500"
+            >
+              <option value="">-- Choose Benchmark Case --</option>
+              {cases.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.id}: {c.name} ({c.acuity})
+                </option>
+              ))}
+            </select>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 bg-slate-800/90 px-3.5 py-2 rounded-lg border border-cyan-800/60 text-xs text-cyan-300 font-medium shadow">
+            <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+            <span>Manual Entry Mode: Ready for Real Patient Data</span>
+          </div>
+        )}
       </div>
 
       {/* Success Notification Alert */}
@@ -233,12 +262,12 @@ export const CaseIntakeAdmissionSection: React.FC<CaseIntakeAdmissionSectionProp
               </div>
             </div>
           </div>
-          {onAdmitAndSimulate && selectedPresetId && (
+          {onAdmitAndSimulate && (
             <button
               onClick={handleQuickEncounter}
-              className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-medium rounded shadow transition whitespace-nowrap"
+              className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-medium rounded shadow transition whitespace-nowrap cursor-pointer"
             >
-              Start Clinical Encounter →
+              Start Clinical Encounter with {lastAdmitted.name} →
             </button>
           )}
         </div>
@@ -483,16 +512,8 @@ export const CaseIntakeAdmissionSection: React.FC<CaseIntakeAdmissionSectionProp
         <div className="flex items-center justify-end gap-3 pt-2">
           <button
             type="button"
-            onClick={() => {
-              setName('');
-              setChiefComplaint('');
-              setHpi('');
-              setPastMedicalHistory('');
-              setMedications('');
-              setAllergies('');
-              setSelectedPresetId('');
-            }}
-            className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 text-xs font-medium rounded-lg transition"
+            onClick={handleResetForm}
+            className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 text-xs font-medium rounded-lg transition cursor-pointer"
           >
             Clear Form
           </button>

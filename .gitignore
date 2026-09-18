@@ -12,6 +12,7 @@ __pycache__/
 *.so
 .pytest_cache/
 *.db
+*.backup
 *.sqlite
 *.sqlite3
 
