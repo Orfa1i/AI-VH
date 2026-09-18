@@ -453,3 +453,31 @@ patient/staff work, see above, not touched by this commit). Frontend build clean
   - Verified evaluator regression suite `backend/tests/test_evaluator.py` -> 9/9 PASSED.
   - Verified frontend build `pnpm run build` -> 0 errors.
   - Git commit: `7aa9e4d`.
+
+## 14. Session 17: Clinical Intent Routing, Over-Medicalization Prevention & CoT Leakage Suppression (2026-09-19)
+- **Problem Resolved**:
+  - **Over-Medicalization**: Conversational greetings like `"hi"` or `"hello doctor"` previously triggered forced clinical evaluation, diagnosing "Undifferentiated Acute Medical Illness", ordering "Establish peripheral IV access", and attaching irrelevant Harrison's citations (e.g. *Haemophilus influenzae*).
+  - **Chain-of-Thought (CoT) Leakage**: MedGemma printed internal numbered meta-planning bullets (`1. Identify the core clinical problem...`, `2. Formulate a primary diagnosis...`) before responding.
+- **Engineered Solution**:
+  - **Clinical Intent Classification Module (`backend/clinical/intent.py`)**:
+    - Created `is_clinical_query()` to distinguish conversational pleasantries from clinical consultations using whole-word boundary regex (`\b`) and comprehensive clinical terms across symptoms, anatomy, lab tests, and diseases in both English and Arabic.
+    - Preserves clinical activation when active patient context is present (`chief_complaint`, `vitals`, `hpi`).
+    - Implemented `clean_doctor_dialogue_text()` to strip `<unused94>thought` tags, leaked numbered planning steps, and prompt role echoes.
+  - **RAG Suppression for Non-Clinical Queries (`backend/agents/specialists/internal_medicine.py`)**:
+    - In `chat_with_specialist()` and `stream_chat_with_specialist()`, checked `is_clinical_query()`. When non-clinical, sets `citations = []` immediately, completely preventing textbook RAG queries on greetings.
+    - Fixed missing imports (`ClinicalReport`, `LabTestType`, `DifferentialItem`) resolving test suite collection.
+  - **Prompt Engineering & Structured Dialogue Synthesis (`backend/llm/medgemma_service.py`)**:
+    - Integrated conditional prompt classification into `generate_doctor_chat_response()`, `stream_doctor_chat_response()`, and `_synthesize_doctor_clinical_dialogue()`.
+    - For conversational queries, Dr. Vance responds naturally in 1-2 sentences with empty arrays for `differential`, `immediate_workup`, `guideline_therapy`, `contraindications`, and `citations`.
+    - For clinical queries, strictly applies Harrison's 21st Edition evidence, complete differential diagnoses, workup, therapies, and safety warnings.
+- **Verification & Automated Tests**:
+  - `backend/tests/test_doctor_intent_routing.py` -> 5/5 PASSED.
+  - `backend/tests/test_internal_medicine_chat.py` -> 4/4 PASSED.
+  - `backend/tests/test_internal_medicine_rag.py` & `test_simulation.py` -> 8/8 PASSED.
+  - Live GPU inference on RTX 4060 verified end-to-end:
+    - `"hi"` -> Clean 1-2 sentence doctor greeting, 0 differential, 0 citations, 0 workup.
+    - `"hello doctor"` -> Clean doctor greeting, 0 differential, 0 citations.
+    - `"صباح الخير دكتور"` -> Clean doctor greeting, 0 differential, 0 citations.
+    - Clinical query ("62yo male with acute substernal chest pressure...") -> 3 differential conditions, 4 workups, 6 therapies, 3 contraindications, and 3 Harrison's citations ("14 Chest Discomfort").
+- **Git Commit**: `8ae463c`.
+
