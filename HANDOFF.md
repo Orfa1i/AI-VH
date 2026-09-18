@@ -435,3 +435,21 @@ patient/staff work, see above, not touched by this commit). Frontend build clean
   - Frontend production build passed (`tsc -b && vite build` in <1s, 0 errors).
   - Live backend (`http://127.0.0.1:8000`) and frontend (`http://localhost:5173`) running and verified.
   - Git commit: `41aace0`.
+
+## 13. Session 16: MedGemma Standardized Evaluation Prompt & Strict JSON Schema Integration (2026-09-19)
+- **Standardized Prompt Engineering (`backend/llm/medgemma_service.py`)**:
+  - Implemented `_build_evaluation_prompt()` encoding the exact clinical prompt specification:
+    - Role: Expert Internal Medicine Physician (MedGemma).
+    - Inputs: Structured patient presentation (CC, HPI, Vitals, Physical Exam, Diagnostic Labs) and Harrison's textbook RAG citations.
+    - Strict Instructions: Suppression of `<unused94>thought` or internal reasoning tags, zero hallucination of unstated vitals/symptoms, specific disease primary diagnosis requirement (no generic clinical categories), and Harrison's reference grounding.
+    - Output Format: Strict JSON output schema (`primary_diagnosis`, `confidence_score`, `differential_diagnoses`, `treatment_regimen`).
+  - Integrated into both `_infer_with_gpu` and `_infer_with_gpu_raw` for live GPU generation and comparative policy evaluations.
+- **Robust JSON Extraction & Fallback Parser**:
+  - Updated `_parse_llm_text_to_structured_output()` to automatically strip `<unused\d+>thought` and extract JSON objects matching the schema.
+  - Added support for `differential_diagnoses` lists, converting them into structured differential objects in `_parse_or_supplement_output`.
+  - Maintained regex and heuristic fallback strategies to ensure backward compatibility and resilience against partial/malformed generations.
+- **Automated Verification**:
+  - Created unit test suite `backend/tests/test_medgemma_prompt_evaluation.py` (4 tests: prompt structure, clean JSON parsing, leaked thought-tag stripping, and prose fallback handling) -> 100% PASS.
+  - Verified evaluator regression suite `backend/tests/test_evaluator.py` -> 9/9 PASSED.
+  - Verified frontend build `pnpm run build` -> 0 errors.
+  - Git commit: `7aa9e4d`.
