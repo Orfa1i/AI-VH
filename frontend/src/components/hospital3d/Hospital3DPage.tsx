@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { HospitalCanvas } from './HospitalCanvas';
+import { HospitalFlowDiagram } from '../diagram/HospitalFlowDiagram';
 import { EventStreamHUD } from '../dashboard/EventStreamHUD';
 import { VitalsMonitorHUD } from '../dashboard/VitalsMonitorHUD';
 import { InternalMedicineConsultModal } from '../specialists/InternalMedicineConsultModal';
@@ -14,6 +15,7 @@ interface Hospital3DPageProps {
 }
 
 export const Hospital3DPage: React.FC<Hospital3DPageProps> = ({ onBackToPortal }) => {
+  const [viewMode, setViewMode] = useState<'DIAGRAM' | '3D'>('DIAGRAM');
   const [cases, setCases] = useState<BenchmarkCase[]>([]);
   const [selectedCaseId, setSelectedCaseId] = useState<string>('CASE-101');
   const [isRunning, setIsRunning] = useState<boolean>(false);
@@ -202,26 +204,51 @@ export const Hospital3DPage: React.FC<Hospital3DPageProps> = ({ onBackToPortal }
           <div className="h-4 w-px bg-slate-700 mx-1" />
 
           <div className="flex items-center gap-2">
-            <span className="text-sm font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
-              AI-VH 3D Virtual Hospital
+            <span className="text-sm font-bold bg-gradient-to-r from-cyan-400 via-sky-400 to-blue-500 bg-clip-text text-transparent">
+              AI-VH Clinical Flow Architecture
             </span>
-            <span className="px-2 py-0.5 text-[10px] font-mono bg-cyan-950 text-cyan-400 border border-cyan-800/60 rounded">
-              Spatial World
+            <span className={`px-2 py-0.5 text-[10px] font-mono rounded border ${
+              viewMode === 'DIAGRAM'
+                ? 'bg-cyan-950 text-cyan-400 border-cyan-800/60'
+                : 'bg-indigo-950 text-indigo-400 border-indigo-800/60'
+            }`}>
+              {viewMode === 'DIAGRAM' ? '2D Process Flow' : '3D Spatial View'}
             </span>
           </div>
         </div>
 
-        {/* Center: Live Spatial Status */}
+        {/* Center: Live Status & View Mode Switcher */}
         <div className="hidden md:flex items-center gap-3">
+          {/* View Switcher Controls */}
+          <div className="bg-slate-950/90 p-0.5 rounded-lg border border-slate-800 flex items-center">
+            <button
+              onClick={() => setViewMode('DIAGRAM')}
+              className={`px-3 py-1 rounded text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer ${
+                viewMode === 'DIAGRAM'
+                  ? 'bg-cyan-600 text-white shadow'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <span>📊</span>
+              <span>Flow Diagram</span>
+            </button>
+            <button
+              onClick={() => setViewMode('3D')}
+              className={`px-3 py-1 rounded text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer ${
+                viewMode === '3D'
+                  ? 'bg-indigo-600 text-white shadow'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <span>🌐</span>
+              <span>3D Spatial</span>
+            </button>
+          </div>
+
           <div className="flex items-center gap-2 bg-slate-950/80 px-3 py-1 rounded-full border border-slate-800 text-xs">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
             <span className="text-slate-400">Department:</span>
             <span className="text-slate-200 font-semibold">{activeDepartment.replace(/_/g, ' ')}</span>
-          </div>
-
-          <div className="flex items-center gap-2 bg-slate-950/80 px-3 py-1 rounded-full border border-slate-800 text-xs">
-            <span className="text-slate-400">Physician Action:</span>
-            <span className="text-cyan-300 font-medium">{doctorAction}</span>
           </div>
         </div>
 
@@ -268,20 +295,39 @@ export const Hospital3DPage: React.FC<Hospital3DPageProps> = ({ onBackToPortal }
         </div>
       </header>
 
-      {/* Main 3D Hospital Canvas */}
-      <main className="flex-1 relative overflow-hidden">
-        <HospitalCanvas
-          activeDepartment={activeDepartment}
-          doctorPos={doctorPos}
-          doctorAction={doctorAction}
-          onDepartmentClick={(dept) => setActiveDepartment(dept)}
-          onStationInteract={handleStationInteract}
-        />
+      {/* Main Viewport: 2D Flow Diagram (Default) or 3D Spatial Canvas */}
+      <main className="flex-1 relative overflow-hidden flex flex-col">
+        {viewMode === 'DIAGRAM' ? (
+          <HospitalFlowDiagram
+            cases={cases}
+            selectedCaseId={selectedCaseId}
+            onSelectCase={(id) => setSelectedCaseId(id)}
+            onRunSimulation={handleRunSimulation}
+            isRunning={isRunning}
+            activeDepartment={activeDepartment}
+            doctorAction={doctorAction}
+            events={events}
+            activeVitals={activeVitals}
+            onOpenConsult={() => setIsConsultOpen(true)}
+            onOpenPharmacy={() => setIsPharmacyOpen(true)}
+            onOpenTelemetry={() => setIsInpatientOpen(true)}
+            onOpenDepartmentStation={handleStationInteract}
+            onToggleTo3D={() => setViewMode('3D')}
+          />
+        ) : (
+          <HospitalCanvas
+            activeDepartment={activeDepartment}
+            doctorPos={doctorPos}
+            doctorAction={doctorAction}
+            onDepartmentClick={(dept) => setActiveDepartment(dept)}
+            onStationInteract={handleStationInteract}
+          />
+        )}
 
-        {/* Floating Glassmorphism Vitals Telemetry */}
+        {/* Floating Glassmorphism Vitals Telemetry (available in both views) */}
         <VitalsMonitorHUD vitals={activeVitals} patientName={currentPatientName} />
 
-        {/* Floating Real-Time Event Feed */}
+        {/* Floating Real-Time Event Feed (available in both views) */}
         <EventStreamHUD events={events} isConnected={isWsConnected} />
       </main>
 

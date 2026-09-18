@@ -212,21 +212,21 @@ export const App: React.FC = () => {
 
           <div className="h-5 w-px bg-slate-800 mx-1" />
 
-          {/* Prominent 3D Hospital Visualization Launcher */}
+          {/* Prominent Hospital Flow Diagram & Simulation Launcher */}
           <div className="flex items-center gap-1">
             <button
               onClick={() => navigateTo('/3d')}
-              className="px-4 py-1.5 rounded-lg bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white text-xs font-bold shadow-lg shadow-sky-500/25 flex items-center gap-1.5 transition cursor-pointer"
-              title="Switch to Full-Screen 3D Hospital Visualization"
+              className="px-4 py-1.5 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white text-xs font-bold shadow-lg shadow-cyan-500/25 flex items-center gap-1.5 transition cursor-pointer"
+              title="Open Hospital Clinical Flow Diagram & Simulation (/3d)"
             >
-              <span>🌐</span>
-              <span>Launch 3D Hospital (/3d)</span>
+              <span>📊</span>
+              <span>Hospital Flow Diagram (/3d)</span>
             </button>
 
             <button
               onClick={() => window.open('/3d', '_blank')}
               className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 text-xs border border-slate-700 transition"
-              title="Open 3D Visualization in New Window / Monitor"
+              title="Open Flow Diagram in New Window / Monitor"
             >
               ↗
             </button>
