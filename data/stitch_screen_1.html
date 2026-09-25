@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Metropolitan General Hospital // Clinical Command Horizon</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CDN -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "primary-fixed-dim": "#7bd0ff",
+            "on-tertiary-fixed": "#2a1700",
+            "on-secondary-container": "#00311f",
+            "tertiary-container": "#f59e0b",
+            "inverse-primary": "#00668a",
+            "primary-container": "#38bdf8",
+            "on-primary-container": "#004965",
+            "surface-container-lowest": "#0b0e15",
+            "primary": "#8ed5ff",
+            "secondary-fixed-dim": "#4edea3",
+            "on-error": "#690005",
+            "tertiary-fixed": "#ffddb8",
+            "surface-container": "#1d1f27",
+            "surface-variant": "#32353d",
+            "on-primary-fixed": "#001e2c",
+            "on-tertiary-fixed-variant": "#653e00",
+            "tertiary": "#ffc174",
+            "background": "#10131a",
+            "on-tertiary": "#472a00",
+            "on-secondary-fixed-variant": "#005236",
+            "tertiary-fixed-dim": "#ffb95f",
+            "on-primary-fixed-variant": "#004c69",
+            "secondary-container": "#00a572",
+            "secondary-fixed": "#6ffbbe",
+            "surface-tint": "#7bd0ff",
+            "secondary": "#4edea3",
+            "surface-container-highest": "#32353d",
+            "error": "#ffb4ab",
+            "inverse-on-surface": "#2d3038",
+            "on-secondary-fixed": "#002113",
+            "on-background": "#e1e2ec",
+            "outline": "#87929a",
+            "inverse-surface": "#e1e2ec",
+            "on-secondary": "#003824",
+            "on-surface-variant": "#bdc8d1",
+            "on-tertiary-container": "#613b00",
+            "on-error-container": "#ffdad6",
+            "surface-bright": "#363941",
+            "surface": "#10131a",
+            "on-surface": "#e1e2ec",
+            "surface-dim": "#10131a",
+            "outline-variant": "#3e484f",
+            "on-primary": "#00354a",
+            "surface-container-low": "#191b23",
+            "error-container": "#93000a",
+            "surface-container-high": "#272a32",
+            "primary-fixed": "#c4e7ff"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.125rem",
+            "lg": "0.25rem",
+            "xl": "0.5rem",
+            "full": "0.75rem"
+          },
+          "spacing": {
+            "margin-desktop": "1.5rem",
+            "space-xs": "0.25rem",
+            "margin": "1rem",
+            "space-sm": "0.5rem",
+            "space-lg": "1.25rem",
+            "gutter-desktop": "1rem",
+            "space-xl": "2rem",
+            "gutter": "0.75rem",
+            "space-md": "0.75rem"
+          },
+          "fontFamily": {
+            "body-lg": ["Inter"],
+            "headline-md": ["Inter"],
+            "label-code": ["JetBrains Mono"],
+            "headline-sm": ["Inter"],
+            "body-md": ["Inter"],
+            "telemetry-metric-md": ["JetBrains Mono"],
+            "headline-lg": ["Inter"],
+            "headline-xl": ["Inter"],
+            "body-sm": ["Inter"],
+            "headline-xl-mobile": ["Inter"],
+            "telemetry-metric-lg": ["JetBrains Mono"],
+            "telemetry-metric-sm": ["JetBrains Mono"]
+          },
+          "fontSize": {
+            "body-lg": ["15px", { "lineHeight": "22px", "letterSpacing": "0em", "fontWeight": "400" }],
+            "headline-md": ["20px", { "lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "500" }],
+            "label-code": ["11px", { "lineHeight": "14px", "letterSpacing": "0.05em", "fontWeight": "500" }],
+            "headline-sm": ["16px", { "lineHeight": "24px", "letterSpacing": "0em", "fontWeight": "600" }],
+            "body-md": ["13px", { "lineHeight": "18px", "letterSpacing": "0.005em", "fontWeight": "400" }],
+            "telemetry-metric-md": ["20px", { "lineHeight": "24px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+            "headline-lg": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.015em", "fontWeight": "600" }],
+            "headline-xl": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+            "body-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.01em", "fontWeight": "400" }],
+            "headline-xl-mobile": ["26px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+            "telemetry-metric-lg": ["32px", { "lineHeight": "36px", "letterSpacing": "-0.03em", "fontWeight": "700" }],
+            "telemetry-metric-sm": ["14px", { "lineHeight": "18px", "letterSpacing": "-0.01em", "fontWeight": "500" }]
+          }
+        },
+      },
+    }
+  </script>
+<style>
+    .telemetry-grid {
+      background-image: radial-gradient(rgba(56, 189, 248, 0.05) 1px, transparent 0);
+      background-size: 16px 16px;
+    }
+    @keyframes pulse-flow {
+      0% { stroke-dashoffset: 100; }
+      100% { stroke-dashoffset: 0; }
+    }
+    .flow-line-active {
+      stroke-dasharray: 6 4;
+      animation: pulse-flow 2s linear infinite;
+    }
+    @keyframes ecg-sweep {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+    .ecg-scanner {
+      animation: ecg-sweep 3s linear infinite;
+    }
+    .hud-bracket {
+      position: relative;
+    }
+    .hud-bracket::before {
+      content: '';
+      position: absolute;
+      top: -1px;
+      left: -1px;
+      width: 6px;
+      height: 6px;
+      border-top: 1.5px solid #38bdf8;
+      border-left: 1.5px solid #38bdf8;
+      pointer-events: none;
+    }
+    .hud-bracket::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      right: -1px;
+      width: 6px;
+      height: 6px;
+      border-bottom: 1.5px solid #38bdf8;
+      border-right: 1.5px solid #38bdf8;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body class="bg-surface-container-lowest text-on-surface antialiased font-body-md select-none min-h-screen telemetry-grid overflow-x-hidden flex flex-col">
+<!-- TOP APP BAR -->
+<header class="w-full px-margin-desktop py-space-sm flex justify-between items-center border-b border-outline-variant/30 bg-surface-container-lowest/90 backdrop-blur-md sticky top-0 z-50 shadow-sm dark:shadow-none">
+<div class="flex items-center gap-space-md">
+<div class="flex items-center gap-space-xs text-primary">
+<span class="material-symbols-outlined text-primary-container animate-pulse" data-icon="terminal">terminal</span>
+<span class="text-headline-sm font-headline-sm tracking-wider font-semibold text-primary">METROPOLITAN GENERAL // ACUTE CARE HUD</span>
+</div>
+<div class="h-4 w-[1px] bg-outline-variant/40 hidden xl:block"></div>
+<div class="hidden sm:flex items-center gap-2 px-2.5 py-1 bg-surface-container-low border border-outline-variant/30 rounded">
+<span class="relative flex h-2 w-2">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2 w-2 bg-secondary"></span>
+</span>
+<span class="font-label-code text-label-code text-secondary tracking-wider">TELEMETRY LIVE • 99.98% SYNC</span>
+</div>
+<div class="hidden lg:flex items-center gap-1.5 font-label-code text-label-code text-outline ml-2">
+<span class="material-symbols-outlined text-[14px]" data-icon="schedule">schedule</span>
+<span id="live-time-ticker">14:28:42 EDT / 18:28:42 UTC</span>
+</div>
+</div>
+<nav class="hidden 2xl:flex items-center gap-space-lg">
+<a class="text-on-surface-variant hover:text-on-surface font-label-code transition-colors" href="#">Census Matrix</a>
+<a class="text-on-surface-variant hover:text-on-surface font-label-code transition-colors" href="#">Live Telemetry</a>
+<a class="text-primary border-b-2 border-primary pb-1 font-label-code" href="#">Workflow Pipeline</a>
+<a class="text-on-surface-variant hover:text-on-surface font-label-code transition-colors" href="#">STAT Alerts</a>
+</nav>
+<div class="flex items-center gap-space-md">
+<div class="flex items-center gap-1.5 bg-surface-container-low border border-outline-variant/40 p-0.5 rounded font-label-code text-label-code">
+<button class="px-2 py-0.5 bg-primary-container text-on-primary-container rounded-sm font-semibold shadow-inner" id="sim-2d">2D SCHEMATIC</button>
+<button class="px-2 py-0.5 text-on-surface-variant hover:text-primary transition-colors" id="sim-3d">3D SIMULATION</button>
+</div>
+<div class="flex items-center gap-1 text-on-surface-variant">
+<button class="p-1.5 hover:bg-surface-variant/40 hover:text-primary rounded transition-colors active:scale-95" title="STAT Code Blue Test">
+<span class="material-symbols-outlined text-[18px]" data-icon="notifications_active">notifications_active</span>
+</button>
+<button class="p-1.5 hover:bg-surface-variant/40 hover:text-primary rounded transition-colors active:scale-95" title="Mute Audio Alarms">
+<span class="material-symbols-outlined text-[18px]" data-icon="volume_off">volume_off</span>
+</button>
+<button class="p-1.5 hover:bg-surface-variant/40 hover:text-primary rounded transition-colors active:scale-95" title="System Settings">
+<span class="material-symbols-outlined text-[18px]" data-icon="tune">tune</span>
+</button>
+</div>
+<button class="flex items-center gap-1.5 px-space-md py-1 bg-error-container text-error border border-error/40 hover:bg-error-container/80 rounded font-label-code text-label-code font-bold tracking-wide active:scale-95 transition-all shadow-[0_0_12px_rgba(239,68,68,0.25)]">
+<span class="material-symbols-outlined text-[14px]" data-icon="warning">warning</span>
+<span>ACKNOWLEDGE ALARMS</span>
+<span class="bg-error text-surface-container-lowest px-1 rounded-sm text-[10px] ml-1">2</span>
+</button>
+<div class="flex items-center gap-2 pl-2 border-l border-outline-variant/40">
+<div class="w-8 h-8 rounded border border-primary-container/40 p-0.5 bg-surface-container">
+<img alt="Dr. Marcus Vance" class="w-full h-full object-cover rounded-sm" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCsHLiWVp93A9DW6hu1e-6UucKet3xORexpnZ_r0wioKjVWKr4cCzifPWsiZTwD3u1N2EZl1kTe5-wQflWj0y2Z41UQ6Cj9ZEVtSYkmeTkaN3dv7z2tWz3vnuY4l_MTsfddguNRsw_eC0TbCD-pl6L-FaANSDJvIEPgPg76GCJNWXNnhDOxaufZTEWDUbmyW5yLsksKhmElBiCZyHdxH1nn2gLCv8tGt3n2gNiEOahap4h8BEfKa448fEXNxmGx3_IAwRQ33isq0y0"/>
+</div>
+<div class="hidden md:flex flex-col">
+<span class="font-headline-sm text-[12px] leading-tight text-on-surface">Dr. Marcus Vance, MD</span>
+<span class="font-label-code text-[10px] text-primary-container">ATTENDING COMMAND</span>
+</div>
+</div>
+</div>
+</header>
+<!-- MAIN VIEWPORT CONTAINER -->
+<div class="flex-1 flex overflow-hidden">
+<aside class="w-64 flex-shrink-0 bg-surface-container-lowest/95 backdrop-blur-md border-r border-outline-variant/30 flex flex-col justify-between hidden lg:flex">
+<div>
+<div class="p-space-md border-b border-outline-variant/20 flex items-center justify-between">
+<div>
+<div class="text-headline-sm font-headline-sm font-bold text-primary">ICU-COMMAND-01</div>
+<div class="font-label-code text-label-code text-secondary tracking-widest">SYS_ONLINE: 99.98%</div>
+</div>
+<span class="material-symbols-outlined text-outline" data-icon="monitor_heart">monitor_heart</span>
+</div>
+<nav class="py-space-sm space-y-0.5">
+<a class="border-l-2 border-primary bg-surface-container-high/50 text-primary px-space-md py-space-sm flex items-center gap-space-sm font-label-code text-label-code" href="#">
+<span class="material-symbols-outlined text-[18px]" data-icon="schema">schema</span>
+<span>Department Flow</span>
+<span class="ml-auto text-[9px] bg-primary/20 text-primary px-1 rounded">LIVE</span>
+</a>
+<a class="text-on-surface-variant hover:text-on-surface px-space-md py-space-sm flex items-center gap-space-sm font-label-code text-label-code transition-colors hover:bg-surface-container/60" href="#">
+<span class="material-symbols-outlined text-[18px]" data-icon="monitor_heart">monitor_heart</span>
+<span>Master Triage Index</span>
+<span class="ml-auto text-[10px] text-outline font-label-code">42</span>
+</a>
+<a class="text-on-surface-variant hover:text-on-surface px-space-md py-space-sm flex items-center gap-space-sm font-label-code text-label-code transition-colors hover:bg-surface-container/60" href="#">
+<span class="material-symbols-outlined text-[18px]" data-icon="ecg_heart">ecg_heart</span>
+<span>Telemetry Feeds</span>
+</a>
+<a class="text-on-surface-variant hover:text-on-surface px-space-md py-space-sm flex items-center gap-space-sm font-label-code text-label-code transition-colors hover:bg-surface-container/60" href="#">
+<span class="material-symbols-outlined text-[18px]" data-icon="medication">medication</span>
+<span>Pharmacy Gate</span>
+<span class="ml-auto text-[9px] bg-secondary-container/40 text-secondary-fixed px-1 rounded">SAFE</span>
+</a>
+<a class="text-on-surface-variant hover:text-on-surface px-space-md py-space-sm flex items-center gap-space-sm font-label-code text-label-code transition-colors hover:bg-surface-container/60" href="#">
+<span class="material-symbols-outlined text-[18px]" data-icon="biotech">biotech</span>
+<span>Critical Labs</span>
+<span class="ml-auto text-[9px] bg-tertiary-container/30 text-tertiary px-1 rounded">STAT</span>
+</a>
+<a class="text-on-surface-variant hover:text-on-surface px-space-md py-space-sm flex items-center gap-space-sm font-label-code text-label-code transition-colors hover:bg-surface-container/60" href="#">
+<span class="material-symbols-outlined text-[18px]" data-icon="terminal">terminal</span>
+<span>System Audit</span>
+</a>
+</nav>
+</div>
+<div class="p-space-md border-t border-outline-variant/30 space-y-space-md">
+<button class="w-full py-2 bg-error-container text-on-error-container border border-error/50 rounded font-label-code text-label-code font-bold tracking-wider hover:bg-error-container/80 transition-all flex items-center justify-center gap-2 active:scale-98 shadow-[0_0_15px_rgba(239,68,68,0.3)]">
+<span class="material-symbols-outlined text-[16px] animate-ping" data-icon="emergency">emergency</span>
+<span>CRASH TEAM DISPATCH</span>
+</button>
+<div class="space-y-1">
+<a class="flex items-center gap-2 text-on-surface-variant hover:text-primary font-label-code text-[11px] py-1 px-1 rounded transition-colors" href="#">
+<span class="material-symbols-outlined text-[16px]" data-icon="graphic_eq">graphic_eq</span>
+<span>Audio Telemetry</span>
+</a>
+<a class="flex items-center gap-2 text-on-surface-variant hover:text-primary font-label-code text-[11px] py-1 px-1 rounded transition-colors" href="#">
+<span class="material-symbols-outlined text-[16px]" data-icon="settings_suggest">settings_suggest</span>
+<span>HUD Diagnostics</span>
+</a>
+</div>
+</div>
+</aside>
+<main class="flex-1 flex flex-col overflow-y-auto px-margin-desktop py-space-md gap-space-md">
+<!-- Vitals HUD -->
+<section class="bg-surface-container-low/80 backdrop-blur-md border border-outline-variant/40 rounded hud-bracket p-space-md">
+<div class="flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-space-md">
+<div class="flex items-center gap-space-md border-b xl:border-b-0 xl:border-r border-outline-variant/30 pb-3 xl:pb-0 pr-0 xl:pr-6">
+<div class="flex flex-col">
+<div class="flex items-center gap-2">
+<span class="px-1.5 py-0.5 bg-error-container/30 border border-error/40 text-error font-label-code text-[10px] font-bold rounded">ESI LEVEL 2</span>
+<span class="font-label-code text-label-code text-primary-container font-semibold tracking-wider">PT-8942-J</span>
+<span class="h-2 w-2 rounded-full bg-secondary animate-pulse"></span>
+</div>
+<h2 class="font-headline-md text-headline-md text-on-surface font-semibold tracking-tight">ELEANOR CHEN</h2>
+<div class="font-label-code text-label-code text-on-surface-variant">58F • ADMIT: 13:42 EDT • LOC: IM-STEPDOWN-08</div>
+</div>
+</div>
+<div class="flex-1 min-w-[240px] max-w-xl h-14 bg-surface-container-lowest/90 border border-outline-variant/40 rounded relative overflow-hidden flex items-center px-3">
+<div class="absolute top-1 left-2 font-label-code text-[9px] text-primary-container tracking-widest flex items-center gap-2">
+<span>LEAD II • ECG 25mm/s</span>
+<span class="text-secondary font-semibold">NSR CONDUCTION</span>
+</div>
+<svg class="w-full h-8 stroke-primary-container" fill="none" preserveaspectratio="none" viewbox="0 0 500 40">
+<path class="drop-shadow-[0_0_6px_rgba(56,189,248,0.7)]" d="M 0,20 L 40,20 L 50,18 L 55,20 L 70,20 L 75,5 L 82,36 L 88,14 L 92,20 L 110,20 L 125,16 L 140,20 L 180,20 L 190,18 L 195,20 L 210,20 L 215,5 L 222,36 L 228,14 L 232,20 L 250,20 L 265,16 L 280,20 L 320,20 L 330,18 L 335,20 L 350,20 L 355,5 L 362,36 L 368,14 L 372,20 L 390,20 L 405,16 L 420,20 L 460,20 L 470,18 L 475,20 L 500,20" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"></path>
+</svg>
+<div class="absolute inset-y-0 w-8 bg-gradient-to-r from-transparent via-primary-container/30 to-transparent ecg-scanner pointer-events-none"></div>
+</div>
+<div class="grid grid-cols-3 sm:grid-cols-6 gap-space-xs xl:gap-space-sm">
+<div class="bg-surface-container/60 border border-outline-variant/30 p-2 rounded flex flex-col justify-between">
+<span class="font-label-code text-[10px] text-outline">HEART RATE</span>
+<div class="flex items-baseline gap-1">
+<span class="font-telemetry-metric-md text-telemetry-metric-md text-secondary leading-none">78</span>
+<span class="font-label-code text-[10px] text-on-surface-variant">BPM</span>
+</div>
+<span class="font-label-code text-[9px] text-secondary/80">Steady (+2)</span>
+</div>
+<div class="bg-surface-container/60 border border-outline-variant/30 p-2 rounded flex flex-col justify-between">
+<span class="font-label-code text-[10px] text-outline">NIBP SYS/DIA</span>
+<div class="flex items-baseline gap-0.5">
+<span class="font-telemetry-metric-md text-[17px] text-on-surface font-semibold leading-none">124/82</span>
+</div>
+<span class="font-label-code text-[9px] text-primary-container">MAP: 96 TGT</span>
+</div>
+<div class="bg-surface-container/60 border border-outline-variant/30 p-2 rounded flex flex-col justify-between">
+<span class="font-label-code text-[10px] text-outline">SPO2 %</span>
+<div class="flex items-baseline gap-1">
+<span class="font-telemetry-metric-md text-telemetry-metric-md text-primary-container leading-none">98</span>
+<span class="font-label-code text-[10px] text-on-surface-variant">%</span>
+</div>
+<span class="font-label-code text-[9px] text-outline">Room Air</span>
+</div>
+<div class="bg-surface-container/60 border border-outline-variant/30 p-2 rounded flex flex-col justify-between">
+<span class="font-label-code text-[10px] text-outline">RESP RATE</span>
+<div class="flex items-baseline gap-1">
+<span class="font-telemetry-metric-md text-telemetry-metric-md text-on-surface leading-none">16</span>
+<span class="font-label-code text-[10px] text-on-surface-variant">bpm</span>
+</div>
+<span class="font-label-code text-[9px] text-outline">Regular</span>
+</div>
+<div class="bg-surface-container/60 border border-outline-variant/30 p-2 rounded flex flex-col justify-between">
+<span class="font-label-code text-[10px] text-outline">TEMP CORE</span>
+<div class="flex items-baseline gap-1">
+<span class="font-telemetry-metric-md text-telemetry-metric-md text-on-surface leading-none">37.1</span>
+<span class="font-label-code text-[10px] text-on-surface-variant">°C</span>
+</div>
+<span class="font-label-code text-[9px] text-secondary">Normothermic</span>
+</div>
+<div class="bg-surface-container/60 border border-outline-variant/30 p-2 rounded flex flex-col justify-between">
+<span class="font-label-code text-[10px] text-outline">LACTATE</span>
+<div class="flex items-baseline gap-1">
+<span class="font-telemetry-metric-md text-telemetry-metric-md text-secondary leading-none">1.2</span>
+<span class="font-label-code text-[10px] text-on-surface-variant">mmol</span>
+</div>
+<span class="font-label-code text-[9px] text-secondary">STAT Normal</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Transit Pipeline Section -->
+<section class="bg-surface-container-low/70 backdrop-blur-md border border-outline-variant/30 rounded p-space-md flex flex-col gap-space-md relative">
+<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-space-sm border-b border-outline-variant/20 pb-space-sm">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-primary-container" data-icon="schema">schema</span>
+<span class="font-headline-sm text-headline-sm font-semibold text-on-surface">ACUTE PATIENT TRANSIT PIPELINE (HORIZON VIEW)</span>
+<div class="hidden md:flex items-center gap-2 pl-3 border-l border-outline-variant/30 text-label-code font-label-code text-on-surface-variant">
+<span>RATE: <strong class="text-primary">42 pts/hr</strong></span>
+<span class="text-outline">•</span>
+<span>BOTTLENECKS: <strong class="text-secondary">0 CRITICAL</strong></span>
+</div>
+</div>
+<div class="flex items-center bg-surface-container-lowest border border-outline-variant/30 p-1 rounded font-label-code text-label-code">
+<button class="px-2.5 py-1 rounded-sm bg-primary/20 text-primary font-medium">All Inpatients</button>
+<button class="px-2.5 py-1 rounded-sm text-on-surface-variant hover:text-on-surface transition-colors">Cardiology/IM Priority</button>
+<button class="px-2.5 py-1 rounded-sm text-on-surface-variant hover:text-on-surface transition-colors">Trauma/Emergent</button>
+</div>
+</div>
+<div class="relative overflow-x-auto py-4 px-2">
+<svg class="absolute top-1/2 left-0 w-[1480px] h-12 -translate-y-1/2 pointer-events-none z-0" fill="none" viewbox="0 0 1480 48">
+<path d="M 60 24 L 1420 24" stroke="#1E293B" stroke-linecap="round" stroke-width="4"></path>
+<path class="flow-line-active" d="M 60 24 L 1420 24" stroke="#38BDF8" stroke-opacity="0.75" stroke-width="2.5"></path>
+</svg>
+<div class="relative z-10 flex items-stretch gap-6 min-w-[1440px]">
+<!-- Station 1 -->
+<div class="w-[195px] bg-surface-container-high/90 border border-outline-variant/40 rounded p-space-sm flex flex-col justify-between hover:border-primary-container/60 transition-all cursor-pointer group shadow-sm">
+<div class="space-y-1">
+<div class="flex items-center justify-between">
+<span class="font-label-code text-[10px] text-outline">STATION 01</span>
+<span class="px-1.5 py-0.2 bg-secondary/15 text-secondary border border-secondary/30 rounded font-label-code text-[9px]">OPTIMAL</span>
+</div>
+<div class="font-headline-sm text-[14px] font-bold text-on-surface flex items-center gap-1.5 pt-1">
+<span class="material-symbols-outlined text-[16px] text-primary" data-icon="how_to_reg">how_to_reg</span>
+<span>PATIENT INTAKE</span>
+</div>
+<p class="font-label-code text-[11px] text-on-surface-variant">Kiosks 6/6 Online • EHR Sync</p>
+</div>
+<div class="mt-4 pt-2 border-t border-outline-variant/20 flex justify-between items-center font-label-code text-[10px]">
+<span class="text-outline">Active: <b class="text-on-surface">8 Pts</b></span>
+<span class="text-secondary">Wait: 4.8m</span>
+</div>
+</div>
+<!-- Station 2 -->
+<div class="w-[195px] bg-surface-container-high/90 border border-tertiary/40 rounded p-space-sm flex flex-col justify-between hover:border-tertiary transition-all cursor-pointer group shadow-sm">
+<div class="space-y-1">
+<div class="flex items-center justify-between">
+<span class="font-label-code text-[10px] text-outline">STATION 02</span>
+<span class="px-1.5 py-0.2 bg-tertiary/15 text-tertiary border border-tertiary/30 rounded font-label-code text-[9px]">78% CAP</span>
+</div>
+<div class="font-headline-sm text-[14px] font-bold text-on-surface flex items-center gap-1.5 pt-1">
+<span class="material-symbols-outlined text-[16px] text-tertiary" data-icon="health_and_safety">health_and_safety</span>
+<span>EMERGENCY TRIAGE</span>
+</div>
+<p class="font-label-code text-[11px] text-on-surface-variant">ESI Scoring Engine Active</p>
+</div>
+<div class="mt-4 pt-2 border-t border-outline-variant/20 flex justify-between items-center font-label-code text-[10px]">
+<span class="text-outline">Active: <b class="text-on-surface">12 Pts</b></span>
+<span class="text-tertiary">Escalations: 1</span>
+</div>
+</div>
+<!-- Station 3 -->
+<div class="w-[195px] bg-surface-container-high/90 border border-outline-variant/40 rounded p-space-sm flex flex-col justify-between hover:border-primary-container/60 transition-all cursor-pointer group shadow-sm">
+<div class="space-y-1">
+<div class="flex items-center justify-between">
+<span class="font-label-code text-[10px] text-outline">STATION 03</span>
+<span class="px-1.5 py-0.2 bg-secondary/15 text-secondary border border-secondary/30 rounded font-label-code text-[9px]">FLOWING</span>
+</div>
+<div class="font-headline-sm text-[14px] font-bold text-on-surface flex items-center gap-1.5 pt-1">
+<span class="material-symbols-outlined text-[16px] text-primary" data-icon="assignment_ind">assignment_ind</span>
+<span>NURSE STATION 3B</span>
+</div>
+<p class="font-label-code text-[11px] text-on-surface-variant">Vitals, IV &amp; Bedside Assgn</p>
+</div>
+<div class="mt-4 pt-2 border-t border-outline-variant/20 flex justify-between items-center font-label-code text-[10px]">
+<span class="text-outline">Census: <b class="text-on-surface">14 Pts</b></span>
+<span class="text-primary-container">8 RNs On Duty</span>
+</div>
+</div>
+<!-- Station 4 (Featured) -->
+<div class="w-[280px] bg-surface-container-highest/95 border-2 border-primary-container rounded p-space-md flex flex-col justify-between relative shadow-[0_0_24px_rgba(56,189,248,0.25)] ring-1 ring-primary/40">
+<div class="absolute -top-3 left-4 px-2 py-0.5 bg-primary-container text-on-primary-container font-label-code text-[9px] font-extrabold uppercase rounded tracking-wider shadow">
+★ FEATURED CORE DEPT
+</div>
+<div class="space-y-2 mt-1">
+<div class="flex items-center justify-between">
+<span class="font-label-code text-[10px] text-primary-fixed">STATION 04 // FOCAL NODE</span>
+<span class="flex h-2 w-2 relative">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-container opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2 w-2 bg-primary-container"></span>
+</span>
+</div>
+<div class="font-headline-sm text-[16px] font-bold text-primary flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[20px] text-primary-container" data-icon="domain">domain</span>
+<span>INTERNAL MEDICINE DEPT</span>
+</div>
+<div class="bg-surface-container-lowest/80 border border-outline-variant/40 rounded p-2 mt-2">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[18px]" data-icon="stethoscope">stethoscope</span>
+<div class="flex flex-col">
+<span class="font-headline-sm text-[12px] text-on-surface font-semibold leading-tight">Dr. Marcus Vance, MD, FACP</span>
+<span class="font-label-code text-[9px] text-outline">Chief Attending • Acute Critical Care</span>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-1.5 pt-1 font-label-code text-[10px]">
+<div class="bg-surface-container/60 p-1.5 rounded border border-outline-variant/20">
+<span class="text-outline block text-[9px]">CENSUS</span>
+<span class="text-on-surface font-bold text-[12px]">19 Patients</span>
+</div>
+<div class="bg-surface-container/60 p-1.5 rounded border border-outline-variant/20">
+<span class="text-outline block text-[9px]">BED CAPACITY</span>
+<span class="text-primary-container font-bold text-[12px]">92% In-Use</span>
+</div>
+</div>
+</div>
+<div class="mt-3 pt-2 border-t border-outline-variant/30 flex justify-between items-center font-label-code text-[10px]">
+<span class="text-secondary font-medium">ROUNDS: 14:30 IN PROGRESS</span>
+<span class="text-primary-container underline font-semibold cursor-pointer">5 Consults</span>
+</div>
+</div>
+<!-- Station 5 -->
+<div class="w-[195px] bg-surface-container-high/90 border border-outline-variant/40 rounded p-space-sm flex flex-col justify-between hover:border-primary-container/60 transition-all cursor-pointer group shadow-sm">
+<div class="space-y-1">
+<div class="flex items-center justify-between">
+<span class="font-label-code text-[10px] text-outline">STATION 05</span>
+<span class="px-1.5 py-0.2 bg-primary/15 text-primary border border-primary/30 rounded font-label-code text-[9px]">STAT RAPID</span>
+</div>
+<div class="font-headline-sm text-[14px] font-bold text-on-surface flex items-center gap-1.5 pt-1">
+<span class="material-symbols-outlined text-[16px] text-primary" data-icon="biotech">biotech</span>
+<span>CLINICAL LAB</span>
+</div>
+<p class="font-label-code text-[11px] text-on-surface-variant">Troponin-I TAT: 18m avg</p>
+</div>
+<div class="mt-4 pt-2 border-t border-outline-variant/20 flex justify-between items-center font-label-code text-[10px]">
+<span class="text-outline">Queue: <b class="text-on-surface">6 Specs</b></span>
+<span class="text-secondary">99.4% Op</span>
+</div>
+</div>
+<!-- Station 6 -->
+<div class="w-[195px] bg-surface-container-high/90 border border-outline-variant/40 rounded p-space-sm flex flex-col justify-between hover:border-primary-container/60 transition-all cursor-pointer group shadow-sm">
+<div class="space-y-1">
+<div class="flex items-center justify-between">
+<span class="font-label-code text-[10px] text-outline">STATION 06</span>
+<span class="px-1.5 py-0.2 bg-secondary/15 text-secondary border border-secondary/30 rounded font-label-code text-[9px]">VERIFIED</span>
+</div>
+<div class="font-headline-sm text-[14px] font-bold text-on-surface flex items-center gap-1.5 pt-1">
+<span class="material-symbols-outlined text-[16px] text-secondary" data-icon="verified">verified</span>
+<span>PHARMACY GATE</span>
+</div>
+<p class="font-label-code text-[11px] text-on-surface-variant">Closed-loop Barcode Safety</p>
+</div>
+<div class="mt-4 pt-2 border-t border-outline-variant/20 flex justify-between items-center font-label-code text-[10px]">
+<span class="text-outline">Anti-microbial: <b class="text-secondary">Pass</b></span>
+<span class="text-secondary">100% Chk</span>
+</div>
+</div>
+<!-- Station 7 -->
+<div class="w-[195px] bg-surface-container-high/90 border border-outline-variant/40 rounded p-space-sm flex flex-col justify-between hover:border-primary-container/60 transition-all cursor-pointer group shadow-sm">
+<div class="space-y-1">
+<div class="flex items-center justify-between">
+<span class="font-label-code text-[10px] text-outline">STATION 07</span>
+<span class="px-1.5 py-0.2 bg-secondary/15 text-secondary border border-secondary/30 rounded font-label-code text-[9px]">DISCHARGING</span>
+</div>
+<div class="font-headline-sm text-[14px] font-bold text-on-surface flex items-center gap-1.5 pt-1">
+<span class="material-symbols-outlined text-[16px] text-primary" data-icon="output">output</span>
+<span>PATIENT EXIT HUB</span>
+</div>
+<p class="font-label-code text-[11px] text-on-surface-variant">Safe Transition &amp; Transport</p>
+</div>
+<div class="mt-4 pt-2 border-t border-outline-variant/20 flex justify-between items-center font-label-code text-[10px]">
+<span class="text-outline">Reconciled: <b class="text-on-surface">9/9</b></span>
+<span class="text-secondary">Ready: 94%</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Lower Split Panels -->
+<section class="grid grid-cols-1 lg:grid-cols-12 gap-space-md">
+<div class="lg:col-span-7 bg-surface-container-low/80 backdrop-blur-md border border-outline-variant/30 rounded p-space-md flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between mb-space-sm pb-space-xs border-b border-outline-variant/20">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary-container" data-icon="patient_list">patient_list</span>
+<span class="font-headline-sm text-headline-sm font-semibold text-on-surface">ACTIVE COHORT TRANSIT DISPATCH</span>
+</div>
+<span class="font-label-code text-label-code text-outline">4 PRIORITY CASES</span>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left font-label-code text-[11px]">
+<thead>
+<tr class="text-outline border-b border-outline-variant/20">
+<th class="py-2 px-2">CASE ID</th>
+<th class="py-2 px-2">PATIENT DETAILS</th>
+<th class="py-2 px-2">ACTIVE STAGE</th>
+<th class="py-2 px-2">PRIORITY</th>
+<th class="py-2 px-2">STATUS / ACTION</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/20">
+<tr class="hover:bg-surface-container-high/60 transition-colors bg-primary-container/5">
+<td class="py-2.5 px-2 font-bold text-primary">#4092</td>
+<td class="py-2.5 px-2 font-body-md text-on-surface font-medium">ELEANOR CHEN <span class="text-outline text-[11px]">(58F)</span></td>
+<td class="py-2.5 px-2 text-primary-container">Internal Medicine (Dr. Vance)</td>
+<td class="py-2.5 px-2"><span class="px-1.5 py-0.5 rounded bg-error-container/40 text-error font-bold text-[9px] border border-error/30">STAT</span></td>
+<td class="py-2.5 px-2 text-secondary flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px]" data-icon="trending_up">trending_up</span>
+<span>Stabilizing</span>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-high/60 transition-colors">
+<td class="py-2.5 px-2 font-bold text-on-surface">#4095</td>
+<td class="py-2.5 px-2 font-body-md text-on-surface font-medium">JAMES WESTBROOK <span class="text-outline text-[11px]">(44M)</span></td>
+<td class="py-2.5 px-2 text-on-surface-variant">Clinical Laboratory</td>
+<td class="py-2.5 px-2"><span class="px-1.5 py-0.5 rounded bg-tertiary-container/30 text-tertiary font-bold text-[9px] border border-tertiary/30">HIGH</span></td>
+<td class="py-2.5 px-2 text-outline">Troponin pending (6m)</td>
+</tr>
+<tr class="hover:bg-surface-container-high/60 transition-colors">
+<td class="py-2.5 px-2 font-bold text-on-surface">#4099</td>
+<td class="py-2.5 px-2 font-body-md text-on-surface font-medium">CLARA SOTO <span class="text-outline text-[11px]">(71F)</span></td>
+<td class="py-2.5 px-2 text-on-surface-variant">Pharmacy Gate</td>
+<td class="py-2.5 px-2"><span class="px-1.5 py-0.5 rounded bg-surface-variant text-on-surface-variant font-bold text-[9px]">ROUTINE</span></td>
+<td class="py-2.5 px-2 text-secondary">Anti-hypertensive pass</td>
+</tr>
+<tr class="hover:bg-surface-container-high/60 transition-colors">
+<td class="py-2.5 px-2 font-bold text-on-surface">#4102</td>
+<td class="py-2.5 px-2 font-body-md text-on-surface font-medium">MALIK RAHMAN <span class="text-outline text-[11px]">(33M)</span></td>
+<td class="py-2.5 px-2 text-on-surface-variant">Emergency Triage</td>
+<td class="py-2.5 px-2"><span class="px-1.5 py-0.5 rounded bg-tertiary-container/30 text-tertiary font-bold text-[9px] border border-tertiary/30">URGENT</span></td>
+<td class="py-2.5 px-2 text-tertiary">ESI-2 Workup</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="mt-4 pt-2 border-t border-outline-variant/20 flex justify-between items-center font-label-code text-[10px] text-outline">
+<span>SYNCHRONIZED WITH EPIC CABOODLE / HL7 V2.8</span>
+<button class="text-primary hover:underline">EXPORT TELEMETRY MATRIX →</button>
+</div>
+</div>
+<div class="lg:col-span-5 bg-surface-container-lowest/90 border border-outline-variant/40 rounded p-space-md flex flex-col justify-between font-label-code">
+<div>
+<div class="flex items-center justify-between mb-space-sm pb-space-xs border-b border-outline-variant/30">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-[16px]" data-icon="terminal">terminal</span>
+<span class="font-headline-sm text-headline-sm font-semibold text-on-surface">LIVE CLINICAL EVENT STREAM</span>
+</div>
+<span class="flex h-2 w-2 rounded-full bg-secondary animate-ping"></span>
+</div>
+<div class="space-y-2.5 text-[11px] leading-relaxed">
+<div class="p-1.5 rounded bg-surface-container-high/40 border-l-2 border-secondary">
+<span class="text-outline">[14:28:10]</span>
+<span class="text-secondary font-bold"> LAB_STAT:</span>
+<span class="text-on-surface"> Troponin I returned 0.02 ng/mL (Normal) for PT-8942-J.</span>
+</div>
+<div class="p-1.5 rounded bg-surface-container-high/40 border-l-2 border-primary-container">
+<span class="text-outline">[14:27:35]</span>
+<span class="text-primary-container font-bold"> MED_AUTH:</span>
+<span class="text-on-surface"> Dr. Marcus Vance, MD approved IV Ceftriaxone 1g dosage.</span>
+</div>
+<div class="p-1.5 rounded bg-surface-container-high/40 border-l-2 border-outline">
+<span class="text-outline">[14:25:50]</span>
+<span class="text-on-surface-variant font-bold"> FLOW_SYNC:</span>
+<span class="text-on-surface-variant"> Transit speed calibrated between Station 03 and Station 04 (+12% throughput).</span>
+</div>
+<div class="p-1.5 rounded bg-surface-container-high/40 border-l-2 border-tertiary">
+<span class="text-outline">[14:24:12]</span>
+<span class="text-tertiary font-bold"> TRIAGE:</span>
+<span class="text-on-surface"> Bed 08 assigned to Internal Medicine clinical service.</span>
+</div>
+<div class="p-1.5 rounded bg-surface-container-high/40 border-l-2 border-primary">
+<span class="text-outline">[14:22:04]</span>
+<span class="text-primary font-bold"> HUD_ALERT:</span>
+<span class="text-on-surface"> Telemetry packet sync re-verified on all 16 channels.</span>
+</div>
+</div>
+</div>
+<div class="mt-3 pt-2 border-t border-outline-variant/30 flex items-center justify-between text-[10px] text-outline">
+<span class="flex items-center gap-1">
+<span class="h-1.5 w-1.5 rounded-full bg-secondary"></span>
+STREAM BUFFER: 1024 KB/s
+</span>
+<span class="text-primary-container hover:underline cursor-pointer">SYS_LOGS // REFRESH</span>
+</div>
+</div>
+</section>
+</main>
+</div>
+<script>
+    function updateClock() {
+      const now = new Date();
+      const edt = now.toLocaleTimeString('en-US', { hour12: false, timeZone: 'America/New_York' });
+      const utc = now.toLocaleTimeString('en-US', { hour12: false, timeZone: 'UTC' });
+      const ticker = document.getElementById('live-time-ticker');
+      if (ticker) {
+        ticker.innerText = `${edt} EDT / ${utc} UTC`;
+      }
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    const btn2d = document.getElementById('sim-2d');
+    const btn3d = document.getElementById('sim-3d');
+    if (btn2d && btn3d) {
+      btn2d.addEventListener('click', () => {
+        btn2d.className = "px-2 py-0.5 bg-primary-container text-on-primary-container rounded-sm font-semibold shadow-inner";
+        btn3d.className = "px-2 py-0.5 text-on-surface-variant hover:text-primary transition-colors";
+      });
+      btn3d.addEventListener('click', () => {
+        btn3d.className = "px-2 py-0.5 bg-primary-container text-on-primary-container rounded-sm font-semibold shadow-inner";
+        btn2d.className = "px-2 py-0.5 text-on-surface-variant hover:text-primary transition-colors";
+      });
+    }
+  </script>
+</body></html>

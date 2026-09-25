@@ -9,9 +9,9 @@
   body {
     margin: 0;
     padding: 0;
-    background-color: #0b0f19;
-    color: #f1f5f9;
-    font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background-color: #0a0d14;
+    color: #e2e8f0;
+    font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     overflow-x: hidden;
   }
 
@@ -22,21 +22,94 @@
     padding: 0;
     display: flex;
     flex-direction: column;
+    background-color: #0a0d14;
   }
+}
+
+/* Telemetry Coordinate Background Grid */
+.telemetry-grid {
+  background-image: radial-gradient(rgba(56, 189, 248, 0.05) 1px, transparent 0);
+  background-size: 20px 20px;
+}
+
+/* Tactical HUD Corner Reticles */
+.hud-bracket {
+  position: relative;
+}
+.hud-bracket::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: -1px;
+  width: 7px;
+  height: 7px;
+  border-top: 1.5px solid #38bdf8;
+  border-left: 1.5px solid #38bdf8;
+  pointer-events: none;
+}
+.hud-bracket::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  right: -1px;
+  width: 7px;
+  height: 7px;
+  border-bottom: 1.5px solid #38bdf8;
+  border-right: 1.5px solid #38bdf8;
+  pointer-events: none;
+}
+
+/* Flow line animation */
+@keyframes pulse-flow {
+  0% { stroke-dashoffset: 100; }
+  100% { stroke-dashoffset: 0; }
+}
+.flow-line-active {
+  stroke-dasharray: 6 4;
+  animation: pulse-flow 2s linear infinite;
+}
+
+/* ECG Sweep scanner */
+@keyframes ecg-sweep {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+.ecg-scanner {
+  animation: ecg-sweep 3s linear infinite;
+}
+
+/* Clinical Glassmorphism Panels */
+.glass-panel {
+  background-color: rgba(18, 24, 38, 0.75);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(51, 65, 85, 0.6);
+}
+
+.glass-panel-elevated {
+  background-color: rgba(24, 32, 50, 0.88);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  box-shadow: 0 4px 20px -2px rgba(8, 47, 73, 0.35);
+}
+
+.glass-panel-danger {
+  background-color: rgba(30, 15, 20, 0.8);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(239, 68, 68, 0.4);
 }
 
 /* Custom scrollbars for telemetry feeds */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 ::-webkit-scrollbar-track {
-  background: #0f172a;
+  background: #0b0e15;
 }
 ::-webkit-scrollbar-thumb {
-  background: #334155;
+  background: #1e293b;
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #475569;
+  background: #334155;
 }

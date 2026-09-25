@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import type { PatientRecord } from '../../types';
+import {
+  Users,
+  Search,
+  RefreshCw,
+  Stethoscope,
+  X,
+  ChevronRight
+} from 'lucide-react';
 
 interface PatientDirectorySectionProps {
   onOpenConsult?: (patientName: string) => void;
@@ -74,76 +82,105 @@ export const PatientDirectorySection: React.FC<PatientDirectorySectionProps> = (
   ).length;
 
   return (
-    <div className="flex-1 p-6 bg-slate-900/60 overflow-y-auto max-w-7xl mx-auto">
-      {/* Top Banner & Analytics Cards */}
-      <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-800 pb-5">
+    <div className="flex-1 p-4 md:p-6 bg-slate-950 overflow-y-auto max-w-7xl mx-auto w-full telemetry-grid">
+      {/* ═══════════════════════════════════════════════════════════════════
+          TOP HEADER & EHR STORE STATUS
+          ═══════════════════════════════════════════════════════════════════ */}
+      <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-800 pb-4">
         <div>
-          <div className="flex items-center gap-2">
-            <span className="text-2xl font-bold text-slate-100">Patient Directory & Bed Board</span>
-            <span className="px-2.5 py-0.5 text-xs font-semibold bg-cyan-950 text-cyan-400 border border-cyan-800 rounded-full">
-              PostgreSQL / SQLite EHR Store
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded bg-sky-500/10 border border-sky-500/30 flex items-center justify-center text-sky-400">
+              <Users className="w-4 h-4" />
+            </div>
+            <h2 className="text-base font-bold text-slate-100 tracking-wide font-headline-sm uppercase">
+              Master Patient Census &amp; Inpatient Bed Board
+            </h2>
+            <span className="px-2 py-0.5 text-[10px] font-mono font-semibold bg-sky-950 text-sky-400 border border-sky-800 rounded">
+              EHR CENTRAL STORE
             </span>
           </div>
           <p className="text-xs text-slate-400 mt-1">
-            Centralized electronic health records (EHR), bed allocation tracking, and clinical life-cycle management.
+            Real-time acute census matrix, bed assignments, longitudinal vitals telemetry, and discharge lifecycle tracking.
           </p>
         </div>
 
         <button
           onClick={fetchPatients}
-          className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs rounded-lg border border-slate-700 flex items-center gap-1.5 transition self-start"
+          disabled={loading}
+          className="px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-slate-300 text-xs font-mono rounded border border-slate-800 flex items-center gap-1.5 transition self-start cursor-pointer active:scale-95 disabled:opacity-50"
         >
-          <span>↻</span> Refresh Records
+          <RefreshCw className={`w-3.5 h-3.5 text-sky-400 ${loading ? 'animate-spin' : ''}`} />
+          <span>REFRESH CENSUS</span>
         </button>
       </div>
 
-      {/* KPI Counters */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-        <div className="bg-slate-800/60 border border-slate-800 p-4 rounded-xl">
-          <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Total Patients</div>
-          <div className="text-2xl font-bold text-slate-100 mt-1">{totalCount}</div>
-          <div className="text-[10px] text-slate-500 mt-0.5">Recorded in database</div>
+      {/* ═══════════════════════════════════════════════════════════════════
+          TACTICAL KPI METRIC TILES
+          ═══════════════════════════════════════════════════════════════════ */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+        <div className="bg-slate-900/80 border border-slate-800 p-3.5 rounded hud-bracket backdrop-blur-md">
+          <div className="text-[10px] font-mono font-semibold text-slate-400 uppercase tracking-wider">
+            TOTAL CENSUS
+          </div>
+          <div className="text-2xl font-bold font-mono text-slate-100 mt-0.5 tabular-nums">
+            {totalCount}
+          </div>
+          <div className="text-[10px] font-mono text-slate-500 mt-0.5">Persisted in database</div>
         </div>
 
-        <div className="bg-slate-800/60 border border-slate-800 p-4 rounded-xl">
-          <div className="text-[11px] font-semibold text-emerald-400 uppercase tracking-wider">Active Inpatients</div>
-          <div className="text-2xl font-bold text-emerald-400 mt-1">{admittedCount}</div>
-          <div className="text-[10px] text-emerald-500/80 mt-0.5">Occupying hospital beds</div>
+        <div className="bg-slate-900/80 border border-slate-800 p-3.5 rounded hud-bracket backdrop-blur-md">
+          <div className="text-[10px] font-mono font-semibold text-emerald-400 uppercase tracking-wider">
+            ACTIVE INPATIENTS
+          </div>
+          <div className="text-2xl font-bold font-mono text-emerald-400 mt-0.5 tabular-nums">
+            {admittedCount}
+          </div>
+          <div className="text-[10px] font-mono text-emerald-500/80 mt-0.5">Occupying clinical beds</div>
         </div>
 
-        <div className="bg-slate-800/60 border border-slate-800 p-4 rounded-xl">
-          <div className="text-[11px] font-semibold text-rose-400 uppercase tracking-wider">High Acuity (Level 1-2)</div>
-          <div className="text-2xl font-bold text-rose-400 mt-1">{criticalCount}</div>
-          <div className="text-[10px] text-rose-500/80 mt-0.5">Immediate / Critical care</div>
+        <div className="bg-slate-900/80 border border-slate-800 p-3.5 rounded hud-bracket backdrop-blur-md">
+          <div className="text-[10px] font-mono font-semibold text-rose-400 uppercase tracking-wider">
+            HIGH ACUITY (ESI 1-2)
+          </div>
+          <div className="text-2xl font-bold font-mono text-rose-400 mt-0.5 tabular-nums">
+            {criticalCount}
+          </div>
+          <div className="text-[10px] font-mono text-rose-500/80 mt-0.5">Continuous telemetry active</div>
         </div>
 
-        <div className="bg-slate-800/60 border border-slate-800 p-4 rounded-xl">
-          <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Discharged</div>
-          <div className="text-2xl font-bold text-slate-300 mt-1">{dischargedCount}</div>
-          <div className="text-[10px] text-slate-500 mt-0.5">Resolved encounters</div>
+        <div className="bg-slate-900/80 border border-slate-800 p-3.5 rounded hud-bracket backdrop-blur-md">
+          <div className="text-[10px] font-mono font-semibold text-slate-400 uppercase tracking-wider">
+            DISCHARGED
+          </div>
+          <div className="text-2xl font-bold font-mono text-slate-300 mt-0.5 tabular-nums">
+            {dischargedCount}
+          </div>
+          <div className="text-[10px] font-mono text-slate-500 mt-0.5">Disposition finalized</div>
         </div>
       </div>
 
-      {/* Search and Filters Bar */}
-      <div className="bg-slate-800/40 border border-slate-800 p-3.5 rounded-xl mb-6 flex flex-wrap items-center justify-between gap-3">
+      {/* ═══════════════════════════════════════════════════════════════════
+          SEARCH & FILTER TOOLBAR
+          ═══════════════════════════════════════════════════════════════════ */}
+      <div className="bg-slate-900/80 border border-slate-800 p-3 rounded hud-bracket mb-5 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2 flex-1 min-w-[240px]">
-          <span className="text-slate-400 text-sm">🔍</span>
+          <Search className="w-4 h-4 text-slate-500 ml-1" />
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search by patient name, MRN, or complaint..."
-            className="w-full bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-lg px-3 py-1.5 focus:outline-none focus:border-cyan-500"
+            placeholder="Search by patient name, MRN, or clinical complaint..."
+            className="w-full bg-slate-950 border border-slate-800 text-slate-200 text-xs rounded px-3 py-1.5 focus:outline-none focus:border-sky-500 font-mono"
           />
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5 text-xs text-slate-400">
-            <span>Status:</span>
+        <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-1.5 text-xs font-mono text-slate-400">
+            <span>STATUS:</span>
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="bg-slate-900 text-slate-200 text-xs rounded px-2.5 py-1.5 border border-slate-700 focus:outline-none"
+              className="bg-slate-950 text-slate-200 text-xs rounded px-2.5 py-1.5 border border-slate-800 focus:outline-none font-mono"
             >
               <option value="ALL">All Statuses</option>
               <option value="ADMITTED">Admitted Only</option>
@@ -151,40 +188,42 @@ export const PatientDirectorySection: React.FC<PatientDirectorySectionProps> = (
             </select>
           </div>
 
-          <div className="flex items-center gap-1.5 text-xs text-slate-400">
-            <span>Department:</span>
+          <div className="flex items-center gap-1.5 text-xs font-mono text-slate-400">
+            <span>DEPT:</span>
             <select
               value={departmentFilter}
               onChange={(e) => setDepartmentFilter(e.target.value)}
-              className="bg-slate-900 text-slate-200 text-xs rounded px-2.5 py-1.5 border border-slate-700 focus:outline-none"
+              className="bg-slate-950 text-slate-200 text-xs rounded px-2.5 py-1.5 border border-slate-800 focus:outline-none font-mono"
             >
               <option value="ALL">All Departments</option>
               <option value="EMERGENCY">Emergency</option>
-              <option value="INTERNAL_MEDICINE">Internal Medicine</option>
               <option value="CARDIOLOGY">Cardiology</option>
-              <option value="ICU">ICU</option>
+              <option value="ICU">Medical ICU</option>
+              <option value="INTERNAL_MEDICINE">Internal Med</option>
               <option value="STEP_DOWN">Step-Down</option>
             </select>
           </div>
         </div>
       </div>
 
-      {/* Patient Bed Board Grid */}
+      {/* ═══════════════════════════════════════════════════════════════════
+          CENSUS GRID / ROSTER
+          ═══════════════════════════════════════════════════════════════════ */}
       {loading ? (
-        <div className="py-16 text-center text-slate-400 text-xs flex flex-col items-center justify-center gap-2">
-          <span className="w-5 h-5 border-2 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin" />
-          <span>Loading patient registry from database...</span>
+        <div className="py-16 text-center text-slate-400 text-xs flex flex-col items-center justify-center gap-2 font-mono">
+          <span className="w-5 h-5 border-2 border-sky-400/30 border-t-sky-400 rounded-full animate-spin" />
+          <span>SYNCHRONIZING PATIENT CENSUS FROM EHR...</span>
         </div>
       ) : filteredPatients.length === 0 ? (
-        <div className="py-16 text-center bg-slate-800/20 border border-slate-800 rounded-2xl p-8">
-          <div className="text-3xl mb-2">🏥</div>
-          <h4 className="text-sm font-semibold text-slate-300">No Patients Found</h4>
-          <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
-            No matching patient records were found in the database. Use the "Case Intake & Admission" tab to admit a patient.
+        <div className="py-16 text-center bg-slate-900/40 border border-slate-800 rounded p-8 hud-bracket">
+          <Users className="w-8 h-8 text-slate-600 mx-auto mb-2" />
+          <h4 className="text-sm font-semibold text-slate-300">No Patient Records Found</h4>
+          <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto font-mono">
+            No matching patient records found. Use the Clinical Case Intake tab to admit new cases.
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
           {filteredPatients.map((p) => {
             const isAdmitted = p.admission_status === 'ADMITTED';
             const vitals = p.baseline_vitals || {};
@@ -192,26 +231,28 @@ export const PatientDirectorySection: React.FC<PatientDirectorySectionProps> = (
             return (
               <div
                 key={p.id}
-                className="bg-slate-800/50 hover:bg-slate-800/80 border border-slate-800 hover:border-slate-700 rounded-xl p-4 transition shadow-sm flex flex-col justify-between cursor-pointer group"
+                className="bg-slate-900/80 hover:bg-slate-900 border border-slate-800 hover:border-slate-700 rounded p-3.5 transition shadow-sm flex flex-col justify-between cursor-pointer group hud-bracket"
                 onClick={() => setSelectedPatient(p)}
               >
                 <div>
-                  {/* Top Bar: Name, Sex, Age & Status */}
+                  {/* Top Bar: Name, Demographics, & Acuity */}
                   <div className="flex items-start justify-between gap-2 mb-2">
                     <div>
-                      <h4 className="text-sm font-bold text-slate-100 group-hover:text-cyan-300 transition flex items-center gap-2">
-                        <span>{p.name}</span>
-                        <span className="text-xs font-normal text-slate-400">
-                          ({p.age}y, {p.sex})
+                      <div className="flex items-center gap-2">
+                        <h4 className="text-xs font-bold text-slate-100 group-hover:text-sky-300 transition">
+                          {p.name}
+                        </h4>
+                        <span className="text-[10px] font-mono text-slate-400">
+                          {p.age}y {p.sex}
                         </span>
-                      </h4>
-                      <div className="text-[11px] font-mono text-slate-400 mt-0.5">
-                        {p.mrn} • <span className="text-slate-500">{p.id}</span>
+                      </div>
+                      <div className="text-[10px] font-mono text-slate-400 mt-0.5">
+                        {p.mrn} • <span className="text-sky-400">{p.id}</span>
                       </div>
                     </div>
 
                     <span
-                      className={`px-2 py-0.5 text-[10px] font-semibold rounded-full border ${
+                      className={`px-1.5 py-0.2 text-[9px] font-mono font-bold rounded border ${
                         isAdmitted
                           ? 'bg-emerald-950/80 text-emerald-400 border-emerald-800'
                           : 'bg-slate-800 text-slate-400 border-slate-700'
@@ -222,18 +263,18 @@ export const PatientDirectorySection: React.FC<PatientDirectorySectionProps> = (
                   </div>
 
                   {/* Bed & Acuity Badges */}
-                  <div className="flex flex-wrap items-center gap-2 my-2.5">
-                    <span className="px-2 py-0.5 text-[10px] font-mono bg-slate-900 text-cyan-300 border border-slate-700 rounded">
+                  <div className="flex flex-wrap items-center gap-1.5 my-2">
+                    <span className="px-1.5 py-0.2 text-[9px] font-mono bg-slate-950 text-sky-400 border border-slate-800 rounded">
                       {p.assigned_department} • Bed {p.bed_number || 'TBD'}
                     </span>
 
                     <span
-                      className={`px-2 py-0.5 text-[10px] font-bold rounded ${
+                      className={`px-1.5 py-0.2 text-[9px] font-mono font-bold rounded border ${
                         p.triage_acuity === 'RESUSCITATION'
-                          ? 'bg-rose-950 text-rose-400 border border-rose-800'
+                          ? 'bg-rose-950 text-rose-400 border-rose-800'
                           : p.triage_acuity === 'EMERGENT'
-                          ? 'bg-amber-950 text-amber-400 border border-amber-800'
-                          : 'bg-cyan-950 text-cyan-400 border border-cyan-800'
+                          ? 'bg-amber-950 text-amber-400 border-amber-800'
+                          : 'bg-sky-950 text-sky-400 border-sky-800'
                       }`}
                     >
                       {p.triage_acuity}
@@ -241,45 +282,49 @@ export const PatientDirectorySection: React.FC<PatientDirectorySectionProps> = (
                   </div>
 
                   {/* Chief Complaint */}
-                  <p className="text-xs text-slate-300 line-clamp-2 my-2 bg-slate-900/60 p-2 rounded-lg border border-slate-800/80">
-                    <span className="text-slate-400 font-semibold">Complaint:</span> {p.chief_complaint}
+                  <p className="text-[11px] text-slate-300 line-clamp-2 my-2 bg-slate-950/80 p-2 rounded border border-slate-800/80 font-normal leading-relaxed">
+                    <span className="text-slate-400 font-semibold font-mono text-[10px]">PRESENTATION:</span> {p.chief_complaint}
                   </p>
 
                   {/* Vitals Ribbon */}
                   {vitals.heart_rate && (
-                    <div className="flex items-center gap-3 text-[11px] font-mono text-slate-400 bg-slate-950/50 px-2.5 py-1.5 rounded-lg border border-slate-900">
-                      <span>HR: <strong className="text-rose-400">{vitals.heart_rate}</strong></span>
-                      <span>BP: <strong className="text-cyan-400">{vitals.systolic_bp}/{vitals.diastolic_bp}</strong></span>
-                      <span>SpO2: <strong className="text-emerald-400">{vitals.spo2}%</strong></span>
+                    <div className="flex items-center justify-between text-[10px] font-mono text-slate-400 bg-slate-950/90 px-2 py-1 rounded border border-slate-800/60">
+                      <span>HR: <strong className="text-emerald-400 tabular-nums">{vitals.heart_rate}</strong></span>
+                      <span>BP: <strong className="text-slate-200 tabular-nums">{vitals.systolic_bp}/{vitals.diastolic_bp}</strong></span>
+                      <span>SpO2: <strong className="text-sky-400 tabular-nums">{vitals.spo2}%</strong></span>
                     </div>
                   )}
                 </div>
 
                 {/* Bottom Actions */}
-                <div className="mt-4 pt-3 border-t border-slate-800 flex items-center justify-between gap-2" onClick={(e) => e.stopPropagation()}>
+                <div
+                  className="mt-3 pt-2.5 border-t border-slate-800/80 flex items-center justify-between gap-2"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   <button
                     onClick={() => setSelectedPatient(p)}
-                    className="text-[11px] text-cyan-400 hover:text-cyan-300 font-medium hover:underline"
+                    className="text-[10px] font-mono text-sky-400 hover:text-sky-300 font-semibold flex items-center gap-0.5 cursor-pointer"
                   >
-                    View Chart →
+                    <span>VIEW CHART</span>
+                    <ChevronRight className="w-3 h-3" />
                   </button>
 
                   <div className="flex items-center gap-1.5">
                     {onOpenConsult && isAdmitted && (
                       <button
                         onClick={() => onOpenConsult(p.name)}
-                        className="px-2 py-1 bg-cyan-950/80 hover:bg-cyan-900 text-cyan-300 border border-cyan-800 text-[10px] rounded transition"
+                        className="px-2 py-0.5 bg-sky-950/80 hover:bg-sky-900 text-sky-400 border border-sky-800/80 text-[10px] font-mono rounded transition cursor-pointer"
                       >
-                        Consult
+                        CONSULT
                       </button>
                     )}
 
                     {isAdmitted && (
                       <button
                         onClick={() => handleDischarge(p.id)}
-                        className="px-2 py-1 bg-slate-800 hover:bg-rose-950 text-slate-400 hover:text-rose-300 border border-slate-700 hover:border-rose-800 text-[10px] rounded transition"
+                        className="px-2 py-0.5 bg-slate-800 hover:bg-rose-950 text-slate-400 hover:text-rose-400 border border-slate-700 hover:border-rose-800 text-[10px] font-mono rounded transition cursor-pointer"
                       >
-                        Discharge
+                        DISCHARGE
                       </button>
                     )}
                   </div>
@@ -290,24 +335,26 @@ export const PatientDirectorySection: React.FC<PatientDirectorySectionProps> = (
         </div>
       )}
 
-      {/* Full Patient EHR Chart Drawer Modal */}
+      {/* ═══════════════════════════════════════════════════════════════════
+          PATIENT EHR CHART DRAWER MODAL
+          ═══════════════════════════════════════════════════════════════════ */}
       {selectedPatient && (
         <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-2xl w-full max-h-[85vh] overflow-y-auto p-6 shadow-2xl relative">
+          <div className="bg-slate-900 border border-slate-800 rounded max-w-2xl w-full max-h-[85vh] overflow-y-auto p-5 shadow-2xl relative hud-bracket">
             {/* Close Button */}
             <button
               onClick={() => setSelectedPatient(null)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-slate-100 text-lg p-1"
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-100 p-1 cursor-pointer"
             >
-              ✕
+              <X className="w-4 h-4" />
             </button>
 
             {/* Header */}
-            <div className="border-b border-slate-800 pb-4 mb-4">
+            <div className="border-b border-slate-800 pb-3.5 mb-4">
               <div className="flex items-center gap-3">
-                <h3 className="text-xl font-bold text-slate-100">{selectedPatient.name}</h3>
+                <h3 className="text-base font-bold text-slate-100 font-headline-sm">{selectedPatient.name}</h3>
                 <span
-                  className={`px-2.5 py-0.5 text-xs font-semibold rounded-full border ${
+                  className={`px-2 py-0.2 text-[10px] font-mono font-bold rounded border ${
                     selectedPatient.admission_status === 'ADMITTED'
                       ? 'bg-emerald-950 text-emerald-400 border-emerald-800'
                       : 'bg-slate-800 text-slate-400 border-slate-700'
@@ -316,131 +363,125 @@ export const PatientDirectorySection: React.FC<PatientDirectorySectionProps> = (
                   {selectedPatient.admission_status}
                 </span>
               </div>
-              <div className="flex flex-wrap items-center gap-3 mt-1.5 text-xs font-mono text-slate-400">
-                <span>MRN: {selectedPatient.mrn}</span>
+              <div className="flex flex-wrap items-center gap-3 mt-1 text-[11px] font-mono text-slate-400">
+                <span>MRN: <strong className="text-slate-200">{selectedPatient.mrn}</strong></span>
                 <span>•</span>
-                <span>ID: {selectedPatient.id}</span>
+                <span>AGE: <strong className="text-slate-200">{selectedPatient.age}yo {selectedPatient.sex}</strong></span>
                 <span>•</span>
-                <span>Age: {selectedPatient.age} ({selectedPatient.sex})</span>
-                <span>•</span>
-                <span>Dept: {selectedPatient.assigned_department}</span>
-                <span>•</span>
-                <span>Bed: {selectedPatient.bed_number || 'Unassigned'}</span>
+                <span>DEPT: <strong className="text-sky-400">{selectedPatient.assigned_department}</strong> [Bed: {selectedPatient.bed_number || 'TBD'}]</span>
               </div>
             </div>
 
-            {/* Clinical Details */}
-            <div className="space-y-4 text-xs">
-              {/* Presenting Complaint */}
+            {/* Clinical Content */}
+            <div className="space-y-3.5 text-xs">
               <div>
-                <h4 className="font-semibold text-slate-300 mb-1 uppercase tracking-wider text-[11px]">Chief Complaint</h4>
-                <p className="bg-slate-950 p-3 rounded-lg border border-slate-800 text-slate-200">
+                <span className="font-mono text-[10px] text-slate-400 uppercase tracking-wider block mb-1">
+                  Chief Complaint
+                </span>
+                <div className="p-2.5 rounded bg-slate-950 border border-slate-800 text-slate-200 font-medium">
                   {selectedPatient.chief_complaint}
-                </p>
+                </div>
               </div>
 
-              {/* HPI */}
               {selectedPatient.history_of_present_illness && (
                 <div>
-                  <h4 className="font-semibold text-slate-300 mb-1 uppercase tracking-wider text-[11px]">History of Present Illness</h4>
-                  <p className="bg-slate-950 p-3 rounded-lg border border-slate-800 text-slate-300">
+                  <span className="font-mono text-[10px] text-slate-400 uppercase tracking-wider block mb-1">
+                    History of Present Illness (HPI)
+                  </span>
+                  <div className="p-2.5 rounded bg-slate-950 border border-slate-800 text-slate-300 leading-relaxed font-normal">
                     {selectedPatient.history_of_present_illness}
-                  </p>
+                  </div>
                 </div>
               )}
 
-              {/* Vitals */}
+              {/* Baseline Vitals */}
               {selectedPatient.baseline_vitals && (
                 <div>
-                  <h4 className="font-semibold text-slate-300 mb-1 uppercase tracking-wider text-[11px]">Admission Baseline Vitals</h4>
-                  <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 bg-slate-950 p-3 rounded-lg border border-slate-800 font-mono">
-                    <div>
-                      <span className="text-slate-500 block text-[10px]">HR</span>
-                      <strong className="text-rose-400">{selectedPatient.baseline_vitals.heart_rate || '--'} bpm</strong>
+                  <span className="font-mono text-[10px] text-slate-400 uppercase tracking-wider block mb-1">
+                    Admission Baseline Vitals
+                  </span>
+                  <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 font-mono">
+                    <div className="bg-slate-950 p-2 rounded border border-slate-800">
+                      <div className="text-[9px] text-slate-500">HEART RATE</div>
+                      <div className="text-sm font-bold text-emerald-400">{selectedPatient.baseline_vitals.heart_rate} bpm</div>
                     </div>
-                    <div>
-                      <span className="text-slate-500 block text-[10px]">BP</span>
-                      <strong className="text-cyan-400">
-                        {selectedPatient.baseline_vitals.systolic_bp}/{selectedPatient.baseline_vitals.diastolic_bp}
-                      </strong>
+                    <div className="bg-slate-950 p-2 rounded border border-slate-800">
+                      <div className="text-[9px] text-slate-500">BLOOD PRESSURE</div>
+                      <div className="text-sm font-bold text-slate-200">{selectedPatient.baseline_vitals.systolic_bp}/{selectedPatient.baseline_vitals.diastolic_bp}</div>
                     </div>
-                    <div>
-                      <span className="text-slate-500 block text-[10px]">RR</span>
-                      <strong className="text-slate-200">{selectedPatient.baseline_vitals.respiratory_rate || '--'} /m</strong>
+                    <div className="bg-slate-950 p-2 rounded border border-slate-800">
+                      <div className="text-[9px] text-slate-500">RESP RATE</div>
+                      <div className="text-sm font-bold text-slate-200">{selectedPatient.baseline_vitals.respiratory_rate} /min</div>
                     </div>
-                    <div>
-                      <span className="text-slate-500 block text-[10px]">SpO2</span>
-                      <strong className="text-emerald-400">{selectedPatient.baseline_vitals.spo2 || '--'}%</strong>
+                    <div className="bg-slate-950 p-2 rounded border border-slate-800">
+                      <div className="text-[9px] text-slate-500">SPO2</div>
+                      <div className="text-sm font-bold text-sky-400">{selectedPatient.baseline_vitals.spo2}%</div>
                     </div>
-                    <div>
-                      <span className="text-slate-500 block text-[10px]">Temp</span>
-                      <strong className="text-amber-400">{selectedPatient.baseline_vitals.temperature_c || '--'}°C</strong>
+                    <div className="bg-slate-950 p-2 rounded border border-slate-800">
+                      <div className="text-[9px] text-slate-500">TEMP</div>
+                      <div className="text-sm font-bold text-slate-200">{selectedPatient.baseline_vitals.temperature_c}°C</div>
                     </div>
-                    <div>
-                      <span className="text-slate-500 block text-[10px]">Acuity</span>
-                      <strong className="text-rose-300">{selectedPatient.triage_acuity}</strong>
+                    <div className="bg-slate-950 p-2 rounded border border-slate-800">
+                      <div className="text-[9px] text-slate-500">ACUITY</div>
+                      <div className="text-sm font-bold text-rose-400">{selectedPatient.triage_acuity}</div>
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* Allergies */}
-              {selectedPatient.allergies && selectedPatient.allergies.length > 0 && (
+              {/* Past Medical History & Allergies */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <h4 className="font-semibold text-rose-400 mb-1 uppercase tracking-wider text-[11px]">Drug Allergies</h4>
-                  <div className="bg-rose-950/30 border border-rose-900/60 p-2.5 rounded-lg text-rose-200 font-medium">
-                    {selectedPatient.allergies.join(', ')}
+                  <span className="font-mono text-[10px] text-slate-400 uppercase tracking-wider block mb-1">
+                    Past Medical History
+                  </span>
+                  <div className="p-2.5 rounded bg-slate-950 border border-slate-800 text-slate-300 min-h-[48px]">
+                    {selectedPatient.past_medical_history?.join(', ') || 'None recorded'}
                   </div>
                 </div>
-              )}
 
-              {/* Past History & Meds */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {selectedPatient.past_medical_history && (
-                  <div>
-                    <h4 className="font-semibold text-slate-300 mb-1 uppercase tracking-wider text-[11px]">Past Medical History</h4>
-                    <ul className="bg-slate-950 p-2.5 rounded-lg border border-slate-800 text-slate-300 list-disc list-inside space-y-0.5">
-                      {selectedPatient.past_medical_history.map((h, i) => (
-                        <li key={i}>{h}</li>
-                      ))}
-                    </ul>
+                <div>
+                  <span className="font-mono text-[10px] text-rose-400 uppercase tracking-wider block mb-1">
+                    Known Allergies
+                  </span>
+                  <div className="p-2.5 rounded bg-slate-950 border border-rose-900/40 text-rose-300 min-h-[48px] font-medium">
+                    {selectedPatient.allergies?.join(', ') || 'No known drug allergies (NKDA)'}
                   </div>
-                )}
-
-                {selectedPatient.medications && (
-                  <div>
-                    <h4 className="font-semibold text-slate-300 mb-1 uppercase tracking-wider text-[11px]">Current Medications</h4>
-                    <ul className="bg-slate-950 p-2.5 rounded-lg border border-slate-800 text-slate-300 list-disc list-inside space-y-0.5">
-                      {selectedPatient.medications.map((m, i) => (
-                        <li key={i}>{m}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
+                </div>
               </div>
             </div>
 
             {/* Modal Actions */}
-            <div className="mt-6 pt-4 border-t border-slate-800 flex items-center justify-between">
-              <span className="text-[11px] text-slate-500">
-                Admitted At: {new Date(selectedPatient.admitted_at).toLocaleString()}
-              </span>
+            <div className="mt-5 pt-3.5 border-t border-slate-800 flex items-center justify-between">
+              <button
+                onClick={() => setSelectedPatient(null)}
+                className="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-mono rounded transition cursor-pointer"
+              >
+                CLOSE CHART
+              </button>
 
               <div className="flex items-center gap-2">
+                {onOpenConsult && selectedPatient.admission_status === 'ADMITTED' && (
+                  <button
+                    onClick={() => {
+                      onOpenConsult(selectedPatient.name);
+                      setSelectedPatient(null);
+                    }}
+                    className="px-3.5 py-1.5 bg-sky-500 hover:bg-sky-400 text-slate-950 font-mono font-bold text-xs rounded transition flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <Stethoscope className="w-3.5 h-3.5" />
+                    <span>CONSULT ATTENDING</span>
+                  </button>
+                )}
+
                 {selectedPatient.admission_status === 'ADMITTED' && (
                   <button
                     onClick={() => handleDischarge(selectedPatient.id)}
-                    className="px-3 py-1.5 bg-rose-900/60 hover:bg-rose-800 text-rose-200 text-xs rounded-lg transition"
+                    className="px-3 py-1.5 bg-rose-950/80 hover:bg-rose-900 text-rose-300 border border-rose-800 text-xs font-mono rounded transition cursor-pointer"
                   >
-                    Discharge Patient
+                    DISCHARGE PATIENT
                   </button>
                 )}
-                <button
-                  onClick={() => setSelectedPatient(null)}
-                  className="px-4 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs rounded-lg transition"
-                >
-                  Close
-                </button>
               </div>
             </div>
           </div>
