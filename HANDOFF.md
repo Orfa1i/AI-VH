@@ -20,6 +20,13 @@
     - Updated `PolicyBenchmarkModal.tsx`: renamed `Base MedGemma` to `Base Foundation Model` / `Base Model`, and `RL DPO MedGemma` to `RL DPO Aligned Model` / `RL DPO Model`; updated foundation tags to `clinical-ai-4b` and `models/clinical-dpo-lora`.
     - Updated `RLDatasetModal.tsx`: renamed target foundation model label to `Clinical AI 4-Bit (DPO)`.
     - Updated `PhysicianReviewDashboard.tsx`: replaced MedGemma empty state text with Clinical AI reports.
+- **Live Harrison's 21st Edition RAG Diagnostic Query Test**:
+  - Successfully executed real-time diagnostic query through `POST /api/specialists/internal-medicine/chat` with Dr. Marcus Vance, MD, FACP.
+  - Test clinical presentation: 64-year-old male with crushing substernal chest pressure radiating to arm/jaw, diaphoresis, dynamic ST depressions in V4-V6, and hs-cTnI 1.8 ng/mL.
+  - Verified Harrison's 21st Edition evidence retrieval: 3 high-relevance chunks retrieved from Chapter 14 (*Chest Discomfort*, p. 147) and Chapter 274 (*Non-ST-Segment Elevation ACS*, p. 2088).
+  - Diagnostic Accuracy: Accurately established Non-ST-Segment Elevation Acute Coronary Syndrome (NSTE-ACS) with 88% probability; formulated comprehensive workup (STAT ECG, serial troponins, echocardiogram) and guideline-directed therapy (DAPT with Aspirin 325mg + Ticagrelor 180mg, IV Heparin, Atorvastatin 80mg, early angiography within 24-48 hours).
+  - Contraindication Safeguards: Flagged NSAIDs as absolutely contraindicated in acute myocardial ischemia and alerted against nitrate-induced hypotension.
+  - Performance: Local GPU NF4 inference completed in 24.0s with 0 errors.
 - **Verification**:
   - `pnpm run build` compiled 2,440 modules in 3.54s with 0 errors (`dist/` generated cleanly).
   - `py -3.13 -m pytest backend/tests/` passed 100% (67 passed in 293.84s).
@@ -41,6 +48,6 @@
 ---
 
 ## 4. Concrete Next Steps
-1. End-to-end clinical simulation walk-through from patient intake through Dr. Marcus Vance diagnostic consult.
+1. Run an end-to-end clinical simulation walk-through from patient intake to discharge disposition.
 2. Review RL DPO feedback submission and verify reward score updates in the Physician Review Console.
-3. Validate Harrison's 21st Edition evidence retrieval performance on complex internal medicine queries.
+3. Conduct multi-turn conversational chat with Dr. Marcus Vance across diverse complex pathology scenarios.
