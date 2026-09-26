@@ -6,8 +6,6 @@ import { StaffManagementSection } from './components/management/StaffManagementS
 import { KnowledgeSearchSection } from './components/management/KnowledgeSearchSection';
 import { PhysicianReviewDashboard } from './components/dashboard/PhysicianReviewDashboard';
 import { InternalMedicineConsultModal } from './components/specialists/InternalMedicineConsultModal';
-import { PharmacistModal } from './components/specialists/PharmacistModal';
-import { InpatientTelemetryModal } from './components/dashboard/InpatientTelemetryModal';
 import { RLDatasetModal } from './components/rl/RLDatasetModal';
 import { PolicyBenchmarkModal } from './components/rl/PolicyBenchmarkModal';
 import { toggleGlobalMute, isGlobalMuted } from './utils/speechSynthesis';
@@ -18,8 +16,6 @@ import {
   Cpu,
   ExternalLink,
   FileText,
-  HeartPulse,
-  Pill,
   Radio,
   Scale,
   Search,
@@ -66,8 +62,6 @@ export const App: React.FC = () => {
 
   // Quick Action Modals
   const [isConsultOpen, setIsConsultOpen] = useState<boolean>(false);
-  const [isPharmacyOpen, setIsPharmacyOpen] = useState<boolean>(false);
-  const [isInpatientOpen, setIsInpatientOpen] = useState<boolean>(false);
   const [isRLModalOpen, setIsRLModalOpen] = useState<boolean>(false);
   const [isBenchmarkOpen, setIsBenchmarkOpen] = useState<boolean>(false);
 
@@ -211,7 +205,7 @@ export const App: React.FC = () => {
               <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
             </span>
             <span className="text-emerald-400 font-medium tracking-wide">
-              TELEMETRY LIVE
+              SYSTEM SYNC LIVE
             </span>
             <span className="text-slate-500 text-[10px]">99.98% SYNC</span>
           </div>
@@ -219,7 +213,7 @@ export const App: React.FC = () => {
           {/* GPU Model Status */}
           <div className="hidden xl:flex items-center gap-1.5 px-2.5 py-1 bg-slate-900/60 border border-slate-800/80 rounded font-mono text-[11px] text-slate-300">
             <Cpu className="w-3.5 h-3.5 text-sky-400" />
-            <span>MedGemma 4B</span>
+            <span>Clinical AI 4B</span>
             <span className="text-[10px] px-1.5 py-0.2 rounded bg-sky-950/80 text-sky-300 border border-sky-800/60">
               NF4 LoRA Aligned
             </span>
@@ -237,16 +231,6 @@ export const App: React.FC = () => {
 
           {/* Quick Action Specialist Dock */}
           <div className="flex items-center gap-1.5 p-1 bg-slate-900/80 border border-slate-800 rounded-md">
-            {/* Telemetry Console */}
-            <button
-              onClick={() => setIsInpatientOpen(true)}
-              className="px-2.5 py-1 rounded text-xs font-mono font-medium flex items-center gap-1.5 transition text-rose-300 hover:text-rose-200 hover:bg-rose-950/40 border border-transparent hover:border-rose-800/60 cursor-pointer"
-              title="Open East Inpatient Wing 4-Bed Real-Time Telemetry Monitor"
-            >
-              <HeartPulse className="w-3.5 h-3.5 text-rose-400 animate-pulse" />
-              <span className="hidden sm:inline">Telemetry</span>
-            </button>
-
             {/* Dr. Marcus Vance Live Consult */}
             <button
               onClick={() => setIsConsultOpen(true)}
@@ -255,16 +239,6 @@ export const App: React.FC = () => {
             >
               <Stethoscope className="w-3.5 h-3.5 text-sky-400" />
               <span className="hidden sm:inline">Dr. Vance RAG</span>
-            </button>
-
-            {/* Clinical Pharmacist Safety */}
-            <button
-              onClick={() => setIsPharmacyOpen(true)}
-              className="px-2.5 py-1 rounded text-xs font-mono font-medium flex items-center gap-1.5 transition text-amber-300 hover:text-amber-200 hover:bg-amber-950/40 border border-transparent hover:border-amber-800/60 cursor-pointer"
-              title="Clinical Pharmacist Drug Safety, Allergy & Renal Dosing Review"
-            >
-              <Pill className="w-3.5 h-3.5 text-amber-400" />
-              <span className="hidden sm:inline">Pharmacy Safety</span>
             </button>
 
             {/* Audio Voice Synthesizer Toggle */}
@@ -441,7 +415,7 @@ export const App: React.FC = () => {
                 Reinforcement Learning Policy Benchmark
               </h3>
               <p className="text-xs text-slate-400 mb-6 leading-relaxed font-sans">
-                Evaluate unaligned Base MedGemma (v0.1) against Physician-Guided RL DPO (v0.3) across multi-case diagnostic accuracy, test appropriateness, and contraindication avoidance.
+                Evaluate unaligned Base Foundation Model (v0.1) against Physician-Guided RL DPO (v0.3) across multi-case diagnostic accuracy, test appropriateness, and contraindication avoidance.
               </p>
               <div className="flex flex-wrap items-center justify-center gap-3 font-mono">
                 <button
@@ -466,17 +440,6 @@ export const App: React.FC = () => {
       <InternalMedicineConsultModal
         isOpen={isConsultOpen}
         onClose={() => setIsConsultOpen(false)}
-      />
-
-      <PharmacistModal
-        isOpen={isPharmacyOpen}
-        onClose={() => setIsPharmacyOpen(false)}
-        cases={cases}
-      />
-
-      <InpatientTelemetryModal
-        isOpen={isInpatientOpen}
-        onClose={() => setIsInpatientOpen(false)}
       />
 
       <PolicyBenchmarkModal

@@ -4,9 +4,7 @@ import { HospitalFlowDiagram } from '../diagram/HospitalFlowDiagram';
 import { EventStreamHUD } from '../dashboard/EventStreamHUD';
 import { VitalsMonitorHUD } from '../dashboard/VitalsMonitorHUD';
 import { InternalMedicineConsultModal } from '../specialists/InternalMedicineConsultModal';
-import { PharmacistModal } from '../specialists/PharmacistModal';
 import { DepartmentStationModal } from '../specialists/DepartmentStationModal';
-import { InpatientTelemetryModal } from '../dashboard/InpatientTelemetryModal';
 import { toggleGlobalMute, isGlobalMuted } from '../../utils/speechSynthesis';
 import type { HospitalEvent, BenchmarkCase, VitalSigns } from '../../types';
 
@@ -27,9 +25,7 @@ export const Hospital3DPage: React.FC<Hospital3DPageProps> = ({ onBackToPortal }
 
   // Modals
   const [isConsultOpen, setIsConsultOpen] = useState<boolean>(false);
-  const [isPharmacyOpen, setIsPharmacyOpen] = useState<boolean>(false);
   const [departmentStationId, setDepartmentStationId] = useState<string | null>(null);
-  const [isInpatientOpen, setIsInpatientOpen] = useState<boolean>(false);
 
   // 3D Department & Agent Position
   const [activeDepartment, setActiveDepartment] = useState<string>('RECEPTION');
@@ -137,13 +133,7 @@ export const Hospital3DPage: React.FC<Hospital3DPageProps> = ({ onBackToPortal }
       case 'TREATMENT_ORDERED':
         setActiveDepartment('DOCTOR_STATION');
         setDoctorPos([6.5, 0, 1]);
-        setDoctorAction('MedGemma Diagnosis Established');
-        break;
-
-      case 'PHARMACY_REVIEW_INITIATED':
-      case 'PHARMACY_REVIEW_COMPLETED':
-      case 'MEDICATION_DISPENSED':
-        setActiveDepartment('PHARMACY');
+        setDoctorAction('Physician Diagnosis Established');
         break;
 
       case 'CLINICAL_REPORT_GENERATED':
@@ -157,9 +147,6 @@ export const Hospital3DPage: React.FC<Hospital3DPageProps> = ({ onBackToPortal }
     switch (stationId) {
       case 'INTERNAL_MEDICINE':
         setIsConsultOpen(true);
-        break;
-      case 'PHARMACY':
-        setIsPharmacyOpen(true);
         break;
       case 'LABORATORY':
       case 'RADIOLOGY':
@@ -254,30 +241,12 @@ export const Hospital3DPage: React.FC<Hospital3DPageProps> = ({ onBackToPortal }
 
         {/* Right: Quick Action Modals & Audio */}
         <div className="flex items-center gap-2">
-          {/* Central Telemetry */}
-          <button
-            onClick={() => setIsInpatientOpen(true)}
-            className="px-2.5 py-1.5 bg-slate-800/80 hover:bg-slate-700 text-rose-300 text-xs rounded border border-rose-900/40 flex items-center gap-1.5 transition"
-            title="Open 4-Bed Central Inpatient Telemetry Console"
-          >
-            <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />
-            <span>Telemetry Console</span>
-          </button>
-
           {/* Specialist Consult */}
           <button
             onClick={() => setIsConsultOpen(true)}
             className="px-2.5 py-1.5 bg-slate-800/80 hover:bg-slate-700 text-cyan-300 text-xs rounded border border-cyan-900/40 transition"
           >
             Dr. Vance RAG
-          </button>
-
-          {/* Pharmacy Safety */}
-          <button
-            onClick={() => setIsPharmacyOpen(true)}
-            className="px-2.5 py-1.5 bg-slate-800/80 hover:bg-slate-700 text-amber-300 text-xs rounded border border-amber-900/40 transition"
-          >
-            Pharmacy Safety
           </button>
 
           {/* Audio Mute Toggle */}
@@ -309,8 +278,6 @@ export const Hospital3DPage: React.FC<Hospital3DPageProps> = ({ onBackToPortal }
             events={events}
             activeVitals={activeVitals}
             onOpenConsult={() => setIsConsultOpen(true)}
-            onOpenPharmacy={() => setIsPharmacyOpen(true)}
-            onOpenTelemetry={() => setIsInpatientOpen(true)}
             onOpenDepartmentStation={handleStationInteract}
             onToggleTo3D={() => setViewMode('3D')}
           />
@@ -337,12 +304,6 @@ export const Hospital3DPage: React.FC<Hospital3DPageProps> = ({ onBackToPortal }
         onClose={() => setIsConsultOpen(false)}
       />
 
-      <PharmacistModal
-        isOpen={isPharmacyOpen}
-        onClose={() => setIsPharmacyOpen(false)}
-        cases={cases}
-      />
-
       <DepartmentStationModal
         stationId={departmentStationId}
         isOpen={departmentStationId !== null}
@@ -351,11 +312,6 @@ export const Hospital3DPage: React.FC<Hospital3DPageProps> = ({ onBackToPortal }
         selectedCaseId={selectedCaseId}
         onRunEncounter={handleRunSimulation}
         isRunning={isRunning}
-      />
-
-      <InpatientTelemetryModal
-        isOpen={isInpatientOpen}
-        onClose={() => setIsInpatientOpen(false)}
       />
     </div>
   );

@@ -109,24 +109,6 @@ export const CaseIntakeAdmissionSection: React.FC<CaseIntakeAdmissionSectionProp
       setRespiratoryRate(28);
       setSpo2(98.0);
       setTemperature(37.4);
-    } else if (caseId === 'CASE-103') {
-      setName('Arthur Pendelton');
-      setAge(68);
-      setSex('Male');
-      setTriageAcuity('URGENT');
-      setAssignedDepartment('INTERNAL_MEDICINE');
-      setBedNumber('MED-103');
-      setChiefComplaint('Oliguria, peripheral pitting edema, and generalized fatigue');
-      setHpi('Noticed darkening urine and decreased volume over past 5 days following intense NSAID use for back pain.');
-      setPastMedicalHistory('Benign Prostatic Hyperplasia, Mild Osteoarthritis');
-      setMedications('Ibuprofen 800mg TID, Tamsulosin 0.4mg daily');
-      setAllergies('Codeine (Severe Nausea)');
-      setHeartRate(82);
-      setSystolicBp(156);
-      setDiastolicBp(94);
-      setRespiratoryRate(16);
-      setSpo2(96.0);
-      setTemperature(36.8);
     } else if (caseId === 'CASE-104') {
       setName('Clara Vance');
       setAge(52);
@@ -256,7 +238,6 @@ export const CaseIntakeAdmissionSection: React.FC<CaseIntakeAdmissionSectionProp
               <>
                 <option value="CASE-101">CASE-101: Robert Miller (NSTEMI / CCU)</option>
                 <option value="CASE-102">CASE-102: Elena Rostova (DKA / ICU)</option>
-                <option value="CASE-103">CASE-103: Arthur Pendelton (AKI / Med)</option>
                 <option value="CASE-104">CASE-104: Clara Vance (Submassive PE)</option>
               </>
             )}
@@ -485,7 +466,7 @@ export const CaseIntakeAdmissionSection: React.FC<CaseIntakeAdmissionSectionProp
             <div className="md:col-span-2">
               <label className="block text-[11px] font-mono text-rose-400 mb-1 flex items-center gap-1.5">
                 <ShieldAlert className="w-3.5 h-3.5" />
-                <span>DRUG ALLERGIES &amp; ADVERSE REACTIONS (CRITICAL FOR PHARMACY RECONCILIATION)</span>
+                <span>DRUG ALLERGIES &amp; ADVERSE REACTIONS (CRITICAL CLINICAL SAFETY PROFILE)</span>
               </label>
               <input
                 type="text"

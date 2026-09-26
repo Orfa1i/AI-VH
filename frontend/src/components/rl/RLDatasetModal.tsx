@@ -166,7 +166,7 @@ export const RLDatasetModal: React.FC<RLDatasetModalProps> = ({ isOpen, onClose 
               <Cpu className="w-5 h-5 text-purple-400" />
               <div>
                 <p className="text-[10px] text-slate-400 uppercase font-bold">Target Foundation Model</p>
-                <p className="text-xs font-bold text-slate-200">MedGemma 4-Bit (DPO)</p>
+                <p className="text-xs font-bold text-slate-200">Clinical AI 4-Bit (DPO)</p>
               </div>
             </div>
           </div>

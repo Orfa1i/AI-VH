@@ -10,7 +10,6 @@ import {
   DoorOpen,
   FileText,
   HeartPulse,
-  Pill,
   Play,
   RefreshCw,
   Stethoscope,
@@ -31,8 +30,6 @@ interface HospitalFlowDiagramProps {
   events: HospitalEvent[];
   activeVitals: VitalSigns | null;
   onOpenConsult: () => void;
-  onOpenPharmacy: () => void;
-  onOpenTelemetry: () => void;
   onOpenDepartmentStation?: (stationId: string) => void;
   onToggleTo3D?: () => void;
 }
@@ -48,8 +45,6 @@ export const HospitalFlowDiagram: React.FC<HospitalFlowDiagramProps> = ({
   events,
   activeVitals,
   onOpenConsult,
-  onOpenPharmacy,
-  onOpenTelemetry,
   onOpenDepartmentStation,
   onToggleTo3D,
 }) => {
@@ -65,14 +60,12 @@ export const HospitalFlowDiagram: React.FC<HospitalFlowDiagramProps> = ({
   const isTriageActive = isRunning && (activeDepartment === 'RECEPTION' || activeDepartment === 'NURSE_STATION');
   const isDoctorActive = isRunning && (activeDepartment.includes('DOCTOR') || activeDepartment.includes('EXAMINATION'));
   const isLabActive = isRunning && activeDepartment === 'LABORATORY';
-  const isPharmacyActive = isRunning && activeDepartment === 'PHARMACY';
   const isDischargeActive = events.some((e) => e.event_type === 'CLINICAL_REPORT_GENERATED' || e.event_type === 'TREATMENT_ORDERED');
 
   // Dynamic patient trajectory position percentage (0% to 100%)
   const getPatientProgress = () => {
     if (isDischargeActive) return 96;
-    if (isPharmacyActive) return 76;
-    if (isLabActive) return 60;
+    if (isLabActive) return 65;
     if (isDoctorActive) return 40;
     if (isTriageActive) return 14;
     if (isRunning) return 28;
@@ -83,7 +76,6 @@ export const HospitalFlowDiagram: React.FC<HospitalFlowDiagramProps> = ({
 
   const getStageDescription = () => {
     if (isDischargeActive) return 'Discharge Gate Cleared & Disposition Finalized';
-    if (isPharmacyActive) return 'Pharmacist Medication Safety & Contraindication Review';
     if (isLabActive) return 'Clinical Laboratory Biomarker Analysis';
     if (isDoctorActive) return 'Attending Physician Examination (Dr. Marcus Vance)';
     if (isTriageActive) return 'Nurse Triage & Objective Vital Telemetry Capture';
@@ -421,7 +413,7 @@ export const HospitalFlowDiagram: React.FC<HospitalFlowDiagramProps> = ({
                   </p>
                   <div className="mt-1 flex items-center gap-1 text-[10px] text-emerald-400 font-mono">
                     <Sparkles className="w-2.5 h-2.5" />
-                    <span>MedGemma Aligned (RTX 4060)</span>
+                    <span>Clinical AI Aligned (RTX 4060)</span>
                   </div>
                 </div>
               </div>
@@ -437,38 +429,21 @@ export const HospitalFlowDiagram: React.FC<HospitalFlowDiagramProps> = ({
                 </div>
               </div>
 
-              {/* Diagnostic Sub-Units Action Buttons */}
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  onClick={onOpenConsult}
-                  className={`p-2 rounded border text-left transition flex items-center gap-2 cursor-pointer group ${
-                    isDoctorActive || isLabActive
-                      ? 'bg-sky-950/60 border-sky-500 shadow-sm shadow-sky-500/20'
-                      : 'bg-slate-800/40 hover:bg-slate-800/80 border-slate-700'
-                  }`}
-                >
-                  <FileText className="w-3.5 h-3.5 text-sky-400 group-hover:scale-110 transition-transform" />
-                  <div className="min-w-0 flex-1">
-                    <div className="text-xs font-semibold text-slate-200 truncate">Dr. Vance RAG</div>
-                    <div className="text-[9px] text-slate-400 font-mono">Harrison's 21st</div>
-                  </div>
-                </button>
-
-                <button
-                  onClick={onOpenPharmacy}
-                  className={`p-2 rounded border text-left transition flex items-center gap-2 cursor-pointer group ${
-                    isPharmacyActive
-                      ? 'bg-amber-950/60 border-amber-500 shadow-sm shadow-amber-500/20'
-                      : 'bg-slate-800/40 hover:bg-slate-800/80 border-slate-700'
-                  }`}
-                >
-                  <Pill className="w-3.5 h-3.5 text-amber-400 group-hover:scale-110 transition-transform" />
-                  <div className="min-w-0 flex-1">
-                    <div className="text-xs font-semibold text-slate-200 truncate">Pharmacy Gate</div>
-                    <div className="text-[9px] text-slate-400 font-mono">Contraindications</div>
-                  </div>
-                </button>
-              </div>
+              {/* Diagnostic Consult Action Button */}
+              <button
+                onClick={onOpenConsult}
+                className={`w-full p-2 rounded border text-left transition flex items-center gap-2 cursor-pointer group ${
+                  isDoctorActive || isLabActive
+                    ? 'bg-sky-950/60 border-sky-500 shadow-sm shadow-sky-500/20'
+                    : 'bg-slate-800/40 hover:bg-slate-800/80 border-slate-700'
+                }`}
+              >
+                <FileText className="w-3.5 h-3.5 text-sky-400 group-hover:scale-110 transition-transform" />
+                <div className="min-w-0 flex-1">
+                  <div className="text-xs font-semibold text-slate-200 truncate">Dr. Vance RAG Consult</div>
+                  <div className="text-[9px] text-slate-400 font-mono">Harrison's Principles 21st Edition</div>
+                </div>
+              </button>
 
               {/* Trajectory Exit Arrow */}
               <div className="pt-2 border-t border-slate-800 flex items-center justify-between text-xs font-mono">
@@ -623,13 +598,10 @@ export const HospitalFlowDiagram: React.FC<HospitalFlowDiagramProps> = ({
                     <span className="text-sky-400 font-semibold">Rx GROUNDED</span>
                   </div>
 
-                  <button
-                    onClick={onOpenTelemetry}
-                    className="w-full p-1.5 rounded bg-slate-800 hover:bg-slate-700 border border-slate-700 text-left transition flex items-center justify-between text-[10px] cursor-pointer mt-1 font-mono"
-                  >
-                    <span className="text-rose-300 font-semibold">Inpatient Bed Board</span>
-                    <span className="text-slate-400">&rarr;</span>
-                  </button>
+                  <div className="p-1.5 rounded bg-slate-800/40 border border-slate-800 flex items-center justify-between text-[10px] font-mono">
+                    <span className="text-slate-400">DISPOSITION:</span>
+                    <span className="text-emerald-400 font-semibold">CLEARED FOR DISCHARGE</span>
+                  </div>
                 </div>
               </div>
 

@@ -76,7 +76,7 @@ export const PhysicianReviewDashboard: React.FC<PhysicianReviewDashboardProps> =
           NO CLINICAL REPORTS PENDING REVIEW
         </h3>
         <p className="text-xs max-w-md text-center mt-1 text-slate-400 font-mono leading-relaxed">
-          Simulate an encounter pathway to generate autonomous MedGemma clinical reports with Harrison's 21st Edition evidence grounding.
+          Simulate an encounter pathway to generate autonomous Clinical AI reports with Harrison's 21st Edition evidence grounding.
         </p>
       </div>
     );

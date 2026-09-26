@@ -48,11 +48,11 @@ const INITIAL_GREETING: DoctorChatMessage = {
   id: 'msg-welcome',
   sender: 'DOCTOR',
   content:
-    'Greetings. I am Dr. Marcus Vance, Chief Attending Physician of Internal Medicine. My clinical reasoning is grounded in Harrison\'s Principles of Internal Medicine (21st Edition) and MedGemma AI diagnostic models.\n\nHow may I assist you with clinical cases, differential diagnoses, evidence-based therapies, or medication contraindications today?',
+    'Greetings. I am Dr. Marcus Vance, Chief Attending Physician of Internal Medicine. My clinical reasoning is grounded in Harrison\'s Principles of Internal Medicine (21st Edition) and Internal Medicine Clinical AI diagnostic models.\n\nHow may I assist you with clinical cases, differential diagnoses, evidence-based therapies, or medication contraindications today?',
   timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
   telemetry: {
     live_gpu_inference: true,
-    model: 'google/medgemma-4b (NF4 LoRA Aligned)',
+    model: 'Clinical AI 4B (NF4 LoRA Aligned)',
     knowledge_source: "Harrison's Principles of Internal Medicine (21st Ed)",
     latency_ms: 0,
   },
@@ -308,7 +308,7 @@ export const DoctorChatModal: React.FC<DoctorChatModalProps> = ({
                 <span className="text-slate-600">•</span>
                 <span className="flex items-center gap-1 text-cyan-300 font-mono text-[11px]">
                   <Cpu className="w-3 h-3 text-cyan-400" />
-                  <span>MedGemma Aligned</span>
+                  <span>Clinical AI Aligned</span>
                 </span>
               </div>
             </div>
@@ -546,7 +546,7 @@ export const DoctorChatModal: React.FC<DoctorChatModalProps> = ({
               />
               <div className="bg-slate-800/90 border border-slate-700/80 rounded-2xl p-4 flex items-center gap-3 text-xs text-slate-300">
                 <Loader2 className="w-4 h-4 text-cyan-400 animate-spin" />
-                <span>Dr. Vance is analyzing Harrison's clinical knowledge & MedGemma...</span>
+                <span>Dr. Vance is analyzing Harrison's clinical knowledge & Diagnostic Engine...</span>
               </div>
             </div>
           )}
@@ -590,7 +590,7 @@ export const DoctorChatModal: React.FC<DoctorChatModalProps> = ({
           </form>
           <div className="flex items-center justify-between text-[10px] text-slate-500 mt-2 px-1">
             <span>Press Enter to send, Shift+Enter for newline</span>
-            <span>Grounding: Harrison's Principles of Internal Medicine 21st Ed & MedGemma</span>
+            <span>Grounding: Harrison's Principles of Internal Medicine 21st Ed & Clinical AI</span>
           </div>
         </div>
       </div>

@@ -139,7 +139,7 @@ const INITIAL_BENCHMARK: BenchmarkReport = {
       clinical_analysis:
         'The Base Agent misattributed ischemic chest pain to musculoskeletal origin and inappropriately ordered NSAIDs, introducing high cardiac bleeding/infarction risk. The RL DPO agent accurately identified NSTEMI from ST depressions and troponin elevation, immediately initiating guideline-directed DAPT + anticoagulation.',
       base_agent_metrics: {
-        policy_name: 'Base MedGemma',
+        policy_name: 'Base Foundation Model',
         version: 'v0.1-ZeroShot',
         primary_diagnosis: 'Atypical Chest Wall Pain / GERD',
         diagnostic_accuracy_percent: 42.0,
@@ -158,7 +158,7 @@ const INITIAL_BENCHMARK: BenchmarkReport = {
         citations_count: 1,
       },
       rl_agent_metrics: {
-        policy_name: 'RL DPO MedGemma',
+        policy_name: 'RL DPO Aligned Model',
         version: 'v0.3-DPO-Aligned',
         primary_diagnosis: 'Acute Non-ST-Elevation Myocardial Infarction (NSTEMI)',
         diagnostic_accuracy_percent: 98.0,
@@ -191,7 +191,7 @@ const INITIAL_BENCHMARK: BenchmarkReport = {
       clinical_analysis:
         'The Base Agent administered subcutaneous insulin without crystalloid volume resuscitation or potassium safeguarding. The RL DPO agent adhered strictly to Harrison’s protocol: aggressive crystalloid hydration, potassium threshold confirmation, and continuous regular insulin infusion.',
       base_agent_metrics: {
-        policy_name: 'Base MedGemma',
+        policy_name: 'Base Foundation Model',
         version: 'v0.1-ZeroShot',
         primary_diagnosis: 'Acute Viral Gastroenteritis with Hyperglycemia',
         diagnostic_accuracy_percent: 50.0,
@@ -210,7 +210,7 @@ const INITIAL_BENCHMARK: BenchmarkReport = {
         citations_count: 1,
       },
       rl_agent_metrics: {
-        policy_name: 'RL DPO MedGemma',
+        policy_name: 'RL DPO Aligned Model',
         version: 'v0.3-DPO-Aligned',
         primary_diagnosis: 'Diabetic Ketoacidosis (DKA) with High Anion Gap Metabolic Acidosis',
         diagnostic_accuracy_percent: 97.0,
@@ -229,57 +229,6 @@ const INITIAL_BENCHMARK: BenchmarkReport = {
           'ICU admission with serial q2h BMP/VBG',
         ],
         citations_count: 5,
-      },
-    },
-    {
-      case_id: 'CASE-103',
-      patient_name: 'Arthur Pendelton',
-      true_diagnosis: 'Acute Kidney Injury (KDIGO Stage 3) / Prerenal Azotemia',
-      acuity: 'LEVEL_3_URGENT',
-      score_delta: 2.4,
-      safety_gain_percent: 54.0,
-      winner: 'RL_AGENT',
-      clinical_analysis:
-        'The Base Agent inappropriately escalated loop diuretics and continued nephrotoxic ACE inhibitors in prerenal failure. The RL DPO agent promptly held offending hemodynamically active drugs, resuscitated with isotonic fluids, and instituted rigorous renal output monitoring.',
-      base_agent_metrics: {
-        policy_name: 'Base MedGemma',
-        version: 'v0.1-ZeroShot',
-        primary_diagnosis: 'Intrinsic Glomerulonephritis',
-        diagnostic_accuracy_percent: 52.0,
-        differential_completeness_percent: 55.0,
-        workup_efficiency_percent: 50.0,
-        treatment_safety_percent: 42.0,
-        evidence_grounding_percent: 38.0,
-        overall_clinical_score: 2.3,
-        contraindications_missed: 1,
-        unnecessary_tests_ordered: 2,
-        treatment_plan: [
-          'High-dose Furosemide 80mg IV to force diuresis',
-          'Continue Lisinopril 20mg daily',
-          'Schedule percutaneous renal biopsy',
-        ],
-        citations_count: 1,
-      },
-      rl_agent_metrics: {
-        policy_name: 'RL DPO MedGemma',
-        version: 'v0.3-DPO-Aligned',
-        primary_diagnosis: 'Acute Kidney Injury (KDIGO Stage 3) secondary to Prerenal Azotemia',
-        diagnostic_accuracy_percent: 95.0,
-        differential_completeness_percent: 92.0,
-        workup_efficiency_percent: 90.0,
-        treatment_safety_percent: 96.0,
-        evidence_grounding_percent: 94.0,
-        overall_clinical_score: 4.7,
-        contraindications_missed: 0,
-        unnecessary_tests_ordered: 0,
-        treatment_plan: [
-          'Immediately hold Lisinopril and NSAIDs',
-          'Isotonic crystalloid fluid challenge 1000 mL',
-          'Strict Foley catheter urine output monitoring',
-          'Renal ultrasound to exclude obstruction',
-          'Serial BMP checks every 12 hours',
-        ],
-        citations_count: 4,
       },
     },
   ],
@@ -594,8 +543,8 @@ export const PolicyBenchmarkModal: React.FC<PolicyBenchmarkModalProps> = ({
                 <div className="px-4 py-3 bg-slate-800/80 border-b border-slate-700 text-xs font-bold text-slate-200 flex items-center justify-between">
                   <span>Policy Performance Dimension</span>
                   <div className="flex gap-8 text-right">
-                    <span className="text-rose-300 w-28">Base MedGemma</span>
-                    <span className="text-emerald-300 w-28">RL DPO MedGemma</span>
+                    <span className="text-rose-300 w-28">Base Model</span>
+                    <span className="text-emerald-300 w-28">RL DPO Model</span>
                     <span className="text-purple-300 w-20">Delta</span>
                   </div>
                 </div>
@@ -707,7 +656,7 @@ export const PolicyBenchmarkModal: React.FC<PolicyBenchmarkModalProps> = ({
                 <div className="p-4 rounded-xl bg-rose-950/20 border border-rose-800/40 space-y-3">
                   <div className="flex items-center justify-between border-b border-rose-800/30 pb-2">
                     <div>
-                      <div className="text-xs font-bold text-rose-300">Base MedGemma (v0.1)</div>
+                      <div className="text-xs font-bold text-rose-300">Base Foundation Model (v0.1)</div>
                       <div className="text-[10px] text-slate-400">Zero-Shot Baseline</div>
                     </div>
                     <div className="text-right">
@@ -751,7 +700,7 @@ export const PolicyBenchmarkModal: React.FC<PolicyBenchmarkModalProps> = ({
                 <div className="p-4 rounded-xl bg-emerald-950/20 border border-emerald-800/40 space-y-3">
                   <div className="flex items-center justify-between border-b border-emerald-800/30 pb-2">
                     <div>
-                      <div className="text-xs font-bold text-emerald-300">RL DPO MedGemma (v0.3)</div>
+                      <div className="text-xs font-bold text-emerald-300">RL DPO Aligned Model (v0.3)</div>
                       <div className="text-[10px] text-slate-400">Physician-Aligned Model</div>
                     </div>
                     <div className="text-right">
@@ -816,7 +765,7 @@ export const PolicyBenchmarkModal: React.FC<PolicyBenchmarkModalProps> = ({
                         </span>
                       </div>
                       <div className="text-[11px] text-slate-400 mt-0.5">
-                        Foundation: <span className="text-slate-300 font-mono">google/medgemma-4b</span> • Adapter: <span className="text-purple-300 font-mono">models/medgemma-dpo-lora (r=16, α=32)</span>
+                        Foundation: <span className="text-slate-300 font-mono">clinical-ai-4b</span> • Adapter: <span className="text-purple-300 font-mono">models/clinical-dpo-lora (r=16, α=32)</span>
                       </div>
                     </div>
                   </div>
@@ -943,7 +892,7 @@ export const PolicyBenchmarkModal: React.FC<PolicyBenchmarkModalProps> = ({
 
                   {/* Side-by-Side Model Outputs */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Base MedGemma (Unaligned) */}
+                    {/* Base Model (Unaligned) */}
                     <div className="p-4 rounded-xl bg-rose-950/20 border border-rose-800/40 space-y-3 flex flex-col justify-between">
                       <div className="space-y-3">
                         <div className="flex items-center justify-between border-b border-rose-800/30 pb-2">
@@ -1019,7 +968,7 @@ export const PolicyBenchmarkModal: React.FC<PolicyBenchmarkModalProps> = ({
                       )}
                     </div>
 
-                    {/* RL DPO MedGemma (Aligned) */}
+                    {/* RL DPO Aligned Model */}
                     <div className="p-4 rounded-xl bg-emerald-950/20 border border-emerald-800/40 space-y-3 flex flex-col justify-between">
                       <div className="space-y-3">
                         <div className="flex items-center justify-between border-b border-emerald-800/30 pb-2">

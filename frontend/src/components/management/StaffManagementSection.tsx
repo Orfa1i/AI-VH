@@ -18,7 +18,7 @@ export const StaffManagementSection: React.FC<StaffManagementSectionProps> = ({ 
 
   // New staff form state
   const [newName, setNewName] = useState('');
-  const [newRole, setNewRole] = useState<'DOCTOR' | 'NURSE' | 'PHARMACIST' | 'RADIOLOGIST' | 'LAB_SCIENTIST' | 'RECEPTIONIST'>('DOCTOR');
+  const [newRole, setNewRole] = useState<'DOCTOR' | 'NURSE' | 'RADIOLOGIST' | 'LAB_SCIENTIST' | 'RECEPTIONIST'>('DOCTOR');
   const [newSpecialty, setNewSpecialty] = useState('INTERNAL_MEDICINE');
   const [newTitle, setNewTitle] = useState('Attending Specialist Physician');
   const [newDepartment, setNewDepartment] = useState('INTERNAL_MEDICINE');
@@ -198,7 +198,6 @@ export const StaffManagementSection: React.FC<StaffManagementSectionProps> = ({ 
               <option value="ALL">All Roles</option>
               <option value="DOCTOR">Physicians (MD)</option>
               <option value="NURSE">Nurses (RN)</option>
-              <option value="PHARMACIST">Pharmacists (PharmD)</option>
               <option value="LAB_SCIENTIST">Lab Scientists (MLS)</option>
               <option value="RADIOLOGIST">Radiologists (MD)</option>
               <option value="RECEPTIONIST">Admissions</option>
@@ -215,7 +214,6 @@ export const StaffManagementSection: React.FC<StaffManagementSectionProps> = ({ 
               <option value="ALL">All Departments</option>
               <option value="INTERNAL_MEDICINE">Internal Medicine</option>
               <option value="EMERGENCY">Emergency</option>
-              <option value="PHARMACY">Pharmacy</option>
               <option value="LABORATORY">Laboratory</option>
               <option value="RADIOLOGY">Radiology</option>
               <option value="RECEPTION">Reception</option>
@@ -315,7 +313,6 @@ export const StaffManagementSection: React.FC<StaffManagementSectionProps> = ({ 
                       <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-slate-700 to-slate-800 border border-slate-600 flex items-center justify-center text-3xl shadow-inner shrink-0">
                         {staff.role === 'DOCTOR' && '👨‍⚕️'}
                         {staff.role === 'NURSE' && '👩‍⚕️'}
-                        {staff.role === 'PHARMACIST' && '💊'}
                         {staff.role === 'LAB_SCIENTIST' && '🔬'}
                         {staff.role === 'RADIOLOGIST' && '🩻'}
                         {staff.role === 'RECEPTIONIST' && '📋'}
@@ -566,7 +563,6 @@ export const StaffManagementSection: React.FC<StaffManagementSectionProps> = ({ 
                   >
                     <option value="DOCTOR">DOCTOR (Physician)</option>
                     <option value="NURSE">NURSE (Triage / Floor RN)</option>
-                    <option value="PHARMACIST">PHARMACIST (PharmD)</option>
                     <option value="LAB_SCIENTIST">LAB_SCIENTIST (Pathology)</option>
                     <option value="RADIOLOGIST">RADIOLOGIST (Imaging)</option>
                     <option value="RECEPTIONIST">RECEPTIONIST (Admissions)</option>
@@ -582,7 +578,6 @@ export const StaffManagementSection: React.FC<StaffManagementSectionProps> = ({ 
                   >
                     <option value="INTERNAL_MEDICINE">Internal Medicine</option>
                     <option value="EMERGENCY">Emergency Department</option>
-                    <option value="PHARMACY">Pharmacy</option>
                     <option value="LABORATORY">Laboratory</option>
                     <option value="RADIOLOGY">Radiology</option>
                     <option value="CARDIOLOGY">Cardiology</option>
