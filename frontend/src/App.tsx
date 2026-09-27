@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Hospital3DPage } from './components/hospital3d/Hospital3DPage';
 import { CaseIntakeAdmissionSection } from './components/management/CaseIntakeAdmissionSection';
 import { PatientDirectorySection } from './components/management/PatientDirectorySection';
 import { StaffManagementSection } from './components/management/StaffManagementSection';
@@ -10,11 +9,9 @@ import { RLDatasetModal } from './components/rl/RLDatasetModal';
 import { PolicyBenchmarkModal } from './components/rl/PolicyBenchmarkModal';
 import { toggleGlobalMute, isGlobalMuted } from './utils/speechSynthesis';
 import {
-  Activity,
   BedDouble,
   Clock,
   Cpu,
-  ExternalLink,
   FileText,
   Radio,
   Scale,
@@ -35,21 +32,6 @@ import type {
 type PortalTab = 'INTAKE' | 'PATIENTS' | 'STAFF' | 'REPORTS' | 'KNOWLEDGE' | 'BENCHMARK';
 
 export const App: React.FC = () => {
-  // Determine if current URL or hash points to the 3D visualization page
-  const checkIs3DRoute = (): boolean => {
-    const path = window.location.pathname.toLowerCase();
-    const hash = window.location.hash.toLowerCase();
-    return (
-      path === '/3d' ||
-      path.startsWith('/3d/') ||
-      path === '/simulation' ||
-      path.startsWith('/simulation/') ||
-      hash === '#3d' ||
-      hash === '#simulation'
-    );
-  };
-
-  const [is3DMode, setIs3DMode] = useState<boolean>(checkIs3DRoute());
   const [activeTab, setActiveTab] = useState<PortalTab>('INTAKE');
 
   // Shared Data State
@@ -83,24 +65,6 @@ export const App: React.FC = () => {
     return () => clearInterval(timer);
   }, []);
 
-  // URL Navigation listener
-  useEffect(() => {
-    const handleLocationChange = () => {
-      setIs3DMode(checkIs3DRoute());
-    };
-
-    window.addEventListener('popstate', handleLocationChange);
-    window.addEventListener('hashchange', handleLocationChange);
-    return () => {
-      window.removeEventListener('popstate', handleLocationChange);
-      window.removeEventListener('hashchange', handleLocationChange);
-    };
-  }, []);
-
-  const navigateTo = (path: string) => {
-    window.history.pushState({}, '', path);
-    setIs3DMode(checkIs3DRoute());
-  };
 
   // Fetch initial cases and reports
   useEffect(() => {
@@ -159,16 +123,6 @@ export const App: React.FC = () => {
     }
   };
 
-  // =========================================================================
-  // View 1: Dedicated 3D Hospital Visualization Page (/3d)
-  // =========================================================================
-  if (is3DMode) {
-    return <Hospital3DPage onBackToPortal={() => navigateTo('/')} />;
-  }
-
-  // =========================================================================
-  // View 2: Hospital Operations & Clinical Management Portal (/)
-  // =========================================================================
   return (
     <div className="w-screen h-screen flex flex-col bg-[#0a0d14] overflow-hidden font-sans select-none text-slate-100 telemetry-grid">
       {/* Top Clinical Command Horizon Header */}
@@ -255,27 +209,6 @@ export const App: React.FC = () => {
             </button>
           </div>
 
-          <div className="h-5 w-px bg-slate-800" />
-
-          {/* Primary Viewport Launcher: 2D Schematic / 3D Simulation */}
-          <div className="flex items-center gap-1">
-            <button
-              onClick={() => navigateTo('/3d')}
-              className="px-3.5 py-1.5 rounded-md bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-slate-950 font-bold text-xs font-mono flex items-center gap-1.5 shadow-[0_0_16px_rgba(56,189,248,0.35)] transition cursor-pointer"
-              title="Open Hospital Clinical Flow Diagram & Simulation (/3d)"
-            >
-              <Activity className="w-3.5 h-3.5" />
-              <span>Flow Diagram (/3d)</span>
-            </button>
-
-            <button
-              onClick={() => window.open('/3d', '_blank')}
-              className="p-1.5 rounded-md bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-sky-300 text-xs border border-slate-800 transition cursor-pointer"
-              title="Open in Detached Window / Clinical Monitor"
-            >
-              <ExternalLink className="w-3.5 h-3.5" />
-            </button>
-          </div>
         </div>
       </header>
 
