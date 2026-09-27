@@ -46,9 +46,9 @@
 ## 3. Current State
 - **Database Status**: Pristine testing state with 0 mock patients, 0 mock reports, 0 mock reviews, 1 attending staff member (Dr. Marcus Vance), and 47,806 Harrison's knowledge chunks.
 - **Theme**: 100% converted to Light Mode across all 18 views, dialogs, and overlays.
-- **Backend Service**: Stopped (Port 8000 released; start via `py -3.13 -m uvicorn backend.main:app --host 127.0.0.1 --port 8000`).
-- **Frontend Service**: Stopped (Port 5173 released; start via `pnpm run dev`).
-- **Git Commit**: `2a689e3` (`docs: update HANDOFF.md with light mode conversion and clean database state`).
+- **Backend Service**: Running on `http://127.0.0.1:8000` (FastAPI with MedGemma 4-bit NF4 GPU model and DPO LoRA adapter active).
+- **Frontend Service**: Running on `http://localhost:5173` (Vite dev server active).
+- **Git Commit**: `b6da788` (`docs: record stopped server status in HANDOFF.md`).
 
 ---
 
