@@ -1,56 +1,58 @@
 # AI Virtual Hospital (AI-VH) : Session Handoff
 
 ## 1. What Was Accomplished
-- **Restoration of Patient Journey Graph & 2D Clinical Flow Architecture (`commit 9e9ab35`)**:
-  - Restored the 2D Patient Journey Graph, Lead II ECG telemetry waveform sweep, encounter trajectory timeline, and multi-station clinical workflow diagram as a first-class view in the portal.
-  - Built `frontend/src/components/diagram/PatientJourneyFlowPage.tsx` as a pure React/SVG/Tailwind view that integrates `HospitalFlowDiagram`, `VitalsMonitorHUD`, `EventStreamHUD`, and live `/ws/simulation` WebSocket event streams.
-  - Updated `frontend/src/App.tsx`:
-    - Added `'JOURNEY'` tab to `PortalTab` state and URL routing (`/journey`, `/flow`, `#journey`).
-    - Added primary header launcher button (**Patient Journey Graph**) and sub-header navigation tab alongside existing clinical workspaces.
-    - Integrated dedicated main viewport renderer `{activeTab === 'JOURNEY' && <PatientJourneyFlowPage ... />}`.
-  - Zero 3D dependencies required: Kept Three.js / WebGL completely purged while maintaining 100% of all 2D charts, graphs, and telemetry HUDs.
-  - Re-added `Screenshots/10_clinical_flow_architecture_diagram.png` (269.4 KB) and updated `Screenshots/README.md`.
-- **Elevation of Harrison's Vector RAG Knowledge Explorer (`design-taste-frontend` & `high-end-visual-design`)**:
-  - Redesigned `KnowledgeSearchSection.tsx` with concentric double-bezel framing, 4 tactical vector store KPI tiles, search filter glass bar, and citation dossiers (`Screenshots/05_harrison_vector_rag.png`, 337.8 KB, commit `0fbbf12`).
-- **Elevation of Hospital Personnel & Clinical Staff Directory**:
-  - Redesigned `StaffManagementSection.tsx` with double-bezel concentric architecture, Dr. Marcus Vance executive attending highlight, and button-in-button controls (`Screenshots/03_hospital_staff_directory.png`, 361.7 KB, commit `feb54bd`).
-- **Elevation of Patient Directory & Census Matrix**:
-  - Redesigned `PatientDirectorySection.tsx` with double-bezel architecture, vitals ribbon, and EHR chart drawer (`Screenshots/02_patient_directory.png`, 211.4 KB, commit `e7e528d`).
-- **Elevation of Case Intake & Emergency Triage Portal**:
-  - Redesigned `CaseIntakeAdmissionSection.tsx` with double-bezel concentric cards, ESI 1 to 5 acuity matrix, and hardware vitals dials (`Screenshots/01_case_intake_and_triage.png`, 204.8 KB, commit `f112d9b`).
-- **Elevation of Clinical Reports & Physician Review Interface**:
-  - Redesigned `PhysicianReviewDashboard.tsx` with double-bezel architecture, haptic 5-star reward scoring, and verified with 12 active inpatient records (`Screenshots/04_clinical_reports_and_reviews.png`, 422.6 KB, commit `13b0563`).
-- **Verification**:
-  - Frontend production build (`pnpm run build`) passing with 0 errors in 1.12s (`tsc -b && vite build`).
-  - Backend test suite (`pytest`) passing 67 of 67 tests (100% pass rate).
-  - Live backend (`task-1827`) running on `http://127.0.0.1:8000` with MedGemma GPU model and LoRA adapter.
-  - Live frontend (`task-940`) running on `http://localhost:5173`.
+- **Theme Conversion to Clinical High-Contrast Light Mode (`commit 34ba823`)**:
+  - Converted the entire visual interface across all workspaces, navigation headers, HUDs, charts, diagrams, and modals from dark theme to clinical high-contrast light mode.
+  - Palette specification: crisp white `#ffffff`, slate grays `#f8fafc` / `#f1f5f9`, border lines `#e2e8f0` / `#cbd5e1`, deep slate text `#0f172a` / `#1e293b`, and clinical accents (sky `#0284c7`, emerald `#059669`, amber `#d97706`, purple `#7c3aed`).
+  - Converted components:
+    - Global Styles: `frontend/src/index.css` (root custom properties, light grid backdrop, custom scrollbars).
+    - Portal Navigation: `frontend/src/App.tsx` (header, live status beacon, workspace tabs, active census indicator).
+    - Clinical Intake & Triage: `frontend/src/components/management/CaseIntakeAdmissionSection.tsx`.
+    - Patient Directory & Census: `frontend/src/components/management/PatientDirectorySection.tsx`.
+    - Physician Review Dashboard: `frontend/src/components/dashboard/PhysicianReviewDashboard.tsx`.
+    - Hospital Staff Directory: `frontend/src/components/management/StaffManagementSection.tsx`.
+    - Harrison's Vector RAG Explorer: `frontend/src/components/management/KnowledgeSearchSection.tsx`.
+    - Patient Journey Flow Page: `frontend/src/components/diagram/PatientJourneyFlowPage.tsx`.
+    - 2D Flow Architecture Diagram: `frontend/src/components/diagram/HospitalFlowDiagram.tsx`.
+    - Vitals Monitor HUD: `frontend/src/components/dashboard/VitalsMonitorHUD.tsx`.
+    - Clinical Event Stream HUD: `frontend/src/components/dashboard/EventStreamHUD.tsx`.
+    - Department Station Modal: `frontend/src/components/specialists/DepartmentStationModal.tsx`.
+    - Doctor Clinical Chat Modal: `frontend/src/components/specialists/DoctorChatModal.tsx`.
+    - Internal Medicine Consult Modal: `frontend/src/components/specialists/InternalMedicineConsultModal.tsx`.
+    - RL Policy Benchmark Modal: `frontend/src/components/rl/PolicyBenchmarkModal.tsx`.
+    - RL DPO Dataset Modal: `frontend/src/components/rl/RLDatasetModal.tsx`.
+
+- **Mock and Dummy Data Purge for Real-World Clinical Testing**:
+  - Implemented backend purge functionality in `backend/database/repository.py` (`purge_mock_data()`) and exposed `POST /api/database/purge-mock-data` in `backend/api/router.py`.
+  - Executed database purge: removed all synthetic patients, encounters, mock clinical reports, test reviews, and ephemeral DPO feedback pairs.
+  - Preserved critical medical knowledge assets: strictly retained all 47,806 Harrison's 21st Edition Medical Knowledge vector chunks and the attending physician record (Dr. Marcus Vance).
+  - Reset form inputs across intake and consult workspaces: blanked default fields (`''`) in `CaseIntakeAdmissionSection.tsx` and `InternalMedicineConsultModal.tsx`.
+  - Added empty-state resilience: safeguarded `HospitalFlowDiagram`, `PatientDirectorySection`, `PhysicianReviewDashboard`, and `DepartmentStationModal` against `undefined` indexing crashes when 0 patients or 0 reports exist in the database.
+
+- **Verification and Code Quality**:
+  - Frontend production build (`pnpm run build`): verified passing with 0 TypeScript and 0 CSS errors in 1.33s.
+  - Backend test suite (`pytest`): verified 67 of 67 tests passing (100% pass rate).
+  - Zero em-dash strictness: verified complete absence of em-dash (`—`) characters across all modified files and commit messages.
 
 ---
 
-## 2. Key Decisions & Rationale
-- **Pure 2D Clinical Flow vs. 3D WebGL**: Decoupled the 2D Patient Journey Graph from previous 3D references, delivering a standalone, lightweight, high-density SVG/Canvas telemetry page (`PatientJourneyFlowPage.tsx`) with zero Three.js footprint.
-- **Dual Launch Points**: Exposed the Patient Journey Graph both via a dedicated sub-header navigation tab and via a prominent gradient header launcher button for immediate access across any tab.
-- **Zero Em-Dash Strictness**: All documentation and components maintain strict adherence to Section 9.G of `design-taste-frontend`.
+## 2. Key Decisions and Rationale
+- **Preservation of 47,806 Vector Embeddings**: The Harrison's 21st Edition RAG vector store represents the clinical foundation model's evidence base. While patient and encounter records were purged to allow real testing, the vector knowledge base was intentionally protected.
+- **Empty-Array Safe Guarding**: In a freshly purged clinical system, queries return empty arrays (`cases.length === 0`, `reports.length === 0`). Added guarded safe selectors (`find() || fallback`) and clean empty-state notices so no component throws null reference errors.
+- **High-Contrast Clinical Light Mode**: Replaced dark backgrounds with medical workstation styling (slate-50 to white surfaces, slate-200 borders, crisp dark typography) for maximum legibility in real clinical environments.
 
 ---
 
 ## 3. Current State
-- **Patient Journey Graph & 2D Flow Architecture**: Restored, verified, and committed (`9e9ab35`).
-- **3D Hospital Component & Dependencies**: Completely purged and committed (`9b74673`).
-- **Harrison's Vector RAG Explorer**: Redesigned, verified, and committed (`0fbbf12`).
-- **Hospital Personnel & Staff Directory**: Redesigned, verified, and committed (`feb54bd`).
-- **Patient Directory & Census Matrix**: Redesigned, verified, and committed (`e7e528d`).
-- **Case Intake & Triage Portal**: Redesigned, verified, and committed (`f112d9b`).
-- **Physician Review Console**: Redesigned, verified, and committed (`13b0563`).
-- **Active Skills**: 13 taste-skill packages active.
-- **Backend**: Live on `http://127.0.0.1:8000` (FastAPI with 67/67 tests passing).
-- **Frontend**: Live on `http://localhost:5173` (Vite dev server running; production build clean).
-- **Screenshots**: Catalog complete in `Screenshots/README.md` (10 captures).
+- **Database Status**: Pristine testing state with 0 mock patients, 0 mock reports, 0 mock reviews, 1 attending staff member (Dr. Marcus Vance), and 47,806 Harrison's knowledge chunks.
+- **Theme**: 100% converted to Light Mode across all 18 views, dialogs, and overlays.
+- **Backend Service**: Running on `http://127.0.0.1:8000` (FastAPI, 67/67 tests passing).
+- **Frontend Service**: Running on `http://localhost:5173` (Vite dev server, production build verified).
+- **Git Commit**: `34ba823` (`feat(ui): convert clinical portal to light mode and purge dummy data for real-world testing`).
 
 ---
 
 ## 4. Concrete Next Steps
-1. Apply `design-taste-frontend` to elevate the RL Policy Benchmark & DPO Convergence Dashboard (`RLBenchmarkSection.tsx` or `RLBenchmarkModal.tsx`).
-2. Generate custom Stitch design tokens and theme specs using `stitch-design-taste`.
-3. Conduct end-to-end clinical case simulation (intake to discharge disposition) with live Harrison's RAG and RL DPO review.
+1. Admit a real test patient via Case Intake and verify end-to-end telemetry generation in the Patient Journey Graph.
+2. Order an Internal Medicine consult with Dr. Marcus Vance on the newly admitted patient to verify live Harrison's RAG grounding.
+3. Conduct a live physician review on the generated clinical report to generate fresh DPO preference training pairs.
