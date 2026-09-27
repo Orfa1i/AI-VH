@@ -17,6 +17,7 @@ This directory contains high-resolution (1920×1080 / HiDPI) screenshots capturi
 | 07 | **RL DPO Policy Benchmark & Comparative Analytics Console** | `modal-policy-benchmark` | [`07_policy_benchmark_modal_console.png`](./07_policy_benchmark_modal_console.png) | 408.4 KB |
 | 08 | **RL DPO Preference Dataset & Clinical Safety Audit Corpus** | `modal-rl-dataset` | [`08_rl_dataset_corpus_modal.png`](./08_rl_dataset_corpus_modal.png) | 105.0 KB |
 | 09 | **Dr. Marcus Vance Attending RAG Specialist Consultation Modal** | `modal-doctor-chat` | [`09_dr_marcus_vance_consult_modal.png`](./09_dr_marcus_vance_consult_modal.png) | 191.9 KB |
+| 10 | **Patient Journey Graph & Clinical Flow Architecture** | `/?tab=JOURNEY` | [`10_clinical_flow_architecture_diagram.png`](./10_clinical_flow_architecture_diagram.png) | 269.4 KB |
 
 ---
 
@@ -100,3 +101,12 @@ This directory contains high-resolution (1920×1080 / HiDPI) screenshots capturi
 - **Description**: Interactive clinical dialogue grounded in Harrison's 21st Edition evidence with Dr. Vance avatar, model telemetry, and prompt shortcuts.
 
 ![Dr. Marcus Vance Attending RAG Specialist Consultation Modal](./09_dr_marcus_vance_consult_modal.png)
+
+---
+
+### 10. Patient Journey Graph & Clinical Flow Architecture
+- **Route / Trigger**: `/?tab=JOURNEY` or header **Patient Journey Graph** button
+- **File**: [`10_clinical_flow_architecture_diagram.png`](./10_clinical_flow_architecture_diagram.png)
+- **Description**: Real-time 2D multi-station encounter trajectory, Lead II ECG vitals telemetry sweep, acute care milestone state machines, and department station routing.
+
+![Patient Journey Graph & Clinical Flow Architecture](./10_clinical_flow_architecture_diagram.png)

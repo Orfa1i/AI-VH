@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { PatientJourneyFlowPage } from './components/diagram/PatientJourneyFlowPage';
 import { CaseIntakeAdmissionSection } from './components/management/CaseIntakeAdmissionSection';
 import { PatientDirectorySection } from './components/management/PatientDirectorySection';
 import { StaffManagementSection } from './components/management/StaffManagementSection';
@@ -9,6 +10,7 @@ import { RLDatasetModal } from './components/rl/RLDatasetModal';
 import { PolicyBenchmarkModal } from './components/rl/PolicyBenchmarkModal';
 import { toggleGlobalMute, isGlobalMuted } from './utils/speechSynthesis';
 import {
+  Activity,
   BedDouble,
   Clock,
   Cpu,
@@ -29,7 +31,7 @@ import type {
   PatientRecord,
 } from './types';
 
-type PortalTab = 'INTAKE' | 'PATIENTS' | 'STAFF' | 'REPORTS' | 'KNOWLEDGE' | 'BENCHMARK';
+type PortalTab = 'INTAKE' | 'PATIENTS' | 'STAFF' | 'REPORTS' | 'KNOWLEDGE' | 'BENCHMARK' | 'JOURNEY';
 
 export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<PortalTab>('INTAKE');
@@ -65,6 +67,30 @@ export const App: React.FC = () => {
     return () => clearInterval(timer);
   }, []);
 
+  // URL / Hash Navigation listener for Clinical Flow & Patient Journey
+  useEffect(() => {
+    const handleUrlRoute = () => {
+      const path = window.location.pathname.toLowerCase();
+      const hash = window.location.hash.toLowerCase();
+      if (
+        path === '/journey' ||
+        path === '/flow' ||
+        path === '/3d' ||
+        hash === '#journey' ||
+        hash === '#flow' ||
+        hash === '#3d'
+      ) {
+        setActiveTab('JOURNEY');
+      }
+    };
+    handleUrlRoute();
+    window.addEventListener('popstate', handleUrlRoute);
+    window.addEventListener('hashchange', handleUrlRoute);
+    return () => {
+      window.removeEventListener('popstate', handleUrlRoute);
+      window.removeEventListener('hashchange', handleUrlRoute);
+    };
+  }, []);
 
   // Fetch initial cases and reports
   useEffect(() => {
@@ -209,6 +235,24 @@ export const App: React.FC = () => {
             </button>
           </div>
 
+          <div className="h-5 w-px bg-slate-800" />
+
+          {/* Primary Viewport Launcher: Patient Journey & Clinical Flow Architecture */}
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => setActiveTab('JOURNEY')}
+              className={`px-3.5 py-1.5 rounded-md text-xs font-mono font-bold flex items-center gap-1.5 transition cursor-pointer ${
+                activeTab === 'JOURNEY'
+                  ? 'bg-sky-500 text-slate-950 shadow-[0_0_14px_rgba(56,189,248,0.4)]'
+                  : 'bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-slate-950 shadow-[0_0_12px_rgba(56,189,248,0.25)]'
+              }`}
+              title="Open Patient Journey Graph & Clinical Flow Architecture"
+            >
+              <Activity className="w-3.5 h-3.5" />
+              <span>Patient Journey Graph</span>
+            </button>
+          </div>
+
         </div>
       </header>
 
@@ -291,6 +335,18 @@ export const App: React.FC = () => {
             <Scale className="w-3.5 h-3.5" />
             <span>RL Policy Benchmark</span>
           </button>
+
+          <button
+            onClick={() => setActiveTab('JOURNEY')}
+            className={`px-3.5 py-2 text-xs font-mono font-medium flex items-center gap-2 rounded transition cursor-pointer ${
+              activeTab === 'JOURNEY'
+                ? 'bg-sky-500/10 text-sky-400 border border-sky-500/30 shadow-[0_0_10px_rgba(56,189,248,0.15)]'
+                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 border border-transparent'
+            }`}
+          >
+            <Activity className="w-3.5 h-3.5" />
+            <span>Patient Journey Graph</span>
+          </button>
         </nav>
 
         {/* Right: Hospital Census Quick Stats */}
@@ -366,6 +422,10 @@ export const App: React.FC = () => {
               </div>
             </div>
           </div>
+        )}
+
+        {activeTab === 'JOURNEY' && (
+          <PatientJourneyFlowPage onBackToPortal={() => setActiveTab('INTAKE')} />
         )}
       </main>
 
