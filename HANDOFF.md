@@ -1,49 +1,53 @@
 # AI Virtual Hospital (AI-VH) : Session Handoff
 
 ## 1. What Was Accomplished
+- **Step 02 of 54 | P0.2: Project Skeleton, Configuration, and CI**:
+  - Implemented target directory layout per ADR-0001: created `src/vh/` (with 9 functional subpackages: `common/`, `cases/`, `rag/`, `generation/`, `verification/`, `agents/`, `feedback/`, `training/`, `events/`), `eval/` (`golden/v1/`, `harness/`, `faults/`), `configs/` (`safety/`, `agents/`), and `.github/workflows/`.
+  - Authored `configs/thresholds.yaml` with exact provisional values per Step 02 prompt specification.
+  - Implemented strict thresholds loader in `src/vh/common/thresholds.py`: validates mandatory sections/keys, raises `MissingThresholdError` on missing entries, and evaluates `null` thresholds as `NOT_SET` (any gate using a NOT SET value fails automatically).
+  - Implemented typed settings management via `pydantic-settings` in `src/vh/common/config.py`, authored `.env.example`, and updated `.gitignore` to protect environment secrets.
+  - Authored native secret scanner in `scripts/scan_secrets.py` and pre-commit configuration in `.pre-commit-config.yaml` to detect API keys, tokens, and private keys.
+  - Created packaging specification in `pyproject.toml` with ruff, mypy (strict for `src/vh`), and pytest markers (`unit`, `integration`, `regression`, `eval`, `slow`).
+  - Implemented Makefile targets (`lint`, `typecheck`, `test-unit`, `test-integration`, `test-regression`, `eval`, `test-all`, `up`, `down`) and cross-platform runners in `scripts/test-all.ps1` and `scripts/test_all.py`.
+  - Configured PostgreSQL container service in `docker-compose.yml`.
+  - Configured GitHub Actions CI workflow in `.github/workflows/ci.yml`.
+  - Added root `/health` endpoint to `backend/main.py`.
+  - Marked ADR-0001 status as Accepted in `docs/decisions/ADR-0001-repo-layout.md`.
+  - Checked off Step 02 in `plan/README.md`.
+  - Authored official step report in `docs/steps/STEP-02.md`.
+
 - **Step 01 of 54 | P0.1: Repository Audit (Read-Only) (`commit 9ffa8c8`)**:
-  - Executed the mandatory Step 01 repository audit per `plan/prompts/phase-0-foundations/STEP-01_P0.1_repo-audit.md` and `plan/CLAUDE.md`.
   - Authored `docs/current-state.md`: Full architectural inventory citing line numbers for Python 3.13 backend, FastAPI endpoints, SQLite schema, multi-agent orchestrator, MedGemma 4-bit NF4 GPU serving, Harrison/Braunwald RAG vector stores, and React 19 light-mode portal.
-  - Authored `docs/decisions/ADR-0001-repo-layout.md`: Proposed mapping existing functional directories (`backend/`, `frontend/`, `data/`, `models/`) onto the target layout (`src/vh/`, `web/`, `eval/`, `configs/`) without breaking running services or dev scripts.
-  - Authored `docs/steps/STEP-01.md`: Official Step 01 report recording status DONE, zero failures, and acceptance criteria verification.
-  - Copied `plan/CLAUDE.md` to repository root as canonical agent standing instructions.
-  - Marked STEP 01 as complete in `plan/README.md`.
-  - Verified zero hardcoded secrets or API keys and zero real patient data (100% synthetic clinical data).
+  - Authored `docs/decisions/ADR-0001-repo-layout.md`.
+  - Authored `docs/steps/STEP-01.md`: Official Step 01 report recording status DONE.
 
-- **Theme Conversion to Clinical High-Contrast Light Mode (`commit 34ba823`)**:
-  - Converted the entire visual interface across all workspaces, navigation headers, HUDs, charts, diagrams, and modals from dark theme to clinical high-contrast light mode.
-  - Palette specification: crisp white `#ffffff`, slate grays `#f8fafc` / `#f1f5f9`, border lines `#e2e8f0` / `#cbd5e1`, deep slate text `#0f172a` / `#1e293b`, and clinical accents (sky `#0284c7`, emerald `#059669`, amber `#d97706`, purple `#7c3aed`).
-
-- **Mock and Dummy Data Purge for Real-World Clinical Testing**:
-  - Implemented backend purge functionality in `backend/database/repository.py` (`purge_mock_data()`) and exposed `POST /api/database/purge-mock-data` in `backend/api/router.py`.
-  - Executed database purge: removed all synthetic patients, encounters, mock clinical reports, test reviews, and ephemeral DPO feedback pairs.
-  - Preserved critical medical knowledge assets: strictly retained all 47,806 Harrison's 21st Edition Medical Knowledge vector chunks and the attending physician record (Dr. Marcus Vance).
-
-- **Verification and Code Quality**:
-  - Frontend production build (`pnpm run build`): verified passing with 0 TypeScript and 0 CSS errors in 1.33s.
-  - Backend test suite (`pytest`): verified 67 of 67 tests passing (100% pass rate in 285s).
-  - Zero em-dash strictness: verified complete absence of em-dash (`—`) characters across all modified files and commit messages.
+- **Acceptance Criteria & Verification**:
+  - Authored 10 acceptance tests in `tests/test_step_02_acceptance.py`.
+  - Demonstrated deliberate test failure on throwaway branch `test/deliberate-failure`, verified exit code 1, and cleaned up branch.
+  - Verified planted fake secret detection by secret scanner.
+  - Full test suite passing: **77 passed of 77** (100% pass rate in 287.60s).
+  - Frontend production build passing: **0 errors** in 1.09s.
+  - Secret scan passing: **0 secrets found** across repository.
+  - Verified complete absence of em-dash (`—`) characters across all files.
 
 ---
 
 ## 2. Key Decisions and Rationale
-- **ADR-0001 Proposed Layout Mapping**: Avoided moving functional code precipitously; mapped `backend/` to `src/vh/` and `frontend/` to `web/` to preserve working development scripts and test suites without regressions.
-- **Verification of Knowledge Sources**: Confirmed `knowledge_sources.py` (RxNorm, openFDA, PubMed) does not yet exist in the repo; scheduled for implementation in Phase 2 (P2.1).
-- **Preservation of 47,806 Vector Embeddings**: Protected the Harrison's 21st Edition RAG vector store while wiping ephemeral test encounters.
+- **ADR-0001 Marked Accepted**: Mapped existing functional directories (`backend/`, `frontend/`) to target architecture (`src/vh/`, `web/`) with bridging modules to ensure zero disruption to live servers and test suites.
+- **Strict Gate Evaluation for NOT SET Thresholds**: Enforced that provisional `null` threshold values (such as `dx_top3_min` and `encounter_score_min`) return `NOT_SET` and cause evaluation gates to fail closed until explicit thresholds are established.
+- **Native Python Secret Scanner**: Implemented `scripts/scan_secrets.py` using standard library regexes so secret scanning operates reliably across Windows, Linux, pre-commit hooks, and CI without requiring third-party binary installations.
 
 ---
 
 ## 3. Current State
-- **Phase 0 Status**: Step 01 DONE; Next is Step 02 (P0.2 Project skeleton, configuration, CI).
-- **Database Status**: Pristine testing state with 0 mock patients, 0 mock reports, 0 mock reviews, 1 attending staff member (Dr. Marcus Vance), and 47,806 Harrison's knowledge chunks.
-- **Theme**: 100% converted to Light Mode across all 18 views, dialogs, and overlays.
-- **Backend Service**: Running on `http://127.0.0.1:8000` (FastAPI with MedGemma 4-bit NF4 GPU model and DPO LoRA adapter active).
+- **Phase 0 Status**: Step 01 DONE, Step 02 DONE; Next is Step 03 (P0.3 Observability and artifact versioning).
+- **Test Suite**: 77 of 77 tests passing across unit, integration, and clinical evaluation testpaths.
+- **Backend Service**: Running on `http://127.0.0.1:8000` (FastAPI with MedGemma 4-bit NF4 GPU engine active).
 - **Frontend Service**: Running on `http://localhost:5173` (Vite dev server active).
-- **Latest Commit**: `9ffa8c8` (`docs: complete Step 01 repository audit, ADR-0001 layout mapping, and current state`).
 
 ---
 
 ## 4. Concrete Next Steps
-1. Execute STEP 02 (P0.2): Project skeleton, configuration, CI (`plan/prompts/phase-0-foundations/STEP-02_P0.2_skeleton-config-ci.md`).
-2. Implement cross-platform test runner (`make test-all` / `scripts/test-all.ps1`).
-3. Set up `configs/thresholds.yaml` and CI workflow skeleton.
+1. Execute STEP 03 (P0.3): Observability and artifact versioning (`plan/prompts/phase-0-foundations/STEP-03_P0.3_observability-versioning.md`).
+2. Implement structured event logging and trace context propagation.
+3. Configure artifact store and versioning mechanism for clinical evaluation artifacts.

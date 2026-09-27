@@ -1,0 +1,96 @@
+[build-system]
+requires = ["setuptools>=65.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ai-vh"
+version = "0.1.0"
+description = "AI Virtual Hospital (AI-VH): Autonomous Multi-Agent Healthcare Simulation and Evaluation Platform"
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [
+    { name = "AI Virtual Hospital Team" }
+]
+dependencies = [
+    "fastapi>=0.110.0",
+    "uvicorn>=0.28.0",
+    "pydantic>=2.6.0",
+    "pydantic-settings>=2.2.0",
+    "pyyaml>=6.0.1",
+    "python-multipart>=0.0.9",
+    "jinja2>=3.1.3",
+    "httpx>=0.27.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+    "pytest-html>=4.1.0",
+    "ruff>=0.3.0",
+    "mypy>=1.9.0",
+    "types-PyYAML>=6.0.12",
+]
+ai = [
+    "torch>=2.2.0",
+    "transformers>=4.40.0",
+    "peft>=0.10.0",
+    "chromadb>=0.4.22",
+    "sentence-transformers>=2.5.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+exclude = [
+    ".git",
+    "__pycache__",
+    "build",
+    "dist",
+    "venv",
+    ".venv",
+    "node_modules",
+    "frontend",
+    "MedGemma Model",
+    "Medical Books",
+]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]
+ignore = ["E501", "B008", "UP007", "UP006"]
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "vh.*"
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests", "backend/tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+markers = [
+    "unit: Fast unit tests with no external dependencies or I/O",
+    "integration: Integration tests requiring database or external subsystem coordination",
+    "regression: Regression test suite ensuring no capability degradations",
+    "eval: Clinical evaluation, benchmark scoring, and safety gate measurements",
+    "slow: Tests with long execution duration (>5s)"
+]
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::UserWarning"
+]

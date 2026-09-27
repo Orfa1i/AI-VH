@@ -1,0 +1,46 @@
+# PROVISIONAL starting values. Only the project owner edits this file.
+# null = not yet set -> any gate that uses it FAILS until it is set.
+golden:
+  min_verified_cases: 50
+cases:
+  fhir_valid_rate: 1.0
+  leakage_count: 0
+  plausibility_pass_rate: 1.0
+  spotcheck_defect_rate_max: 0.05
+retrieval:
+  recall_at_10: 0.85
+  mrr_min: 0.60
+  traceability_rate: 1.0
+  stale_retrieval_count: 0
+  p95_latency_s: 1.5
+generation:
+  schema_valid_rate: 1.0
+  fabricated_citation_rate: 0.0
+  abstention_correct_rate: 0.90
+  dx_top3_min: null
+  rag_beats_baseline: true
+verification:
+  critical_fault_detection: 1.0
+  noncritical_fault_detection: 0.90
+  false_flag_rate_max: 0.10
+  judge_kappa_min: 0.70
+  faithfulness_min: 0.90
+  contextual_relevancy_min: 0.80
+  p95_latency_s: 5.0
+agents:
+  permission_violations: 0
+  runaway_loops: 0
+  replay_mismatch_count: 0
+  encounter_score_min: null
+review:
+  kappa_min: 0.60
+  overlap_fraction: 0.15
+training:
+  min_reviewed_cases: 500
+  safety_regressions: 0
+  must_beat_production: true
+ui:
+  min_fps: 50
+  max_load_s: 5
+  max_sync_lag_ms: 500
+  output_divergence_count: 0

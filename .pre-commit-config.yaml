@@ -1,0 +1,17 @@
+# Pre-commit configuration for AI Virtual Hospital (AI-VH)
+# Enforces secret scanning and code formatting before commits are accepted.
+repos:
+  - repo: local
+    hooks:
+      - id: secret-scan
+        name: Secret Scanner (Credentials and API Keys)
+        entry: py -3.13 scripts/scan_secrets.py
+        language: system
+        pass_filenames: false
+        always_run: true
+      - id: ruff-check
+        name: Ruff Linter
+        entry: ruff check .
+        language: system
+        types: [python]
+        stages: [pre-commit]

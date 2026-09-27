@@ -53,6 +53,17 @@ app.add_middleware(
 app.include_router(api_router)
 
 
+@app.get("/health")
+async def root_health_check():
+    """Root health check endpoint for container orchestrators and monitoring probes."""
+    return {
+        "status": "healthy",
+        "service": "AI Virtual Hospital Platform",
+        "version": "1.0.0",
+        "agents": ["triage", "attending", "pharmacist", "lab", "radiology", "review"],
+    }
+
+
 @app.websocket("/ws/simulation")
 async def websocket_simulation_endpoint(websocket: WebSocket):
     await websocket.accept()

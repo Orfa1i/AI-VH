@@ -1,6 +1,6 @@
 # ADR-0001: Target Repository Layout and Existing Codebase Mapping Strategy
 
-- **Status**: Proposed
+- **Status**: Accepted
 - **Date**: 2026-09-28
 - **Deciders**: Engineering Team & AI Agent
 - **Governing Document**: `plan/CLAUDE.md` (Section 4 & Section 5), `plan/README.md` (Target repository layout)
@@ -21,7 +21,7 @@ However, the AI-VH repository already contains a functioning, production-tested 
 - `MedGemma Model/` & `models/`: Local quantized model weights and trained DPO LoRA adapter.
 - `Medical Books/` & `data/knowledge/`: Ingested medical literature and 47,806 vector embeddings.
 
-Moving or renaming functional code precipitously would break existing module imports, dev scripts, and running background servers. `plan/CLAUDE.md` explicitly addresses this: *"If your existing code lives elsewhere, ADR-0001 (STEP 01–02) maps it onto this layout instead of moving working code unnecessarily."*
+Moving or renaming functional code precipitously would break existing module imports, dev scripts, and running background servers. `plan/CLAUDE.md` explicitly addresses this: *"If your existing code lives elsewhere, ADR-0001 (STEP 01 to 02) maps it onto this layout instead of moving working code unnecessarily."*
 
 ---
 
