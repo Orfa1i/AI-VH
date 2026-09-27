@@ -274,40 +274,40 @@ export const DoctorChatModal: React.FC<DoctorChatModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="bg-slate-900 border-2 border-cyan-500/40 w-full max-w-4xl h-[90vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden text-slate-200 ring-1 ring-cyan-500/20">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-900/40 backdrop-blur-xs animate-in fade-in duration-200">
+      <div className="bg-white border border-slate-200 w-full max-w-4xl h-[90vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden text-slate-800">
         {/* Header */}
-        <div className="p-4 sm:p-5 border-b border-slate-800 bg-slate-950/90 flex items-center justify-between shrink-0">
+        <div className="p-4 sm:p-5 border-b border-slate-200 bg-slate-50 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3.5">
             {/* Dr. Vance Avatar */}
             <div className="relative shrink-0">
               <img
                 src={drMarcusPhoto}
                 alt="Dr. Marcus Vance, MD"
-                className="w-12 h-12 rounded-xl object-cover object-top border-2 border-cyan-400 shadow-lg shadow-cyan-950/80 ring-2 ring-cyan-500/20"
+                className="w-12 h-12 rounded-xl object-cover object-top border-2 border-sky-500 shadow-sm"
               />
-              <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full bg-emerald-400 border-2 border-slate-950 shadow animate-pulse" />
+              <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-white shadow-xs animate-pulse" />
             </div>
 
             <div>
               <div className="flex flex-wrap items-center gap-2">
-                <h2 className="text-base font-bold text-slate-100 flex items-center gap-1.5">
+                <h2 className="text-base font-bold text-slate-900 flex items-center gap-1.5">
                   <span>Dr. Marcus Vance, MD, FACP</span>
                 </h2>
-                <span className="px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-600/60 text-[10px] font-bold font-mono">
+                <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-300 text-[10px] font-bold font-mono">
                   ● ON DUTY
                 </span>
               </div>
-              <div className="flex flex-wrap items-center gap-2 text-xs text-slate-400 mt-0.5">
-                <span className="text-cyan-400 font-medium">Chief Attending Physician, Internal Medicine</span>
-                <span className="text-slate-600">•</span>
-                <span className="flex items-center gap-1 text-purple-300 font-mono text-[11px]">
-                  <BookOpen className="w-3 h-3 text-purple-400" />
+              <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 mt-0.5">
+                <span className="text-sky-700 font-medium">Chief Attending Physician, Internal Medicine</span>
+                <span className="text-slate-300">•</span>
+                <span className="flex items-center gap-1 text-purple-700 font-mono text-[11px]">
+                  <BookOpen className="w-3 h-3 text-purple-600" />
                   <span>Harrison's 21st Ed RAG</span>
                 </span>
-                <span className="text-slate-600">•</span>
-                <span className="flex items-center gap-1 text-cyan-300 font-mono text-[11px]">
-                  <Cpu className="w-3 h-3 text-cyan-400" />
+                <span className="text-slate-300">•</span>
+                <span className="flex items-center gap-1 text-sky-700 font-mono text-[11px]">
+                  <Cpu className="w-3 h-3 text-sky-600" />
                   <span>Clinical AI Aligned</span>
                 </span>
               </div>
@@ -317,7 +317,7 @@ export const DoctorChatModal: React.FC<DoctorChatModalProps> = ({
           <div className="flex items-center gap-2">
             <button
               onClick={handleClearHistory}
-              className="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 text-xs flex items-center gap-1 transition"
+              className="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 text-xs flex items-center gap-1 transition"
               title="Reset conversation"
             >
               <Trash2 className="w-3.5 h-3.5" />
@@ -325,7 +325,7 @@ export const DoctorChatModal: React.FC<DoctorChatModalProps> = ({
             </button>
             <button
               onClick={onClose}
-              className="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition"
+              className="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-900 flex items-center justify-center transition"
             >
               <X className="w-4 h-4" />
             </button>
@@ -333,9 +333,9 @@ export const DoctorChatModal: React.FC<DoctorChatModalProps> = ({
         </div>
 
         {/* Quick Scenario Starter Chips */}
-        <div className="px-4 py-2.5 bg-slate-950/60 border-b border-slate-800/80 flex items-center gap-2 overflow-x-auto text-xs shrink-0">
-          <span className="text-slate-400 font-medium shrink-0 flex items-center gap-1">
-            <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+        <div className="px-4 py-2.5 bg-slate-50 border-b border-slate-200 flex items-center gap-2 overflow-x-auto text-xs shrink-0">
+          <span className="text-slate-500 font-medium shrink-0 flex items-center gap-1">
+            <Sparkles className="w-3.5 h-3.5 text-sky-600" />
             <span>Presets:</span>
           </span>
           {STARTER_PROMPTS.map((item, idx) => (
@@ -343,7 +343,7 @@ export const DoctorChatModal: React.FC<DoctorChatModalProps> = ({
               key={idx}
               onClick={() => handleSendMessage(item.prompt)}
               disabled={isLoading}
-              className="px-2.5 py-1 rounded-lg bg-slate-800/80 hover:bg-cyan-950 hover:border-cyan-600 border border-slate-700 text-slate-300 hover:text-cyan-200 text-[11px] whitespace-nowrap transition cursor-pointer disabled:opacity-50"
+              className="px-2.5 py-1 rounded-lg bg-white hover:bg-sky-50 hover:border-sky-300 border border-slate-200 text-slate-700 hover:text-sky-900 text-[11px] whitespace-nowrap transition cursor-pointer shadow-xs disabled:opacity-50"
             >
               {item.title}
             </button>
@@ -351,7 +351,7 @@ export const DoctorChatModal: React.FC<DoctorChatModalProps> = ({
         </div>
 
         {/* Message Thread */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5 bg-gradient-to-b from-slate-900/60 via-slate-900/40 to-slate-950/80">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5 bg-[#f8fafc]">
           {messages.map((msg) => {
             const isDoc = msg.sender === 'DOCTOR';
             const citationsOpen = !!expandedCitations[msg.id];
@@ -367,40 +367,44 @@ export const DoctorChatModal: React.FC<DoctorChatModalProps> = ({
                   <img
                     src={drMarcusPhoto}
                     alt="Dr. Vance"
-                    className="w-8 h-8 rounded-lg object-cover object-top border border-cyan-400/80 shrink-0 mt-1 shadow"
+                    className="w-8 h-8 rounded-lg object-cover object-top border border-sky-300 shrink-0 mt-1 shadow-xs"
                   />
                 )}
 
                 <div
-                  className={`max-w-2xl rounded-2xl p-4 sm:p-5 shadow-xl transition-all ${
+                  className={`max-w-2xl rounded-2xl p-4 sm:p-5 shadow-xs transition-all ${
                     isDoc
-                      ? 'bg-slate-800/90 border border-slate-700/80 text-slate-100 ring-1 ring-white/5'
-                      : 'bg-cyan-950/90 border border-cyan-600/70 text-cyan-50'
+                      ? 'bg-white border border-slate-200 text-slate-800'
+                      : 'bg-sky-600 border border-sky-700 text-white'
                   }`}
                 >
                   {/* Sender & Timestamp Header */}
-                  <div className="flex items-center justify-between gap-3 mb-2 pb-1.5 border-b border-white/5 text-[11px]">
+                  <div className={`flex items-center justify-between gap-3 mb-2 pb-1.5 border-b text-[11px] ${
+                    isDoc ? 'border-slate-100' : 'border-sky-500/40'
+                  }`}>
                     <div className="flex items-center gap-1.5 font-bold tracking-wide">
                       {isDoc ? (
                         <>
-                          <span className="text-cyan-300">Dr. Marcus Vance, MD</span>
-                          <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-cyan-900/50 text-cyan-200 border border-cyan-700/40">
+                          <span className="text-sky-800">Dr. Marcus Vance, MD</span>
+                          <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-sky-50 text-sky-800 border border-sky-200">
                             Attending
                           </span>
                         </>
                       ) : (
-                        <span className="text-slate-300">Clinician / User</span>
+                        <span className="text-white font-semibold">Clinician / User</span>
                       )}
                     </div>
-                    <div className="flex items-center gap-2 text-slate-400 text-[10px]">
+                    <div className={`flex items-center gap-2 text-[10px] ${
+                      isDoc ? 'text-slate-400' : 'text-sky-100'
+                    }`}>
                       <span>{msg.timestamp}</span>
                       {isDoc && (
                         <button
                           onClick={() => handleToggleSpeech(msg)}
                           className={`p-1 rounded transition ${
                             isSpeaking
-                              ? 'bg-rose-900/50 text-rose-300 border border-rose-600'
-                              : 'hover:bg-slate-700 text-slate-400 hover:text-slate-200'
+                              ? 'bg-rose-100 text-rose-700 border border-rose-300'
+                              : 'hover:bg-slate-100 text-slate-500 hover:text-slate-800'
                           }`}
                           title={isSpeaking ? 'Stop clinical voice readout' : 'Listen to Dr. Vance read response'}
                         >
@@ -424,24 +428,24 @@ export const DoctorChatModal: React.FC<DoctorChatModalProps> = ({
                     <>
                       {/* Differential Diagnosis Tags */}
                       {msg.differential && msg.differential.length > 0 && (
-                        <div className="mt-4 pt-3 border-t border-slate-700/60">
-                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-2">
+                        <div className="mt-4 pt-3 border-t border-slate-200">
+                          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-2 font-mono">
                             Evidence-Based Differential Diagnosis:
                           </span>
                           <div className="space-y-1.5">
                             {msg.differential.map((diff, dIdx) => (
                               <div
                                 key={dIdx}
-                                className="flex items-center justify-between gap-2 p-2 rounded-lg bg-slate-900/70 border border-slate-700/70 text-xs"
+                                className="flex items-center justify-between gap-2 p-2 rounded-lg bg-slate-50 border border-slate-200 text-xs"
                               >
-                                <span className="font-semibold text-slate-200">{diff.condition}</span>
+                                <span className="font-semibold text-slate-800">{diff.condition}</span>
                                 <div className="flex items-center gap-2 shrink-0">
                                   {diff.notes && (
-                                    <span className="text-[10px] text-slate-400 hidden sm:inline">
+                                    <span className="text-[10px] text-slate-500 hidden sm:inline">
                                       {diff.notes}
                                     </span>
                                   )}
-                                  <span className="px-1.5 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-700 text-[10px] font-mono font-bold">
+                                  <span className="px-1.5 py-0.5 rounded bg-sky-50 text-sky-800 border border-sky-300 text-[10px] font-mono font-bold">
                                     {(diff.likelihood * 100).toFixed(0)}%
                                   </span>
                                 </div>
@@ -453,12 +457,12 @@ export const DoctorChatModal: React.FC<DoctorChatModalProps> = ({
 
                       {/* Safety Alerts / Contraindications */}
                       {msg.contraindications && msg.contraindications.length > 0 && (
-                        <div className="mt-3 p-3 rounded-xl bg-amber-950/40 border border-amber-600/50 text-amber-200">
-                          <div className="flex items-center gap-1.5 text-xs font-bold text-amber-400 mb-1">
-                            <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
+                        <div className="mt-3 p-3 rounded-xl bg-amber-50/70 border border-amber-300 text-amber-900">
+                          <div className="flex items-center gap-1.5 text-xs font-bold text-amber-800 mb-1">
+                            <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
                             <span>Clinical Safety & Contraindications:</span>
                           </div>
-                          <ul className="list-disc list-inside text-xs space-y-0.5 text-amber-100/90 pl-1">
+                          <ul className="list-disc list-inside text-xs space-y-0.5 text-amber-900 pl-1">
                             {msg.contraindications.map((c, cIdx) => (
                               <li key={cIdx}>{c}</li>
                             ))}
@@ -468,12 +472,12 @@ export const DoctorChatModal: React.FC<DoctorChatModalProps> = ({
 
                       {/* Guideline Therapy & Workup */}
                       {msg.guideline_therapy && msg.guideline_therapy.length > 0 && (
-                        <div className="mt-3 p-3 rounded-xl bg-slate-900/80 border border-slate-700/60">
-                          <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-400 mb-1.5">
-                            <Stethoscope className="w-3.5 h-3.5 text-emerald-400" />
+                        <div className="mt-3 p-3 rounded-xl bg-slate-50 border border-slate-200">
+                          <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-700 mb-1.5">
+                            <Stethoscope className="w-3.5 h-3.5 text-emerald-600" />
                             <span>Guideline-Directed Management:</span>
                           </div>
-                          <ul className="list-disc list-inside text-xs space-y-0.5 text-slate-200 pl-1">
+                          <ul className="list-disc list-inside text-xs space-y-0.5 text-slate-700 pl-1">
                             {msg.guideline_therapy.map((rx, rxIdx) => (
                               <li key={rxIdx}>{rx}</li>
                             ))}
@@ -486,9 +490,9 @@ export const DoctorChatModal: React.FC<DoctorChatModalProps> = ({
                         <div className="mt-3 pt-2">
                           <button
                             onClick={() => toggleCitations(msg.id)}
-                            className="text-[11px] text-purple-300 hover:text-purple-200 flex items-center gap-1 transition cursor-pointer font-medium"
+                            className="text-[11px] text-purple-700 hover:text-purple-900 flex items-center gap-1 transition cursor-pointer font-medium"
                           >
-                            <BookOpen className="w-3.5 h-3.5 text-purple-400" />
+                            <BookOpen className="w-3.5 h-3.5 text-purple-600" />
                             <span>
                               {citationsOpen ? 'Hide' : 'View'} {msg.citations.length} Harrison's Textbook Citations
                             </span>
@@ -504,12 +508,12 @@ export const DoctorChatModal: React.FC<DoctorChatModalProps> = ({
                               {msg.citations.map((cite, cIdx) => (
                                 <div
                                   key={cIdx}
-                                  className="p-2.5 rounded-lg bg-slate-950/80 border border-purple-500/30 text-slate-300 text-xs"
+                                  className="p-2.5 rounded-lg bg-purple-50/60 border border-purple-200 text-slate-800 text-xs"
                                 >
-                                  <div className="font-bold text-purple-300 text-[11px] mb-1">
+                                  <div className="font-bold text-purple-900 text-[11px] mb-1">
                                     {cite.chapter} {cite.page ? `(Page ${cite.page})` : ''}
                                   </div>
-                                  <p className="text-[11px] text-slate-400 italic leading-relaxed">
+                                  <p className="text-[11px] text-slate-600 italic leading-relaxed">
                                     "{cite.text}"
                                   </p>
                                 </div>
@@ -521,9 +525,9 @@ export const DoctorChatModal: React.FC<DoctorChatModalProps> = ({
 
                       {/* Telemetry pill */}
                       {msg.telemetry && (
-                        <div className="mt-3 pt-2 border-t border-white/5 flex flex-wrap items-center justify-between text-[10px] text-slate-500 font-mono">
+                        <div className="mt-3 pt-2 border-t border-slate-200 flex flex-wrap items-center justify-between text-[10px] text-slate-500 font-mono">
                           <span className="flex items-center gap-1">
-                            <Activity className="w-3 h-3 text-cyan-400" />
+                            <Activity className="w-3 h-3 text-sky-600" />
                             <span>{msg.telemetry.model}</span>
                           </span>
                           <span>{msg.telemetry.latency_ms > 0 ? `${msg.telemetry.latency_ms} ms` : 'Cached'}</span>
@@ -542,10 +546,10 @@ export const DoctorChatModal: React.FC<DoctorChatModalProps> = ({
               <img
                 src={drMarcusPhoto}
                 alt="Dr. Vance"
-                className="w-8 h-8 rounded-lg object-cover object-top border border-cyan-400/80 shrink-0 mt-1 shadow"
+                className="w-8 h-8 rounded-lg object-cover object-top border border-sky-400 shrink-0 mt-1 shadow-xs"
               />
-              <div className="bg-slate-800/90 border border-slate-700/80 rounded-2xl p-4 flex items-center gap-3 text-xs text-slate-300">
-                <Loader2 className="w-4 h-4 text-cyan-400 animate-spin" />
+              <div className="bg-white border border-slate-200 rounded-2xl p-4 flex items-center gap-3 text-xs text-slate-700 shadow-xs">
+                <Loader2 className="w-4 h-4 text-sky-600 animate-spin" />
                 <span>Dr. Vance is analyzing Harrison's clinical knowledge & Diagnostic Engine...</span>
               </div>
             </div>
@@ -555,7 +559,7 @@ export const DoctorChatModal: React.FC<DoctorChatModalProps> = ({
         </div>
 
         {/* Input Bar */}
-        <div className="p-4 bg-slate-950 border-t border-slate-800 shrink-0">
+        <div className="p-4 bg-white border-t border-slate-200 shrink-0">
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -563,7 +567,7 @@ export const DoctorChatModal: React.FC<DoctorChatModalProps> = ({
             }}
             className="flex items-end gap-3"
           >
-            <div className="flex-1 bg-slate-900 border border-slate-700 focus-within:border-cyan-500 rounded-xl px-3.5 py-2.5 shadow-inner transition">
+            <div className="flex-1 bg-slate-50 border border-slate-300 focus-within:border-sky-500 rounded-xl px-3.5 py-2.5 shadow-xs transition">
               <textarea
                 ref={inputRef}
                 value={inputText}
@@ -571,14 +575,14 @@ export const DoctorChatModal: React.FC<DoctorChatModalProps> = ({
                 onKeyDown={handleKeyDown}
                 placeholder="Ask Dr. Vance about clinical cases, differential diagnoses, therapies, or Harrison's guidelines... (Press Enter to send)"
                 rows={2}
-                className="w-full bg-transparent text-slate-100 placeholder-slate-500 text-xs sm:text-sm focus:outline-none resize-none"
+                className="w-full bg-transparent text-slate-900 placeholder-slate-400 text-xs sm:text-sm focus:outline-none resize-none"
               />
             </div>
 
             <button
               type="submit"
               disabled={!inputText.trim() || isLoading}
-              className="px-4 py-3 rounded-xl bg-cyan-600 hover:bg-cyan-500 disabled:opacity-40 text-white text-xs sm:text-sm font-bold shadow-lg shadow-cyan-950 flex items-center gap-1.5 transition cursor-pointer disabled:cursor-not-allowed shrink-0"
+              className="px-4 py-3 rounded-xl bg-sky-600 hover:bg-sky-500 disabled:opacity-40 text-white text-xs sm:text-sm font-bold shadow-xs flex items-center gap-1.5 transition cursor-pointer disabled:cursor-not-allowed shrink-0"
             >
               {isLoading ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -588,7 +592,7 @@ export const DoctorChatModal: React.FC<DoctorChatModalProps> = ({
               <span className="hidden sm:inline">Send</span>
             </button>
           </form>
-          <div className="flex items-center justify-between text-[10px] text-slate-500 mt-2 px-1">
+          <div className="flex items-center justify-between text-[10px] text-slate-500 mt-2 px-1 font-mono">
             <span>Press Enter to send, Shift+Enter for newline</span>
             <span>Grounding: Harrison's Principles of Internal Medicine 21st Ed & Clinical AI</span>
           </div>

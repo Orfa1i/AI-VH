@@ -174,15 +174,15 @@ export const PatientJourneyFlowPage: React.FC<PatientJourneyFlowPageProps> = ({ 
   };
 
   return (
-    <div className="w-full h-full flex flex-col bg-slate-950 overflow-hidden select-none font-sans relative isolate telemetry-grid">
+    <div className="w-full h-full flex flex-col bg-[#f8fafc] overflow-hidden select-none font-sans relative isolate telemetry-grid text-slate-900">
       {/* Top Clinical Header */}
-      <header className="h-14 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 px-4 flex items-center justify-between z-30 shrink-0 shadow-lg">
+      <header className="h-14 bg-white/95 backdrop-blur-md border-b border-slate-200 px-4 flex items-center justify-between z-30 shrink-0 shadow-xs">
         {/* Left: Branding & Back Button */}
         <div className="flex items-center gap-3">
           {onBackToPortal && (
             <button
               onClick={onBackToPortal}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-sky-400 hover:text-sky-300 font-medium text-xs rounded-lg border border-slate-700 transition shadow cursor-pointer active:scale-95"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-slate-900 font-medium text-xs rounded-lg border border-slate-300 transition shadow-xs cursor-pointer active:scale-95"
               title="Return to Clinical Management Portal"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
@@ -190,17 +190,17 @@ export const PatientJourneyFlowPage: React.FC<PatientJourneyFlowPageProps> = ({ 
             </button>
           )}
 
-          {onBackToPortal && <div className="h-4 w-px bg-slate-700 mx-1" />}
+          {onBackToPortal && <div className="h-4 w-px bg-slate-200 mx-1" />}
 
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-sky-500/10 border border-sky-400/30 flex items-center justify-center text-sky-400 shadow-[0_0_12px_rgba(56,189,248,0.25)]">
-              <Activity className="w-4 h-4 text-sky-400 animate-pulse" />
+            <div className="w-7 h-7 rounded-lg bg-sky-50 border border-sky-200 flex items-center justify-center text-sky-600 shadow-xs">
+              <Activity className="w-4 h-4 text-sky-600 animate-pulse" />
             </div>
             <div>
-              <span className="text-sm font-bold bg-gradient-to-r from-sky-400 via-cyan-400 to-teal-400 bg-clip-text text-transparent">
+              <span className="text-sm font-bold bg-gradient-to-r from-sky-700 via-cyan-700 to-teal-700 bg-clip-text text-transparent">
                 AI-VH Clinical Flow Architecture & Patient Journey
               </span>
-              <span className="hidden sm:inline-block ml-2 px-2 py-0.5 text-[10px] font-mono rounded-full bg-emerald-950 text-emerald-400 border border-emerald-800/60 font-semibold">
+              <span className="hidden sm:inline-block ml-2 px-2 py-0.5 text-[10px] font-mono rounded-full bg-emerald-50 text-emerald-700 border border-emerald-300 font-semibold">
                 2D Clinical Process Pathway
               </span>
             </div>
@@ -208,19 +208,19 @@ export const PatientJourneyFlowPage: React.FC<PatientJourneyFlowPageProps> = ({ 
         </div>
 
         {/* Center: Real-Time Department Tracker */}
-        <div className="hidden md:flex items-center gap-2 bg-slate-950/80 px-3.5 py-1 rounded-full border border-slate-800 text-xs">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-          <span className="text-slate-400">Current Station:</span>
-          <span className="text-slate-200 font-semibold font-mono">{activeDepartment.replace(/_/g, ' ')}</span>
+        <div className="hidden md:flex items-center gap-2 bg-slate-100 px-3.5 py-1 rounded-full border border-slate-200 text-xs">
+          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+          <span className="text-slate-500">Current Station:</span>
+          <span className="text-slate-800 font-semibold font-mono">{activeDepartment.replace(/_/g, ' ')}</span>
         </div>
 
         {/* Right: Specialist Consult & Audio Toggle */}
         <div className="flex items-center gap-2">
           <button
             onClick={() => setIsConsultOpen(true)}
-            className="px-3 py-1.5 bg-slate-800/80 hover:bg-slate-700 text-sky-300 text-xs font-mono font-medium rounded-lg border border-sky-900/40 hover:border-sky-700/60 transition flex items-center gap-1.5 cursor-pointer shadow-sm"
+            className="px-3 py-1.5 bg-sky-50 hover:bg-sky-100 text-sky-800 text-xs font-mono font-medium rounded-lg border border-sky-300 transition flex items-center gap-1.5 cursor-pointer shadow-xs"
           >
-            <Stethoscope className="w-3.5 h-3.5 text-sky-400" />
+            <Stethoscope className="w-3.5 h-3.5 text-sky-600" />
             <span>Dr. Vance RAG</span>
           </button>
 
@@ -228,12 +228,12 @@ export const PatientJourneyFlowPage: React.FC<PatientJourneyFlowPageProps> = ({ 
             onClick={() => setIsAudioMuted(toggleGlobalMute())}
             className={`p-1.5 rounded-lg border text-xs transition cursor-pointer ${
               isAudioMuted
-                ? 'bg-slate-800 text-slate-500 border-slate-700'
-                : 'bg-sky-950 text-sky-400 border-sky-800'
+                ? 'bg-slate-100 text-slate-400 border-slate-200 hover:bg-slate-200'
+                : 'bg-sky-50 text-sky-700 border-sky-300'
             }`}
             title={isAudioMuted ? 'Unmute Audio Voice Synthesis' : 'Mute Audio Voice Synthesis'}
           >
-            {isAudioMuted ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5 text-sky-400" />}
+            {isAudioMuted ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5 text-sky-600" />}
           </button>
         </div>
       </header>

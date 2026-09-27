@@ -790,6 +790,25 @@ class DatabaseRepository:
             res = cur.fetchone()
             return res[0] if res else 0
 
+    def purge_mock_data(self) -> Dict[str, int]:
+        """Safely purges mock/test data from patients, encounters, clinical_reports,
+        physician_reviews, and dpo_feedback_pairs.
+        Strictly preserves knowledge_chunks (Harrison's RAG embeddings) and hospital_staff."""
+        deleted = {
+            "patients": 0,
+            "physician_reviews": 0,
+            "clinical_reports": 0,
+            "encounters": 0,
+            "dpo_feedback_pairs": 0,
+        }
+        with self.manager.get_connection() as conn:
+            cur = conn.cursor()
+            for tbl in ["physician_reviews", "clinical_reports", "encounters", "patients", "dpo_feedback_pairs"]:
+                cur.execute(f"DELETE FROM {tbl};")
+                deleted[tbl] = cur.rowcount
+            logger.info(f"Purged mock data: {deleted}")
+        return deleted
+
     # =========================================================================
     # Knowledge Chunks & Vector Store
     # =========================================================================

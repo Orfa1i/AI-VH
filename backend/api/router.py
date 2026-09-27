@@ -249,6 +249,22 @@ async def get_database_status():
     return status
 
 
+@api_router.post("/database/purge-mock-data")
+async def purge_mock_data():
+    """Safely purges mock/test data from patients, reports, reviews, and encounters.
+    Preserves Harrison's RAG knowledge base and medical staff."""
+    try:
+        deleted = orchestrator.db.purge_mock_data()
+        orchestrator.reports.clear()
+        orchestrator.encounters.clear()
+        orchestrator.reviews.clear()
+        logger.info(f"Purged mock data: {deleted}")
+        return {"status": "success", "message": "Mock data purged successfully", "deleted": deleted}
+    except Exception as e:
+        logger.error(f"Error purging mock data: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @api_router.get("/knowledge/search")
 async def search_medical_knowledge(
     q: str,

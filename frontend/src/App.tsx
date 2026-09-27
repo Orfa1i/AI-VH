@@ -150,51 +150,51 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div className="w-screen h-screen flex flex-col bg-[#0a0d14] overflow-hidden font-sans select-none text-slate-100 telemetry-grid">
+    <div className="w-screen h-screen flex flex-col bg-[#f8fafc] overflow-hidden font-sans select-none text-slate-900 telemetry-grid">
       {/* Top Clinical Command Horizon Header */}
-      <header className="h-16 px-5 border-b border-slate-800/80 bg-[#0d111a]/90 backdrop-blur-md flex items-center justify-between z-30 shrink-0 shadow-sm">
+      <header className="h-16 px-5 border-b border-slate-200 bg-white/95 backdrop-blur-md flex items-center justify-between z-30 shrink-0 shadow-xs">
         {/* Left: Branding & Real-Time System Status */}
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-md bg-sky-500/10 border border-sky-400/30 flex items-center justify-center text-sky-400 shadow-[0_0_12px_rgba(56,189,248,0.25)]">
-              <Terminal className="w-4 h-4 text-sky-400 animate-pulse" />
+            <div className="w-8 h-8 rounded-md bg-sky-50 border border-sky-200 flex items-center justify-center text-sky-600 shadow-xs">
+              <Terminal className="w-4 h-4 text-sky-600 animate-pulse" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-xs font-bold tracking-wider text-slate-100 uppercase font-mono">
+                <span className="text-xs font-bold tracking-wider text-slate-900 uppercase font-mono">
                   METROPOLITAN GENERAL
                 </span>
-                <span className="text-[10px] text-sky-400 font-mono tracking-widest font-semibold opacity-90">
+                <span className="text-[10px] text-sky-700 font-mono tracking-widest font-bold">
                   // CLINICAL COMMAND HORIZON
                 </span>
               </div>
-              <p className="text-[10px] text-slate-400 font-mono tracking-tight flex items-center gap-2">
+              <p className="text-[10px] text-slate-500 font-mono tracking-tight flex items-center gap-2">
                 <span>Autonomous Multi-Agent Clinical Operating System</span>
-                <span className="text-slate-600">•</span>
-                <span className="text-sky-300/80">Harrison's 21st Ed & Braunwald's (47.8k Chunks)</span>
+                <span className="text-slate-300">•</span>
+                <span className="text-sky-700">Harrison's 21st Ed & Braunwald's (47.8k Chunks)</span>
               </p>
             </div>
           </div>
 
-          <div className="h-4 w-px bg-slate-800 hidden md:block" />
+          <div className="h-4 w-px bg-slate-200 hidden md:block" />
 
           {/* Real-time Telemetry Sync Beacon */}
-          <div className="hidden lg:flex items-center gap-2 px-2.5 py-1 bg-slate-900/80 border border-slate-800 rounded font-mono text-[11px]">
+          <div className="hidden lg:flex items-center gap-2 px-2.5 py-1 bg-slate-100/90 border border-slate-200 rounded font-mono text-[11px]">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
               <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
             </span>
-            <span className="text-emerald-400 font-medium tracking-wide">
+            <span className="text-emerald-700 font-medium tracking-wide">
               SYSTEM SYNC LIVE
             </span>
             <span className="text-slate-500 text-[10px]">99.98% SYNC</span>
           </div>
 
           {/* GPU Model Status */}
-          <div className="hidden xl:flex items-center gap-1.5 px-2.5 py-1 bg-slate-900/60 border border-slate-800/80 rounded font-mono text-[11px] text-slate-300">
-            <Cpu className="w-3.5 h-3.5 text-sky-400" />
+          <div className="hidden xl:flex items-center gap-1.5 px-2.5 py-1 bg-slate-100/90 border border-slate-200 rounded font-mono text-[11px] text-slate-700">
+            <Cpu className="w-3.5 h-3.5 text-sky-600" />
             <span>Clinical AI 4B</span>
-            <span className="text-[10px] px-1.5 py-0.2 rounded bg-sky-950/80 text-sky-300 border border-sky-800/60">
+            <span className="text-[10px] px-1.5 py-0.2 rounded bg-sky-50 text-sky-700 border border-sky-200 font-medium">
               NF4 LoRA Aligned
             </span>
           </div>
@@ -203,21 +203,21 @@ export const App: React.FC = () => {
         {/* Right: Live Ticker, Quick Action Specialists Dock & Viewport Switcher */}
         <div className="flex items-center gap-3">
           {/* Live UTC Clock */}
-          <div className="hidden 2xl:flex items-center gap-1.5 font-mono text-xs text-slate-400 px-2.5 py-1 bg-slate-900/60 border border-slate-800 rounded">
-            <Clock className="w-3.5 h-3.5 text-slate-400" />
-            <span className="text-slate-200">{currentTime || '12:00:00'}</span>
-            <span className="text-[10px] text-slate-500">UTC</span>
+          <div className="hidden 2xl:flex items-center gap-1.5 font-mono text-xs text-slate-600 px-2.5 py-1 bg-slate-100/90 border border-slate-200 rounded">
+            <Clock className="w-3.5 h-3.5 text-slate-500" />
+            <span className="text-slate-800 font-semibold">{currentTime || '12:00:00'}</span>
+            <span className="text-[10px] text-slate-400">UTC</span>
           </div>
 
           {/* Quick Action Specialist Dock */}
-          <div className="flex items-center gap-1.5 p-1 bg-slate-900/80 border border-slate-800 rounded-md">
+          <div className="flex items-center gap-1.5 p-1 bg-slate-100 border border-slate-200 rounded-md">
             {/* Dr. Marcus Vance Live Consult */}
             <button
               onClick={() => setIsConsultOpen(true)}
-              className="px-2.5 py-1 rounded text-xs font-mono font-medium flex items-center gap-1.5 transition text-sky-300 hover:text-sky-200 hover:bg-sky-950/40 border border-transparent hover:border-sky-800/60 cursor-pointer"
+              className="px-2.5 py-1 rounded text-xs font-mono font-medium flex items-center gap-1.5 transition text-sky-700 hover:text-sky-900 hover:bg-sky-50 border border-transparent hover:border-sky-200 cursor-pointer"
               title="Consult Chief Attending Physician Dr. Marcus Vance, MD, FACP"
             >
-              <Stethoscope className="w-3.5 h-3.5 text-sky-400" />
+              <Stethoscope className="w-3.5 h-3.5 text-sky-600" />
               <span className="hidden sm:inline">Dr. Vance RAG</span>
             </button>
 
@@ -227,15 +227,15 @@ export const App: React.FC = () => {
               title={isAudioMuted ? 'Unmute Clinical Voice Audio' : 'Mute Clinical Voice Audio'}
               className={`p-1.5 rounded transition cursor-pointer ${
                 isAudioMuted
-                  ? 'text-slate-500 hover:text-slate-300 hover:bg-slate-800'
-                  : 'text-sky-400 bg-sky-950/60 border border-sky-800/60 shadow-[0_0_8px_rgba(56,189,248,0.2)]'
+                  ? 'text-slate-400 hover:text-slate-600 hover:bg-slate-200/60'
+                  : 'text-sky-700 bg-sky-50 border border-sky-300 shadow-xs'
               }`}
             >
               {isAudioMuted ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
             </button>
           </div>
 
-          <div className="h-5 w-px bg-slate-800" />
+          <div className="h-5 w-px bg-slate-200" />
 
           {/* Primary Viewport Launcher: Patient Journey & Clinical Flow Architecture */}
           <div className="flex items-center gap-1">
@@ -243,8 +243,8 @@ export const App: React.FC = () => {
               onClick={() => setActiveTab('JOURNEY')}
               className={`px-3.5 py-1.5 rounded-md text-xs font-mono font-bold flex items-center gap-1.5 transition cursor-pointer ${
                 activeTab === 'JOURNEY'
-                  ? 'bg-sky-500 text-slate-950 shadow-[0_0_14px_rgba(56,189,248,0.4)]'
-                  : 'bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-slate-950 shadow-[0_0_12px_rgba(56,189,248,0.25)]'
+                  ? 'bg-sky-600 text-white shadow-xs'
+                  : 'bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 text-white shadow-xs'
               }`}
               title="Open Patient Journey Graph & Clinical Flow Architecture"
             >
@@ -257,14 +257,14 @@ export const App: React.FC = () => {
       </header>
 
       {/* Sub-Header: Clinical Workspace Navigation Tabs */}
-      <div className="bg-[#0d111a]/70 border-b border-slate-800/80 px-5 flex items-center justify-between shrink-0">
+      <div className="bg-white/80 border-b border-slate-200 px-5 flex items-center justify-between shrink-0">
         <nav className="flex items-center gap-1 overflow-x-auto py-1">
           <button
             onClick={() => setActiveTab('INTAKE')}
             className={`px-3.5 py-2 text-xs font-mono font-medium flex items-center gap-2 rounded transition cursor-pointer ${
               activeTab === 'INTAKE'
-                ? 'bg-sky-500/10 text-sky-400 border border-sky-500/30 shadow-[0_0_10px_rgba(56,189,248,0.15)]'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 border border-transparent'
+                ? 'bg-sky-50 text-sky-700 border border-sky-300 shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent'
             }`}
           >
             <Radio className="w-3.5 h-3.5" />
@@ -275,8 +275,8 @@ export const App: React.FC = () => {
             onClick={() => setActiveTab('PATIENTS')}
             className={`px-3.5 py-2 text-xs font-mono font-medium flex items-center gap-2 rounded transition cursor-pointer ${
               activeTab === 'PATIENTS'
-                ? 'bg-sky-500/10 text-sky-400 border border-sky-500/30 shadow-[0_0_10px_rgba(56,189,248,0.15)]'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 border border-transparent'
+                ? 'bg-sky-50 text-sky-700 border border-sky-300 shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent'
             }`}
           >
             <BedDouble className="w-3.5 h-3.5" />
@@ -287,8 +287,8 @@ export const App: React.FC = () => {
             onClick={() => setActiveTab('STAFF')}
             className={`px-3.5 py-2 text-xs font-mono font-medium flex items-center gap-2 rounded transition cursor-pointer ${
               activeTab === 'STAFF'
-                ? 'bg-sky-500/10 text-sky-400 border border-sky-500/30 shadow-[0_0_10px_rgba(56,189,248,0.15)]'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 border border-transparent'
+                ? 'bg-sky-50 text-sky-700 border border-sky-300 shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent'
             }`}
           >
             <Users className="w-3.5 h-3.5" />
@@ -299,14 +299,14 @@ export const App: React.FC = () => {
             onClick={() => setActiveTab('REPORTS')}
             className={`px-3.5 py-2 text-xs font-mono font-medium flex items-center gap-2 rounded transition cursor-pointer ${
               activeTab === 'REPORTS'
-                ? 'bg-sky-500/10 text-sky-400 border border-sky-500/30 shadow-[0_0_10px_rgba(56,189,248,0.15)]'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 border border-transparent'
+                ? 'bg-sky-50 text-sky-700 border border-sky-300 shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent'
             }`}
           >
             <FileText className="w-3.5 h-3.5" />
             <span>Clinical Reports & Reviews</span>
             {reports.length > 0 && (
-              <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-sky-950 text-sky-300 border border-sky-800">
+              <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-sky-100 text-sky-800 border border-sky-300">
                 {reports.length}
               </span>
             )}
@@ -316,8 +316,8 @@ export const App: React.FC = () => {
             onClick={() => setActiveTab('KNOWLEDGE')}
             className={`px-3.5 py-2 text-xs font-mono font-medium flex items-center gap-2 rounded transition cursor-pointer ${
               activeTab === 'KNOWLEDGE'
-                ? 'bg-sky-500/10 text-sky-400 border border-sky-500/30 shadow-[0_0_10px_rgba(56,189,248,0.15)]'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 border border-transparent'
+                ? 'bg-sky-50 text-sky-700 border border-sky-300 shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent'
             }`}
           >
             <Search className="w-3.5 h-3.5" />
@@ -328,8 +328,8 @@ export const App: React.FC = () => {
             onClick={() => setActiveTab('BENCHMARK')}
             className={`px-3.5 py-2 text-xs font-mono font-medium flex items-center gap-2 rounded transition cursor-pointer ${
               activeTab === 'BENCHMARK'
-                ? 'bg-sky-500/10 text-sky-400 border border-sky-500/30 shadow-[0_0_10px_rgba(56,189,248,0.15)]'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 border border-transparent'
+                ? 'bg-sky-50 text-sky-700 border border-sky-300 shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent'
             }`}
           >
             <Scale className="w-3.5 h-3.5" />
@@ -340,8 +340,8 @@ export const App: React.FC = () => {
             onClick={() => setActiveTab('JOURNEY')}
             className={`px-3.5 py-2 text-xs font-mono font-medium flex items-center gap-2 rounded transition cursor-pointer ${
               activeTab === 'JOURNEY'
-                ? 'bg-sky-500/10 text-sky-400 border border-sky-500/30 shadow-[0_0_10px_rgba(56,189,248,0.15)]'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 border border-transparent'
+                ? 'bg-sky-50 text-sky-700 border border-sky-300 shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent'
             }`}
           >
             <Activity className="w-3.5 h-3.5" />
@@ -350,21 +350,21 @@ export const App: React.FC = () => {
         </nav>
 
         {/* Right: Hospital Census Quick Stats */}
-        <div className="hidden lg:flex items-center gap-3 font-mono text-[11px] text-slate-400 py-1">
+        <div className="hidden lg:flex items-center gap-3 font-mono text-[11px] text-slate-500 py-1">
           <div className="flex items-center gap-1.5">
             <span className="text-slate-500">Admitted Patients:</span>
-            <span className="font-semibold text-slate-200">{cases.length}</span>
+            <span className="font-semibold text-slate-900">{cases.length}</span>
           </div>
-          <span className="text-slate-700">•</span>
+          <span className="text-slate-300">•</span>
           <div className="flex items-center gap-1.5">
             <span className="text-slate-500">Pending Reviews:</span>
-            <span className="font-semibold text-amber-400">{reports.length}</span>
+            <span className="font-semibold text-amber-700">{reports.length}</span>
           </div>
         </div>
       </div>
 
       {/* Main Portal Viewport */}
-      <main className="flex-1 overflow-hidden flex flex-col relative bg-[#0a0d14]">
+      <main className="flex-1 overflow-hidden flex flex-col relative bg-[#f8fafc]">
         {activeTab === 'INTAKE' && (
           <CaseIntakeAdmissionSection
             cases={cases}
@@ -396,26 +396,26 @@ export const App: React.FC = () => {
 
         {activeTab === 'BENCHMARK' && (
           <div className="flex-1 p-6 overflow-y-auto max-w-5xl mx-auto flex flex-col justify-center items-center text-center">
-            <div className="max-w-xl p-8 bg-[#121824] border border-slate-800/80 rounded-xl shadow-2xl hud-bracket">
-              <div className="w-12 h-12 rounded-lg bg-sky-500/10 border border-sky-500/30 flex items-center justify-center text-sky-400 mx-auto mb-4">
-                <Scale className="w-6 h-6 text-sky-400" />
+            <div className="max-w-xl p-8 bg-white border border-slate-200 rounded-xl shadow-md hud-bracket">
+              <div className="w-12 h-12 rounded-lg bg-sky-50 border border-sky-200 flex items-center justify-center text-sky-600 mx-auto mb-4 shadow-xs">
+                <Scale className="w-6 h-6 text-sky-600" />
               </div>
-              <h3 className="text-lg font-bold text-slate-100 font-mono tracking-wide mb-2 uppercase">
+              <h3 className="text-lg font-bold text-slate-900 font-mono tracking-wide mb-2 uppercase">
                 Reinforcement Learning Policy Benchmark
               </h3>
-              <p className="text-xs text-slate-400 mb-6 leading-relaxed font-sans">
+              <p className="text-xs text-slate-600 mb-6 leading-relaxed font-sans">
                 Evaluate unaligned Base Foundation Model (v0.1) against Physician-Guided RL DPO (v0.3) across multi-case diagnostic accuracy, test appropriateness, and contraindication avoidance.
               </p>
               <div className="flex flex-wrap items-center justify-center gap-3 font-mono">
                 <button
                   onClick={() => setIsBenchmarkOpen(true)}
-                  className="px-4 py-2.5 bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs rounded-md shadow-[0_0_16px_rgba(56,189,248,0.3)] transition cursor-pointer"
+                  className="px-4 py-2.5 bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs rounded-md shadow-xs transition cursor-pointer"
                 >
                   Launch Policy Benchmark Console
                 </button>
                 <button
                   onClick={() => setIsRLModalOpen(true)}
-                  className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs rounded-md border border-slate-700 transition cursor-pointer"
+                  className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold text-xs rounded-md border border-slate-300 transition cursor-pointer"
                 >
                   Inspect DPO Preference Dataset
                 </button>
