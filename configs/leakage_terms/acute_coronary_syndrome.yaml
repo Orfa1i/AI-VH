@@ -1,0 +1,34 @@
+# Leakage terms for Acute Coronary Syndrome (ACS)
+# Any presence of these diagnosis terms or abbreviations in the visible presentation
+# or clinical narrative indicates an information leakage defect.
+
+condition_id: "acute_coronary_syndrome"
+specialty: "Cardiology"
+
+terms:
+  - "acute coronary syndrome"
+  - "myocardial infarction"
+  - "coronary artery occlusion"
+  - "coronary thrombosis"
+  - "unstable angina"
+  - "st-elevation myocardial infarction"
+  - "non-st-elevation myocardial infarction"
+  - "heart attack"
+  - "coronary syndrome"
+  - "coronary occlusion"
+  - "anterior stemi"
+  - "inferior stemi"
+  - "lateral stemi"
+
+abbreviations:
+  - "ACS"
+  - "STEMI"
+  - "NSTEMI"
+  - "AMI"
+  - "MI"
+  - "UA"
+
+synonyms:
+  - "acute infarct"
+  - "myocardial infarct"
+  - "infarction"

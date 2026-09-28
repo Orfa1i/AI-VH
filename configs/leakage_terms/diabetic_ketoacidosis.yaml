@@ -1,0 +1,26 @@
+# Leakage terms for Diabetic Ketoacidosis (DKA)
+# Any presence of these diagnosis terms or abbreviations in the visible presentation
+# or clinical narrative indicates an information leakage defect.
+
+condition_id: "diabetic_ketoacidosis"
+specialty: "Endocrinology"
+
+terms:
+  - "diabetic ketoacidosis"
+  - "ketoacidosis"
+  - "ketonemia"
+  - "ketonuria"
+  - "beta-hydroxybutyrate"
+  - "hyperglycemic crisis"
+  - "hyperosmolar hyperglycemic state"
+  - "diabetic acidosis"
+  - "acidotic crisis"
+
+abbreviations:
+  - "DKA"
+  - "HHS"
+  - "NKH"
+
+synonyms:
+  - "ketotic acidosis"
+  - "ketoacidotic state"

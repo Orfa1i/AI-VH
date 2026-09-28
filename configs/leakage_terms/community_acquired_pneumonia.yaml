@@ -1,0 +1,27 @@
+# Leakage terms for Community-Acquired Pneumonia (CAP)
+# Any presence of these diagnosis terms or abbreviations in the visible presentation
+# or clinical narrative indicates an information leakage defect.
+
+condition_id: "community_acquired_pneumonia"
+specialty: "Pulmonology"
+
+terms:
+  - "community-acquired pneumonia"
+  - "community acquired pneumonia"
+  - "bacterial pneumonia"
+  - "viral pneumonia"
+  - "bronchopneumonia"
+  - "lobar pneumonia"
+  - "pneumonia"
+  - "pneumonitis"
+  - "lung consolidation"
+  - "pulmonary infiltration"
+  - "streptococcus pneumoniae"
+
+abbreviations:
+  - "CAP"
+  - "PNA"
+
+synonyms:
+  - "pneumonic infiltrate"
+  - "lobar consolidation"

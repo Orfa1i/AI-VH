@@ -14,6 +14,17 @@ from .spec import (
     ReleasedResult,
     DataIsolationError,
 )
+from .builder import (
+    CaseBuilder,
+    CaseBuilderConfig,
+    LeakageGuard,
+    NumberConsistencyChecker,
+    SpecialtyCohortSpec,
+    ACS_COHORT,
+    CAP_COHORT,
+    DKA_COHORT,
+    ALL_COHORTS,
+)
 
 try:
     from backend.clinical.cases import BENCHMARK_CASES
@@ -36,6 +47,15 @@ __all__ = [
     "HiddenResult",
     "ReleasedResult",
     "DataIsolationError",
+    "CaseBuilder",
+    "CaseBuilderConfig",
+    "LeakageGuard",
+    "NumberConsistencyChecker",
+    "SpecialtyCohortSpec",
+    "ACS_COHORT",
+    "CAP_COHORT",
+    "DKA_COHORT",
+    "ALL_COHORTS",
     "BENCHMARK_CASES",
     "hospital_repo",
 ]

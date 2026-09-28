@@ -1,0 +1,60 @@
+{
+  "run_id": "eval-v1-dummy-1790632294",
+  "golden_version": "v1",
+  "pipeline": "dummy",
+  "total_cases": 60,
+  "cases_evaluated": 60,
+  "overall_status": "PASS",
+  "metrics": {
+    "schema_valid_rate": {
+      "observed": 1.0,
+      "threshold": 1.0,
+      "status": "PASS",
+      "reason": "SATISFIED"
+    },
+    "min_verified_cases": {
+      "observed": 60.0,
+      "threshold": 50,
+      "status": "PASS",
+      "reason": "SATISFIED"
+    },
+    "recall_at_10": {
+      "observed": 0.9,
+      "threshold": 0.85,
+      "status": "PASS",
+      "reason": "SATISFIED"
+    },
+    "mrr_min": {
+      "observed": 0.8,
+      "threshold": 0.6,
+      "status": "PASS",
+      "reason": "SATISFIED"
+    },
+    "critical_fault_detection": {
+      "observed": 1.0,
+      "threshold": 1.0,
+      "status": "PASS",
+      "reason": "SATISFIED"
+    },
+    "faithfulness_min": {
+      "observed": 0.95,
+      "threshold": 0.9,
+      "status": "PASS",
+      "reason": "SATISFIED"
+    },
+    "contextual_relevancy_min": {
+      "observed": 0.85,
+      "threshold": 0.8,
+      "status": "PASS",
+      "reason": "SATISFIED"
+    },
+    "traceability_rate": {
+      "observed": 1.0,
+      "threshold": 1.0,
+      "status": "PASS",
+      "reason": "SATISFIED"
+    }
+  },
+  "timestamp": "2026-09-28T21:51:34.134424+00:00",
+  "duration_seconds": 0.0368
+}
