@@ -1,0 +1,55 @@
+{
+  "case_id": "GOLDEN-DRAFT-CAP-019",
+  "specialty": "Pulmonology",
+  "patient_ref": "PAT-SYNTH-CAP-019",
+  "visible_presentation": {
+    "chief_complaint": "Sudden acute dyspnea and wheezing within 2 hours of vomiting",
+    "history": "Patient presenting with respiratory illness consistent with aspiration chemical pneumonitis.",
+    "vitals": {
+      "bp": "114/72",
+      "hr": 102,
+      "rr": 22,
+      "spo2": 94,
+      "temp": 38.6
+    },
+    "exam": "Respiratory exam reveals focal crackles and localized consolidation signs."
+  },
+  "hidden_results": [
+    {
+      "order": "Radiology",
+      "result": "Consolidation or infiltrates documented on imaging"
+    },
+    {
+      "order": "Microbiology",
+      "result": "Pathogen identification and sensitivities in progress"
+    }
+  ],
+  "ground_truth": {
+    "primary_dx": "Mendelson Syndrome (Acute Chemical Pneumonitis)",
+    "acceptable_differential": [
+      "Bacterial Pneumonia",
+      "Pulmonary Embolism"
+    ],
+    "expected_workup": [
+      "Serial Chest Radiographs",
+      "ABG"
+    ],
+    "red_flags": [
+      "Acute lung injury"
+    ]
+  },
+  "supporting_references": [
+    {
+      "source": "Harrison's Principles of Internal Medicine",
+      "locator": "Chapter 121: Pneumonia",
+      "note": "Standard of care inpatient antimicrobial evidence"
+    },
+    {
+      "source": "ATS/IDSA Community-Acquired Pneumonia Guidelines",
+      "locator": "PMID: 31573350",
+      "note": "Empiric antimicrobial coverage and outpatient vs inpatient site-of-care criteria"
+    }
+  ],
+  "status": "draft",
+  "version": "1.0.0"
+}

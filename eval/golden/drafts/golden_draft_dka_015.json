@@ -1,0 +1,54 @@
+{
+  "case_id": "GOLDEN-DRAFT-DKA-015",
+  "specialty": "Endocrinology",
+  "patient_ref": "PAT-SYNTH-DKA-015",
+  "visible_presentation": {
+    "chief_complaint": "Steroid burst for asthma exacerbation triggering severe ketoacidosis",
+    "history": "Patient presenting with acute metabolic decompensation indicative of dka precipitated by glucocorticoid pulse therapy.",
+    "vitals": {
+      "bp": "106/66",
+      "hr": 114,
+      "rr": 26,
+      "spo2": 98,
+      "temp": 37.1
+    },
+    "exam": "Signs of severe dehydration, tachypnea with sweet breath odor, and diffuse abdominal tenderness."
+  },
+  "hidden_results": [
+    {
+      "order": "Metabolic Panel",
+      "result": "Elevated glucose, high anion gap metabolic acidosis"
+    },
+    {
+      "order": "Ketone Assay",
+      "result": "Markedly elevated serum beta-hydroxybutyrate"
+    }
+  ],
+  "ground_truth": {
+    "primary_dx": "Corticosteroid-Induced Diabetic Ketoacidosis",
+    "acceptable_differential": [
+      "Steroid-Induced Hyperglycemia without DKA"
+    ],
+    "expected_workup": [
+      "Venous Blood Gas",
+      "Comprehensive Metabolic Panel"
+    ],
+    "red_flags": [
+      "Severe insulin resistance requiring high drip rates"
+    ]
+  },
+  "supporting_references": [
+    {
+      "source": "Harrison's Principles of Internal Medicine",
+      "locator": "Chapter 396: Diabetes Mellitus: Complications",
+      "note": "Standard of care evidence protocol"
+    },
+    {
+      "source": "ADA Standards of Care in Diabetes",
+      "locator": "PMID: 38078642",
+      "note": "Management of acute hyperglycemic emergencies, IV fluid, potassium and insulin titration"
+    }
+  ],
+  "status": "draft",
+  "version": "1.0.0"
+}

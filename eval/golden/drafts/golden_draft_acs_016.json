@@ -1,0 +1,55 @@
+{
+  "case_id": "GOLDEN-DRAFT-ACS-016",
+  "specialty": "Cardiology",
+  "patient_ref": "PAT-SYNTH-ACS-016",
+  "visible_presentation": {
+    "chief_complaint": "Chest pain during recovery ward stay post-catheterization",
+    "history": "Patient presenting with clinical features indicative of post-pci non-target vessel ischemia.",
+    "vitals": {
+      "bp": "136/84",
+      "hr": 88,
+      "rr": 18,
+      "spo2": 96,
+      "temp": 37.0
+    },
+    "exam": "Cardiovascular exam conducted per emergency triage protocol."
+  },
+  "hidden_results": [
+    {
+      "order": "Cardiac Enzymes",
+      "result": "Elevated High-Sensitivity Troponin"
+    },
+    {
+      "order": "ECG",
+      "result": "Specific diagnostic morphology recorded"
+    }
+  ],
+  "ground_truth": {
+    "primary_dx": "Acute Ischemia in Secondary Coronary Territory",
+    "acceptable_differential": [
+      "Vessel perforation",
+      "Access site hematoma"
+    ],
+    "expected_workup": [
+      "Stat 12-Lead ECG",
+      "Repeat Troponin"
+    ],
+    "red_flags": [
+      "Retroperitoneal bleed vs ischemia"
+    ]
+  },
+  "supporting_references": [
+    {
+      "source": "Harrison's Principles of Internal Medicine",
+      "locator": "Chapter 269: ST-Segment Elevation Myocardial Infarction",
+      "note": "Standard of care evidence protocol"
+    },
+    {
+      "source": "ACC/AHA Guideline for Chest Pain",
+      "locator": "PMID: 34709979",
+      "note": "Standard evaluation and risk stratification algorithm for acute chest discomfort"
+    }
+  ],
+  "status": "draft",
+  "version": "1.0.0"
+}

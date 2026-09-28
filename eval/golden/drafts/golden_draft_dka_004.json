@@ -1,0 +1,55 @@
+{
+  "case_id": "GOLDEN-DRAFT-DKA-004",
+  "specialty": "Endocrinology",
+  "patient_ref": "PAT-SYNTH-DKA-004",
+  "visible_presentation": {
+    "chief_complaint": "Nausea, malaise, deep breathing, glucose only 180 mg/dL on empagliflozin",
+    "history": "Patient presenting with acute metabolic decompensation indicative of euglycemic dka from sglt2 inhibitor.",
+    "vitals": {
+      "bp": "106/66",
+      "hr": 114,
+      "rr": 26,
+      "spo2": 98,
+      "temp": 37.1
+    },
+    "exam": "Signs of severe dehydration, tachypnea with sweet breath odor, and diffuse abdominal tenderness."
+  },
+  "hidden_results": [
+    {
+      "order": "Metabolic Panel",
+      "result": "Elevated glucose, high anion gap metabolic acidosis"
+    },
+    {
+      "order": "Ketone Assay",
+      "result": "Markedly elevated serum beta-hydroxybutyrate"
+    }
+  ],
+  "ground_truth": {
+    "primary_dx": "Euglycemic Diabetic Ketoacidosis (SGLT2i-Induced)",
+    "acceptable_differential": [
+      "Lactic Acidosis",
+      "Starvation Ketosis"
+    ],
+    "expected_workup": [
+      "Serum Beta-hydroxybutyrate",
+      "Arterial Blood Gas"
+    ],
+    "red_flags": [
+      "Missed diagnosis due to normal glucose"
+    ]
+  },
+  "supporting_references": [
+    {
+      "source": "Harrison's Principles of Internal Medicine",
+      "locator": "Chapter 396: Diabetes Mellitus: Complications",
+      "note": "Standard of care evidence protocol"
+    },
+    {
+      "source": "ADA Standards of Care in Diabetes",
+      "locator": "PMID: 38078642",
+      "note": "Management of acute hyperglycemic emergencies, IV fluid, potassium and insulin titration"
+    }
+  ],
+  "status": "draft",
+  "version": "1.0.0"
+}

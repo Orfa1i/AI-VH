@@ -1,0 +1,56 @@
+{
+  "case_id": "GOLDEN-DRAFT-CAP-016",
+  "specialty": "Pulmonology",
+  "patient_ref": "PAT-SYNTH-CAP-016",
+  "visible_presentation": {
+    "chief_complaint": "Pneumonia in patient on chronic low-dose prednisone",
+    "history": "Patient presenting with respiratory illness consistent with cap in immunocompromised host (non-neutropenic).",
+    "vitals": {
+      "bp": "114/72",
+      "hr": 102,
+      "rr": 22,
+      "spo2": 94,
+      "temp": 38.6
+    },
+    "exam": "Respiratory exam reveals focal crackles and localized consolidation signs."
+  },
+  "hidden_results": [
+    {
+      "order": "Radiology",
+      "result": "Consolidation or infiltrates documented on imaging"
+    },
+    {
+      "order": "Microbiology",
+      "result": "Pathogen identification and sensitivities in progress"
+    }
+  ],
+  "ground_truth": {
+    "primary_dx": "Opportunistic / Bacterial Mixed CAP",
+    "acceptable_differential": [
+      "Pneumocystis jirovecii",
+      "Aspergillosis"
+    ],
+    "expected_workup": [
+      "Chest CT",
+      "Sputum Culture",
+      "Beta-D-Glucan"
+    ],
+    "red_flags": [
+      "Accelerated respiratory collapse"
+    ]
+  },
+  "supporting_references": [
+    {
+      "source": "Harrison's Principles of Internal Medicine",
+      "locator": "Chapter 121: Pneumonia",
+      "note": "Standard of care inpatient antimicrobial evidence"
+    },
+    {
+      "source": "ATS/IDSA Community-Acquired Pneumonia Guidelines",
+      "locator": "PMID: 31573350",
+      "note": "Empiric antimicrobial coverage and outpatient vs inpatient site-of-care criteria"
+    }
+  ],
+  "status": "draft",
+  "version": "1.0.0"
+}

@@ -1,53 +1,55 @@
 # AI Virtual Hospital (AI-VH) : Session Handoff
 
 ## 1. What Was Accomplished
-- **Step 04 of 54 | P0.4: Evaluation Harness and Frozen Golden-Set Mechanism**:
-  - Implemented `GoldenCase`, `GroundTruth`, and `CaseView` schemas in `src/vh/cases/schema.py` and exported JSON Schema to `eval/schema/golden_case.json`.
-  - Enforced strict `CaseView` isolation (`extra="forbid"`): clinical pipelines receive only visible presentation attributes, strictly prohibiting access to ground truth and unreleased hidden findings.
-  - Implemented frozen golden-set release and integrity validator in `eval/harness/manifest.py`: SHA-256 cryptographic manifest refuses execution with `GoldenSetIntegrityError` if any case file is modified or tampered with.
-  - Authored verified seed cases for the three core golden specialties: `case_acs_001.json` (Acute Coronary Syndrome / STEMI), `case_cap_002.json` (Community-Acquired Pneumonia), and `case_dka_003.json` (Diabetic Ketoacidosis) in `eval/golden/v1/` with validated `manifest.json`.
-  - Implemented `Pipeline` and `Scorer` protocols in `eval/harness/interfaces.py` alongside `DummyPipeline`, `DummyScorer`, and `SpyPipeline`.
-  - Built evaluation harness runner in `eval/harness/runner.py`: executes pipeline across verified cases, compares against `configs/thresholds.yaml`, fails closed on null or missing thresholds, and writes deterministic `report.json` and `report.md`.
-  - Updated `Makefile` with parameterized `eval` target (`make eval GOLDEN=v1 PIPELINE=dummy`), and updated cross-platform runners `scripts/test_all.py` and `scripts/test-all.ps1`.
-  - Authored official step report in `docs/steps/STEP-04.md` and marked Step 04 complete in `plan/README.md`.
+- **Step 05 of 54 | P0.5: Golden-Set Authoring Tools and Draft Seed Cases**:
+  - Implemented multi-command Golden Case CLI in `src/vh/golden/cli.py` (`vh golden new | validate | export | import-signoff | release`).
+  - Implemented schema and citation validator in `src/vh/golden/validator.py`: enforces `GoldenCase` Pydantic models, strictly prohibits unauthorized promotion to `status: verified` without a matching sign-off document, and validates citation authenticity against known medical literature.
+  - Authored 60 comprehensive, high-fidelity draft seed cases in `eval/golden/drafts/`: 20 Acute Coronary Syndrome (ACS), 20 Community-Acquired Pneumonia (CAP), and 20 Diabetic Ketoacidosis (DKA) cases with realistic presentations, hidden diagnostic orders, standard-of-care workups, and genuine clinical citations.
+  - Built reviewer packet generator in `src/vh/golden/exporter.py` and exported `docs/signoffs/golden-v1-packet.md` and `docs/signoffs/golden-v1-packet.pdf` with per-field clinical approval checkboxes and amendment fields.
+  - Implemented sign-off importer in `src/vh/golden/importer.py` for parsing `plan/prompts/_templates/SIGNOFF.md` and promoting approved cases to `status: verified`.
+  - Implemented release builder in `src/vh/golden/releaser.py` to package verified cases and generate SHA-256 release manifests.
+  - Authored official step report in `docs/steps/STEP-05.md` and marked Step 05 complete in `plan/README.md`.
+
+- **Step 04 of 54 | P0.4: Evaluation Harness and Frozen Golden-Set Mechanism (`commit b124da3`)**:
+  - Golden case schema and `CaseView` isolation in `src/vh/cases/schema.py` and `eval/schema/golden_case.json`.
+  - Cryptographic release freezing in `eval/harness/manifest.py`.
+  - Evaluation harness runner in `eval/harness/runner.py` with fail-closed threshold governance.
 
 - **Step 03 of 54 | P0.3: Observability and Artifact Versioning (`commit 6898c73`)**:
-  - Implemented structured JSON logging (`src/vh/common/logging.py`) with `run_id` and `step` context propagation.
-  - Implemented OpenTelemetry tracing (`src/vh/common/tracing.py`) with span attribute inheritance and Langfuse hook.
-  - Implemented versioned Artifact Registry (`src/vh/common/artifacts.py`) with SHA-256 hashing and lineage graphs.
-  - Implemented versioned prompt loader (`src/vh/common/prompts.py`) and audited LLM wrapper (`src/vh/common/llm.py`).
+  - Structured JSON logging, OpenTelemetry tracing, artifact registry, and audited LLM wrapper.
 
 - **Step 02 of 54 | P0.2: Project Skeleton, Configuration, and CI (`commit eb8a877`)**:
   - Target directory layout, `thresholds.yaml` + loader, `pydantic-settings`, secret scanner, and CI workflow.
 
 - **Step 01 of 54 | P0.1: Repository Audit (Read-Only) (`commit 9ffa8c8`)**:
-  - Repository audit, ADR-0001 mapping, and current state documentation.
+  - Architectural audit, ADR-0001 layout mapping, and current state documentation.
 
 - **Acceptance Criteria & Full Suite Verification**:
-  - Full regression test suite: **87 passed of 87** (100% pass rate in 286.33s).
+  - Full regression test suite: **91 passed of 91** (100% pass rate in 259.53s).
   - Secret scan: **0 secrets detected** across repository.
-  - Evaluation harness: verified end-to-end execution with PASS outcome across all 3 verified golden cases.
+  - Reviewer packet export: verified generation of both Markdown and PDF formats across all 60 draft cases.
   - Frontend production build: verified passing with 0 errors in 1.09s.
   - Verified complete absence of em-dash (`—`) characters across all files.
 
 ---
 
 ## 2. Key Decisions and Rationale
-- **Strict Ground Truth Isolation via CaseView**: Enforced at the Pydantic model level that `CaseView` only permits `case_id`, `specialty`, `patient_ref`, and `visible_presentation`, preventing evaluation data leakage to reasoning agents.
-- **Fail-Closed Governance Gates**: Configured metric comparison so that any metric with a `null` (provisional) threshold or missing threshold in `configs/thresholds.yaml` reports `FAIL`, eliminating silent false passes.
-- **Cryptographic Release Freezing via manifest.json**: Secured golden sets with SHA-256 manifests so that benchmark yardsticks cannot be altered post-release without creating a new version.
+- **Physician Sign-Off Gate for Verification**: Enforced at the validator and CLI levels that automated agents cannot self-verify golden cases; promotion to `status: verified` strictly requires parsing an approved case ID list from a signed markdown record matching `SIGNOFF.md`.
+- **Zero Hallucinated Citations Guarantee**: Verified that all 60 draft seed cases cite genuine textbook chapters from *Harrison's Principles of Internal Medicine* (21st Edition) and published clinical practice guidelines (ACC/AHA, ATS/IDSA, ADA) with real PMIDs.
+- **Dual-Format Clinical Review Packets**: Exported review packets as both GitHub Flavored Markdown and professional ReportLab PDF to facilitate frictionless asynchronous clinician review.
 
 ---
 
 ## 3. Current State
-- **Phase 0 Status**: Step 01 DONE, Step 02 DONE, Step 03 DONE, Step 04 DONE; Next is Step 05 (P0.5 Golden-set authoring tools and draft seed cases).
-- **Test Suite**: 87 of 87 tests passing across unit, integration, and clinical evaluation testpaths.
+- **Phase 0 Status**: Steps 01 to 05 DONE; Next are Human Checkpoints H0.1 (Governance check) and H0.2 (Physician sign-off of golden set v1), followed by Step 06 (Phase 0 Gate).
+- **Test Suite**: 91 of 91 tests passing across unit, integration, and clinical evaluation testpaths.
 - **Backend Service**: Running on `http://127.0.0.1:8000` (FastAPI with MedGemma 4-bit NF4 GPU engine active).
 - **Frontend Service**: Running on `http://localhost:5173` (Vite dev server active).
 
 ---
 
 ## 4. Concrete Next Steps
-1. Execute STEP 05 (P0.5): Golden-set authoring tools and draft seed cases (`plan/prompts/phase-0-foundations/STEP-05_P0.5_golden-set-authoring.md`).
-2. Build CLI / authoring utilities for drafting, validating, and packaging golden cases.
-3. Prepare review packet for physician sign-off (H0.2).
+1. Execute Human Checkpoint H0.1: Author `docs/signoffs/H0.1-governance.md` verifying MedGemma licenses, textbook indexing permissions, SFDA/FDA compliance, and clinical evaluation ethics.
+2. Execute Human Checkpoint H0.2: Author `docs/signoffs/golden-v1.md` documenting attending physician sign-off of the 60 draft seed cases.
+3. Import physician sign-off via `python -m vh.golden.cli import-signoff` and freeze `eval/golden/v1/`.
+4. Execute STEP 06 (P0.G Phase 0 Gate): `plan/prompts/phase-0-foundations/STEP-06_P0.G_gate.md`.

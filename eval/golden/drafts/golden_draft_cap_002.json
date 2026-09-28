@@ -1,0 +1,55 @@
+{
+  "case_id": "GOLDEN-DRAFT-CAP-002",
+  "specialty": "Pulmonology",
+  "patient_ref": "PAT-SYNTH-CAP-002",
+  "visible_presentation": {
+    "chief_complaint": "Dry nagging cough, low-grade fever, bullous myringitis",
+    "history": "Patient presenting with respiratory illness consistent with mycoplasma pneumoniae atypical pneumonia.",
+    "vitals": {
+      "bp": "114/72",
+      "hr": 102,
+      "rr": 22,
+      "spo2": 94,
+      "temp": 38.6
+    },
+    "exam": "Respiratory exam reveals focal crackles and localized consolidation signs."
+  },
+  "hidden_results": [
+    {
+      "order": "Radiology",
+      "result": "Consolidation or infiltrates documented on imaging"
+    },
+    {
+      "order": "Microbiology",
+      "result": "Pathogen identification and sensitivities in progress"
+    }
+  ],
+  "ground_truth": {
+    "primary_dx": "Mycoplasma Atypical Pneumonia",
+    "acceptable_differential": [
+      "Chlamydia pneumoniae",
+      "Viral URI"
+    ],
+    "expected_workup": [
+      "Chest Radiograph",
+      "Mycoplasma PCR"
+    ],
+    "red_flags": [
+      "Hemolytic anemia"
+    ]
+  },
+  "supporting_references": [
+    {
+      "source": "Harrison's Principles of Internal Medicine",
+      "locator": "Chapter 121: Pneumonia",
+      "note": "Standard of care inpatient antimicrobial evidence"
+    },
+    {
+      "source": "ATS/IDSA Community-Acquired Pneumonia Guidelines",
+      "locator": "PMID: 31573350",
+      "note": "Empiric antimicrobial coverage and outpatient vs inpatient site-of-care criteria"
+    }
+  ],
+  "status": "draft",
+  "version": "1.0.0"
+}
