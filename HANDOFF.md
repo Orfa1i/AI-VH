@@ -1,53 +1,49 @@
 # AI Virtual Hospital (AI-VH) : Session Handoff
 
 ## 1. What Was Accomplished
-- **Step 02 of 54 | P0.2: Project Skeleton, Configuration, and CI**:
-  - Implemented target directory layout per ADR-0001: created `src/vh/` (with 9 functional subpackages: `common/`, `cases/`, `rag/`, `generation/`, `verification/`, `agents/`, `feedback/`, `training/`, `events/`), `eval/` (`golden/v1/`, `harness/`, `faults/`), `configs/` (`safety/`, `agents/`), and `.github/workflows/`.
-  - Authored `configs/thresholds.yaml` with exact provisional values per Step 02 prompt specification.
-  - Implemented strict thresholds loader in `src/vh/common/thresholds.py`: validates mandatory sections/keys, raises `MissingThresholdError` on missing entries, and evaluates `null` thresholds as `NOT_SET` (any gate using a NOT SET value fails automatically).
-  - Implemented typed settings management via `pydantic-settings` in `src/vh/common/config.py`, authored `.env.example`, and updated `.gitignore` to protect environment secrets.
-  - Authored native secret scanner in `scripts/scan_secrets.py` and pre-commit configuration in `.pre-commit-config.yaml` to detect API keys, tokens, and private keys.
-  - Created packaging specification in `pyproject.toml` with ruff, mypy (strict for `src/vh`), and pytest markers (`unit`, `integration`, `regression`, `eval`, `slow`).
-  - Implemented Makefile targets (`lint`, `typecheck`, `test-unit`, `test-integration`, `test-regression`, `eval`, `test-all`, `up`, `down`) and cross-platform runners in `scripts/test-all.ps1` and `scripts/test_all.py`.
-  - Configured PostgreSQL container service in `docker-compose.yml`.
-  - Configured GitHub Actions CI workflow in `.github/workflows/ci.yml`.
-  - Added root `/health` endpoint to `backend/main.py`.
-  - Marked ADR-0001 status as Accepted in `docs/decisions/ADR-0001-repo-layout.md`.
-  - Checked off Step 02 in `plan/README.md`.
-  - Authored official step report in `docs/steps/STEP-02.md`.
+- **Step 03 of 54 | P0.3: Observability and Artifact Versioning**:
+  - Implemented structured JSON logging in `src/vh/common/logging.py`: outputs valid single-line JSON with timestamps, log levels, file and line attributes, and contextually propagates `run_id` and `step` via `contextvars`.
+  - Implemented OpenTelemetry tracing in `src/vh/common/tracing.py`: integrates with `opentelemetry-api` and `opentelemetry-sdk`, automatically propagating `run_id` across parent and child spans and synchronizing with logging context. Added hook for optional Langfuse tracing exporter behind configuration flag.
+  - Implemented versioned Artifact Registry in `src/vh/common/artifacts.py`: supports kinds `dataset`, `index`, `prompt_template`, `model`, `golden_set`, `fault_set` with deterministic SHA-256 content hashing, lineage tracking (`parent_ids`), and dual persistence in SQLite/Postgres and filesystem binary store.
+  - Created versioned prompt templates in `src/vh/prompt_templates/` (`clinical_report@1.0.0.md` and `triage@1.0.0.md`) and loader in `src/vh/common/prompts.py` enforcing strict `name@version` syntax.
+  - Implemented audited LLM call wrapper in `src/vh/common/llm.py`: strictly requires prompt version and emits complete audit record (`model_id`, `prompt_version`, `input_hash`, `output_hash`, `latency`, `token_counts`).
+  - Authored official step report in `docs/steps/STEP-03.md` and marked Step 03 complete in `plan/README.md`.
+
+- **Step 02 of 54 | P0.2: Project Skeleton, Configuration, and CI (`commit eb8a877`)**:
+  - Implemented target directory layout per ADR-0001 (`src/vh/`, `eval/`, `configs/`, `.github/workflows/`).
+  - Authored `configs/thresholds.yaml` and strict loader `src/vh/common/thresholds.py`.
+  - Implemented typed settings via `pydantic-settings` in `src/vh/common/config.py` and `.env.example`.
+  - Authored secret scanner in `scripts/scan_secrets.py` and `.pre-commit-config.yaml`.
+  - Created `pyproject.toml`, `Makefile`, `scripts/test-all.ps1`, `scripts/test_all.py`, `docker-compose.yml`, and `.github/workflows/ci.yml`.
+  - Marked ADR-0001 status Accepted.
 
 - **Step 01 of 54 | P0.1: Repository Audit (Read-Only) (`commit 9ffa8c8`)**:
-  - Authored `docs/current-state.md`: Full architectural inventory citing line numbers for Python 3.13 backend, FastAPI endpoints, SQLite schema, multi-agent orchestrator, MedGemma 4-bit NF4 GPU serving, Harrison/Braunwald RAG vector stores, and React 19 light-mode portal.
-  - Authored `docs/decisions/ADR-0001-repo-layout.md`.
-  - Authored `docs/steps/STEP-01.md`: Official Step 01 report recording status DONE.
+  - Authored `docs/current-state.md`, `docs/decisions/ADR-0001-repo-layout.md`, and `docs/steps/STEP-01.md`.
 
-- **Acceptance Criteria & Verification**:
-  - Authored 10 acceptance tests in `tests/test_step_02_acceptance.py`.
-  - Demonstrated deliberate test failure on throwaway branch `test/deliberate-failure`, verified exit code 1, and cleaned up branch.
-  - Verified planted fake secret detection by secret scanner.
-  - Full test suite passing: **77 passed of 77** (100% pass rate in 287.60s).
-  - Frontend production build passing: **0 errors** in 1.09s.
-  - Secret scan passing: **0 secrets found** across repository.
+- **Acceptance Criteria & Full Suite Verification**:
+  - Full regression test suite: **82 passed of 82** (100% pass rate in 276.11s).
+  - Secret scan: **0 secrets detected** across repository.
+  - Frontend production build: **0 errors** in 1.09s.
   - Verified complete absence of em-dash (`—`) characters across all files.
 
 ---
 
 ## 2. Key Decisions and Rationale
-- **ADR-0001 Marked Accepted**: Mapped existing functional directories (`backend/`, `frontend/`) to target architecture (`src/vh/`, `web/`) with bridging modules to ensure zero disruption to live servers and test suites.
-- **Strict Gate Evaluation for NOT SET Thresholds**: Enforced that provisional `null` threshold values (such as `dx_top3_min` and `encounter_score_min`) return `NOT_SET` and cause evaluation gates to fail closed until explicit thresholds are established.
-- **Native Python Secret Scanner**: Implemented `scripts/scan_secrets.py` using standard library regexes so secret scanning operates reliably across Windows, Linux, pre-commit hooks, and CI without requiring third-party binary installations.
+- **Context-Variable Synchronized Tracing and Logging**: Bound `run_id` across both `contextvars` in `src/vh/common/logging.py` and OpenTelemetry span attributes in `src/vh/common/tracing.py` so that log records and distributed traces automatically correlate without manual identifier passing.
+- **Strict Content-Hashed Artifact Storage**: Implemented SHA-256 content addressing for all artifacts, ensuring byte-level provenance, deduplication, and immutable parent lineage across evaluation checkpoints.
+- **Mandatory Prompt Versioning (name@version)**: Enforced that the LLM execution wrapper refuses calls lacking a prompt template version, eliminating untracked prompt drift in clinical decision support pipelines.
 
 ---
 
 ## 3. Current State
-- **Phase 0 Status**: Step 01 DONE, Step 02 DONE; Next is Step 03 (P0.3 Observability and artifact versioning).
-- **Test Suite**: 77 of 77 tests passing across unit, integration, and clinical evaluation testpaths.
+- **Phase 0 Status**: Step 01 DONE, Step 02 DONE, Step 03 DONE; Next is Step 04 (P0.4 Evaluation harness and frozen golden-set mechanism).
+- **Test Suite**: 82 of 82 tests passing across unit, integration, and clinical evaluation testpaths.
 - **Backend Service**: Running on `http://127.0.0.1:8000` (FastAPI with MedGemma 4-bit NF4 GPU engine active).
 - **Frontend Service**: Running on `http://localhost:5173` (Vite dev server active).
 
 ---
 
 ## 4. Concrete Next Steps
-1. Execute STEP 03 (P0.3): Observability and artifact versioning (`plan/prompts/phase-0-foundations/STEP-03_P0.3_observability-versioning.md`).
-2. Implement structured event logging and trace context propagation.
-3. Configure artifact store and versioning mechanism for clinical evaluation artifacts.
+1. Execute STEP 04 (P0.4): Evaluation harness and frozen golden-set mechanism (`plan/prompts/phase-0-foundations/STEP-04_P0.4_evaluation-harness.md`).
+2. Implement DeepEval test harness runner in `eval/harness/`.
+3. Set up frozen golden-set schema and storage format in `eval/golden/`.
