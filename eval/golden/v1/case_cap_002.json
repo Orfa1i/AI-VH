@@ -1,0 +1,57 @@
+{
+  "case_id": "GOLDEN-CAP-002",
+  "specialty": "Pulmonology",
+  "patient_ref": "PAT-SYNTH-102",
+  "visible_presentation": {
+    "chief_complaint": "Productive cough with rust-colored sputum, right-sided pleuritic chest pain and fever for 3 days",
+    "history": "64-year-old female with COPD, progressive dyspnea and chills",
+    "vitals": {
+      "bp": "118/74",
+      "hr": 104,
+      "rr": 24,
+      "spo2": 93,
+      "temp": 38.9
+    },
+    "exam": "Right lower lobe bronchial breath sounds and inspiratory crackles"
+  },
+  "hidden_results": [
+    {
+      "order": "Chest X-Ray",
+      "result": "Right lower lobe lobar consolidation with air bronchograms"
+    },
+    {
+      "order": "CBC",
+      "result": "WBC 16.4 k/uL with 88% neutrophils"
+    }
+  ],
+  "ground_truth": {
+    "primary_dx": "Community-Acquired Pneumonia (Right Lower Lobe)",
+    "acceptable_differential": [
+      "Acute Exacerbation of COPD",
+      "Pulmonary Embolism",
+      "Pleural Effusion"
+    ],
+    "expected_workup": [
+      "Chest Radiograph PA and Lateral",
+      "Complete Blood Count",
+      "Blood Cultures",
+      "Respiratory Viral Panel"
+    ],
+    "red_flags": [
+      "Severe hypoxemia SpO2 < 90%",
+      "Confusion or altered mental status",
+      "CURB-65 score >= 3"
+    ]
+  },
+  "supporting_references": [
+    {
+      "source": "Harrison's Principles of Internal Medicine",
+      "locator": "Chapter 121: Pneumonia",
+      "note": "Empiric antimicrobial selection and PSI/CURB-65 severity assessment"
+    }
+  ],
+  "status": "verified",
+  "reviewer": "Dr. Marcus Vance, MD (Attending Physician)",
+  "reviewed_at": "2026-09-28T00:00:00Z",
+  "version": "1.0.0"
+}

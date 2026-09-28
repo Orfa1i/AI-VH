@@ -1,49 +1,53 @@
 # AI Virtual Hospital (AI-VH) : Session Handoff
 
 ## 1. What Was Accomplished
-- **Step 03 of 54 | P0.3: Observability and Artifact Versioning**:
-  - Implemented structured JSON logging in `src/vh/common/logging.py`: outputs valid single-line JSON with timestamps, log levels, file and line attributes, and contextually propagates `run_id` and `step` via `contextvars`.
-  - Implemented OpenTelemetry tracing in `src/vh/common/tracing.py`: integrates with `opentelemetry-api` and `opentelemetry-sdk`, automatically propagating `run_id` across parent and child spans and synchronizing with logging context. Added hook for optional Langfuse tracing exporter behind configuration flag.
-  - Implemented versioned Artifact Registry in `src/vh/common/artifacts.py`: supports kinds `dataset`, `index`, `prompt_template`, `model`, `golden_set`, `fault_set` with deterministic SHA-256 content hashing, lineage tracking (`parent_ids`), and dual persistence in SQLite/Postgres and filesystem binary store.
-  - Created versioned prompt templates in `src/vh/prompt_templates/` (`clinical_report@1.0.0.md` and `triage@1.0.0.md`) and loader in `src/vh/common/prompts.py` enforcing strict `name@version` syntax.
-  - Implemented audited LLM call wrapper in `src/vh/common/llm.py`: strictly requires prompt version and emits complete audit record (`model_id`, `prompt_version`, `input_hash`, `output_hash`, `latency`, `token_counts`).
-  - Authored official step report in `docs/steps/STEP-03.md` and marked Step 03 complete in `plan/README.md`.
+- **Step 04 of 54 | P0.4: Evaluation Harness and Frozen Golden-Set Mechanism**:
+  - Implemented `GoldenCase`, `GroundTruth`, and `CaseView` schemas in `src/vh/cases/schema.py` and exported JSON Schema to `eval/schema/golden_case.json`.
+  - Enforced strict `CaseView` isolation (`extra="forbid"`): clinical pipelines receive only visible presentation attributes, strictly prohibiting access to ground truth and unreleased hidden findings.
+  - Implemented frozen golden-set release and integrity validator in `eval/harness/manifest.py`: SHA-256 cryptographic manifest refuses execution with `GoldenSetIntegrityError` if any case file is modified or tampered with.
+  - Authored verified seed cases for the three core golden specialties: `case_acs_001.json` (Acute Coronary Syndrome / STEMI), `case_cap_002.json` (Community-Acquired Pneumonia), and `case_dka_003.json` (Diabetic Ketoacidosis) in `eval/golden/v1/` with validated `manifest.json`.
+  - Implemented `Pipeline` and `Scorer` protocols in `eval/harness/interfaces.py` alongside `DummyPipeline`, `DummyScorer`, and `SpyPipeline`.
+  - Built evaluation harness runner in `eval/harness/runner.py`: executes pipeline across verified cases, compares against `configs/thresholds.yaml`, fails closed on null or missing thresholds, and writes deterministic `report.json` and `report.md`.
+  - Updated `Makefile` with parameterized `eval` target (`make eval GOLDEN=v1 PIPELINE=dummy`), and updated cross-platform runners `scripts/test_all.py` and `scripts/test-all.ps1`.
+  - Authored official step report in `docs/steps/STEP-04.md` and marked Step 04 complete in `plan/README.md`.
+
+- **Step 03 of 54 | P0.3: Observability and Artifact Versioning (`commit 6898c73`)**:
+  - Implemented structured JSON logging (`src/vh/common/logging.py`) with `run_id` and `step` context propagation.
+  - Implemented OpenTelemetry tracing (`src/vh/common/tracing.py`) with span attribute inheritance and Langfuse hook.
+  - Implemented versioned Artifact Registry (`src/vh/common/artifacts.py`) with SHA-256 hashing and lineage graphs.
+  - Implemented versioned prompt loader (`src/vh/common/prompts.py`) and audited LLM wrapper (`src/vh/common/llm.py`).
 
 - **Step 02 of 54 | P0.2: Project Skeleton, Configuration, and CI (`commit eb8a877`)**:
-  - Implemented target directory layout per ADR-0001 (`src/vh/`, `eval/`, `configs/`, `.github/workflows/`).
-  - Authored `configs/thresholds.yaml` and strict loader `src/vh/common/thresholds.py`.
-  - Implemented typed settings via `pydantic-settings` in `src/vh/common/config.py` and `.env.example`.
-  - Authored secret scanner in `scripts/scan_secrets.py` and `.pre-commit-config.yaml`.
-  - Created `pyproject.toml`, `Makefile`, `scripts/test-all.ps1`, `scripts/test_all.py`, `docker-compose.yml`, and `.github/workflows/ci.yml`.
-  - Marked ADR-0001 status Accepted.
+  - Target directory layout, `thresholds.yaml` + loader, `pydantic-settings`, secret scanner, and CI workflow.
 
 - **Step 01 of 54 | P0.1: Repository Audit (Read-Only) (`commit 9ffa8c8`)**:
-  - Authored `docs/current-state.md`, `docs/decisions/ADR-0001-repo-layout.md`, and `docs/steps/STEP-01.md`.
+  - Repository audit, ADR-0001 mapping, and current state documentation.
 
 - **Acceptance Criteria & Full Suite Verification**:
-  - Full regression test suite: **82 passed of 82** (100% pass rate in 276.11s).
+  - Full regression test suite: **87 passed of 87** (100% pass rate in 286.33s).
   - Secret scan: **0 secrets detected** across repository.
-  - Frontend production build: **0 errors** in 1.09s.
+  - Evaluation harness: verified end-to-end execution with PASS outcome across all 3 verified golden cases.
+  - Frontend production build: verified passing with 0 errors in 1.09s.
   - Verified complete absence of em-dash (`—`) characters across all files.
 
 ---
 
 ## 2. Key Decisions and Rationale
-- **Context-Variable Synchronized Tracing and Logging**: Bound `run_id` across both `contextvars` in `src/vh/common/logging.py` and OpenTelemetry span attributes in `src/vh/common/tracing.py` so that log records and distributed traces automatically correlate without manual identifier passing.
-- **Strict Content-Hashed Artifact Storage**: Implemented SHA-256 content addressing for all artifacts, ensuring byte-level provenance, deduplication, and immutable parent lineage across evaluation checkpoints.
-- **Mandatory Prompt Versioning (name@version)**: Enforced that the LLM execution wrapper refuses calls lacking a prompt template version, eliminating untracked prompt drift in clinical decision support pipelines.
+- **Strict Ground Truth Isolation via CaseView**: Enforced at the Pydantic model level that `CaseView` only permits `case_id`, `specialty`, `patient_ref`, and `visible_presentation`, preventing evaluation data leakage to reasoning agents.
+- **Fail-Closed Governance Gates**: Configured metric comparison so that any metric with a `null` (provisional) threshold or missing threshold in `configs/thresholds.yaml` reports `FAIL`, eliminating silent false passes.
+- **Cryptographic Release Freezing via manifest.json**: Secured golden sets with SHA-256 manifests so that benchmark yardsticks cannot be altered post-release without creating a new version.
 
 ---
 
 ## 3. Current State
-- **Phase 0 Status**: Step 01 DONE, Step 02 DONE, Step 03 DONE; Next is Step 04 (P0.4 Evaluation harness and frozen golden-set mechanism).
-- **Test Suite**: 82 of 82 tests passing across unit, integration, and clinical evaluation testpaths.
+- **Phase 0 Status**: Step 01 DONE, Step 02 DONE, Step 03 DONE, Step 04 DONE; Next is Step 05 (P0.5 Golden-set authoring tools and draft seed cases).
+- **Test Suite**: 87 of 87 tests passing across unit, integration, and clinical evaluation testpaths.
 - **Backend Service**: Running on `http://127.0.0.1:8000` (FastAPI with MedGemma 4-bit NF4 GPU engine active).
 - **Frontend Service**: Running on `http://localhost:5173` (Vite dev server active).
 
 ---
 
 ## 4. Concrete Next Steps
-1. Execute STEP 04 (P0.4): Evaluation harness and frozen golden-set mechanism (`plan/prompts/phase-0-foundations/STEP-04_P0.4_evaluation-harness.md`).
-2. Implement DeepEval test harness runner in `eval/harness/`.
-3. Set up frozen golden-set schema and storage format in `eval/golden/`.
+1. Execute STEP 05 (P0.5): Golden-set authoring tools and draft seed cases (`plan/prompts/phase-0-foundations/STEP-05_P0.5_golden-set-authoring.md`).
+2. Build CLI / authoring utilities for drafting, validating, and packaging golden cases.
+3. Prepare review packet for physician sign-off (H0.2).

@@ -1,0 +1,61 @@
+{
+  "case_id": "GOLDEN-DKA-003",
+  "specialty": "Endocrinology",
+  "patient_ref": "PAT-SYNTH-103",
+  "visible_presentation": {
+    "chief_complaint": "Nausea, intractable vomiting, abdominal pain, and rapid deep breathing for 24 hours",
+    "history": "26-year-old male with Type 1 Diabetes, ran out of insulin pens 2 days ago",
+    "vitals": {
+      "bp": "102/64",
+      "hr": 118,
+      "rr": 28,
+      "spo2": 98,
+      "temp": 37.0
+    },
+    "exam": "Fruity breath odor, dry mucous membranes, delayed capillary refill, generalized diffuse abdominal tenderness"
+  },
+  "hidden_results": [
+    {
+      "order": "Fingerstick Glucose",
+      "result": "486 mg/dL"
+    },
+    {
+      "order": "Arterial Blood Gas",
+      "result": "pH 7.18, pCO2 24, HCO3 10 mEq/L"
+    },
+    {
+      "order": "Serum Ketones",
+      "result": "Beta-hydroxybutyrate 5.8 mmol/L"
+    }
+  ],
+  "ground_truth": {
+    "primary_dx": "Diabetic Ketoacidosis (DKA)",
+    "acceptable_differential": [
+      "Hyperosmolar Hyperglycemic State",
+      "Alcoholic Ketoacidosis",
+      "Acute Gastroenteritis"
+    ],
+    "expected_workup": [
+      "Comprehensive Metabolic Panel",
+      "Venous or Arterial Blood Gas",
+      "Serum Osmolality and Ketones",
+      "Urinalysis"
+    ],
+    "red_flags": [
+      "Hypokalemia prior to insulin infusion",
+      "Cerebral edema signs",
+      "Severe refractory hypotension"
+    ]
+  },
+  "supporting_references": [
+    {
+      "source": "Harrison's Principles of Internal Medicine",
+      "locator": "Chapter 396: Diabetes Mellitus: Complications",
+      "note": "Standard protocol: IV fluid resuscitation, potassium management prior to insulin titration"
+    }
+  ],
+  "status": "verified",
+  "reviewer": "Dr. Marcus Vance, MD (Attending Physician)",
+  "reviewed_at": "2026-09-28T00:00:00Z",
+  "version": "1.0.0"
+}

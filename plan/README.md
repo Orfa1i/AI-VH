@@ -173,7 +173,7 @@ If your existing code lives elsewhere, ADR-0001 (STEP 01–02) maps it onto this
 - [x] STEP 01: P0.1 Repository audit (read-only) → `prompts/phase-0-foundations/STEP-01_P0.1_repo-audit.md`
 - [x] STEP 02: P0.2 Project skeleton, configuration, CI → `prompts/phase-0-foundations/STEP-02_P0.2_skeleton-config-ci.md`
 - [x] STEP 03: P0.3 Observability and artifact versioning → `prompts/phase-0-foundations/STEP-03_P0.3_observability-versioning.md`
-- [ ] STEP 04: P0.4 Evaluation harness and frozen golden-set mechanism → `prompts/phase-0-foundations/STEP-04_P0.4_evaluation-harness.md`
+- [x] STEP 04: P0.4 Evaluation harness and frozen golden-set mechanism → `prompts/phase-0-foundations/STEP-04_P0.4_evaluation-harness.md`
 - [ ] STEP 05: P0.5 Golden-set authoring tools and draft seed cases → `prompts/phase-0-foundations/STEP-05_P0.5_golden-set-authoring.md`
 - [ ] **[HUMAN] H0.1: Governance check** → `docs/signoffs/H0.1-governance.md`  
   Confirm and record: MedGemma licence terms (Health AI Developer Foundations) permit your intended use and fine-tuning; licences for any textbook you plan to index; whether SFDA software-as-a-medical-device rules apply to your intended use; ethics/IRB plan before real clinicians review outputs.

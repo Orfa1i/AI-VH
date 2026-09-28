@@ -31,8 +31,8 @@ switch ($Target) {
         py -3.13 -m pytest -m regression
     }
     "eval" {
-        Write-Host "Running Evaluation Tests..." -ForegroundColor Cyan
-        py -3.13 -m pytest -m eval
+        Write-Host "Running Evaluation Harness Runner..." -ForegroundColor Cyan
+        py -3.13 -m eval.harness.runner --golden v1 --pipeline dummy
     }
     "test-all" {
         Write-Host "Running Secret Scanner..." -ForegroundColor Cyan

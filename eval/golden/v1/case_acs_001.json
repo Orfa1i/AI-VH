@@ -1,0 +1,57 @@
+{
+  "case_id": "GOLDEN-ACS-001",
+  "specialty": "Cardiology",
+  "patient_ref": "PAT-SYNTH-101",
+  "visible_presentation": {
+    "chief_complaint": "Crushing retrosternal chest pain radiating to left arm for 2 hours",
+    "history": "58-year-old male with hypertension and hyperlipidemia, acute onset while mowing lawn",
+    "vitals": {
+      "bp": "148/92",
+      "hr": 96,
+      "rr": 20,
+      "spo2": 97,
+      "temp": 37.1
+    },
+    "exam": "Diaphoretic, anxious, regular rhythm without murmurs, lungs clear to auscultation"
+  },
+  "hidden_results": [
+    {
+      "order": "Troponin I",
+      "result": "1.85 ng/mL (Ref: <0.04)"
+    },
+    {
+      "order": "12-Lead ECG",
+      "result": "2mm ST elevation in leads V2-V5, reciprocal depression in III and aVF"
+    }
+  ],
+  "ground_truth": {
+    "primary_dx": "Acute Anterior ST-Elevation Myocardial Infarction (STEMI)",
+    "acceptable_differential": [
+      "Non-ST-Elevation Acute Coronary Syndrome",
+      "Aortic Dissection",
+      "Acute Pericarditis"
+    ],
+    "expected_workup": [
+      "Emergency 12-Lead ECG",
+      "High-sensitivity Cardiac Troponin",
+      "Echocardiogram",
+      "Emergency Coronary Angiography"
+    ],
+    "red_flags": [
+      "Hemodynamic instability",
+      "Ventricular tachycardia",
+      "Pulmonary edema"
+    ]
+  },
+  "supporting_references": [
+    {
+      "source": "Harrison's Principles of Internal Medicine",
+      "locator": "Chapter 269: ST-Segment Elevation Myocardial Infarction",
+      "note": "Immediate reperfusion pathway criteria"
+    }
+  ],
+  "status": "verified",
+  "reviewer": "Dr. Marcus Vance, MD (Attending Physician)",
+  "reviewed_at": "2026-09-28T00:00:00Z",
+  "version": "1.0.0"
+}

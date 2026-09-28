@@ -34,8 +34,11 @@ test-integration:
 test-regression:
 	$(PYTEST) -m regression
 
+GOLDEN ?= v1
+PIPELINE ?= dummy
+
 eval:
-	$(PYTEST) -m eval
+	$(PYTHON) -m eval.harness.runner --golden $(GOLDEN) --pipeline $(PIPELINE)
 
 test-all: lint typecheck
 	$(PYTEST)

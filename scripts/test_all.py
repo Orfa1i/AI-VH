@@ -61,7 +61,7 @@ def target_test_regression() -> int:
 
 
 def target_eval() -> int:
-    return run_cmd([sys.executable, "-m", "pytest", "-m", "eval"])
+    return run_cmd([sys.executable, "-m", "eval.harness.runner", "--golden", "v1", "--pipeline", "dummy"])
 
 
 def target_test_all() -> int:

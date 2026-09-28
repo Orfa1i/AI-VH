@@ -1,0 +1,153 @@
+{
+  "$defs": {
+    "GroundTruth": {
+      "properties": {
+        "primary_dx": {
+          "description": "Primary clinical diagnosis confirmed by attending physician",
+          "title": "Primary Dx",
+          "type": "string"
+        },
+        "acceptable_differential": {
+          "description": "List of acceptable alternative diagnoses or differentials",
+          "items": {
+            "type": "string"
+          },
+          "title": "Acceptable Differential",
+          "type": "array"
+        },
+        "expected_workup": {
+          "description": "Standard-of-care laboratory, imaging, and diagnostic orders required",
+          "items": {
+            "type": "string"
+          },
+          "title": "Expected Workup",
+          "type": "array"
+        },
+        "red_flags": {
+          "description": "Critical symptoms, contraindications, or emergency warning signs",
+          "items": {
+            "type": "string"
+          },
+          "title": "Red Flags",
+          "type": "array"
+        }
+      },
+      "required": [
+        "primary_dx"
+      ],
+      "title": "GroundTruth",
+      "type": "object"
+    },
+    "SupportingReference": {
+      "properties": {
+        "source": {
+          "description": "Medical textbook, clinical guideline, or PubMed citation",
+          "title": "Source",
+          "type": "string"
+        },
+        "locator": {
+          "description": "Chapter, section, page, or table identifier",
+          "title": "Locator",
+          "type": "string"
+        },
+        "note": {
+          "description": "Clinical rationale or evidence snippet",
+          "title": "Note",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source",
+        "locator",
+        "note"
+      ],
+      "title": "SupportingReference",
+      "type": "object"
+    }
+  },
+  "description": "Complete golden case specification containing patient presentation and hidden ground truth.",
+  "properties": {
+    "case_id": {
+      "title": "Case Id",
+      "type": "string"
+    },
+    "specialty": {
+      "title": "Specialty",
+      "type": "string"
+    },
+    "patient_ref": {
+      "title": "Patient Ref",
+      "type": "string"
+    },
+    "visible_presentation": {
+      "additionalProperties": true,
+      "title": "Visible Presentation",
+      "type": "object"
+    },
+    "hidden_results": {
+      "items": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Hidden Results",
+      "type": "array"
+    },
+    "ground_truth": {
+      "$ref": "#/$defs/GroundTruth"
+    },
+    "supporting_references": {
+      "items": {
+        "$ref": "#/$defs/SupportingReference"
+      },
+      "title": "Supporting References",
+      "type": "array"
+    },
+    "status": {
+      "default": "draft",
+      "enum": [
+        "draft",
+        "verified"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "reviewer": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Reviewer"
+    },
+    "reviewed_at": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Reviewed At"
+    },
+    "version": {
+      "default": "1.0.0",
+      "title": "Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "case_id",
+    "specialty",
+    "patient_ref",
+    "visible_presentation",
+    "ground_truth"
+  ],
+  "title": "GoldenCase",
+  "type": "object"
+}
