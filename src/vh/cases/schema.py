@@ -52,6 +52,16 @@ class GoldenCase(BaseModel):
             visible_presentation=self.visible_presentation
         )
 
+    def to_case_spec(self):
+        """Convert GoldenCase into formal CaseSpec instance."""
+        from .spec import CaseSpec
+        return CaseSpec.from_golden_case(self)
+
+    def to_agent_view(self):
+        """Convert GoldenCase into strictly isolated AgentView instance."""
+        from .spec import CaseSpec
+        return CaseSpec.from_golden_case(self).to_agent_view()
+
 
 class CaseView(BaseModel):
     """Sanitized patient presentation accessible to clinical pipelines and agents."""

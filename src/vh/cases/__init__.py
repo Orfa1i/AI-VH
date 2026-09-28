@@ -6,6 +6,14 @@ Provides patient records, synthetic benchmarks, and repository mappings.
 from .schema import GoldenCase, GroundTruth, SupportingReference, CaseView
 from .patient_repo import PatientRepository
 from .fhir_loader import FHIRBundleLoader, LoadSummary
+from .spec import (
+    CaseSpec,
+    AgentView,
+    VisiblePresentation,
+    HiddenResult,
+    ReleasedResult,
+    DataIsolationError,
+)
 
 try:
     from backend.clinical.cases import BENCHMARK_CASES
@@ -22,6 +30,12 @@ __all__ = [
     "PatientRepository",
     "FHIRBundleLoader",
     "LoadSummary",
+    "CaseSpec",
+    "AgentView",
+    "VisiblePresentation",
+    "HiddenResult",
+    "ReleasedResult",
+    "DataIsolationError",
     "BENCHMARK_CASES",
     "hospital_repo",
 ]
