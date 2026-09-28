@@ -1,0 +1,195 @@
+{
+  "name": "Acute Coronary Syndrome Presentation",
+  "remarks": [
+    "Synthea Generic Module for emergency presentation of acute coronary syndrome",
+    "Incorporates serial high-sensitivity cardiac troponins, ECG risk stratification, and acute dual antiplatelet therapy"
+  ],
+  "states": {
+    "Initial": {
+      "type": "Initial",
+      "direct_transition": "Risk_Assessment"
+    },
+    "Risk_Assessment": {
+      "type": "Simple",
+      "distributed_transition": [
+        {
+          "distribution": 0.035,
+          "transition": "ACS_Onset"
+        },
+        {
+          "distribution": 0.965,
+          "transition": "No_ACS_Terminal"
+        }
+      ]
+    },
+    "ACS_Onset": {
+      "type": "ConditionOnset",
+      "codes": [
+        {
+          "system": "SNOMED-CT",
+          "code": "371809000",
+          "display": "Acute coronary syndrome"
+        }
+      ],
+      "direct_transition": "Emergency_Encounter"
+    },
+    "Emergency_Encounter": {
+      "type": "Encounter",
+      "encounter_class": "emergency",
+      "codes": [
+        {
+          "system": "SNOMED-CT",
+          "code": "50849002",
+          "display": "Emergency room admission"
+        }
+      ],
+      "direct_transition": "Observation_Initial_Troponin"
+    },
+    "Observation_Initial_Troponin": {
+      "type": "Observation",
+      "category": "laboratory",
+      "unit": "ng/L",
+      "codes": [
+        {
+          "system": "LOINC",
+          "code": "49563-0",
+          "display": "Cardiac troponin I in Serum or Plasma by High sensitivity method"
+        }
+      ],
+      "exact": {
+        "quantity": 245.0
+      },
+      "direct_transition": "Observation_Systolic_BP"
+    },
+    "Observation_Systolic_BP": {
+      "type": "Observation",
+      "category": "vital-signs",
+      "unit": "mm[Hg]",
+      "codes": [
+        {
+          "system": "LOINC",
+          "code": "8480-6",
+          "display": "Systolic blood pressure"
+        }
+      ],
+      "exact": {
+        "quantity": 142.0
+      },
+      "direct_transition": "Observation_Heart_Rate"
+    },
+    "Observation_Heart_Rate": {
+      "type": "Observation",
+      "category": "vital-signs",
+      "unit": "/min",
+      "codes": [
+        {
+          "system": "LOINC",
+          "code": "8867-4",
+          "display": "Heart rate"
+        }
+      ],
+      "exact": {
+        "quantity": 92.0
+      },
+      "direct_transition": "Severity_Stratification"
+    },
+    "Severity_Stratification": {
+      "type": "Simple",
+      "distributed_transition": [
+        {
+          "distribution": 0.40,
+          "transition": "STEMI_Branch"
+        },
+        {
+          "distribution": 0.40,
+          "transition": "NSTEMI_Branch"
+        },
+        {
+          "distribution": 0.20,
+          "transition": "Unstable_Angina_Branch"
+        }
+      ]
+    },
+    "STEMI_Branch": {
+      "type": "ConditionOnset",
+      "codes": [
+        {
+          "system": "SNOMED-CT",
+          "code": "401303003",
+          "display": "Acute ST segment elevation myocardial infarction"
+        }
+      ],
+      "direct_transition": "Medication_Aspirin"
+    },
+    "NSTEMI_Branch": {
+      "type": "ConditionOnset",
+      "codes": [
+        {
+          "system": "SNOMED-CT",
+          "code": "401314000",
+          "display": "Acute non-ST segment elevation myocardial infarction"
+        }
+      ],
+      "direct_transition": "Medication_Aspirin"
+    },
+    "Unstable_Angina_Branch": {
+      "type": "Simple",
+      "direct_transition": "Medication_Aspirin"
+    },
+    "Medication_Aspirin": {
+      "type": "MedicationOrder",
+      "codes": [
+        {
+          "system": "RxNorm",
+          "code": "1191",
+          "display": "Aspirin"
+        }
+      ],
+      "direct_transition": "Medication_Ticagrelor"
+    },
+    "Medication_Ticagrelor": {
+      "type": "MedicationOrder",
+      "codes": [
+        {
+          "system": "RxNorm",
+          "code": "860975",
+          "display": "Ticagrelor 90 MG Oral Tablet"
+        }
+      ],
+      "direct_transition": "Medication_Nitroglycerin"
+    },
+    "Medication_Nitroglycerin": {
+      "type": "MedicationOrder",
+      "codes": [
+        {
+          "system": "RxNorm",
+          "code": "32968",
+          "display": "Nitroglycerin sublingual"
+        }
+      ],
+      "direct_transition": "Observation_Serial_Troponin_3h"
+    },
+    "Observation_Serial_Troponin_3h": {
+      "type": "Observation",
+      "category": "laboratory",
+      "unit": "ng/L",
+      "codes": [
+        {
+          "system": "LOINC",
+          "code": "49563-0",
+          "display": "Cardiac troponin I in Serum or Plasma by High sensitivity method"
+        }
+      ],
+      "exact": {
+        "quantity": 890.0
+      },
+      "direct_transition": "ACS_Terminal"
+    },
+    "ACS_Terminal": {
+      "type": "Terminal"
+    },
+    "No_ACS_Terminal": {
+      "type": "Terminal"
+    }
+  }
+}

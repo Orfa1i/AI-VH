@@ -1,0 +1,178 @@
+{
+  "name": "Community Acquired Pneumonia Presentation",
+  "remarks": [
+    "Synthea Generic Module for acute inpatient community-acquired pneumonia presentation",
+    "Incorporates CURB-65 / PSI risk stratification, inflammatory markers, and guideline-directed empiric antimicrobials"
+  ],
+  "states": {
+    "Initial": {
+      "type": "Initial",
+      "direct_transition": "Respiratory_Risk_Assessment"
+    },
+    "Respiratory_Risk_Assessment": {
+      "type": "Simple",
+      "distributed_transition": [
+        {
+          "distribution": 0.040,
+          "transition": "CAP_Onset"
+        },
+        {
+          "distribution": 0.960,
+          "transition": "No_CAP_Terminal"
+        }
+      ]
+    },
+    "CAP_Onset": {
+      "type": "ConditionOnset",
+      "codes": [
+        {
+          "system": "SNOMED-CT",
+          "code": "385093006",
+          "display": "Community acquired pneumonia"
+        }
+      ],
+      "direct_transition": "Hospital_Encounter"
+    },
+    "Hospital_Encounter": {
+      "type": "Encounter",
+      "encounter_class": "inpatient",
+      "codes": [
+        {
+          "system": "SNOMED-CT",
+          "code": "32485007",
+          "display": "Hospital admission"
+        }
+      ],
+      "direct_transition": "Observation_Oxygen_Saturation"
+    },
+    "Observation_Oxygen_Saturation": {
+      "type": "Observation",
+      "category": "vital-signs",
+      "unit": "%",
+      "codes": [
+        {
+          "system": "LOINC",
+          "code": "2708-6",
+          "display": "Oxygen saturation in Arterial blood"
+        }
+      ],
+      "exact": {
+        "quantity": 89.0
+      },
+      "direct_transition": "Observation_Respiratory_Rate"
+    },
+    "Observation_Respiratory_Rate": {
+      "type": "Observation",
+      "category": "vital-signs",
+      "unit": "/min",
+      "codes": [
+        {
+          "system": "LOINC",
+          "code": "9279-1",
+          "display": "Respiratory rate"
+        }
+      ],
+      "exact": {
+        "quantity": 28.0
+      },
+      "direct_transition": "Observation_Body_Temperature"
+    },
+    "Observation_Body_Temperature": {
+      "type": "Observation",
+      "category": "vital-signs",
+      "unit": "Cel",
+      "codes": [
+        {
+          "system": "LOINC",
+          "code": "8310-5",
+          "display": "Body temperature"
+        }
+      ],
+      "exact": {
+        "quantity": 38.8
+      },
+      "direct_transition": "Observation_Leukocytes"
+    },
+    "Observation_Leukocytes": {
+      "type": "Observation",
+      "category": "laboratory",
+      "unit": "10*3/uL",
+      "codes": [
+        {
+          "system": "LOINC",
+          "code": "6690-2",
+          "display": "Leukocytes in Blood by Automated count"
+        }
+      ],
+      "exact": {
+        "quantity": 16.4
+      },
+      "direct_transition": "Observation_Procalcitonin"
+    },
+    "Observation_Procalcitonin": {
+      "type": "Observation",
+      "category": "laboratory",
+      "unit": "ug/L",
+      "codes": [
+        {
+          "system": "LOINC",
+          "code": "34714-6",
+          "display": "Procalcitonin in Serum or Plasma"
+        }
+      ],
+      "exact": {
+        "quantity": 2.8
+      },
+      "direct_transition": "Severity_Triaging"
+    },
+    "Severity_Triaging": {
+      "type": "Simple",
+      "distributed_transition": [
+        {
+          "distribution": 0.75,
+          "transition": "Floor_Admission"
+        },
+        {
+          "distribution": 0.25,
+          "transition": "ICU_Admission"
+        }
+      ]
+    },
+    "Floor_Admission": {
+      "type": "Simple",
+      "direct_transition": "Medication_Ceftriaxone"
+    },
+    "ICU_Admission": {
+      "type": "Simple",
+      "direct_transition": "Medication_Ceftriaxone"
+    },
+    "Medication_Ceftriaxone": {
+      "type": "MedicationOrder",
+      "codes": [
+        {
+          "system": "RxNorm",
+          "code": "309362",
+          "display": "Ceftriaxone 1000 MG Injection"
+        }
+      ],
+      "direct_transition": "Medication_Azithromycin"
+    },
+    "Medication_Azithromycin": {
+      "type": "MedicationOrder",
+      "codes": [
+        {
+          "system": "RxNorm",
+          "code": "2551",
+          "display": "Azithromycin 500 MG Oral Tablet"
+        }
+      ],
+      "direct_transition": "CAP_Terminal"
+    },
+    "CAP_Terminal": {
+      "type": "Terminal"
+    },
+    "No_CAP_Terminal": {
+      "type": "Terminal"
+    }
+  }
+}

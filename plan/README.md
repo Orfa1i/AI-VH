@@ -184,7 +184,7 @@ If your existing code lives elsewhere, ADR-0001 (STEP 01–02) maps it onto this
 ### Phase 1: Synthetic Patients & Case Builder
 
 - [x] STEP 07: P1.1 Synthea runner (reproducible FHIR export) → `prompts/phase-1-synthetic-patients/STEP-07_P1.1_synthea-runner.md`
-- [ ] STEP 08: P1.2 Custom Synthea modules for target specialties → `prompts/phase-1-synthetic-patients/STEP-08_P1.2_synthea-custom-modules.md`
+- [x] STEP 08: P1.2 Custom Synthea modules for target specialties → `prompts/phase-1-synthetic-patients/STEP-08_P1.2_synthea-custom-modules.md`
 - [ ] STEP 09: P1.3 Patient store and FHIR loader → `prompts/phase-1-synthetic-patients/STEP-09_P1.3_patient-store.md`
 - [ ] STEP 10: P1.4 Case spec schema and AgentView isolation → `prompts/phase-1-synthetic-patients/STEP-10_P1.4_case-spec-schema.md`
 - [ ] STEP 11: P1.5 Case Builder → `prompts/phase-1-synthetic-patients/STEP-11_P1.5_case-builder.md`

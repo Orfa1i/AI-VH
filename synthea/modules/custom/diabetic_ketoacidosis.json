@@ -1,0 +1,168 @@
+{
+  "name": "Diabetic Ketoacidosis Presentation",
+  "remarks": [
+    "Synthea Generic Module for emergency presentation of diabetic ketoacidosis",
+    "Incorporates high anion gap metabolic acidosis, arterial blood gas pH, beta-hydroxybutyrate, and guideline-directed fluid/insulin resuscitation"
+  ],
+  "states": {
+    "Initial": {
+      "type": "Initial",
+      "direct_transition": "DKA_Risk_Assessment"
+    },
+    "DKA_Risk_Assessment": {
+      "type": "Simple",
+      "distributed_transition": [
+        {
+          "distribution": 0.018,
+          "transition": "DKA_Onset"
+        },
+        {
+          "distribution": 0.982,
+          "transition": "No_DKA_Terminal"
+        }
+      ]
+    },
+    "DKA_Onset": {
+      "type": "ConditionOnset",
+      "codes": [
+        {
+          "system": "SNOMED-CT",
+          "code": "46635009",
+          "display": "Diabetes mellitus type 1 with ketoacidosis"
+        }
+      ],
+      "direct_transition": "Emergency_Admission"
+    },
+    "Emergency_Admission": {
+      "type": "Encounter",
+      "encounter_class": "emergency",
+      "codes": [
+        {
+          "system": "SNOMED-CT",
+          "code": "50849002",
+          "display": "Emergency room admission"
+        }
+      ],
+      "direct_transition": "Observation_Glucose"
+    },
+    "Observation_Glucose": {
+      "type": "Observation",
+      "category": "laboratory",
+      "unit": "mg/dL",
+      "codes": [
+        {
+          "system": "LOINC",
+          "code": "1558-6",
+          "display": "Glucose in Serum or Plasma"
+        }
+      ],
+      "exact": {
+        "quantity": 486.0
+      },
+      "direct_transition": "Observation_Blood_pH"
+    },
+    "Observation_Blood_pH": {
+      "type": "Observation",
+      "category": "laboratory",
+      "unit": "[pH]",
+      "codes": [
+        {
+          "system": "LOINC",
+          "code": "2744-1",
+          "display": "pH of Arterial blood"
+        }
+      ],
+      "exact": {
+        "quantity": 7.18
+      },
+      "direct_transition": "Observation_Serum_Bicarbonate"
+    },
+    "Observation_Serum_Bicarbonate": {
+      "type": "Observation",
+      "category": "laboratory",
+      "unit": "mmol/L",
+      "codes": [
+        {
+          "system": "LOINC",
+          "code": "1963-8",
+          "display": "Bicarbonate in Serum or Plasma"
+        }
+      ],
+      "exact": {
+        "quantity": 9.0
+      },
+      "direct_transition": "Observation_Beta_Hydroxybutyrate"
+    },
+    "Observation_Beta_Hydroxybutyrate": {
+      "type": "Observation",
+      "category": "laboratory",
+      "unit": "mmol/L",
+      "codes": [
+        {
+          "system": "LOINC",
+          "code": "1989-3",
+          "display": "Beta hydroxybutyrate in Serum or Plasma"
+        }
+      ],
+      "exact": {
+        "quantity": 5.4
+      },
+      "direct_transition": "Observation_Serum_Potassium"
+    },
+    "Observation_Serum_Potassium": {
+      "type": "Observation",
+      "category": "laboratory",
+      "unit": "mmol/L",
+      "codes": [
+        {
+          "system": "LOINC",
+          "code": "2823-3",
+          "display": "Potassium in Serum or Plasma"
+        }
+      ],
+      "exact": {
+        "quantity": 4.8
+      },
+      "direct_transition": "Resuscitation_Fluids_Saline"
+    },
+    "Resuscitation_Fluids_Saline": {
+      "type": "MedicationOrder",
+      "codes": [
+        {
+          "system": "RxNorm",
+          "code": "313007",
+          "display": "0.9% Sodium Chloride Injection"
+        }
+      ],
+      "direct_transition": "Medication_Regular_Insulin"
+    },
+    "Medication_Regular_Insulin": {
+      "type": "MedicationOrder",
+      "codes": [
+        {
+          "system": "RxNorm",
+          "code": "311036",
+          "display": "Regular Insulin 100 UNT/ML Injectable Solution"
+        }
+      ],
+      "direct_transition": "Medication_Potassium_Chloride"
+    },
+    "Medication_Potassium_Chloride": {
+      "type": "MedicationOrder",
+      "codes": [
+        {
+          "system": "RxNorm",
+          "code": "313002",
+          "display": "Potassium Chloride 20 MEQ/L in 0.9% Sodium Chloride Injection"
+        }
+      ],
+      "direct_transition": "DKA_Terminal"
+    },
+    "DKA_Terminal": {
+      "type": "Terminal"
+    },
+    "No_DKA_Terminal": {
+      "type": "Terminal"
+    }
+  }
+}
