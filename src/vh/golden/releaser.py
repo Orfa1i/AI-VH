@@ -23,6 +23,9 @@ def build_release(
     copy to target_dir, and generate manifest.json.
     """
     target_dir.mkdir(parents=True, exist_ok=True)
+    # Clear any previous or stale json files in target directory
+    for existing_file in target_dir.glob("*.json"):
+        existing_file.unlink()
     verified_cases = 0
 
     for file_path in sorted(source_dir.glob("*.json")):

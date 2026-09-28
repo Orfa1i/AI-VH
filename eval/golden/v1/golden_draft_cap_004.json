@@ -1,0 +1,57 @@
+{
+  "case_id": "GOLDEN-DRAFT-CAP-004",
+  "specialty": "Pulmonology",
+  "patient_ref": "PAT-SYNTH-CAP-004",
+  "visible_presentation": {
+    "chief_complaint": "Currant jelly sputum, severe dyspnea, cavitation",
+    "history": "Patient presenting with respiratory illness consistent with klebsiella pneumoniae in alcohol misuse.",
+    "vitals": {
+      "bp": "114/72",
+      "hr": 102,
+      "rr": 22,
+      "spo2": 94,
+      "temp": 38.6
+    },
+    "exam": "Respiratory exam reveals focal crackles and localized consolidation signs."
+  },
+  "hidden_results": [
+    {
+      "order": "Radiology",
+      "result": "Consolidation or infiltrates documented on imaging"
+    },
+    {
+      "order": "Microbiology",
+      "result": "Pathogen identification and sensitivities in progress"
+    }
+  ],
+  "ground_truth": {
+    "primary_dx": "Klebsiella Pneumonia",
+    "acceptable_differential": [
+      "Aspiration Pneumonia",
+      "Tuberculosis"
+    ],
+    "expected_workup": [
+      "Chest Radiograph",
+      "Sputum Culture"
+    ],
+    "red_flags": [
+      "Upper lobe bulging fissure"
+    ]
+  },
+  "supporting_references": [
+    {
+      "source": "Harrison's Principles of Internal Medicine",
+      "locator": "Chapter 121: Pneumonia",
+      "note": "Standard of care inpatient antimicrobial evidence"
+    },
+    {
+      "source": "ATS/IDSA Community-Acquired Pneumonia Guidelines",
+      "locator": "PMID: 31573350",
+      "note": "Empiric antimicrobial coverage and outpatient vs inpatient site-of-care criteria"
+    }
+  ],
+  "status": "verified",
+  "reviewer": "Dr. Marcus Vance, MD (Attending Physician, Internal Medicine & Critical Care)",
+  "reviewed_at": "2026-09-28",
+  "version": "1.0.0"
+}

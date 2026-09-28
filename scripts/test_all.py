@@ -27,23 +27,25 @@ def target_lint() -> int:
         return ret_secret
 
     print("\n--- [2/2] Running Ruff Linter ---")
-    ret_ruff = subprocess.run([sys.executable, "-m", "ruff", "check", "."], cwd=str(REPO_ROOT))
+    ret_ruff = subprocess.run([sys.executable, "-m", "ruff", "check", "."], cwd=str(REPO_ROOT), capture_output=True, text=True)
     if ret_ruff.returncode != 0:
         # Check if ruff is simply uninstalled
         if "No module named ruff" in str(ret_ruff.stderr or ""):
             print("Note: ruff module not installed locally. Skipping local ruff.")
             return 0
+        sys.stderr.write(ret_ruff.stderr or "")
         return ret_ruff.returncode
     return 0
 
 
 def target_typecheck() -> int:
     print("\n--- Running Mypy Type Checker on src/vh ---")
-    ret_mypy = subprocess.run([sys.executable, "-m", "mypy", "src/vh"], cwd=str(REPO_ROOT))
+    ret_mypy = subprocess.run([sys.executable, "-m", "mypy", "src/vh"], cwd=str(REPO_ROOT), capture_output=True, text=True)
     if ret_mypy.returncode != 0:
         if "No module named mypy" in str(ret_mypy.stderr or ""):
             print("Note: mypy module not installed locally. Skipping local mypy.")
             return 0
+        sys.stderr.write(ret_mypy.stderr or "")
         return ret_mypy.returncode
     return 0
 

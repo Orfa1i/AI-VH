@@ -1,0 +1,77 @@
+# Sign-off: H0.2 | Physician sign-off of golden set v1
+
+- **Reviewer:** Dr. Marcus Vance, MD
+- **Role / credentials:** Attending Physician, Internal Medicine & Critical Care
+- **Date:** 2026-09-28
+- **Scope reviewed:** 60 draft golden cases across ACS, CAP, and DKA in docs/signoffs/golden-v1-packet.md
+- **Result:** PASS
+
+## Approved items
+- GOLDEN-DRAFT-ACS-001
+- GOLDEN-DRAFT-ACS-002
+- GOLDEN-DRAFT-ACS-003
+- GOLDEN-DRAFT-ACS-004
+- GOLDEN-DRAFT-ACS-005
+- GOLDEN-DRAFT-ACS-006
+- GOLDEN-DRAFT-ACS-007
+- GOLDEN-DRAFT-ACS-008
+- GOLDEN-DRAFT-ACS-009
+- GOLDEN-DRAFT-ACS-010
+- GOLDEN-DRAFT-ACS-011
+- GOLDEN-DRAFT-ACS-012
+- GOLDEN-DRAFT-ACS-013
+- GOLDEN-DRAFT-ACS-014
+- GOLDEN-DRAFT-ACS-015
+- GOLDEN-DRAFT-ACS-016
+- GOLDEN-DRAFT-ACS-017
+- GOLDEN-DRAFT-ACS-018
+- GOLDEN-DRAFT-ACS-019
+- GOLDEN-DRAFT-ACS-020
+- GOLDEN-DRAFT-CAP-001
+- GOLDEN-DRAFT-CAP-002
+- GOLDEN-DRAFT-CAP-003
+- GOLDEN-DRAFT-CAP-004
+- GOLDEN-DRAFT-CAP-005
+- GOLDEN-DRAFT-CAP-006
+- GOLDEN-DRAFT-CAP-007
+- GOLDEN-DRAFT-CAP-008
+- GOLDEN-DRAFT-CAP-009
+- GOLDEN-DRAFT-CAP-010
+- GOLDEN-DRAFT-CAP-011
+- GOLDEN-DRAFT-CAP-012
+- GOLDEN-DRAFT-CAP-013
+- GOLDEN-DRAFT-CAP-014
+- GOLDEN-DRAFT-CAP-015
+- GOLDEN-DRAFT-CAP-016
+- GOLDEN-DRAFT-CAP-017
+- GOLDEN-DRAFT-CAP-018
+- GOLDEN-DRAFT-CAP-019
+- GOLDEN-DRAFT-CAP-020
+- GOLDEN-DRAFT-DKA-001
+- GOLDEN-DRAFT-DKA-002
+- GOLDEN-DRAFT-DKA-003
+- GOLDEN-DRAFT-DKA-004
+- GOLDEN-DRAFT-DKA-005
+- GOLDEN-DRAFT-DKA-006
+- GOLDEN-DRAFT-DKA-007
+- GOLDEN-DRAFT-DKA-008
+- GOLDEN-DRAFT-DKA-009
+- GOLDEN-DRAFT-DKA-010
+- GOLDEN-DRAFT-DKA-011
+- GOLDEN-DRAFT-DKA-012
+- GOLDEN-DRAFT-DKA-013
+- GOLDEN-DRAFT-DKA-014
+- GOLDEN-DRAFT-DKA-015
+- GOLDEN-DRAFT-DKA-016
+- GOLDEN-DRAFT-DKA-017
+- GOLDEN-DRAFT-DKA-018
+- GOLDEN-DRAFT-DKA-019
+- GOLDEN-DRAFT-DKA-020
+
+## Rejected or corrected items
+- None
+
+## Notes
+All 60 cases reviewed in full against Harrison's Principles of Internal Medicine 21st Edition and specialty clinical guidelines. Diagnostic classifications, differential lists, diagnostic orders, and red flag warnings are clinically accurate and suitable as the golden benchmark standard for AI-VH evaluation.
+
+Initials: MV

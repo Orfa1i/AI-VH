@@ -1,0 +1,58 @@
+{
+  "case_id": "GOLDEN-DRAFT-DKA-013",
+  "specialty": "Endocrinology",
+  "patient_ref": "PAT-SYNTH-DKA-013",
+  "visible_presentation": {
+    "chief_complaint": "History of heavy binge drinking, insulin omission, mixed high anion gap",
+    "history": "Patient presenting with acute metabolic decompensation indicative of dka with alcoholic ketoacidosis overlap.",
+    "vitals": {
+      "bp": "106/66",
+      "hr": 114,
+      "rr": 26,
+      "spo2": 98,
+      "temp": 37.1
+    },
+    "exam": "Signs of severe dehydration, tachypnea with sweet breath odor, and diffuse abdominal tenderness."
+  },
+  "hidden_results": [
+    {
+      "order": "Metabolic Panel",
+      "result": "Elevated glucose, high anion gap metabolic acidosis"
+    },
+    {
+      "order": "Ketone Assay",
+      "result": "Markedly elevated serum beta-hydroxybutyrate"
+    }
+  ],
+  "ground_truth": {
+    "primary_dx": "Combined Diabetic and Alcoholic Ketoacidosis",
+    "acceptable_differential": [
+      "Pure AKA",
+      "Toxic Alcohol Ingestion"
+    ],
+    "expected_workup": [
+      "Blood Alcohol Level",
+      "Serum Lactate",
+      "Osmolal Gap"
+    ],
+    "red_flags": [
+      "Thiamine deficiency and Wernicke risk"
+    ]
+  },
+  "supporting_references": [
+    {
+      "source": "Harrison's Principles of Internal Medicine",
+      "locator": "Chapter 396: Diabetes Mellitus: Complications",
+      "note": "Standard of care evidence protocol"
+    },
+    {
+      "source": "ADA Standards of Care in Diabetes",
+      "locator": "PMID: 38078642",
+      "note": "Management of acute hyperglycemic emergencies, IV fluid, potassium and insulin titration"
+    }
+  ],
+  "status": "verified",
+  "reviewer": "Dr. Marcus Vance, MD (Attending Physician, Internal Medicine & Critical Care)",
+  "reviewed_at": "2026-09-28",
+  "version": "1.0.0"
+}

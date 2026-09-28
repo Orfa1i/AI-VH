@@ -98,6 +98,7 @@ class DummyScorer:
 
         return {
             "schema_valid_rate": schema_valid_rate,
+            "min_verified_cases": float(len(golden_cases)),
             "recall_at_10": 0.90,
             "mrr_min": 0.80,
             "critical_fault_detection": 1.0,

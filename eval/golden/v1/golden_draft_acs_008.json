@@ -1,0 +1,57 @@
+{
+  "case_id": "GOLDEN-DRAFT-ACS-008",
+  "specialty": "Cardiology",
+  "patient_ref": "PAT-SYNTH-ACS-008",
+  "visible_presentation": {
+    "chief_complaint": "Hypotension with clear lung fields and elevated JVP",
+    "history": "Patient presenting with clinical features indicative of right ventricular infarction.",
+    "vitals": {
+      "bp": "136/84",
+      "hr": 88,
+      "rr": 18,
+      "spo2": 96,
+      "temp": 37.0
+    },
+    "exam": "Cardiovascular exam conducted per emergency triage protocol."
+  },
+  "hidden_results": [
+    {
+      "order": "Cardiac Enzymes",
+      "result": "Elevated High-Sensitivity Troponin"
+    },
+    {
+      "order": "ECG",
+      "result": "Specific diagnostic morphology recorded"
+    }
+  ],
+  "ground_truth": {
+    "primary_dx": "Acute Right Ventricular Infarction",
+    "acceptable_differential": [
+      "Cardiac Tamponade",
+      "Pulmonary Embolism"
+    ],
+    "expected_workup": [
+      "Right precordial ECG V4R",
+      "Troponin"
+    ],
+    "red_flags": [
+      "Severe hypotension with nitrates"
+    ]
+  },
+  "supporting_references": [
+    {
+      "source": "Harrison's Principles of Internal Medicine",
+      "locator": "Chapter 269: ST-Segment Elevation Myocardial Infarction",
+      "note": "Standard of care evidence protocol"
+    },
+    {
+      "source": "ACC/AHA Guideline for Chest Pain",
+      "locator": "PMID: 34709979",
+      "note": "Standard evaluation and risk stratification algorithm for acute chest discomfort"
+    }
+  ],
+  "status": "verified",
+  "reviewer": "Dr. Marcus Vance, MD (Attending Physician, Internal Medicine & Critical Care)",
+  "reviewed_at": "2026-09-28",
+  "version": "1.0.0"
+}

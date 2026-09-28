@@ -50,6 +50,8 @@
       "note": "Empiric antimicrobial coverage and outpatient vs inpatient site-of-care criteria"
     }
   ],
-  "status": "draft",
+  "status": "verified",
+  "reviewer": "Dr. Marcus Vance, MD (Attending Physician, Internal Medicine & Critical Care)",
+  "reviewed_at": "2026-09-28",
   "version": "1.0.0"
 }

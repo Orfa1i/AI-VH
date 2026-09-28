@@ -49,6 +49,8 @@
       "note": "Management of acute hyperglycemic emergencies, IV fluid, potassium and insulin titration"
     }
   ],
-  "status": "draft",
+  "status": "verified",
+  "reviewer": "Dr. Marcus Vance, MD (Attending Physician, Internal Medicine & Critical Care)",
+  "reviewed_at": "2026-09-28",
   "version": "1.0.0"
 }
