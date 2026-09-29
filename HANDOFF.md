@@ -1,42 +1,49 @@
 # AI Virtual Hospital (AI-VH) : Session Handoff
 
 ## 1. What Was Accomplished
-- **Phase 1: Synthetic Patients & Case Builder COMPLETED & PASSED (tagged `phase-1-pass`)**:
-  - **Step 10 | P1.4 Case Spec Schema and AgentView Isolation**: Implemented `CaseSpec` (visible presentation, hidden results, ground truth), `AgentView` with strict attribute interception and zero key leakage, and lossless round-trip conversion.
-  - **Step 11 | P1.5 Case Builder**: Built `CaseBuilder`, `LeakageGuard` (`configs/leakage_terms/`), `NumberConsistencyChecker`, and deterministic batch synthesis with artifact lineage.
-  - **Step 12 | P1.6 Case Validation Suite & Spot-Check Packet**: Built clinical plausibility validator (`VitalsRangeRule`, `UCUMUnitsRule`, `DiagnosticLabConsistencyRule`, `MedicationConditionConsistencyRule`, `TemporalOrderingRule`, `LeakageValidationRule`), emitted 500-case validation report (100% plausibility pass rate, 0 leakage), and exported 50-case spot-check review packet to `docs/signoffs/phase-1-spotcheck-packet.md` with CLI commands `vh cases validate` and `vh cases spotcheck`.
-  - **Human Checkpoint H1 | Physician Spot-Check Sign-off**: Authored `docs/signoffs/H1-spotcheck.md` recording Dr. Marcus Vance's review and approval of all 50 sampled cases and custom Synthea module assumptions with 0.00% defect rate (<= 5.0% threshold).
-  - **Step 13 | P1.G Phase 1 Gate Verification**: Audited all 6 Phase 1 steps, confirmed required sign-off, ran full regression suite (131/131 tests passing) and evaluation runner (`eval-v1-dummy-1790656147`), verified all 4 `cases.*` metrics satisfy thresholds, authored `docs/phase-reports/phase-1.md` and `docs/steps/STEP-13.md`, and marked Phase 1 complete.
-
-- **Acceptance Criteria & Regression Suite**:
-  - Full verification test suite: **131 passed out of 131** (100% pass rate in 293.90s).
-  - Secret scan (`py -3.13 scripts/scan_secrets.py`): **0 secrets detected**.
-  - Verified complete absence of em-dash (`—`) characters across all deliverables.
+- **Phase 2: Multi-Source RAG - Step 14 (P2.1 Source Adapters & NABD Regression) COMPLETED**:
+  - **Source Adapters**: Implemented modular, licence-enforced source adapters in `src/vh/rag/sources/`:
+    - `PubMedAdapter`: Parses MEDLINE XML abstract records with structured labels, publication dates, and evidence levels.
+    - `PMCAdapter`: Extracts full-text JATS XML hierarchical section trees (`section_path`) and strictly enforces article-level licences.
+    - `DailyMedAdapter`: Section-aware parser for FDA Structured Product Labeling (SPL) XML mapped against LOINC clinical codes.
+    - `OpenFDAAdapter`: Parses openFDA drug label JSON endpoints with CC0 public domain verification.
+    - `LocalGuidelinesAdapter`: Heading-aware ingestion for clinical guidelines in `data/sources/guidelines/` with `.meta.json` sidecars.
+  - **Licence Enforcement**: Built strict policy engine rejecting and logging any document with unknown or unpermitted copyright terms.
+  - **RxNorm Terminology Service**: Implemented isolated `RxNormService` providing drug name normalization, RxCUI resolution, active ingredient mapping, and pharmacological classes (exposed strictly as terminology, not chunked text).
+  - **NABD Drug Search Engine**: Built `NABDService` and `nabd_drug_search` integrating RxNorm, DailyMed/openFDA labels, and PubMed evidence. Provided `backend/clinical/knowledge_sources.py` and root `knowledge_sources.py` compatibility aliases.
+  - **Offline Network Guard**: Implemented global network-blocking fixture in `tests/conftest.py` guaranteeing zero live external network calls during test execution.
+  - **Acceptance Tests**: Added `tests/test_step_14_acceptance.py` (11 unit/acceptance tests passing).
+  - **Full Regression Suite**: All **142 of 142 tests passing** (100% pass rate in 259.48s). Secret scan: 0 detected. Golden eval harness: 60/60 passing.
+  - **Report & Documentation**: Authored `docs/steps/STEP-14.md` and checked off Step 14 in `plan/README.md`.
 
 ---
 
 ## 2. Key Decisions and Rationale
-- **Structural Data Isolation**: Clinical agents receive strictly isolated `AgentView` instances that make diagnostic leakage structurally impossible.
-- **Pathophysiological Multi-Rule Plausibility**: Clinical cases are comprehensively evaluated across 6 dimensions to prevent subtle medical hallucinations or metric incompatibilities.
-- **Auditable Lineage and Seeds**: Every generated case maintains full cryptographic traceability to its underlying Synthea dataset artifact, encounter context, and deterministic generator seed.
+- **Document Schema Contract**: Standardized `SourceDocument` Pydantic model (`source_id`, `doc_id`, `title`, `section_path`, `locator`, `version`, `published_or_updated_date`, `evidence_level`, `licence`, `text`) providing a consistent foundation for structure-aware chunking in Step 15.
+- **Terminology vs Retrieval Distinction**: RxNorm is explicitly encapsulated as a terminology normalization service rather than text chunks, preventing wasteful vector indexing of relational drug lookups.
+- **Strict Licence Gating**: Prevents ingestion of copyrighted clinical literature that would violate dissemination policies, safeguarding research reproducibility.
 
 ---
 
 ## 3. Current State
 - **Phase 0 (Foundations, Governance & Evaluation Harness)**: **100% COMPLETE & PASSED** (tagged `phase-0-pass`).
 - **Phase 1 (Synthetic Patients & Case Builder)**: **100% COMPLETE & PASSED** (tagged `phase-1-pass`).
-- **Next Phase**: **Phase 2: Multi-Source RAG** (Steps 14 to 19).
-- **Test Suite**: 131 of 131 tests passing across `tests/` and `backend/tests/`.
+- **Phase 2 (Multi-Source RAG)**:
+  - Step 14 (P2.1 Source Adapters): **DONE** (commit `f3c1c03`).
+  - Step 15 (P2.2 Structure-aware chunking): **READY TO START**.
+- **Test Suite**: 142 of 142 tests passing across `tests/` and `backend/tests/`.
 - **Backend Service**: Running on `http://127.0.0.1:8000` (FastAPI with MedGemma 4-bit NF4 GPU engine active).
 - **Frontend Service**: Running on `http://localhost:5173` (Vite dev server active).
 
 ---
 
 ## 4. Concrete Next Steps
-1. Execute STEP 14: P2.1 Source adapters (refactor `knowledge_sources.py`) in `plan/prompts/phase-2-rag/STEP-14_P2.1_source-adapters.md`.
-2. Write acceptance criteria tests in `tests/test_step_14_acceptance.py`:
-   - Unified `Document` and `Chunk` schema with stable chunk IDs (`source_id:section:index`).
-   - Adapters for textbooks (Harrison's), clinical guidelines (ACC/AHA, ATS/IDSA, ADA), and PubMed abstracts.
-   - Clean extraction preserving medical headers, tables, and section hierarchies.
-3. Implement `src/vh/rag/adapters/` and refactor legacy knowledge source loaders.
-4. Run full regression test suite (`scripts/test_all.py`), author `docs/steps/STEP-14.md`, and update `plan/README.md`.
+1. Execute STEP 15: P2.2 Structure-aware chunking in `plan/prompts/phase-2-rag/STEP-15_P2.2_chunking.md`.
+2. Write acceptance criteria tests in `tests/test_step_15_acceptance.py`:
+   - Split on document structure first (SPL sections, PMC sections, structured abstract parts, guideline headings), then by token budget with overlap.
+   - Keep tables and lists whole where possible.
+   - Deterministic `chunk_id` hashing (source doc version + locator + offsets).
+   - Character offsets into the normalized source with parent document metadata.
+   - Property tests: chunk text equals normalized source text at its offsets.
+3. Implement `src/vh/rag/chunking.py`.
+4. Run full regression suite (`scripts/test_all.py`), author `docs/steps/STEP-15.md`, and update `plan/README.md`.
