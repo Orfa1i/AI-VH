@@ -21,6 +21,15 @@ from vh.rag.indexing import (
     RetrievedItem,
     QueryResult,
 )
+from vh.rag.retrieval import (
+    EvidenceItem,
+    RetrievalFilters,
+    RetrievalRequest,
+    RetrievalResponse,
+    UnifiedRetrievalService,
+    RetrievalClient,
+    resolve_locator,
+)
 
 __all__ = [
     "rag_service",
@@ -37,4 +46,11 @@ __all__ = [
     "VersionedHybridIndex",
     "RetrievedItem",
     "QueryResult",
+    "EvidenceItem",
+    "RetrievalFilters",
+    "RetrievalRequest",
+    "RetrievalResponse",
+    "UnifiedRetrievalService",
+    "RetrievalClient",
+    "resolve_locator",
 ]

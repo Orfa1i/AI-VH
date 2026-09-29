@@ -52,6 +52,12 @@ app.add_middleware(
 
 app.include_router(api_router)
 
+try:
+    from vh.rag.router import router as rag_router
+    app.include_router(rag_router)
+except ImportError:
+    pass
+
 
 @app.get("/health")
 async def root_health_check():

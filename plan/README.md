@@ -198,7 +198,7 @@ If your existing code lives elsewhere, ADR-0001 (STEP 01–02) maps it onto this
 - [x] STEP 14: P2.1 Source adapters (refactor knowledge_sources.py) → `prompts/phase-2-rag/STEP-14_P2.1_source-adapters.md`
 - [x] STEP 15: P2.2 Structure-aware chunking → `prompts/phase-2-rag/STEP-15_P2.2_chunking.md`
 - [x] STEP 16: P2.3 Dense + keyword indexing with versioned indexes → `prompts/phase-2-rag/STEP-16_P2.3_indexing.md`
-- [ ] STEP 17: P2.4 Unified hybrid retrieval API → `prompts/phase-2-rag/STEP-17_P2.4_retrieval-api.md`
+- [x] STEP 17: P2.4 Unified hybrid retrieval API → `prompts/phase-2-rag/STEP-17_P2.4_retrieval-api.md`
 - [ ] STEP 18: P2.5 Retrieval evaluation and configuration choice → `prompts/phase-2-rag/STEP-18_P2.5_retrieval-evaluation.md`
 - [ ] **[HUMAN] H2: Confirm golden-set chunk mapping** → `docs/signoffs/H2-chunkmap.md`  
   Check that each mapped chunk genuinely contains the supporting evidence for its golden case (you can do this yourself; no physician needed). List corrections, then have the agent apply them and re-run STEP 18's evaluation.
