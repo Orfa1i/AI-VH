@@ -8,4 +8,11 @@ try:
 except ImportError:
     rag_service = None
 
-__all__ = ["rag_service"]
+from vh.rag.chunking import Chunk, ChunkerConfig, StructureAwareChunker
+
+__all__ = [
+    "rag_service",
+    "Chunk",
+    "ChunkerConfig",
+    "StructureAwareChunker",
+]
