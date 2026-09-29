@@ -25,6 +25,17 @@ from .builder import (
     DKA_COHORT,
     ALL_COHORTS,
 )
+from .validation import (
+    CaseValidator,
+    BatchCaseValidator,
+    VitalsRangeRule,
+    UCUMUnitsRule,
+    DiagnosticLabConsistencyRule,
+    MedicationConditionConsistencyRule,
+    TemporalOrderingRule,
+    LeakageValidationRule,
+    generate_spotcheck_packet,
+)
 
 try:
     from backend.clinical.cases import BENCHMARK_CASES
@@ -56,6 +67,15 @@ __all__ = [
     "CAP_COHORT",
     "DKA_COHORT",
     "ALL_COHORTS",
+    "CaseValidator",
+    "BatchCaseValidator",
+    "VitalsRangeRule",
+    "UCUMUnitsRule",
+    "DiagnosticLabConsistencyRule",
+    "MedicationConditionConsistencyRule",
+    "TemporalOrderingRule",
+    "LeakageValidationRule",
+    "generate_spotcheck_packet",
     "BENCHMARK_CASES",
     "hospital_repo",
 ]

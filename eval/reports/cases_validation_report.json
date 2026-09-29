@@ -1,0 +1,17 @@
+{
+  "timestamp": "2026-09-29T04:19:21.856465+00:00",
+  "total_cases": 500,
+  "valid_cases": 500,
+  "plausibility_pass_rate": 1.0,
+  "leakage_count": 0,
+  "rule_pass_rates": {
+    "vitals_range_pass_rate": 1.0,
+    "ucum_units_pass_rate": 1.0,
+    "diagnostic_consistency_pass_rate": 1.0,
+    "medication_consistency_pass_rate": 1.0,
+    "temporal_ordering_pass_rate": 1.0,
+    "leakage_pass_rate": 1.0
+  },
+  "defects_count": 0,
+  "defects": []
+}
