@@ -206,7 +206,7 @@ If your existing code lives elsewhere, ADR-0001 (STEP 01–02) maps it onto this
 
 ### Phase 3: Grounded Clinical Generation (MedGemma)
 
-- [ ] STEP 20: P3.1 Clinical report schema with claim-evidence links → `prompts/phase-3-generation/STEP-20_P3.1_report-schema.md`
+- [x] STEP 20: P3.1 Clinical report schema with claim-evidence links → `prompts/phase-3-generation/STEP-20_P3.1_report-schema.md`
 - [ ] STEP 21: P3.2 MedGemma adapter → `prompts/phase-3-generation/STEP-21_P3.2_medgemma-adapter.md`
 - [ ] STEP 22: P3.3 Grounded generation pipeline with abstention → `prompts/phase-3-generation/STEP-22_P3.3_grounded-pipeline.md`
 - [ ] STEP 23: P3.4 Model benchmark and no-RAG baseline → `prompts/phase-3-generation/STEP-23_P3.4_model-benchmark.md`

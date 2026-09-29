@@ -1,7 +1,17 @@
-"""
-Clinical text and report generation module for AI-VH.
-Provides local MedGemma 4-bit serving and comparative inference pipelines.
-"""
+from .report import (
+    ClinicalReport,
+    DifferentialItem,
+    RecommendationItem,
+    ClaimItem,
+    AbstentionItem,
+    ReportProvenance,
+    validate_clinical_report,
+    IntegrityValidationError,
+    MissingClaimError,
+    UnresolvedEvidenceError,
+    EmptyClaimsError,
+    export_clinical_report_json_schema,
+)
 
 try:
     from backend.llm.medgemma_service import medgemma_service, MedGemmaService
@@ -9,4 +19,19 @@ except ImportError:
     medgemma_service = None
     MedGemmaService = None
 
-__all__ = ["medgemma_service", "MedGemmaService"]
+__all__ = [
+    "ClinicalReport",
+    "DifferentialItem",
+    "RecommendationItem",
+    "ClaimItem",
+    "AbstentionItem",
+    "ReportProvenance",
+    "validate_clinical_report",
+    "IntegrityValidationError",
+    "MissingClaimError",
+    "UnresolvedEvidenceError",
+    "EmptyClaimsError",
+    "export_clinical_report_json_schema",
+    "medgemma_service",
+    "MedGemmaService",
+]
