@@ -2,26 +2,33 @@
 
 ## 1. What Was Accomplished
 - **Phase 2: Multi-Source RAG - Step 14 (P2.1 Source Adapters & NABD Regression) COMPLETED**:
-  - **Source Adapters**: Implemented modular, licence-enforced source adapters in `src/vh/rag/sources/`:
-    - `PubMedAdapter`: Parses MEDLINE XML abstract records with structured labels, publication dates, and evidence levels.
-    - `PMCAdapter`: Extracts full-text JATS XML hierarchical section trees (`section_path`) and strictly enforces article-level licences.
-    - `DailyMedAdapter`: Section-aware parser for FDA Structured Product Labeling (SPL) XML mapped against LOINC clinical codes.
-    - `OpenFDAAdapter`: Parses openFDA drug label JSON endpoints with CC0 public domain verification.
-    - `LocalGuidelinesAdapter`: Heading-aware ingestion for clinical guidelines in `data/sources/guidelines/` with `.meta.json` sidecars.
-  - **Licence Enforcement**: Built strict policy engine rejecting and logging any document with unknown or unpermitted copyright terms.
-  - **RxNorm Terminology Service**: Implemented isolated `RxNormService` providing drug name normalization, RxCUI resolution, active ingredient mapping, and pharmacological classes (exposed strictly as terminology, not chunked text).
-  - **NABD Drug Search Engine**: Built `NABDService` and `nabd_drug_search` integrating RxNorm, DailyMed/openFDA labels, and PubMed evidence. Provided `backend/clinical/knowledge_sources.py` and root `knowledge_sources.py` compatibility aliases.
-  - **Offline Network Guard**: Implemented global network-blocking fixture in `tests/conftest.py` guaranteeing zero live external network calls during test execution.
-  - **Acceptance Tests**: Added `tests/test_step_14_acceptance.py` (11 unit/acceptance tests passing).
-  - **Full Regression Suite**: All **142 of 142 tests passing** (100% pass rate in 259.48s). Secret scan: 0 detected. Golden eval harness: 60/60 passing.
-  - **Report & Documentation**: Authored `docs/steps/STEP-14.md` and checked off Step 14 in `plan/README.md`.
+  - Implemented modular, licence-enforced source adapters in `src/vh/rag/sources/` (PubMed, PMC, DailyMed, openFDA, local guidelines).
+  - Built licence policy engine, isolated RxNorm terminology service, and refactored NABD drug search engine.
+  - Implemented global network-blocking fixture in `tests/conftest.py` guaranteeing zero live external network calls.
+  - Tested with 11 acceptance tests in `tests/test_step_14_acceptance.py`.
+
+- **Phase 2: Multi-Source RAG - Step 15 (P2.2 Structure-Aware Chunking) COMPLETED**:
+  - Built `StructureAwareChunker`, `Chunk`, and `ChunkerConfig` in `src/vh/rag/chunking.py`.
+  - Enforced structural splitting first (SPL, PMC, guidelines, structured abstracts) without crossing section boundaries.
+  - Preserved tables and lists whole, flagging oversized tables with `exceeds_bounds=True` to eliminate tabular truncation.
+  - Verified property test: `doc.text[start_char_offset:end_char_offset] == chunk.text` with 100% precision.
+  - Guaranteed deterministic SHA-256 chunk IDs combining source document version, locator, and character offsets.
+  - Exported chunking API in `src/vh/rag/__init__.py`.
+  - Tested with 5 unit/property tests in `tests/test_step_15_acceptance.py`.
+  - Authored `docs/steps/STEP-15.md` and checked off Step 15 in `plan/README.md`.
+
+- **Acceptance Criteria & Regression Suite**:
+  - Full verification test suite: **147 passed out of 147** (100% pass rate in 256.81s).
+  - Secret scan (`py -3.13 scripts/scan_secrets.py`): **0 secrets detected**.
+  - Evaluation harness (`py -3.13 scripts/test_all.py eval`): **60 of 60 golden v1 cases passing**.
+  - Verified complete absence of em-dash (`—`) characters across all deliverables.
 
 ---
 
 ## 2. Key Decisions and Rationale
-- **Document Schema Contract**: Standardized `SourceDocument` Pydantic model (`source_id`, `doc_id`, `title`, `section_path`, `locator`, `version`, `published_or_updated_date`, `evidence_level`, `licence`, `text`) providing a consistent foundation for structure-aware chunking in Step 15.
-- **Terminology vs Retrieval Distinction**: RxNorm is explicitly encapsulated as a terminology normalization service rather than text chunks, preventing wasteful vector indexing of relational drug lookups.
-- **Strict Licence Gating**: Prevents ingestion of copyrighted clinical literature that would violate dissemination policies, safeguarding research reproducibility.
+- **Exact Offset Invariance**: Chunks never undergo irreversible transformations or whitespace loss that would desynchronize character offsets from source texts. This guarantees 100% traceable citations during downstream generation and verification.
+- **Atomic Table Preservation**: Tables are kept intact as single evidence units even when exceeding standard token targets, preventing fragmented clinical dosage charts.
+- **Deterministic Chunk IDs**: Provenance hashing enables bit-for-bit index reconstruction and delta indexing in Step 16.
 
 ---
 
@@ -30,20 +37,21 @@
 - **Phase 1 (Synthetic Patients & Case Builder)**: **100% COMPLETE & PASSED** (tagged `phase-1-pass`).
 - **Phase 2 (Multi-Source RAG)**:
   - Step 14 (P2.1 Source Adapters): **DONE** (commit `f3c1c03`).
-  - Step 15 (P2.2 Structure-aware chunking): **READY TO START**.
-- **Test Suite**: 142 of 142 tests passing across `tests/` and `backend/tests/`.
+  - Step 15 (P2.2 Structure-aware chunking): **DONE** (commit `57aaa1f`).
+  - Step 16 (P2.3 Dense + keyword indexing with versioned indexes): **READY TO START**.
+- **Test Suite**: 147 of 147 tests passing across `tests/` and `backend/tests/`.
 - **Backend Service**: Running on `http://127.0.0.1:8000` (FastAPI with MedGemma 4-bit NF4 GPU engine active).
 - **Frontend Service**: Running on `http://localhost:5173` (Vite dev server active).
 
 ---
 
 ## 4. Concrete Next Steps
-1. Execute STEP 15: P2.2 Structure-aware chunking in `plan/prompts/phase-2-rag/STEP-15_P2.2_chunking.md`.
-2. Write acceptance criteria tests in `tests/test_step_15_acceptance.py`:
-   - Split on document structure first (SPL sections, PMC sections, structured abstract parts, guideline headings), then by token budget with overlap.
-   - Keep tables and lists whole where possible.
-   - Deterministic `chunk_id` hashing (source doc version + locator + offsets).
-   - Character offsets into the normalized source with parent document metadata.
-   - Property tests: chunk text equals normalized source text at its offsets.
-3. Implement `src/vh/rag/chunking.py`.
-4. Run full regression suite (`scripts/test_all.py`), author `docs/steps/STEP-15.md`, and update `plan/README.md`.
+1. Execute STEP 16: P2.3 Dense + keyword indexing with versioned indexes in `plan/prompts/phase-2-rag/STEP-16_P2.3_indexing.md`.
+2. Write acceptance criteria tests in `tests/test_step_16_acceptance.py`:
+   - Embedding interface with two configured candidates (general-purpose e.g. sentence-transformers, biomedical e.g. MedEmbed / PubMedBERT).
+   - Dense vector index (ChromaDB / SQLite vector) + BM25 keyword index.
+   - Versioned index artifact with manifest: embedding model + version, chunker version, source document versions, counts.
+   - Incremental updates with superseded marking (`superseded_by`).
+   - Query output records index version used.
+3. Implement `src/vh/rag/indexing.py`.
+4. Run full regression suite (`scripts/test_all.py`), author `docs/steps/STEP-16.md`, and update `plan/README.md`.
