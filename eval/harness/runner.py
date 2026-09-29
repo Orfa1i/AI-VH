@@ -175,11 +175,20 @@ def run_evaluation(
         pipeline = pipeline_instance
     elif pipeline_name == "dummy":
         pipeline = DummyPipeline()
+    elif pipeline_name in ("grounded", "medgemma"):
+        from vh.generation.pipeline import GroundedGenerationPipeline
+        pipeline = GroundedGenerationPipeline()
     else:
         raise ValueError(f"Unknown pipeline: '{pipeline_name}'")
 
     # Resolve scorer
-    scorer = scorer_instance or DummyScorer()
+    if scorer_instance is not None:
+        scorer = scorer_instance
+    elif pipeline_name in ("grounded", "medgemma"):
+        from eval.harness.scorers.generation import GenerationScorer
+        scorer = GenerationScorer()
+    else:
+        scorer = DummyScorer()
 
     # Step 3: Run pipeline passing strictly CaseView (isolation guarantee)
     results: List[Tuple[CaseView, PipelineResult]] = []

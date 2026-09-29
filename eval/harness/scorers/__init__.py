@@ -15,6 +15,13 @@ from .retrieval import (
     RetrievalEvaluationHarness,
 )
 
+from .generation import (
+    compute_schema_valid_rate,
+    compute_fabricated_citation_rate,
+    compute_abstention_correct_rate,
+    GenerationScorer,
+)
+
 __all__ = [
     "RetrievalMetrics",
     "compute_recall_at_k",
@@ -26,4 +33,8 @@ __all__ = [
     "compute_p95_latency",
     "build_retrieval_query_from_case_view",
     "RetrievalEvaluationHarness",
+    "compute_schema_valid_rate",
+    "compute_fabricated_citation_rate",
+    "compute_abstention_correct_rate",
+    "GenerationScorer",
 ]

@@ -24,6 +24,12 @@ from .medgemma import (
     format_generation_prompt,
 )
 
+from .pipeline import (
+    GroundedGenerationPipeline,
+    QueryPlanner,
+    get_default_retrieval_service,
+)
+
 try:
     from backend.llm.medgemma_service import medgemma_service, MedGemmaService
 except ImportError:
@@ -51,6 +57,9 @@ __all__ = [
     "MissingPromptVersionError",
     "extract_json_from_text",
     "format_generation_prompt",
+    "GroundedGenerationPipeline",
+    "QueryPlanner",
+    "get_default_retrieval_service",
     "medgemma_service",
     "MedGemmaService",
 ]
