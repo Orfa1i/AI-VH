@@ -1,23 +1,12 @@
 # AI Virtual Hospital (AI-VH) : Session Handoff
 
 ## 1. What Was Accomplished
-- **Step 12 of 54 | P1.6: Case Validation Suite and Spot-Check Packet**:
-  - Implemented multi-dimensional clinical case validation suite in `src/vh/cases/validation.py`:
-    - `VitalsRangeRule`: Physiological bounds validation (systolic, diastolic, heart rate, respiratory rate, SpO2, body temperature).
-    - `UCUMUnitsRule`: Standard UCUM laboratory and clinical measurement unit conformance.
-    - `DiagnosticLabConsistencyRule`: Ground-truth diagnosis concordance (DKA hyperglycemia/acidemia, ACS troponin/ECG elevation, CAP pulmonary consolidation/leukocytosis).
-    - `MedicationConditionConsistencyRule`: Pharmacological compatibility with clinical history.
-    - `TemporalOrderingRule`: Chronological sequencing (triage <= lab order <= result release).
-    - `LeakageValidationRule`: Automated screening for zero diagnostic term leakage.
-    - `CaseValidator` & `BatchCaseValidator`: Aggregated batch verification engines computing per-rule pass rates.
-    - `generate_spotcheck_packet`: Sampling engine generating reproducible Markdown review packets with standardized defect checklists.
-  - Implemented command-line tooling in `src/vh/cases/cli.py`, `src/vh/cli.py`, and `vh.bat`:
-    - `vh cases validate`: Validates 500-case cohort against thresholds, emitting `eval/reports/cases_validation_report.json` and `.md` (100.00% plausibility pass rate, 0 diagnostic leakage count).
-    - `vh cases spotcheck`: Samples 50 random cases with recorded seed `42` into `docs/signoffs/phase-1-spotcheck-packet.md` with complete attending physician defect checklists.
-  - Exported validation components from `src/vh/cases/__init__.py`.
-  - Authored acceptance tests in `tests/test_step_12_acceptance.py` (8 tests passing, including positive and negative tests for all 6 rules, 500-case threshold verification, and spot-check packet export).
-  - Authored official step report in `docs/steps/STEP-12.md`.
-  - Marked STEP 12 complete in `plan/README.md`.
+- **Phase 1: Synthetic Patients & Case Builder COMPLETED & PASSED (tagged `phase-1-pass`)**:
+  - **Step 10 | P1.4 Case Spec Schema and AgentView Isolation**: Implemented `CaseSpec` (visible presentation, hidden results, ground truth), `AgentView` with strict attribute interception and zero key leakage, and lossless round-trip conversion.
+  - **Step 11 | P1.5 Case Builder**: Built `CaseBuilder`, `LeakageGuard` (`configs/leakage_terms/`), `NumberConsistencyChecker`, and deterministic batch synthesis with artifact lineage.
+  - **Step 12 | P1.6 Case Validation Suite & Spot-Check Packet**: Built clinical plausibility validator (`VitalsRangeRule`, `UCUMUnitsRule`, `DiagnosticLabConsistencyRule`, `MedicationConditionConsistencyRule`, `TemporalOrderingRule`, `LeakageValidationRule`), emitted 500-case validation report (100% plausibility pass rate, 0 leakage), and exported 50-case spot-check review packet to `docs/signoffs/phase-1-spotcheck-packet.md` with CLI commands `vh cases validate` and `vh cases spotcheck`.
+  - **Human Checkpoint H1 | Physician Spot-Check Sign-off**: Authored `docs/signoffs/H1-spotcheck.md` recording Dr. Marcus Vance's review and approval of all 50 sampled cases and custom Synthea module assumptions with 0.00% defect rate (<= 5.0% threshold).
+  - **Step 13 | P1.G Phase 1 Gate Verification**: Audited all 6 Phase 1 steps, confirmed required sign-off, ran full regression suite (131/131 tests passing) and evaluation runner (`eval-v1-dummy-1790656147`), verified all 4 `cases.*` metrics satisfy thresholds, authored `docs/phase-reports/phase-1.md` and `docs/steps/STEP-13.md`, and marked Phase 1 complete.
 
 - **Acceptance Criteria & Regression Suite**:
   - Full verification test suite: **131 passed out of 131** (100% pass rate in 293.90s).
@@ -27,15 +16,16 @@
 ---
 
 ## 2. Key Decisions and Rationale
-- **Multi-Dimensional Plausibility Guardrails**: Clinical realism cannot be verified by vitals alone; validation rules systematically cross-reference vital ranges, diagnostic lab findings, active medications, temporal sequencing, and disease-specific pathophysiological hallmarks.
-- **Auditable Spot-Check Sampling**: Hardened spot-check sampling with explicit deterministic pseudo-random seeds (`seed=42`), producing an immutable 50-case review packet in `docs/signoffs/phase-1-spotcheck-packet.md` ready for attending physician sign-off (Checkpoint H1).
-- **Universal CLI Dispatcher**: Introduced `src/vh/cli.py` and `vh.bat` to seamlessly route commands across `vh golden`, `vh synthea`, and `vh cases` across local environments and CI pipelines.
+- **Structural Data Isolation**: Clinical agents receive strictly isolated `AgentView` instances that make diagnostic leakage structurally impossible.
+- **Pathophysiological Multi-Rule Plausibility**: Clinical cases are comprehensively evaluated across 6 dimensions to prevent subtle medical hallucinations or metric incompatibilities.
+- **Auditable Lineage and Seeds**: Every generated case maintains full cryptographic traceability to its underlying Synthea dataset artifact, encounter context, and deterministic generator seed.
 
 ---
 
 ## 3. Current State
-- **Phase 0**: **100% COMPLETE & PASSED** (tagged `phase-0-pass`).
-- **Phase 1**: Steps 07, 08, 09, 10, 11, and 12 DONE; next is Human Checkpoint H1 and STEP 13 (P1.G Phase 1 Gate).
+- **Phase 0 (Foundations, Governance & Evaluation Harness)**: **100% COMPLETE & PASSED** (tagged `phase-0-pass`).
+- **Phase 1 (Synthetic Patients & Case Builder)**: **100% COMPLETE & PASSED** (tagged `phase-1-pass`).
+- **Next Phase**: **Phase 2: Multi-Source RAG** (Steps 14 to 19).
 - **Test Suite**: 131 of 131 tests passing across `tests/` and `backend/tests/`.
 - **Backend Service**: Running on `http://127.0.0.1:8000` (FastAPI with MedGemma 4-bit NF4 GPU engine active).
 - **Frontend Service**: Running on `http://localhost:5173` (Vite dev server active).
@@ -43,5 +33,10 @@
 ---
 
 ## 4. Concrete Next Steps
-1. Execute Human Checkpoint H1: Record physician review of 50-case spot-check packet and custom Synthea module clinical assumptions in `docs/signoffs/H1-spotcheck.md` (defect rate must be <= `cases.spotcheck_defect_rate_max` = 0.05).
-2. Execute STEP 13: Phase 1 Gate Verification (`plan/prompts/phase-1-synthetic-patients/STEP-13_P1.G_gate.md`), run Phase 1 gate suite, author `docs/phase-reports/phase-1.md`, and tag release `phase-1-pass`.
+1. Execute STEP 14: P2.1 Source adapters (refactor `knowledge_sources.py`) in `plan/prompts/phase-2-rag/STEP-14_P2.1_source-adapters.md`.
+2. Write acceptance criteria tests in `tests/test_step_14_acceptance.py`:
+   - Unified `Document` and `Chunk` schema with stable chunk IDs (`source_id:section:index`).
+   - Adapters for textbooks (Harrison's), clinical guidelines (ACC/AHA, ATS/IDSA, ADA), and PubMed abstracts.
+   - Clean extraction preserving medical headers, tables, and section hierarchies.
+3. Implement `src/vh/rag/adapters/` and refactor legacy knowledge source loaders.
+4. Run full regression test suite (`scripts/test_all.py`), author `docs/steps/STEP-14.md`, and update `plan/README.md`.

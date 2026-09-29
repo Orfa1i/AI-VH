@@ -189,9 +189,9 @@ If your existing code lives elsewhere, ADR-0001 (STEP 01–02) maps it onto this
 - [x] STEP 10: P1.4 Case spec schema and AgentView isolation → `prompts/phase-1-synthetic-patients/STEP-10_P1.4_case-spec-schema.md`
 - [x] STEP 11: P1.5 Case Builder → `prompts/phase-1-synthetic-patients/STEP-11_P1.5_case-builder.md`
 - [x] STEP 12: P1.6 Case validation suite and spot-check packet → `prompts/phase-1-synthetic-patients/STEP-12_P1.6_case-validation-suite.md`
-- [ ] **[HUMAN] H1: Physician spot-check of 50 cases + custom-module assumptions** → `docs/signoffs/H1-spotcheck.md`  
+- [x] **[HUMAN] H1: Physician spot-check of 50 cases + custom-module assumptions** → `docs/signoffs/H1-spotcheck.md`  
   A physician reviews the spot-check packet and `synthea/modules/custom/README.md`, records the defect rate and any required fixes. Defect rate must be at or below `cases.spotcheck_defect_rate_max`.
-- [ ] **STEP 13: P1.G Phase 1 GATE** → `prompts/phase-1-synthetic-patients/STEP-13_P1.G_gate.md`
+- [x] **STEP 13: P1.G Phase 1 GATE** → `prompts/phase-1-synthetic-patients/STEP-13_P1.G_gate.md`
 
 ### Phase 2: Multi-Source RAG
 
