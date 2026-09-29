@@ -42,3 +42,15 @@ licence_policy:
     - "FDA Public Domain"
     - "NLM Public Domain"
     - "Open Access"
+
+retrieval:
+  default_embedding_model: "general"
+  embedding_model_name: "sentence-transformers/all-MiniLM-L6-v2"
+  alternative_embedding_model: "microsoft/BiomedNLP-PubMedBERT-base-uncased-abstract"
+  dense_weight: 1.0
+  bm25_weight: 1.0
+  rrf_k: 60
+  reranker_enabled: false
+  source_diversity_cap: 0.6
+  exclude_superseded: true
+  top_k: 10

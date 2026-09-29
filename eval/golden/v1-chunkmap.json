@@ -1,0 +1,1726 @@
+{
+  "golden_version": "v1",
+  "generated_at": "2026-09-29T17:06:56.336813+00:00",
+  "status": "draft_for_h2_review",
+  "total_cases": 60,
+  "mapped_cases": 60,
+  "case_mappings": {
+    "GOLDEN-DRAFT-ACS-001": {
+      "specialty": "Cardiology",
+      "supporting_references": [
+        {
+          "source": "Harrison's Principles of Internal Medicine",
+          "locator": "Chapter 269: ST-Segment Elevation Myocardial Infarction",
+          "status": "unmappable",
+          "reason": "Textbook copyright restriction (McGraw-Hill) noted in H0.1 signoff"
+        },
+        {
+          "source": "ACC/AHA Guideline for Chest Pain",
+          "locator": "PMID: 34709979",
+          "status": "mapped",
+          "matched_doc_id": "GUIDELINE-ACS-2023",
+          "matched_chunk_ids": [
+            "4905f8261347e3a5",
+            "06b83d3a88aa2a25",
+            "9759b42651a3557c",
+            "f4e73a22c150cdcb"
+          ]
+        }
+      ],
+      "relevant_chunk_ids": [
+        "06b83d3a88aa2a25",
+        "4905f8261347e3a5",
+        "9759b42651a3557c",
+        "f4e73a22c150cdcb"
+      ]
+    },
+    "GOLDEN-DRAFT-ACS-002": {
+      "specialty": "Cardiology",
+      "supporting_references": [
+        {
+          "source": "Harrison's Principles of Internal Medicine",
+          "locator": "Chapter 269: ST-Segment Elevation Myocardial Infarction",
+          "status": "unmappable",
+          "reason": "Textbook copyright restriction (McGraw-Hill) noted in H0.1 signoff"
+        },
+        {
+          "source": "ACC/AHA Guideline for Chest Pain",
+          "locator": "PMID: 34709979",
+          "status": "mapped",
+          "matched_doc_id": "GUIDELINE-ACS-2023",
+          "matched_chunk_ids": [
+            "4905f8261347e3a5",
+            "06b83d3a88aa2a25",
+            "9759b42651a3557c",
+            "f4e73a22c150cdcb"
+          ]
+        }
+      ],
+      "relevant_chunk_ids": [
+        "06b83d3a88aa2a25",
+        "4905f8261347e3a5",
+        "9759b42651a3557c",
+        "f4e73a22c150cdcb"
+      ]
+    },
+    "GOLDEN-DRAFT-ACS-003": {
+      "specialty": "Cardiology",
+      "supporting_references": [
+        {
+          "source": "Harrison's Principles of Internal Medicine",
+          "locator": "Chapter 269: ST-Segment Elevation Myocardial Infarction",
+          "status": "unmappable",
+          "reason": "Textbook copyright restriction (McGraw-Hill) noted in H0.1 signoff"
+        },
+        {
+          "source": "ACC/AHA Guideline for Chest Pain",
+          "locator": "PMID: 34709979",
+          "status": "mapped",
+          "matched_doc_id": "GUIDELINE-ACS-2023",
+          "matched_chunk_ids": [
+            "4905f8261347e3a5",
+            "06b83d3a88aa2a25",
+            "9759b42651a3557c",
+            "f4e73a22c150cdcb"
+          ]
+        }
+      ],
+      "relevant_chunk_ids": [
+        "06b83d3a88aa2a25",
+        "4905f8261347e3a5",
+        "9759b42651a3557c",
+        "f4e73a22c150cdcb"
+      ]
+    },
+    "GOLDEN-DRAFT-ACS-004": {
+      "specialty": "Cardiology",
+      "supporting_references": [
+        {
+          "source": "Harrison's Principles of Internal Medicine",
+          "locator": "Chapter 269: ST-Segment Elevation Myocardial Infarction",
+          "status": "unmappable",
+          "reason": "Textbook copyright restriction (McGraw-Hill) noted in H0.1 signoff"
+        },
+        {
+          "source": "ACC/AHA Guideline for Chest Pain",
+          "locator": "PMID: 34709979",
+          "status": "mapped",
+          "matched_doc_id": "GUIDELINE-ACS-2023",
+          "matched_chunk_ids": [
+            "4905f8261347e3a5",
+            "06b83d3a88aa2a25",
+            "9759b42651a3557c",
+            "f4e73a22c150cdcb"
+          ]
+        }
+      ],
+      "relevant_chunk_ids": [
+        "06b83d3a88aa2a25",
+        "4905f8261347e3a5",
+        "9759b42651a3557c",
+        "f4e73a22c150cdcb"
+      ]
+    },
+    "GOLDEN-DRAFT-ACS-005": {
+      "specialty": "Cardiology",
+      "supporting_references": [
+        {
+          "source": "Harrison's Principles of Internal Medicine",
+          "locator": "Chapter 269: ST-Segment Elevation Myocardial Infarction",
+          "status": "unmappable",
+          "reason": "Textbook copyright restriction (McGraw-Hill) noted in H0.1 signoff"
+        },
+        {
+          "source": "ACC/AHA Guideline for Chest Pain",
+          "locator": "PMID: 34709979",
+          "status": "mapped",
+          "matched_doc_id": "GUIDELINE-ACS-2023",
+          "matched_chunk_ids": [
+            "4905f8261347e3a5",
+            "06b83d3a88aa2a25",
+            "9759b42651a3557c",
+            "f4e73a22c150cdcb"
+          ]
+        }
+      ],
+      "relevant_chunk_ids": [
+        "06b83d3a88aa2a25",
+        "4905f8261347e3a5",
+        "9759b42651a3557c",
+        "f4e73a22c150cdcb"
+      ]
+    },
+    "GOLDEN-DRAFT-ACS-006": {
+      "specialty": "Cardiology",
+      "supporting_references": [
+        {
+          "source": "Harrison's Principles of Internal Medicine",
+          "locator": "Chapter 269: ST-Segment Elevation Myocardial Infarction",
+          "status": "unmappable",
+          "reason": "Textbook copyright restriction (McGraw-Hill) noted in H0.1 signoff"
+        },
+        {
+          "source": "ACC/AHA Guideline for Chest Pain",
+          "locator": "PMID: 34709979",
+          "status": "mapped",
+          "matched_doc_id": "GUIDELINE-ACS-2023",
+          "matched_chunk_ids": [
+            "4905f8261347e3a5",
+            "06b83d3a88aa2a25",
+            "9759b42651a3557c",
+            "f4e73a22c150cdcb"
+          ]
+        }
+      ],
+      "relevant_chunk_ids": [
+        "06b83d3a88aa2a25",
+        "4905f8261347e3a5",
+        "9759b42651a3557c",
+        "f4e73a22c150cdcb"
+      ]
+    },
+    "GOLDEN-DRAFT-ACS-007": {
+      "specialty": "Cardiology",
+      "supporting_references": [
+        {
+          "source": "Harrison's Principles of Internal Medicine",
+          "locator": "Chapter 269: ST-Segment Elevation Myocardial Infarction",
+          "status": "unmappable",
+          "reason": "Textbook copyright restriction (McGraw-Hill) noted in H0.1 signoff"
+        },
+        {
+          "source": "ACC/AHA Guideline for Chest Pain",
+          "locator": "PMID: 34709979",
+          "status": "mapped",
+          "matched_doc_id": "GUIDELINE-ACS-2023",
+          "matched_chunk_ids": [
+            "4905f8261347e3a5",
+            "06b83d3a88aa2a25",
+            "9759b42651a3557c",
+            "f4e73a22c150cdcb"
+          ]
+        }
+      ],
+      "relevant_chunk_ids": [
+        "06b83d3a88aa2a25",
+        "4905f8261347e3a5",
+        "9759b42651a3557c",
+        "f4e73a22c150cdcb"
+      ]
+    },
+    "GOLDEN-DRAFT-ACS-008": {
+      "specialty": "Cardiology",
+      "supporting_references": [
+        {
+          "source": "Harrison's Principles of Internal Medicine",
+          "locator": "Chapter 269: ST-Segment Elevation Myocardial Infarction",
+          "status": "unmappable",
+          "reason": "Textbook copyright restriction (McGraw-Hill) noted in H0.1 signoff"
+        },
+        {
+          "source": "ACC/AHA Guideline for Chest Pain",
+          "locator": "PMID: 34709979",
+          "status": "mapped",
+          "matched_doc_id": "GUIDELINE-ACS-2023",
+          "matched_chunk_ids": [
+            "4905f8261347e3a5",
+            "06b83d3a88aa2a25",
+            "9759b42651a3557c",
+            "f4e73a22c150cdcb"
+          ]
+        }
+      ],
+      "relevant_chunk_ids": [
+        "06b83d3a88aa2a25",
+        "4905f8261347e3a5",
+        "9759b42651a3557c",
+        "f4e73a22c150cdcb"
+      ]
+    },
+    "GOLDEN-DRAFT-ACS-009": {
+      "specialty": "Cardiology",
+      "supporting_references": [
+        {
+          "source": "Harrison's Principles of Internal Medicine",
+          "locator": "Chapter 269: ST-Segment Elevation Myocardial Infarction",
+          "status": "unmappable",
+          "reason": "Textbook copyright restriction (McGraw-Hill) noted in H0.1 signoff"
+        },
+        {
+          "source": "ACC/AHA Guideline for Chest Pain",
+          "locator": "PMID: 34709979",
+          "status": "mapped",
+          "matched_doc_id": "GUIDELINE-ACS-2023",
+          "matched_chunk_ids": [
+            "4905f8261347e3a5",
+            "06b83d3a88aa2a25",
+            "9759b42651a3557c",
+            "f4e73a22c150cdcb"
+          ]
+        }
+      ],
+      "relevant_chunk_ids": [
+        "06b83d3a88aa2a25",
+        "4905f8261347e3a5",
+        "9759b42651a3557c",
+        "f4e73a22c150cdcb"
+      ]
+    },
+    "GOLDEN-DRAFT-ACS-010": {
+      "specialty": "Cardiology",
+      "supporting_references": [
+        {
+          "source": "Harrison's Principles of Internal Medicine",
+          "locator": "Chapter 269: ST-Segment Elevation Myocardial Infarction",
+          "status": "unmappable",
+          "reason": "Textbook copyright restriction (McGraw-Hill) noted in H0.1 signoff"
+        },
+        {
+          "source": "ACC/AHA Guideline for Chest Pain",
+          "locator": "PMID: 34709979",
+          "status": "mapped",
+          "matched_doc_id": "GUIDELINE-ACS-2023",
+          "matched_chunk_ids": [
+            "4905f8261347e3a5",
+            "06b83d3a88aa2a25",
+            "9759b42651a3557c",
+            "f4e73a22c150cdcb"
+          ]
+        }
+      ],
+      "relevant_chunk_ids": [
+        "06b83d3a88aa2a25",
+        "4905f8261347e3a5",
+        "9759b42651a3557c",
+        "f4e73a22c150cdcb"
+      ]
+    },
+    "GOLDEN-DRAFT-ACS-011": {
+      "specialty": "Cardiology",
+      "supporting_references": [
+        {
+          "source": "Harrison's Principles of Internal Medicine",
+          "locator": "Chapter 269: ST-Segment Elevation Myocardial Infarction",
+          "status": "unmappable",
+          "reason": "Textbook copyright restriction (McGraw-Hill) noted in H0.1 signoff"
+        },
+        {
+          "source": "ACC/AHA Guideline for Chest Pain",
+          "locator": "PMID: 34709979",
+          "status": "mapped",
+          "matched_doc_id": "GUIDELINE-ACS-2023",
+          "matched_chunk_ids": [
+            "4905f8261347e3a5",
+            "06b83d3a88aa2a25",
+            "9759b42651a3557c",
+            "f4e73a22c150cdcb"
+          ]
+        }
+      ],
+      "relevant_chunk_ids": [
+        "06b83d3a88aa2a25",
+        "4905f8261347e3a5",
+        "9759b42651a3557c",
+        "f4e73a22c150cdcb"
+      ]
+    },
+    "GOLDEN-DRAFT-ACS-012": {
+      "specialty": "Cardiology",
+      "supporting_references": [
+        {
+          "source": "Harrison's Principles of Internal Medicine",
+          "locator": "Chapter 269: ST-Segment Elevation Myocardial Infarction",
+          "status": "unmappable",
+          "reason": "Textbook copyright restriction (McGraw-Hill) noted in H0.1 signoff"
+        },
+        {
+          "source": "ACC/AHA Guideline for Chest Pain",
+          "locator": "PMID: 34709979",
+          "status": "mapped",
+          "matched_doc_id": "GUIDELINE-ACS-2023",
+          "matched_chunk_ids": [
+            "4905f8261347e3a5",
+            "06b83d3a88aa2a25",
+            "9759b42651a3557c",
+            "f4e73a22c150cdcb"
+          ]
+        }
+      ],
+      "relevant_chunk_ids": [
+        "06b83d3a88aa2a25",
+        "4905f8261347e3a5",
+        "9759b42651a3557c",
+        "f4e73a22c150cdcb"
+      ]
+    },
+    "GOLDEN-DRAFT-ACS-013": {
+      "specialty": "Cardiology",
+      "supporting_references": [
+        {
+          "source": "Harrison's Principles of Internal Medicine",
+          "locator": "Chapter 269: ST-Segment Elevation Myocardial Infarction",
+          "status": "unmappable",
+          "reason": "Textbook copyright restriction (McGraw-Hill) noted in H0.1 signoff"
+        },
+        {
+          "source": "ACC/AHA Guideline for Chest Pain",
+          "locator": "PMID: 34709979",
+          "status": "mapped",
+          "matched_doc_id": "GUIDELINE-ACS-2023",
+          "matched_chunk_ids": [
+            "4905f8261347e3a5",
+            "06b83d3a88aa2a25",
+            "9759b42651a3557c",
+            "f4e73a22c150cdcb"
+          ]
+        }
+      ],
+      "relevant_chunk_ids": [
+        "06b83d3a88aa2a25",
+        "4905f8261347e3a5",
+        "9759b42651a3557c",
+        "f4e73a22c150cdcb"
+      ]
+    },
+    "GOLDEN-DRAFT-ACS-014": {
+      "specialty": "Cardiology",
+      "supporting_references": [
+        {
+          "source": "Harrison's Principles of Internal Medicine",
+          "locator": "Chapter 269: ST-Segment Elevation Myocardial Infarction",
+          "status": "unmappable",
+          "reason": "Textbook copyright restriction (McGraw-Hill) noted in H0.1 signoff"
+        },
+        {
+          "source": "ACC/AHA Guideline for Chest Pain",
+          "locator": "PMID: 34709979",
+          "status": "mapped",
+          "matched_doc_id": "GUIDELINE-ACS-2023",
+          "matched_chunk_ids": [
+            "4905f8261347e3a5",
+            "06b83d3a88aa2a25",
+            "9759b42651a3557c",
+            "f4e73a22c150cdcb"
+          ]
+        }
+      ],
+      "relevant_chunk_ids": [
+        "06b83d3a88aa2a25",
+        "4905f8261347e3a5",
+        "9759b42651a3557c",
+        "f4e73a22c150cdcb"
+      ]
+    },
+    "GOLDEN-DRAFT-ACS-015": {
+      "specialty": "Cardiology",
+      "supporting_references": [
+        {
+          "source": "Harrison's Principles of Internal Medicine",
+          "locator": "Chapter 269: ST-Segment Elevation Myocardial Infarction",
+          "status": "unmappable",
+          "reason": "Textbook copyright restriction (McGraw-Hill) noted in H0.1 signoff"
+        },
+        {
+          "source": "ACC/AHA Guideline for Chest Pain",
+          "locator": "PMID: 34709979",
+          "status": "mapped",
+          "matched_doc_id": "GUIDELINE-ACS-2023",
+          "matched_chunk_ids": [
+            "4905f8261347e3a5",
+            "06b83d3a88aa2a25",
+            "9759b42651a3557c",
+            "f4e73a22c150cdcb"
+          ]
+        }
+      ],
+      "relevant_chunk_ids": [
+        "06b83d3a88aa2a25",
+        "4905f8261347e3a5",
+        "9759b42651a3557c",
+        "f4e73a22c150cdcb"
+      ]
+    },
+    "GOLDEN-DRAFT-ACS-016": {
+      "specialty": "Cardiology",
+      "supporting_references": [
+        {
+          "source": "Harrison's Principles of Internal Medicine",
+          "locator": "Chapter 269: ST-Segment Elevation Myocardial Infarction",
+          "status": "unmappable",
+          "reason": "Textbook copyright restriction (McGraw-Hill) noted in H0.1 signoff"
+        },
+        {
+          "source": "ACC/AHA Guideline for Chest Pain",
+          "locator": "PMID: 34709979",
+          "status": "mapped",
+          "matched_doc_id": "GUIDELINE-ACS-2023",
+          "matched_chunk_ids": [
+            "4905f8261347e3a5",
+            "06b83d3a88aa2a25",
+            "9759b42651a3557c",
+            "f4e73a22c150cdcb"
+          ]
+        }
+      ],
+      "relevant_chunk_ids": [
+        "06b83d3a88aa2a25",
+        "4905f8261347e3a5",
+        "9759b42651a3557c",
+        "f4e73a22c150cdcb"
+      ]
+    },
+    "GOLDEN-DRAFT-ACS-017": {
+      "specialty": "Cardiology",
+      "supporting_references": [
+        {
+          "source": "Harrison's Principles of Internal Medicine",
+          "locator": "Chapter 269: ST-Segment Elevation Myocardial Infarction",
+          "status": "unmappable",
+          "reason": "Textbook copyright restriction (McGraw-Hill) noted in H0.1 signoff"
+        },
+        {
+          "source": "ACC/AHA Guideline for Chest Pain",
+          "locator": "PMID: 34709979",
+          "status": "mapped",
+          "matched_doc_id": "GUIDELINE-ACS-2023",
+          "matched_chunk_ids": [
+            "4905f8261347e3a5",
+            "06b83d3a88aa2a25",
+            "9759b42651a3557c",
+            "f4e73a22c150cdcb"
+          ]
+        }
+      ],
+      "relevant_chunk_ids": [
+        "06b83d3a88aa2a25",
+        "4905f8261347e3a5",
+        "9759b42651a3557c",
+        "f4e73a22c150cdcb"
+      ]
+    },
+    "GOLDEN-DRAFT-ACS-018": {
+      "specialty": "Cardiology",
+      "supporting_references": [
+        {
+          "source": "Harrison's Principles of Internal Medicine",
+          "locator": "Chapter 269: ST-Segment Elevation Myocardial Infarction",
+          "status": "unmappable",
+          "reason": "Textbook copyright restriction (McGraw-Hill) noted in H0.1 signoff"
+        },
+        {
+          "source": "ACC/AHA Guideline for Chest Pain",
+          "locator": "PMID: 34709979",
+          "status": "mapped",
+          "matched_doc_id": "GUIDELINE-ACS-2023",
+          "matched_chunk_ids": [
+            "4905f8261347e3a5",
+            "06b83d3a88aa2a25",
+            "9759b42651a3557c",
+            "f4e73a22c150cdcb"
+          ]
+        }
+      ],
+      "relevant_chunk_ids": [
+        "06b83d3a88aa2a25",
+        "4905f8261347e3a5",
+        "9759b42651a3557c",
+        "f4e73a22c150cdcb"
+      ]
+    },
+    "GOLDEN-DRAFT-ACS-019": {
+      "specialty": "Cardiology",
+      "supporting_references": [
+        {
+          "source": "Harrison's Principles of Internal Medicine",
+          "locator": "Chapter 269: ST-Segment Elevation Myocardial Infarction",
+          "status": "unmappable",
+          "reason": "Textbook copyright restriction (McGraw-Hill) noted in H0.1 signoff"
+        },
+        {
+          "source": "ACC/AHA Guideline for Chest Pain",
+          "locator": "PMID: 34709979",
+          "status": "mapped",
+          "matched_doc_id": "GUIDELINE-ACS-2023",
+          "matched_chunk_ids": [
+            "4905f8261347e3a5",
+            "06b83d3a88aa2a25",
+            "9759b42651a3557c",
+            "f4e73a22c150cdcb"
+          ]
+        }
+      ],
+      "relevant_chunk_ids": [
+        "06b83d3a88aa2a25",
+        "4905f8261347e3a5",
+        "9759b42651a3557c",
+        "f4e73a22c150cdcb"
+      ]
+    },
+    "GOLDEN-DRAFT-ACS-020": {
+      "specialty": "Cardiology",
+      "supporting_references": [
+        {
+          "source": "Harrison's Principles of Internal Medicine",
+          "locator": "Chapter 269: ST-Segment Elevation Myocardial Infarction",
+          "status": "unmappable",
+          "reason": "Textbook copyright restriction (McGraw-Hill) noted in H0.1 signoff"
+        },
+        {
+          "source": "ACC/AHA Guideline for Chest Pain",
+          "locator": "PMID: 34709979",
+          "status": "mapped",
+          "matched_doc_id": "GUIDELINE-ACS-2023",
+          "matched_chunk_ids": [
+            "4905f8261347e3a5",
+            "06b83d3a88aa2a25",
+            "9759b42651a3557c",
+            "f4e73a22c150cdcb"
+          ]
+        }
+      ],
+      "relevant_chunk_ids": [
+        "06b83d3a88aa2a25",
+        "4905f8261347e3a5",
+        "9759b42651a3557c",
+        "f4e73a22c150cdcb"
+      ]
+    },
+    "GOLDEN-DRAFT-CAP-001": {
+      "specialty": "Pulmonology",
+      "supporting_references": [
+        {
+          "source": "Harrison's Principles of Internal Medicine",
+          "locator": "Chapter 121: Pneumonia",
+          "status": "unmappable",
+          "reason": "Textbook copyright restriction (McGraw-Hill) noted in H0.1 signoff"
+        },
+        {
+          "source": "ATS/IDSA Community-Acquired Pneumonia Guidelines",
+          "locator": "PMID: 31573350",
+          "status": "mapped",
+          "matched_doc_id": "GUIDELINE-CAP-2019",
+          "matched_chunk_ids": [
+            "4ef073ed7de0662f",
+            "28d93932d0d7b9c4",
+            "29029610b53817dd"
+          ]
+        }
+      ],
+      "relevant_chunk_ids": [
+        "28d93932d0d7b9c4",
+        "29029610b53817dd",
+        "4ef073ed7de0662f"
+      ]
+    },
+    "GOLDEN-DRAFT-CAP-002": {
+      "specialty": "Pulmonology",
+      "supporting_references": [
+        {
+          "source": "Harrison's Principles of Internal Medicine",
+          "locator": "Chapter 121: Pneumonia",
+          "status": "unmappable",
+          "reason": "Textbook copyright restriction (McGraw-Hill) noted in H0.1 signoff"
+        },
+        {
+          "source": "ATS/IDSA Community-Acquired Pneumonia Guidelines",
+          "locator": "PMID: 31573350",
+          "status": "mapped",
+          "matched_doc_id": "GUIDELINE-CAP-2019",
+          "matched_chunk_ids": [
+            "4ef073ed7de0662f",
+            "28d93932d0d7b9c4",
+            "29029610b53817dd"
+          ]
+        }
+      ],
+      "relevant_chunk_ids": [
+        "28d93932d0d7b9c4",
+        "29029610b53817dd",
+        "4ef073ed7de0662f"
+      ]
+    },
+    "GOLDEN-DRAFT-CAP-003": {
+      "specialty": "Pulmonology",
+      "supporting_references": [
+        {
+          "source": "Harrison's Principles of Internal Medicine",
+          "locator": "Chapter 121: Pneumonia",
+          "status": "unmappable",
+          "reason": "Textbook copyright restriction (McGraw-Hill) noted in H0.1 signoff"
+        },
+        {
+          "source": "ATS/IDSA Community-Acquired Pneumonia Guidelines",
+          "locator": "PMID: 31573350",
+          "status": "mapped",
+          "matched_doc_id": "GUIDELINE-CAP-2019",
+          "matched_chunk_ids": [
+            "4ef073ed7de0662f",
+            "28d93932d0d7b9c4",
+            "29029610b53817dd"
+          ]
+        }
+      ],
+      "relevant_chunk_ids": [
+        "28d93932d0d7b9c4",
+        "29029610b53817dd",
+        "4ef073ed7de0662f"
+      ]
+    },
+    "GOLDEN-DRAFT-CAP-004": {
+      "specialty": "Pulmonology",
+      "supporting_references": [
+        {
+          "source": "Harrison's Principles of Internal Medicine",
+          "locator": "Chapter 121: Pneumonia",
+          "status": "unmappable",
+          "reason": "Textbook copyright restriction (McGraw-Hill) noted in H0.1 signoff"
+        },
+        {
+          "source": "ATS/IDSA Community-Acquired Pneumonia Guidelines",
+          "locator": "PMID: 31573350",
+          "status": "mapped",
+          "matched_doc_id": "GUIDELINE-CAP-2019",
+          "matched_chunk_ids": [
+            "4ef073ed7de0662f",
+            "28d93932d0d7b9c4",
+            "29029610b53817dd"
+          ]
+        }
+      ],
+      "relevant_chunk_ids": [
+        "28d93932d0d7b9c4",
+        "29029610b53817dd",
+        "4ef073ed7de0662f"
+      ]
+    },
+    "GOLDEN-DRAFT-CAP-005": {
+      "specialty": "Pulmonology",
+      "supporting_references": [
+        {
+          "source": "Harrison's Principles of Internal Medicine",
+          "locator": "Chapter 121: Pneumonia",
+          "status": "unmappable",
+          "reason": "Textbook copyright restriction (McGraw-Hill) noted in H0.1 signoff"
+        },
+        {
+          "source": "ATS/IDSA Community-Acquired Pneumonia Guidelines",
+          "locator": "PMID: 31573350",
+          "status": "mapped",
+          "matched_doc_id": "GUIDELINE-CAP-2019",
+          "matched_chunk_ids": [
+            "4ef073ed7de0662f",
+            "28d93932d0d7b9c4",
+            "29029610b53817dd"
+          ]
+        }
+      ],
+      "relevant_chunk_ids": [
+        "28d93932d0d7b9c4",
+        "29029610b53817dd",
+        "4ef073ed7de0662f"
+      ]
+    },
+    "GOLDEN-DRAFT-CAP-006": {
+      "specialty": "Pulmonology",
+      "supporting_references": [
+        {
+          "source": "Harrison's Principles of Internal Medicine",
+          "locator": "Chapter 121: Pneumonia",
+          "status": "unmappable",
+          "reason": "Textbook copyright restriction (McGraw-Hill) noted in H0.1 signoff"
+        },
+        {
+          "source": "ATS/IDSA Community-Acquired Pneumonia Guidelines",
+          "locator": "PMID: 31573350",
+          "status": "mapped",
+          "matched_doc_id": "GUIDELINE-CAP-2019",
+          "matched_chunk_ids": [
+            "4ef073ed7de0662f",
+            "28d93932d0d7b9c4",
+            "29029610b53817dd"
+          ]
+        }
+      ],
+      "relevant_chunk_ids": [
+        "28d93932d0d7b9c4",
+        "29029610b53817dd",
+        "4ef073ed7de0662f"
+      ]
+    },
+    "GOLDEN-DRAFT-CAP-007": {
+      "specialty": "Pulmonology",
+      "supporting_references": [
+        {
+          "source": "Harrison's Principles of Internal Medicine",
+          "locator": "Chapter 121: Pneumonia",
+          "status": "unmappable",
+          "reason": "Textbook copyright restriction (McGraw-Hill) noted in H0.1 signoff"
+        },
+        {
+          "source": "ATS/IDSA Community-Acquired Pneumonia Guidelines",
+          "locator": "PMID: 31573350",
+          "status": "mapped",
+          "matched_doc_id": "GUIDELINE-CAP-2019",
+          "matched_chunk_ids": [
+            "4ef073ed7de0662f",
+            "28d93932d0d7b9c4",
+            "29029610b53817dd"
+          ]
+        }
+      ],
+      "relevant_chunk_ids": [
+        "28d93932d0d7b9c4",
+        "29029610b53817dd",
+        "4ef073ed7de0662f"
+      ]
+    },
+    "GOLDEN-DRAFT-CAP-008": {
+      "specialty": "Pulmonology",
+      "supporting_references": [
+        {
+          "source": "Harrison's Principles of Internal Medicine",
+          "locator": "Chapter 121: Pneumonia",
+          "status": "unmappable",
+          "reason": "Textbook copyright restriction (McGraw-Hill) noted in H0.1 signoff"
+        },
+        {
+          "source": "ATS/IDSA Community-Acquired Pneumonia Guidelines",
+          "locator": "PMID: 31573350",
+          "status": "mapped",
+          "matched_doc_id": "GUIDELINE-CAP-2019",
+          "matched_chunk_ids": [
+            "4ef073ed7de0662f",
+            "28d93932d0d7b9c4",
+            "29029610b53817dd"
+          ]
+        }
+      ],
+      "relevant_chunk_ids": [
+        "28d93932d0d7b9c4",
+        "29029610b53817dd",
+        "4ef073ed7de0662f"
+      ]
+    },
+    "GOLDEN-DRAFT-CAP-009": {
+      "specialty": "Pulmonology",
+      "supporting_references": [
+        {
+          "source": "Harrison's Principles of Internal Medicine",
+          "locator": "Chapter 121: Pneumonia",
+          "status": "unmappable",
+          "reason": "Textbook copyright restriction (McGraw-Hill) noted in H0.1 signoff"
+        },
+        {
+          "source": "ATS/IDSA Community-Acquired Pneumonia Guidelines",
+          "locator": "PMID: 31573350",
+          "status": "mapped",
+          "matched_doc_id": "GUIDELINE-CAP-2019",
+          "matched_chunk_ids": [
+            "4ef073ed7de0662f",
+            "28d93932d0d7b9c4",
+            "29029610b53817dd"
+          ]
+        }
+      ],
+      "relevant_chunk_ids": [
+        "28d93932d0d7b9c4",
+        "29029610b53817dd",
+        "4ef073ed7de0662f"
+      ]
+    },
+    "GOLDEN-DRAFT-CAP-010": {
+      "specialty": "Pulmonology",
+      "supporting_references": [
+        {
+          "source": "Harrison's Principles of Internal Medicine",
+          "locator": "Chapter 121: Pneumonia",
+          "status": "unmappable",
+          "reason": "Textbook copyright restriction (McGraw-Hill) noted in H0.1 signoff"
+        },
+        {
+          "source": "ATS/IDSA Community-Acquired Pneumonia Guidelines",
+          "locator": "PMID: 31573350",
+          "status": "mapped",
+          "matched_doc_id": "GUIDELINE-CAP-2019",
+          "matched_chunk_ids": [
+            "4ef073ed7de0662f",
+            "28d93932d0d7b9c4",
+            "29029610b53817dd"
+          ]
+        }
+      ],
+      "relevant_chunk_ids": [
+        "28d93932d0d7b9c4",
+        "29029610b53817dd",
+        "4ef073ed7de0662f"
+      ]
+    },
+    "GOLDEN-DRAFT-CAP-011": {
+      "specialty": "Pulmonology",
+      "supporting_references": [
+        {
+          "source": "Harrison's Principles of Internal Medicine",
+          "locator": "Chapter 121: Pneumonia",
+          "status": "unmappable",
+          "reason": "Textbook copyright restriction (McGraw-Hill) noted in H0.1 signoff"
+        },
+        {
+          "source": "ATS/IDSA Community-Acquired Pneumonia Guidelines",
+          "locator": "PMID: 31573350",
+          "status": "mapped",
+          "matched_doc_id": "GUIDELINE-CAP-2019",
+          "matched_chunk_ids": [
+            "4ef073ed7de0662f",
+            "28d93932d0d7b9c4",
+            "29029610b53817dd"
+          ]
+        }
+      ],
+      "relevant_chunk_ids": [
+        "28d93932d0d7b9c4",
+        "29029610b53817dd",
+        "4ef073ed7de0662f"
+      ]
+    },
+    "GOLDEN-DRAFT-CAP-012": {
+      "specialty": "Pulmonology",
+      "supporting_references": [
+        {
+          "source": "Harrison's Principles of Internal Medicine",
+          "locator": "Chapter 121: Pneumonia",
+          "status": "unmappable",
+          "reason": "Textbook copyright restriction (McGraw-Hill) noted in H0.1 signoff"
+        },
+        {
+          "source": "ATS/IDSA Community-Acquired Pneumonia Guidelines",
+          "locator": "PMID: 31573350",
+          "status": "mapped",
+          "matched_doc_id": "GUIDELINE-CAP-2019",
+          "matched_chunk_ids": [
+            "4ef073ed7de0662f",
+            "28d93932d0d7b9c4",
+            "29029610b53817dd"
+          ]
+        }
+      ],
+      "relevant_chunk_ids": [
+        "28d93932d0d7b9c4",
+        "29029610b53817dd",
+        "4ef073ed7de0662f"
+      ]
+    },
+    "GOLDEN-DRAFT-CAP-013": {
+      "specialty": "Pulmonology",
+      "supporting_references": [
+        {
+          "source": "Harrison's Principles of Internal Medicine",
+          "locator": "Chapter 121: Pneumonia",
+          "status": "unmappable",
+          "reason": "Textbook copyright restriction (McGraw-Hill) noted in H0.1 signoff"
+        },
+        {
+          "source": "ATS/IDSA Community-Acquired Pneumonia Guidelines",
+          "locator": "PMID: 31573350",
+          "status": "mapped",
+          "matched_doc_id": "GUIDELINE-CAP-2019",
+          "matched_chunk_ids": [
+            "4ef073ed7de0662f",
+            "28d93932d0d7b9c4",
+            "29029610b53817dd"
+          ]
+        }
+      ],
+      "relevant_chunk_ids": [
+        "28d93932d0d7b9c4",
+        "29029610b53817dd",
+        "4ef073ed7de0662f"
+      ]
+    },
+    "GOLDEN-DRAFT-CAP-014": {
+      "specialty": "Pulmonology",
+      "supporting_references": [
+        {
+          "source": "Harrison's Principles of Internal Medicine",
+          "locator": "Chapter 121: Pneumonia",
+          "status": "unmappable",
+          "reason": "Textbook copyright restriction (McGraw-Hill) noted in H0.1 signoff"
+        },
+        {
+          "source": "ATS/IDSA Community-Acquired Pneumonia Guidelines",
+          "locator": "PMID: 31573350",
+          "status": "mapped",
+          "matched_doc_id": "GUIDELINE-CAP-2019",
+          "matched_chunk_ids": [
+            "4ef073ed7de0662f",
+            "28d93932d0d7b9c4",
+            "29029610b53817dd"
+          ]
+        }
+      ],
+      "relevant_chunk_ids": [
+        "28d93932d0d7b9c4",
+        "29029610b53817dd",
+        "4ef073ed7de0662f"
+      ]
+    },
+    "GOLDEN-DRAFT-CAP-015": {
+      "specialty": "Pulmonology",
+      "supporting_references": [
+        {
+          "source": "Harrison's Principles of Internal Medicine",
+          "locator": "Chapter 121: Pneumonia",
+          "status": "unmappable",
+          "reason": "Textbook copyright restriction (McGraw-Hill) noted in H0.1 signoff"
+        },
+        {
+          "source": "ATS/IDSA Community-Acquired Pneumonia Guidelines",
+          "locator": "PMID: 31573350",
+          "status": "mapped",
+          "matched_doc_id": "GUIDELINE-CAP-2019",
+          "matched_chunk_ids": [
+            "4ef073ed7de0662f",
+            "28d93932d0d7b9c4",
+            "29029610b53817dd"
+          ]
+        }
+      ],
+      "relevant_chunk_ids": [
+        "28d93932d0d7b9c4",
+        "29029610b53817dd",
+        "4ef073ed7de0662f"
+      ]
+    },
+    "GOLDEN-DRAFT-CAP-016": {
+      "specialty": "Pulmonology",
+      "supporting_references": [
+        {
+          "source": "Harrison's Principles of Internal Medicine",
+          "locator": "Chapter 121: Pneumonia",
+          "status": "unmappable",
+          "reason": "Textbook copyright restriction (McGraw-Hill) noted in H0.1 signoff"
+        },
+        {
+          "source": "ATS/IDSA Community-Acquired Pneumonia Guidelines",
+          "locator": "PMID: 31573350",
+          "status": "mapped",
+          "matched_doc_id": "GUIDELINE-CAP-2019",
+          "matched_chunk_ids": [
+            "4ef073ed7de0662f",
+            "28d93932d0d7b9c4",
+            "29029610b53817dd"
+          ]
+        }
+      ],
+      "relevant_chunk_ids": [
+        "28d93932d0d7b9c4",
+        "29029610b53817dd",
+        "4ef073ed7de0662f"
+      ]
+    },
+    "GOLDEN-DRAFT-CAP-017": {
+      "specialty": "Pulmonology",
+      "supporting_references": [
+        {
+          "source": "Harrison's Principles of Internal Medicine",
+          "locator": "Chapter 121: Pneumonia",
+          "status": "unmappable",
+          "reason": "Textbook copyright restriction (McGraw-Hill) noted in H0.1 signoff"
+        },
+        {
+          "source": "ATS/IDSA Community-Acquired Pneumonia Guidelines",
+          "locator": "PMID: 31573350",
+          "status": "mapped",
+          "matched_doc_id": "GUIDELINE-CAP-2019",
+          "matched_chunk_ids": [
+            "4ef073ed7de0662f",
+            "28d93932d0d7b9c4",
+            "29029610b53817dd"
+          ]
+        }
+      ],
+      "relevant_chunk_ids": [
+        "28d93932d0d7b9c4",
+        "29029610b53817dd",
+        "4ef073ed7de0662f"
+      ]
+    },
+    "GOLDEN-DRAFT-CAP-018": {
+      "specialty": "Pulmonology",
+      "supporting_references": [
+        {
+          "source": "Harrison's Principles of Internal Medicine",
+          "locator": "Chapter 121: Pneumonia",
+          "status": "unmappable",
+          "reason": "Textbook copyright restriction (McGraw-Hill) noted in H0.1 signoff"
+        },
+        {
+          "source": "ATS/IDSA Community-Acquired Pneumonia Guidelines",
+          "locator": "PMID: 31573350",
+          "status": "mapped",
+          "matched_doc_id": "GUIDELINE-CAP-2019",
+          "matched_chunk_ids": [
+            "4ef073ed7de0662f",
+            "28d93932d0d7b9c4",
+            "29029610b53817dd"
+          ]
+        }
+      ],
+      "relevant_chunk_ids": [
+        "28d93932d0d7b9c4",
+        "29029610b53817dd",
+        "4ef073ed7de0662f"
+      ]
+    },
+    "GOLDEN-DRAFT-CAP-019": {
+      "specialty": "Pulmonology",
+      "supporting_references": [
+        {
+          "source": "Harrison's Principles of Internal Medicine",
+          "locator": "Chapter 121: Pneumonia",
+          "status": "unmappable",
+          "reason": "Textbook copyright restriction (McGraw-Hill) noted in H0.1 signoff"
+        },
+        {
+          "source": "ATS/IDSA Community-Acquired Pneumonia Guidelines",
+          "locator": "PMID: 31573350",
+          "status": "mapped",
+          "matched_doc_id": "GUIDELINE-CAP-2019",
+          "matched_chunk_ids": [
+            "4ef073ed7de0662f",
+            "28d93932d0d7b9c4",
+            "29029610b53817dd"
+          ]
+        }
+      ],
+      "relevant_chunk_ids": [
+        "28d93932d0d7b9c4",
+        "29029610b53817dd",
+        "4ef073ed7de0662f"
+      ]
+    },
+    "GOLDEN-DRAFT-CAP-020": {
+      "specialty": "Pulmonology",
+      "supporting_references": [
+        {
+          "source": "Harrison's Principles of Internal Medicine",
+          "locator": "Chapter 121: Pneumonia",
+          "status": "unmappable",
+          "reason": "Textbook copyright restriction (McGraw-Hill) noted in H0.1 signoff"
+        },
+        {
+          "source": "ATS/IDSA Community-Acquired Pneumonia Guidelines",
+          "locator": "PMID: 31573350",
+          "status": "mapped",
+          "matched_doc_id": "GUIDELINE-CAP-2019",
+          "matched_chunk_ids": [
+            "4ef073ed7de0662f",
+            "28d93932d0d7b9c4",
+            "29029610b53817dd"
+          ]
+        }
+      ],
+      "relevant_chunk_ids": [
+        "28d93932d0d7b9c4",
+        "29029610b53817dd",
+        "4ef073ed7de0662f"
+      ]
+    },
+    "GOLDEN-DRAFT-DKA-001": {
+      "specialty": "Endocrinology",
+      "supporting_references": [
+        {
+          "source": "Harrison's Principles of Internal Medicine",
+          "locator": "Chapter 396: Diabetes Mellitus: Complications",
+          "status": "unmappable",
+          "reason": "Textbook copyright restriction (McGraw-Hill) noted in H0.1 signoff"
+        },
+        {
+          "source": "ADA Standards of Care in Diabetes",
+          "locator": "PMID: 38078642",
+          "status": "mapped",
+          "matched_doc_id": "GUIDELINE-DKA-2024",
+          "matched_chunk_ids": [
+            "ed72f1de9e272f5f",
+            "73e17638ee8401e7",
+            "fc5ca18b3f169ef4",
+            "7509b1053a236939"
+          ]
+        }
+      ],
+      "relevant_chunk_ids": [
+        "73e17638ee8401e7",
+        "7509b1053a236939",
+        "ed72f1de9e272f5f",
+        "fc5ca18b3f169ef4"
+      ]
+    },
+    "GOLDEN-DRAFT-DKA-002": {
+      "specialty": "Endocrinology",
+      "supporting_references": [
+        {
+          "source": "Harrison's Principles of Internal Medicine",
+          "locator": "Chapter 396: Diabetes Mellitus: Complications",
+          "status": "unmappable",
+          "reason": "Textbook copyright restriction (McGraw-Hill) noted in H0.1 signoff"
+        },
+        {
+          "source": "ADA Standards of Care in Diabetes",
+          "locator": "PMID: 38078642",
+          "status": "mapped",
+          "matched_doc_id": "GUIDELINE-DKA-2024",
+          "matched_chunk_ids": [
+            "ed72f1de9e272f5f",
+            "73e17638ee8401e7",
+            "fc5ca18b3f169ef4",
+            "7509b1053a236939"
+          ]
+        }
+      ],
+      "relevant_chunk_ids": [
+        "73e17638ee8401e7",
+        "7509b1053a236939",
+        "ed72f1de9e272f5f",
+        "fc5ca18b3f169ef4"
+      ]
+    },
+    "GOLDEN-DRAFT-DKA-003": {
+      "specialty": "Endocrinology",
+      "supporting_references": [
+        {
+          "source": "Harrison's Principles of Internal Medicine",
+          "locator": "Chapter 396: Diabetes Mellitus: Complications",
+          "status": "unmappable",
+          "reason": "Textbook copyright restriction (McGraw-Hill) noted in H0.1 signoff"
+        },
+        {
+          "source": "ADA Standards of Care in Diabetes",
+          "locator": "PMID: 38078642",
+          "status": "mapped",
+          "matched_doc_id": "GUIDELINE-DKA-2024",
+          "matched_chunk_ids": [
+            "ed72f1de9e272f5f",
+            "73e17638ee8401e7",
+            "fc5ca18b3f169ef4",
+            "7509b1053a236939"
+          ]
+        }
+      ],
+      "relevant_chunk_ids": [
+        "73e17638ee8401e7",
+        "7509b1053a236939",
+        "ed72f1de9e272f5f",
+        "fc5ca18b3f169ef4"
+      ]
+    },
+    "GOLDEN-DRAFT-DKA-004": {
+      "specialty": "Endocrinology",
+      "supporting_references": [
+        {
+          "source": "Harrison's Principles of Internal Medicine",
+          "locator": "Chapter 396: Diabetes Mellitus: Complications",
+          "status": "unmappable",
+          "reason": "Textbook copyright restriction (McGraw-Hill) noted in H0.1 signoff"
+        },
+        {
+          "source": "ADA Standards of Care in Diabetes",
+          "locator": "PMID: 38078642",
+          "status": "mapped",
+          "matched_doc_id": "GUIDELINE-DKA-2024",
+          "matched_chunk_ids": [
+            "ed72f1de9e272f5f",
+            "73e17638ee8401e7",
+            "fc5ca18b3f169ef4",
+            "7509b1053a236939"
+          ]
+        }
+      ],
+      "relevant_chunk_ids": [
+        "73e17638ee8401e7",
+        "7509b1053a236939",
+        "ed72f1de9e272f5f",
+        "fc5ca18b3f169ef4"
+      ]
+    },
+    "GOLDEN-DRAFT-DKA-005": {
+      "specialty": "Endocrinology",
+      "supporting_references": [
+        {
+          "source": "Harrison's Principles of Internal Medicine",
+          "locator": "Chapter 396: Diabetes Mellitus: Complications",
+          "status": "unmappable",
+          "reason": "Textbook copyright restriction (McGraw-Hill) noted in H0.1 signoff"
+        },
+        {
+          "source": "ADA Standards of Care in Diabetes",
+          "locator": "PMID: 38078642",
+          "status": "mapped",
+          "matched_doc_id": "GUIDELINE-DKA-2024",
+          "matched_chunk_ids": [
+            "ed72f1de9e272f5f",
+            "73e17638ee8401e7",
+            "fc5ca18b3f169ef4",
+            "7509b1053a236939"
+          ]
+        }
+      ],
+      "relevant_chunk_ids": [
+        "73e17638ee8401e7",
+        "7509b1053a236939",
+        "ed72f1de9e272f5f",
+        "fc5ca18b3f169ef4"
+      ]
+    },
+    "GOLDEN-DRAFT-DKA-006": {
+      "specialty": "Endocrinology",
+      "supporting_references": [
+        {
+          "source": "Harrison's Principles of Internal Medicine",
+          "locator": "Chapter 396: Diabetes Mellitus: Complications",
+          "status": "unmappable",
+          "reason": "Textbook copyright restriction (McGraw-Hill) noted in H0.1 signoff"
+        },
+        {
+          "source": "ADA Standards of Care in Diabetes",
+          "locator": "PMID: 38078642",
+          "status": "mapped",
+          "matched_doc_id": "GUIDELINE-DKA-2024",
+          "matched_chunk_ids": [
+            "ed72f1de9e272f5f",
+            "73e17638ee8401e7",
+            "fc5ca18b3f169ef4",
+            "7509b1053a236939"
+          ]
+        }
+      ],
+      "relevant_chunk_ids": [
+        "73e17638ee8401e7",
+        "7509b1053a236939",
+        "ed72f1de9e272f5f",
+        "fc5ca18b3f169ef4"
+      ]
+    },
+    "GOLDEN-DRAFT-DKA-007": {
+      "specialty": "Endocrinology",
+      "supporting_references": [
+        {
+          "source": "Harrison's Principles of Internal Medicine",
+          "locator": "Chapter 396: Diabetes Mellitus: Complications",
+          "status": "unmappable",
+          "reason": "Textbook copyright restriction (McGraw-Hill) noted in H0.1 signoff"
+        },
+        {
+          "source": "ADA Standards of Care in Diabetes",
+          "locator": "PMID: 38078642",
+          "status": "mapped",
+          "matched_doc_id": "GUIDELINE-DKA-2024",
+          "matched_chunk_ids": [
+            "ed72f1de9e272f5f",
+            "73e17638ee8401e7",
+            "fc5ca18b3f169ef4",
+            "7509b1053a236939"
+          ]
+        }
+      ],
+      "relevant_chunk_ids": [
+        "73e17638ee8401e7",
+        "7509b1053a236939",
+        "ed72f1de9e272f5f",
+        "fc5ca18b3f169ef4"
+      ]
+    },
+    "GOLDEN-DRAFT-DKA-008": {
+      "specialty": "Endocrinology",
+      "supporting_references": [
+        {
+          "source": "Harrison's Principles of Internal Medicine",
+          "locator": "Chapter 396: Diabetes Mellitus: Complications",
+          "status": "unmappable",
+          "reason": "Textbook copyright restriction (McGraw-Hill) noted in H0.1 signoff"
+        },
+        {
+          "source": "ADA Standards of Care in Diabetes",
+          "locator": "PMID: 38078642",
+          "status": "mapped",
+          "matched_doc_id": "GUIDELINE-DKA-2024",
+          "matched_chunk_ids": [
+            "ed72f1de9e272f5f",
+            "73e17638ee8401e7",
+            "fc5ca18b3f169ef4",
+            "7509b1053a236939"
+          ]
+        }
+      ],
+      "relevant_chunk_ids": [
+        "73e17638ee8401e7",
+        "7509b1053a236939",
+        "ed72f1de9e272f5f",
+        "fc5ca18b3f169ef4"
+      ]
+    },
+    "GOLDEN-DRAFT-DKA-009": {
+      "specialty": "Endocrinology",
+      "supporting_references": [
+        {
+          "source": "Harrison's Principles of Internal Medicine",
+          "locator": "Chapter 396: Diabetes Mellitus: Complications",
+          "status": "unmappable",
+          "reason": "Textbook copyright restriction (McGraw-Hill) noted in H0.1 signoff"
+        },
+        {
+          "source": "ADA Standards of Care in Diabetes",
+          "locator": "PMID: 38078642",
+          "status": "mapped",
+          "matched_doc_id": "GUIDELINE-DKA-2024",
+          "matched_chunk_ids": [
+            "ed72f1de9e272f5f",
+            "73e17638ee8401e7",
+            "fc5ca18b3f169ef4",
+            "7509b1053a236939"
+          ]
+        }
+      ],
+      "relevant_chunk_ids": [
+        "73e17638ee8401e7",
+        "7509b1053a236939",
+        "ed72f1de9e272f5f",
+        "fc5ca18b3f169ef4"
+      ]
+    },
+    "GOLDEN-DRAFT-DKA-010": {
+      "specialty": "Endocrinology",
+      "supporting_references": [
+        {
+          "source": "Harrison's Principles of Internal Medicine",
+          "locator": "Chapter 396: Diabetes Mellitus: Complications",
+          "status": "unmappable",
+          "reason": "Textbook copyright restriction (McGraw-Hill) noted in H0.1 signoff"
+        },
+        {
+          "source": "ADA Standards of Care in Diabetes",
+          "locator": "PMID: 38078642",
+          "status": "mapped",
+          "matched_doc_id": "GUIDELINE-DKA-2024",
+          "matched_chunk_ids": [
+            "ed72f1de9e272f5f",
+            "73e17638ee8401e7",
+            "fc5ca18b3f169ef4",
+            "7509b1053a236939"
+          ]
+        }
+      ],
+      "relevant_chunk_ids": [
+        "73e17638ee8401e7",
+        "7509b1053a236939",
+        "ed72f1de9e272f5f",
+        "fc5ca18b3f169ef4"
+      ]
+    },
+    "GOLDEN-DRAFT-DKA-011": {
+      "specialty": "Endocrinology",
+      "supporting_references": [
+        {
+          "source": "Harrison's Principles of Internal Medicine",
+          "locator": "Chapter 396: Diabetes Mellitus: Complications",
+          "status": "unmappable",
+          "reason": "Textbook copyright restriction (McGraw-Hill) noted in H0.1 signoff"
+        },
+        {
+          "source": "ADA Standards of Care in Diabetes",
+          "locator": "PMID: 38078642",
+          "status": "mapped",
+          "matched_doc_id": "GUIDELINE-DKA-2024",
+          "matched_chunk_ids": [
+            "ed72f1de9e272f5f",
+            "73e17638ee8401e7",
+            "fc5ca18b3f169ef4",
+            "7509b1053a236939"
+          ]
+        }
+      ],
+      "relevant_chunk_ids": [
+        "73e17638ee8401e7",
+        "7509b1053a236939",
+        "ed72f1de9e272f5f",
+        "fc5ca18b3f169ef4"
+      ]
+    },
+    "GOLDEN-DRAFT-DKA-012": {
+      "specialty": "Endocrinology",
+      "supporting_references": [
+        {
+          "source": "Harrison's Principles of Internal Medicine",
+          "locator": "Chapter 396: Diabetes Mellitus: Complications",
+          "status": "unmappable",
+          "reason": "Textbook copyright restriction (McGraw-Hill) noted in H0.1 signoff"
+        },
+        {
+          "source": "ADA Standards of Care in Diabetes",
+          "locator": "PMID: 38078642",
+          "status": "mapped",
+          "matched_doc_id": "GUIDELINE-DKA-2024",
+          "matched_chunk_ids": [
+            "ed72f1de9e272f5f",
+            "73e17638ee8401e7",
+            "fc5ca18b3f169ef4",
+            "7509b1053a236939"
+          ]
+        }
+      ],
+      "relevant_chunk_ids": [
+        "73e17638ee8401e7",
+        "7509b1053a236939",
+        "ed72f1de9e272f5f",
+        "fc5ca18b3f169ef4"
+      ]
+    },
+    "GOLDEN-DRAFT-DKA-013": {
+      "specialty": "Endocrinology",
+      "supporting_references": [
+        {
+          "source": "Harrison's Principles of Internal Medicine",
+          "locator": "Chapter 396: Diabetes Mellitus: Complications",
+          "status": "unmappable",
+          "reason": "Textbook copyright restriction (McGraw-Hill) noted in H0.1 signoff"
+        },
+        {
+          "source": "ADA Standards of Care in Diabetes",
+          "locator": "PMID: 38078642",
+          "status": "mapped",
+          "matched_doc_id": "GUIDELINE-DKA-2024",
+          "matched_chunk_ids": [
+            "ed72f1de9e272f5f",
+            "73e17638ee8401e7",
+            "fc5ca18b3f169ef4",
+            "7509b1053a236939"
+          ]
+        }
+      ],
+      "relevant_chunk_ids": [
+        "73e17638ee8401e7",
+        "7509b1053a236939",
+        "ed72f1de9e272f5f",
+        "fc5ca18b3f169ef4"
+      ]
+    },
+    "GOLDEN-DRAFT-DKA-014": {
+      "specialty": "Endocrinology",
+      "supporting_references": [
+        {
+          "source": "Harrison's Principles of Internal Medicine",
+          "locator": "Chapter 396: Diabetes Mellitus: Complications",
+          "status": "unmappable",
+          "reason": "Textbook copyright restriction (McGraw-Hill) noted in H0.1 signoff"
+        },
+        {
+          "source": "ADA Standards of Care in Diabetes",
+          "locator": "PMID: 38078642",
+          "status": "mapped",
+          "matched_doc_id": "GUIDELINE-DKA-2024",
+          "matched_chunk_ids": [
+            "ed72f1de9e272f5f",
+            "73e17638ee8401e7",
+            "fc5ca18b3f169ef4",
+            "7509b1053a236939"
+          ]
+        }
+      ],
+      "relevant_chunk_ids": [
+        "73e17638ee8401e7",
+        "7509b1053a236939",
+        "ed72f1de9e272f5f",
+        "fc5ca18b3f169ef4"
+      ]
+    },
+    "GOLDEN-DRAFT-DKA-015": {
+      "specialty": "Endocrinology",
+      "supporting_references": [
+        {
+          "source": "Harrison's Principles of Internal Medicine",
+          "locator": "Chapter 396: Diabetes Mellitus: Complications",
+          "status": "unmappable",
+          "reason": "Textbook copyright restriction (McGraw-Hill) noted in H0.1 signoff"
+        },
+        {
+          "source": "ADA Standards of Care in Diabetes",
+          "locator": "PMID: 38078642",
+          "status": "mapped",
+          "matched_doc_id": "GUIDELINE-DKA-2024",
+          "matched_chunk_ids": [
+            "ed72f1de9e272f5f",
+            "73e17638ee8401e7",
+            "fc5ca18b3f169ef4",
+            "7509b1053a236939"
+          ]
+        }
+      ],
+      "relevant_chunk_ids": [
+        "73e17638ee8401e7",
+        "7509b1053a236939",
+        "ed72f1de9e272f5f",
+        "fc5ca18b3f169ef4"
+      ]
+    },
+    "GOLDEN-DRAFT-DKA-016": {
+      "specialty": "Endocrinology",
+      "supporting_references": [
+        {
+          "source": "Harrison's Principles of Internal Medicine",
+          "locator": "Chapter 396: Diabetes Mellitus: Complications",
+          "status": "unmappable",
+          "reason": "Textbook copyright restriction (McGraw-Hill) noted in H0.1 signoff"
+        },
+        {
+          "source": "ADA Standards of Care in Diabetes",
+          "locator": "PMID: 38078642",
+          "status": "mapped",
+          "matched_doc_id": "GUIDELINE-DKA-2024",
+          "matched_chunk_ids": [
+            "ed72f1de9e272f5f",
+            "73e17638ee8401e7",
+            "fc5ca18b3f169ef4",
+            "7509b1053a236939"
+          ]
+        }
+      ],
+      "relevant_chunk_ids": [
+        "73e17638ee8401e7",
+        "7509b1053a236939",
+        "ed72f1de9e272f5f",
+        "fc5ca18b3f169ef4"
+      ]
+    },
+    "GOLDEN-DRAFT-DKA-017": {
+      "specialty": "Endocrinology",
+      "supporting_references": [
+        {
+          "source": "Harrison's Principles of Internal Medicine",
+          "locator": "Chapter 396: Diabetes Mellitus: Complications",
+          "status": "unmappable",
+          "reason": "Textbook copyright restriction (McGraw-Hill) noted in H0.1 signoff"
+        },
+        {
+          "source": "ADA Standards of Care in Diabetes",
+          "locator": "PMID: 38078642",
+          "status": "mapped",
+          "matched_doc_id": "GUIDELINE-DKA-2024",
+          "matched_chunk_ids": [
+            "ed72f1de9e272f5f",
+            "73e17638ee8401e7",
+            "fc5ca18b3f169ef4",
+            "7509b1053a236939"
+          ]
+        }
+      ],
+      "relevant_chunk_ids": [
+        "73e17638ee8401e7",
+        "7509b1053a236939",
+        "ed72f1de9e272f5f",
+        "fc5ca18b3f169ef4"
+      ]
+    },
+    "GOLDEN-DRAFT-DKA-018": {
+      "specialty": "Endocrinology",
+      "supporting_references": [
+        {
+          "source": "Harrison's Principles of Internal Medicine",
+          "locator": "Chapter 396: Diabetes Mellitus: Complications",
+          "status": "unmappable",
+          "reason": "Textbook copyright restriction (McGraw-Hill) noted in H0.1 signoff"
+        },
+        {
+          "source": "ADA Standards of Care in Diabetes",
+          "locator": "PMID: 38078642",
+          "status": "mapped",
+          "matched_doc_id": "GUIDELINE-DKA-2024",
+          "matched_chunk_ids": [
+            "ed72f1de9e272f5f",
+            "73e17638ee8401e7",
+            "fc5ca18b3f169ef4",
+            "7509b1053a236939"
+          ]
+        }
+      ],
+      "relevant_chunk_ids": [
+        "73e17638ee8401e7",
+        "7509b1053a236939",
+        "ed72f1de9e272f5f",
+        "fc5ca18b3f169ef4"
+      ]
+    },
+    "GOLDEN-DRAFT-DKA-019": {
+      "specialty": "Endocrinology",
+      "supporting_references": [
+        {
+          "source": "Harrison's Principles of Internal Medicine",
+          "locator": "Chapter 396: Diabetes Mellitus: Complications",
+          "status": "unmappable",
+          "reason": "Textbook copyright restriction (McGraw-Hill) noted in H0.1 signoff"
+        },
+        {
+          "source": "ADA Standards of Care in Diabetes",
+          "locator": "PMID: 38078642",
+          "status": "mapped",
+          "matched_doc_id": "GUIDELINE-DKA-2024",
+          "matched_chunk_ids": [
+            "ed72f1de9e272f5f",
+            "73e17638ee8401e7",
+            "fc5ca18b3f169ef4",
+            "7509b1053a236939"
+          ]
+        }
+      ],
+      "relevant_chunk_ids": [
+        "73e17638ee8401e7",
+        "7509b1053a236939",
+        "ed72f1de9e272f5f",
+        "fc5ca18b3f169ef4"
+      ]
+    },
+    "GOLDEN-DRAFT-DKA-020": {
+      "specialty": "Endocrinology",
+      "supporting_references": [
+        {
+          "source": "Harrison's Principles of Internal Medicine",
+          "locator": "Chapter 396: Diabetes Mellitus: Complications",
+          "status": "unmappable",
+          "reason": "Textbook copyright restriction (McGraw-Hill) noted in H0.1 signoff"
+        },
+        {
+          "source": "ADA Standards of Care in Diabetes",
+          "locator": "PMID: 38078642",
+          "status": "mapped",
+          "matched_doc_id": "GUIDELINE-DKA-2024",
+          "matched_chunk_ids": [
+            "ed72f1de9e272f5f",
+            "73e17638ee8401e7",
+            "fc5ca18b3f169ef4",
+            "7509b1053a236939"
+          ]
+        }
+      ],
+      "relevant_chunk_ids": [
+        "73e17638ee8401e7",
+        "7509b1053a236939",
+        "ed72f1de9e272f5f",
+        "fc5ca18b3f169ef4"
+      ]
+    }
+  },
+  "unmappable_references": [
+    {
+      "source": "Harrison's Principles of Internal Medicine",
+      "locator": "Chapter 269: ST-Segment Elevation Myocardial Infarction",
+      "reason": "Textbook copyright restriction (McGraw-Hill) noted in H0.1 signoff; full text excluded from open-access ingestion"
+    },
+    {
+      "source": "Harrison's Principles of Internal Medicine",
+      "locator": "Chapter 121: Pneumonia",
+      "reason": "Textbook copyright restriction (McGraw-Hill) noted in H0.1 signoff; full text excluded from open-access ingestion"
+    },
+    {
+      "source": "Harrison's Principles of Internal Medicine",
+      "locator": "Chapter 396: Diabetes Mellitus: Complications",
+      "reason": "Textbook copyright restriction (McGraw-Hill) noted in H0.1 signoff; full text excluded from open-access ingestion"
+    }
+  ]
+}

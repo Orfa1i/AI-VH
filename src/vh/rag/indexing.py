@@ -19,6 +19,21 @@ from pydantic import BaseModel, Field
 from vh.rag.chunking import Chunk
 
 
+STOP_WORDS = {
+    "a", "about", "above", "after", "again", "against", "all", "am", "an", "and", "any", "are",
+    "as", "at", "be", "because", "been", "before", "being", "below", "between", "both", "but",
+    "by", "could", "did", "do", "does", "doing", "down", "during", "each", "few", "for", "from",
+    "further", "had", "has", "have", "having", "he", "her", "here", "hers", "herself", "him",
+    "himself", "his", "how", "i", "if", "in", "into", "is", "it", "its", "itself", "me", "more",
+    "most", "my", "myself", "no", "nor", "not", "of", "off", "on", "once", "only", "or", "other",
+    "ought", "our", "ours", "ourselves", "out", "over", "own", "same", "she", "should", "so",
+    "some", "such", "than", "that", "the", "their", "theirs", "them", "themselves", "then",
+    "there", "these", "they", "this", "those", "through", "to", "too", "under", "until", "up",
+    "very", "was", "we", "were", "what", "when", "where", "which", "while", "who", "whom", "why",
+    "with", "would", "you", "your", "yours", "yourself", "yourselves"
+}
+
+
 class EmbeddingModel(ABC):
     """Abstract interface defining dense vector embedding providers."""
     model_id: str
@@ -54,7 +69,8 @@ class DeterministicProjector:
 
         vectors = np.zeros((len(texts), self.dimension), dtype=np.float32)
         for i, text in enumerate(texts):
-            tokens = re.findall(r"[a-zA-Z0-9]+", text.lower())
+            raw_tokens = re.findall(r"[a-zA-Z0-9]+", text.lower())
+            tokens = [t for t in raw_tokens if len(t) >= 2 and t not in STOP_WORDS]
             if not tokens:
                 vectors[i, 0] = 1.0
                 continue
@@ -177,7 +193,7 @@ class BM25Index:
 
     def _tokenize(self, text: str) -> List[str]:
         tokens = re.findall(r"[a-zA-Z0-9]+", text.lower())
-        return [t for t in tokens if len(t) >= 2]
+        return [t for t in tokens if len(t) >= 2 and t not in STOP_WORDS]
 
     def build(self, chunk_records: List[Dict[str, Any]]) -> None:
         self.corpus_size = len(chunk_records)
@@ -188,7 +204,8 @@ class BM25Index:
 
         for rec in chunk_records:
             cid = rec["chunk_id"]
-            tokens = self._tokenize(rec["text"])
+            text_to_index = rec.get("searchable_text", rec["text"])
+            tokens = self._tokenize(text_to_index)
             self.doc_len[cid] = len(tokens)
             total_len += len(tokens)
 
@@ -353,16 +370,21 @@ class VersionedHybridIndex:
             doc_ver = c.parent_metadata.get("version", "1.0")
             doc_versions[doc_id] = doc_ver
 
+            title = c.parent_metadata.get("title", "")
+            sec = " ".join(c.section_path)
+            searchable_text = f"{title} {sec} {c.text}".strip()
+
             rec = {
                 "chunk_id": c.chunk_id,
                 "doc_id": doc_id,
                 "chunk": c,
                 "text": c.text,
+                "searchable_text": searchable_text,
                 "is_active": True,
                 "superseded_by": None,
             }
             self.records[c.chunk_id] = rec
-            texts.append(c.text)
+            texts.append(searchable_text)
             chunk_ids.append(c.chunk_id)
 
         # Generate dense embeddings

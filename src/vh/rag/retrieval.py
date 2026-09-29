@@ -13,7 +13,7 @@ from typing import Any, Dict, List, Optional, Set, Tuple
 from pydantic import BaseModel, Field
 
 from vh.rag.chunking import Chunk
-from vh.rag.indexing import VersionedHybridIndex, QueryResult
+from vh.rag.indexing import VersionedHybridIndex, QueryResult, STOP_WORDS
 from vh.common.tracing import trace_span
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent.parent
@@ -30,12 +30,44 @@ class RetrievalFilters(BaseModel):
 
 class EvidenceItem(BaseModel):
     """Normalized evidence item returned by the unified retrieval API."""
-    evidence_id: str = Field(..., description="Stable evidence identifier across index version")
+    evidence_id: str = Field(default="", description="Stable evidence identifier across index version")
     text: str = Field(..., description="Exact chunk textual content")
     source: str = Field(..., description="Originating knowledge source repository")
     locator: str = Field(..., description="Resolvable locator URI or anchor")
     scores: Dict[str, float] = Field(default_factory=dict, description="Scoring breakdown across retrieval stages")
     metadata: Dict[str, Any] = Field(default_factory=dict, description="Provenance metadata")
+    rank: int = Field(default=0, description="Rank within retrieval response (1-indexed)")
+    chunk_id: Optional[str] = Field(default=None, description="Underlying chunk identifier")
+    superseded_by: Optional[str] = Field(default=None, description="Index version superseding this chunk if inactive")
+
+    def model_post_init(self, __context: Any) -> None:
+        if not self.evidence_id:
+            cid = self.chunk_id or "unknown"
+            self.evidence_id = f"v1:{cid}"
+        if not self.chunk_id and ":" in self.evidence_id:
+            self.chunk_id = self.evidence_id.split(":", 1)[1]
+        elif not self.chunk_id:
+            self.chunk_id = self.evidence_id
+
+    @property
+    def rrf_score(self) -> float:
+        return self.scores.get("rrf", 0.0)
+
+    @property
+    def dense_score(self) -> float:
+        return self.scores.get("dense", 0.0)
+
+    @property
+    def bm25_score(self) -> float:
+        return self.scores.get("bm25", 0.0)
+
+    @property
+    def rerank_score(self) -> float:
+        return self.scores.get("rerank", 0.0)
+
+    @property
+    def document_title(self) -> str:
+        return self.metadata.get("title", "")
 
 
 class RetrievalRequest(BaseModel):
@@ -66,8 +98,8 @@ class CrossEncoderReranker:
 
     def score(self, query: str, text: str) -> float:
         """Compute cross-attention relevance score."""
-        q_tokens = set(re.findall(r"[a-zA-Z0-9]+", query.lower()))
-        t_tokens = re.findall(r"[a-zA-Z0-9]+", text.lower())
+        q_tokens = {t for t in re.findall(r"[a-zA-Z0-9]+", query.lower()) if len(t) >= 2 and t not in STOP_WORDS}
+        t_tokens = [t for t in re.findall(r"[a-zA-Z0-9]+", text.lower()) if len(t) >= 2 and t not in STOP_WORDS]
         if not q_tokens or not t_tokens:
             return 0.0
 
@@ -191,7 +223,8 @@ class UnifiedRetrievalService:
                     for cid, _ in candidates[: max(k * 2, 10)]:
                         rec = self.index.records.get(cid)
                         if rec:
-                            score_re = self.reranker.score(query, rec["text"])
+                            text_for_rerank = rec.get("searchable_text", rec["text"])
+                            score_re = self.reranker.score(query, text_for_rerank)
                             rerank_scores[cid] = score_re
                             # Boost candidate score
                             rrf_scores[cid] += score_re * 0.5
@@ -266,7 +299,7 @@ class UnifiedRetrievalService:
 
                 # Build EvidenceItem objects
                 idx_ver = self.index.manifest.index_version if self.index.manifest else "v1.0"
-                for rec in selected_records:
+                for idx, rec in enumerate(selected_records):
                     cid = rec["chunk_id"]
                     chunk: Chunk = rec["chunk"]
                     p_meta = chunk.parent_metadata
@@ -289,11 +322,14 @@ class UnifiedRetrievalService:
 
                     evidence_items.append(EvidenceItem(
                         evidence_id=f"{idx_ver}:{cid}",
+                        chunk_id=cid,
+                        rank=idx + 1,
                         text=chunk.text,
                         source=p_meta.get("source_id", "unknown"),
                         locator=chunk.locator,
                         scores=scores_dict,
                         metadata=full_meta,
+                        superseded_by=rec.get("superseded_by") if not rec["is_active"] else None,
                     ))
 
             return evidence_items
