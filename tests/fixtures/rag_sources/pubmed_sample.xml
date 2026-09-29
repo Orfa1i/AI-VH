@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE PubmedArticleSet PUBLIC "-//NLM//DTD PubMedArticle, 1st January 2024//EN" "https://dtd.nlm.nih.gov/ncbi/pubmed/out/pubmed_240101.dtd">
+<PubmedArticleSet>
+  <PubmedArticle>
+    <MedlineCitation Status="MEDLINE" Owner="NLM">
+      <PMID Version="1">34567890</PMID>
+      <DateCompleted>
+        <Year>2023</Year>
+        <Month>06</Month>
+        <Day>15</Day>
+      </DateCompleted>
+      <Article PubModel="Print-Electronic">
+        <Journal>
+          <JournalIssue CitedMedium="Internet">
+            <Volume>388</Volume>
+            <Issue>24</Issue>
+            <PubDate>
+              <Year>2023</Year>
+              <Month>Jun</Month>
+              <Day>15</Day>
+            </PubDate>
+          </JournalIssue>
+          <Title>The New England Journal of Medicine</Title>
+        </Journal>
+        <ArticleTitle>Dual Antiplatelet Therapy Duration in Patients with Acute Coronary Syndrome</ArticleTitle>
+        <Abstract>
+          <AbstractText Label="BACKGROUND">Guidelines recommend dual antiplatelet therapy (DAPT) with aspirin and a P2Y12 inhibitor following acute coronary syndromes (ACS). However, the optimal duration balancing ischemic benefit against bleeding risk remains debated.</AbstractText>
+          <AbstractText Label="METHODS">In a randomized multicenter trial, 4,000 patients undergoing percutaneous coronary intervention (PCI) for ACS were assigned to 3 months versus 12 months of DAPT followed by P2Y12 monotherapy.</AbstractText>
+          <AbstractText Label="RESULTS">At 12 months, major adverse cardiac events occurred in 4.2% of the 3-month cohort and 4.1% of the 12-month cohort (HR 1.02; 95% CI 0.81 to 1.30; p = 0.88). Major bleeding occurred in 1.1% versus 2.4% (HR 0.46; 95% CI 0.31 to 0.69; p &lt; 0.001).</AbstractText>
+          <AbstractText Label="CONCLUSIONS">Shortened 3-month DAPT followed by P2Y12 monotherapy reduced major bleeding without increasing ischemic events in stabilized ACS patients.</AbstractText>
+        </Abstract>
+        <PublicationTypeList>
+          <PublicationType UI="D016428">Journal Article</PublicationType>
+          <PublicationType UI="D016449">Randomized Controlled Trial</PublicationType>
+        </PublicationTypeList>
+      </Article>
+      <MedlineJournalInfo>
+        <Country>United States</Country>
+        <MedlineTA>N Engl J Med</MedlineTA>
+      </MedlineJournalInfo>
+    </MedlineCitation>
+  </PubmedArticle>
+  <PubmedArticle>
+    <MedlineCitation Status="MEDLINE" Owner="NLM">
+      <PMID Version="1">31234567</PMID>
+      <DateCompleted>
+        <Year>2022</Year>
+        <Month>11</Month>
+        <Day>01</Day>
+      </DateCompleted>
+      <Article PubModel="Print">
+        <Journal>
+          <JournalIssue CitedMedium="Internet">
+            <Volume>328</Volume>
+            <Issue>18</Issue>
+            <PubDate>
+              <Year>2022</Year>
+              <Month>Nov</Month>
+              <Day>08</Day>
+            </PubDate>
+          </JournalIssue>
+          <Title>JAMA</Title>
+        </Journal>
+        <ArticleTitle>Empiric Antibiotic Regimens for Hospitalized Adults with Community-Acquired Pneumonia</ArticleTitle>
+        <Abstract>
+          <AbstractText>Among non-ICU inpatients with community-acquired pneumonia, beta-lactam monotherapy demonstrated non-inferiority to beta-lactam plus macrolide combination therapy with respect to 30-day all-cause clinical cure and in-hospital mortality.</AbstractText>
+        </Abstract>
+        <PublicationTypeList>
+          <PublicationType UI="D016428">Journal Article</PublicationType>
+          <PublicationType UI="D016449">Comparative Study</PublicationType>
+        </PublicationTypeList>
+      </Article>
+      <MedlineJournalInfo>
+        <Country>United States</Country>
+        <MedlineTA>JAMA</MedlineTA>
+      </MedlineJournalInfo>
+    </MedlineCitation>
+  </PubmedArticle>
+</PubmedArticleSet>

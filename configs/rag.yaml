@@ -1,0 +1,44 @@
+# Multi-Source RAG Configuration for AI-VH
+ncbi:
+  api_key: null
+  rate_limit_per_second: 3.0
+  rate_limit_with_key: 10.0
+  timeout_seconds: 10
+  retries: 3
+
+openfda:
+  api_key: null
+  rate_limit_per_second: 4.0
+  timeout_seconds: 10
+  retries: 3
+
+dailymed:
+  rate_limit_per_second: 5.0
+  timeout_seconds: 10
+  retries: 3
+
+pmc:
+  rate_limit_per_second: 3.0
+  timeout_seconds: 15
+  retries: 3
+
+guidelines:
+  dir: "data/sources/guidelines"
+
+cache:
+  enabled: true
+  dir: "data/cache/rag"
+
+licence_policy:
+  enforce_strict: true
+  permitted_licences:
+    - "CC0"
+    - "CC-BY"
+    - "CC-BY-4.0"
+    - "CC-BY-3.0"
+    - "CC-BY-SA"
+    - "US Government Work"
+    - "Public Domain"
+    - "FDA Public Domain"
+    - "NLM Public Domain"
+    - "Open Access"

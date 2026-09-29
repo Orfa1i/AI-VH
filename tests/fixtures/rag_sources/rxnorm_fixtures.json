@@ -1,0 +1,72 @@
+{
+  "concepts": {
+    "1191": {
+      "rxcui": "1191",
+      "name": "Aspirin",
+      "synonyms": ["Aspirin", "Acetylsalicylic Acid", "Bayer Aspirin", "Ecotrin", "Empirin"],
+      "ingredients": ["Aspirin"],
+      "drug_classes": ["Antiplatelet Agents", "Nonsteroidal Anti-inflammatory Drugs", "Cyclooxygenase Inhibitors"],
+      "atc_codes": ["B01AC06", "N02BA01"]
+    },
+    "6809": {
+      "rxcui": "6809",
+      "name": "Metformin",
+      "synonyms": ["Metformin", "Metformin Hydrochloride", "Glucophage", "Fortamet", "Glumetza"],
+      "ingredients": ["Metformin"],
+      "drug_classes": ["Biguanides", "Antihyperglycemic Agents"],
+      "atc_codes": ["A10BA02"]
+    },
+    "29046": {
+      "rxcui": "29046",
+      "name": "Lisinopril",
+      "synonyms": ["Lisinopril", "Prinivil", "Zestril"],
+      "ingredients": ["Lisinopril"],
+      "drug_classes": ["Angiotensin-Converting Enzyme Inhibitors", "Antihypertensive Agents"],
+      "atc_codes": ["C09AA03"]
+    },
+    "5640": {
+      "rxcui": "5640",
+      "name": "Ibuprofen",
+      "synonyms": ["Ibuprofen", "Advil", "Motrin", "Nuprin"],
+      "ingredients": ["Ibuprofen"],
+      "drug_classes": ["Nonsteroidal Anti-inflammatory Drugs", "Analgesics"],
+      "atc_codes": ["M01AE01"]
+    },
+    "83367": {
+      "rxcui": "83367",
+      "name": "Atorvastatin",
+      "synonyms": ["Atorvastatin", "Lipitor"],
+      "ingredients": ["Atorvastatin"],
+      "drug_classes": ["HMG-CoA Reductase Inhibitors", "Statins", "Hypolipidemic Agents"],
+      "atc_codes": ["C10AA05"]
+    },
+    "2193": {
+      "rxcui": "2193",
+      "name": "Ceftriaxone",
+      "synonyms": ["Ceftriaxone", "Rocephin"],
+      "ingredients": ["Ceftriaxone"],
+      "drug_classes": ["Cephalosporins", "Third-Generation Cephalosporins", "Antibacterial Agents"],
+      "atc_codes": ["J01DD04"]
+    },
+    "18631": {
+      "rxcui": "18631",
+      "name": "Azithromycin",
+      "synonyms": ["Azithromycin", "Zithromax", "Z-Pak"],
+      "ingredients": ["Azithromycin"],
+      "drug_classes": ["Macrolides", "Antibacterial Agents"],
+      "atc_codes": ["J01FA10"]
+    }
+  },
+  "interactions": [
+    {
+      "rxcui_pair": ["1191", "5640"],
+      "severity": "High",
+      "description": "Ibuprofen may competitively inhibit platelet COX-1 binding of aspirin, diminishing aspirin cardioprotection and compounding gastrointestinal bleeding risk."
+    },
+    {
+      "rxcui_pair": ["29046", "6809"],
+      "severity": "Moderate",
+      "description": "Lisinopril-induced acute kidney injury or hemodynamic changes may exacerbate metformin accumulation and risk of lactic acidosis."
+    }
+  ]
+}

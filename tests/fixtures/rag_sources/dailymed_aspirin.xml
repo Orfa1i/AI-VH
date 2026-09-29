@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document xmlns="urn:hl7-org:v3" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <id root="a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d"/>
+  <code code="34390-5" codeSystem="2.16.840.1.113883.6.1" displayName="HUMAN PRESCRIPTION DRUG LABEL"/>
+  <title>ASPIRIN TABLET, DELAYED RELEASE</title>
+  <versionNumber value="4"/>
+  <effectiveTime value="20230815"/>
+  <setId root="8f9024f2-2e21-4fa2-bf45-c1894b9d0312"/>
+  <component>
+    <structuredBody>
+      <component>
+        <section ID="BOXED_WARNING">
+          <code code="34066-1" codeSystem="2.16.840.1.113883.6.1" displayName="BOXED WARNING SECTION"/>
+          <title>WARNING: RISK OF REYE SYNDROME IN CHILDREN AND TEENAGERS</title>
+          <text>
+            <paragraph>Children and teenagers who have or are recovering from chickenpox or flu-like symptoms should not use this medicine. When using this medicine, if changes in behavior with nausea and vomiting occur, consult a doctor because these symptoms could be an early sign of Reye syndrome, a rare but serious illness.</paragraph>
+          </text>
+        </section>
+      </component>
+      <component>
+        <section ID="INDICATIONS">
+          <code code="34067-9" codeSystem="2.16.840.1.113883.6.1" displayName="INDICATIONS &amp; USAGE SECTION"/>
+          <title>1 INDICATIONS AND USAGE</title>
+          <text>
+            <paragraph>Aspirin is indicated to reduce the risk of death and myocardial infarction in patients with acute coronary syndromes (unstable angina, non-ST elevation myocardial infarction, and ST elevation myocardial infarction) and suspected acute coronary syndromes.</paragraph>
+          </text>
+        </section>
+      </component>
+      <component>
+        <section ID="CONTRAINDICATIONS">
+          <code code="34070-3" codeSystem="2.16.840.1.113883.6.1" displayName="CONTRAINDICATIONS SECTION"/>
+          <title>4 CONTRAINDICATIONS</title>
+          <text>
+            <paragraph>Aspirin is contraindicated in patients with known hypersensitivity to nonsteroidal anti-inflammatory drugs (NSAIDs), active pathological bleeding, severe thrombocytopenia, or hemorrhagic diathesis.</paragraph>
+          </text>
+        </section>
+      </component>
+      <component>
+        <section ID="WARNINGS">
+          <code code="43685-7" codeSystem="2.16.840.1.113883.6.1" displayName="WARNINGS AND PRECAUTIONS SECTION"/>
+          <title>5 WARNINGS AND PRECAUTIONS</title>
+          <text>
+            <paragraph>Gastrointestinal adverse events including ulceration, bleeding, and perforation can occur at any time without warning symptoms. Caution is advised when co-administered with anticoagulants or antiplatelet agents.</paragraph>
+          </text>
+        </section>
+      </component>
+      <component>
+        <section ID="INTERACTIONS">
+          <code code="34073-7" codeSystem="2.16.840.1.113883.6.1" displayName="DRUG INTERACTIONS SECTION"/>
+          <title>7 DRUG INTERACTIONS</title>
+          <text>
+            <paragraph>Co-administration of aspirin with systemic NSAIDs (e.g. ibuprofen) may competitively inhibit platelet COX-1, attenuating aspirin cardioprotection. Concurrent use with heparin, warfarin, or direct oral anticoagulants substantially increases major bleeding risk.</paragraph>
+          </text>
+        </section>
+      </component>
+    </structuredBody>
+  </component>
+</document>

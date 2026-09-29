@@ -56,6 +56,24 @@ class Settings(BaseSettings):
         description="Path to thresholds.yaml defining quality and safety gate thresholds"
     )
 
+    # Multi-Source RAG & Knowledge Configuration
+    NCBI_API_KEY: Optional[str] = Field(
+        default=None,
+        description="NCBI e-utilities API key for elevated rate limits (10 req/s)"
+    )
+    OPENFDA_API_KEY: Optional[str] = Field(
+        default=None,
+        description="openFDA API key for higher request rate limits"
+    )
+    RAG_CACHE_DIR: str = Field(
+        default="./data/cache/rag",
+        description="Directory for cached source query responses"
+    )
+    RAG_CONFIG_PATH: str = Field(
+        default="./configs/rag.yaml",
+        description="Path to multi-source RAG configuration file"
+    )
+
     # CORS and Frontend Networking
     CORS_ORIGINS: List[str] = Field(
         default=["http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:3000"],

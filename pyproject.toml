@@ -80,6 +80,7 @@ warn_unused_ignores = true
 
 [tool.pytest.ini_options]
 minversion = "8.0"
+pythonpath = ["src", "."]
 testpaths = ["tests", "backend/tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]

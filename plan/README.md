@@ -195,7 +195,7 @@ If your existing code lives elsewhere, ADR-0001 (STEP 01–02) maps it onto this
 
 ### Phase 2: Multi-Source RAG
 
-- [ ] STEP 14: P2.1 Source adapters (refactor knowledge_sources.py) → `prompts/phase-2-rag/STEP-14_P2.1_source-adapters.md`
+- [x] STEP 14: P2.1 Source adapters (refactor knowledge_sources.py) → `prompts/phase-2-rag/STEP-14_P2.1_source-adapters.md`
 - [ ] STEP 15: P2.2 Structure-aware chunking → `prompts/phase-2-rag/STEP-15_P2.2_chunking.md`
 - [ ] STEP 16: P2.3 Dense + keyword indexing with versioned indexes → `prompts/phase-2-rag/STEP-16_P2.3_indexing.md`
 - [ ] STEP 17: P2.4 Unified hybrid retrieval API → `prompts/phase-2-rag/STEP-17_P2.4_retrieval-api.md`
