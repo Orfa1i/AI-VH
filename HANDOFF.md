@@ -24,10 +24,23 @@
   - Built incremental index update mechanism marking previous document chunks with `superseded_by = new_index_version`.
   - Recorded exact `index_version` in every `QueryResult`.
   - Tested with 5 unit/acceptance tests in `tests/test_step_16_acceptance.py`.
-  - Authored `docs/steps/STEP-16.md` and checked off Step 16 in `plan/README.md`.
+
+- **Phase 2: Multi-Source RAG - Step 17 (P2.4 Unified Hybrid Retrieval API) COMPLETED**:
+  - Built `UnifiedRetrievalService`, `RetrievalRequest`, `RetrievalResponse`, `EvidenceItem`, and `RetrievalFilters` in `src/vh/rag/retrieval.py`.
+  - Implemented Reciprocal Rank Fusion (RRF, `k=60`) combining dense vector and BM25 sparse keyword indices.
+  - Integrated optional cross-encoder reranker stage (`CrossEncoderReranker`).
+  - Added source diversity capping (`source_diversity_cap`) to prevent single-source domination.
+  - Enforced default exclusion of superseded documents.
+  - Implemented multi-attribute filtering (source, date range, evidence level, tags).
+  - Built canonical locator resolver (`resolve_locator`) verifying that every retrieved chunk locator resolves directly to the exact source text slice.
+  - Built OpenTelemetry-compatible tracing spans recording per-stage latency and candidate counts.
+  - Built FastAPI router (`POST /retrieve`) in `src/vh/rag/router.py` and mounted in `backend/main.py`.
+  - Built lightweight Python client (`RetrievalClient`).
+  - Tested with 7 unit/acceptance tests in `tests/test_step_17_acceptance.py`.
+  - Authored `docs/steps/STEP-17.md` and checked off Step 17 in `plan/README.md`.
 
 - **Acceptance Criteria & Regression Suite**:
-  - Full verification test suite: **152 passed out of 152** (100% pass rate in 262.65s).
+  - Full verification test suite: **159 passed out of 159** (100% pass rate in 263.28s).
   - Secret scan (`py -3.13 scripts/scan_secrets.py`): **0 secrets detected**.
   - Evaluation harness (`py -3.13 scripts/test_all.py eval`): **60 of 60 golden v1 cases passing**.
   - Verified complete absence of em-dash (`—`) characters across all deliverables.
@@ -35,9 +48,9 @@
 ---
 
 ## 2. Key Decisions and Rationale
-- **Dual Embedding Candidates with Offline Projections**: Allows empirical comparison in Step 18 between general and biomedical embedding models without requiring live network access or brittle external dependencies during automated CI runs.
-- **Cryptographic Provenance Manifests**: Every index artifact contains an immutable SHA-256 manifest hash linking retrieval results to specific source document versions and chunker configurations.
-- **Superseded Chunk Lifecycle Tracking**: Prevents clinical guideline obsolescence by explicitly flagging and isolating superseded evidence versions while preserving full audit history.
+- **Reciprocal Rank Fusion (RRF)**: RRF provides robust rank combination without requiring fragile cross-modal score calibration between dense cosine similarities and BM25 unbounded scores.
+- **Source Diversity Capping**: Enforces balanced multi-source evidence synthesis by preventing high-frequency sources (e.g., guidelines) from crowding out FDA warnings, drug monographs, or trial literature.
+- **Direct Locator Resolution Invariance**: Every returned chunk embeds a locator string that deterministically resolves back to the exact physical character slice of the source document in the corpus.
 
 ---
 
@@ -48,20 +61,18 @@
   - Step 14 (P2.1 Source Adapters): **DONE** (commit `f3c1c03`).
   - Step 15 (P2.2 Structure-aware chunking): **DONE** (commit `57aaa1f`).
   - Step 16 (P2.3 Dense + keyword indexing with versioned indexes): **DONE** (commit `63e39aa`).
-  - Step 17 (P2.4 Unified hybrid retrieval API): **READY TO START**.
-- **Test Suite**: 152 of 152 tests passing across `tests/` and `backend/tests/`.
+  - Step 17 (P2.4 Unified hybrid retrieval API): **DONE** (commit `6818712`).
+  - Step 18 (P2.5 Retrieval evaluation and configuration choice): **READY TO START**.
+- **Test Suite**: 159 of 159 tests passing across `tests/` and `backend/tests/`.
 - **Backend Service**: Running on `http://127.0.0.1:8000` (FastAPI with MedGemma 4-bit NF4 GPU engine active).
 - **Frontend Service**: Running on `http://localhost:5173` (Vite dev server active).
 
 ---
 
 ## 4. Concrete Next Steps
-1. Execute STEP 17: P2.4 Unified hybrid retrieval API in `plan/prompts/phase-2-rag/STEP-17_P2.4_retrieval-api.md`.
-2. Write acceptance criteria tests in `tests/test_step_17_acceptance.py`:
-   - Single retrieval endpoint accepting query, filters (source, date, evidence level), top_k, alpha weight (dense vs keyword).
-   - Reciprocal Rank Fusion (RRF) and linear score combination.
-   - P95 latency <= `retrieval.p95_latency_s` (1.5s).
-   - Traceability: every returned chunk contains full provenance (source_id, doc_id, version, locator, offsets, licence).
-   - Zero stale retrievals: superseded chunks excluded by default.
-3. Implement `src/vh/rag/retrieval.py` and API router endpoint.
-4. Run full regression suite (`scripts/test_all.py`), author `docs/steps/STEP-17.md`, and update `plan/README.md`.
+1. Execute STEP 18: P2.5 Retrieval evaluation and configuration choice in `plan/prompts/phase-2-rag/STEP-18_P2.5_retrieval-evaluation.md`.
+2. Evaluate dense vs keyword vs hybrid retrieval against golden queries.
+3. Measure Recall@10, MRR, latency, and source balance.
+4. Record configuration decision in `docs/decisions/ADR-0003-retrieval-configuration.md`.
+5. Execute Human Checkpoint H2 (Confirm golden-set chunk mapping in `docs/signoffs/H2-chunkmap.md`).
+6. Execute Step 19: P2.G Phase 2 GATE.
