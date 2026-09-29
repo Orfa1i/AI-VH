@@ -58,6 +58,12 @@ try:
 except ImportError:
     pass
 
+try:
+    from vh.generation.router import router as generation_router
+    app.include_router(generation_router)
+except ImportError:
+    pass
+
 
 @app.get("/health")
 async def root_health_check():

@@ -13,6 +13,17 @@ from .report import (
     export_clinical_report_json_schema,
 )
 
+from .medgemma import (
+    MedGemmaAdapter,
+    MedGemmaConfig,
+    GenerationFailed,
+    GenerationTimeoutError,
+    GenerationConcurrencyError,
+    MissingPromptVersionError,
+    extract_json_from_text,
+    format_generation_prompt,
+)
+
 try:
     from backend.llm.medgemma_service import medgemma_service, MedGemmaService
 except ImportError:
@@ -32,6 +43,14 @@ __all__ = [
     "UnresolvedEvidenceError",
     "EmptyClaimsError",
     "export_clinical_report_json_schema",
+    "MedGemmaAdapter",
+    "MedGemmaConfig",
+    "GenerationFailed",
+    "GenerationTimeoutError",
+    "GenerationConcurrencyError",
+    "MissingPromptVersionError",
+    "extract_json_from_text",
+    "format_generation_prompt",
     "medgemma_service",
     "MedGemmaService",
 ]
