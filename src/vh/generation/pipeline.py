@@ -52,8 +52,8 @@ class QueryPlanner:
     def plan_queries(self, case_view: CaseView) -> Dict[str, str]:
         pres = case_view.visible_presentation
         chief = pres.get("chief_complaint", "")
-        hpi = pres.get("history_of_present_illness", "")
-        labs = pres.get("initial_labs", {})
+        hpi = pres.get("history") or pres.get("history_of_present_illness", "")
+        labs = pres.get("initial_labs") or pres.get("labs", {})
         vitals = pres.get("vitals", {})
 
         labs_str = " ".join(f"{k}: {v}" for k, v in labs.items()) if isinstance(labs, dict) else str(labs)
@@ -144,10 +144,10 @@ class GroundedGenerationPipeline(Pipeline):
         # 1. AgentView extraction: assemble presentation string and findings
         pres = case_view.visible_presentation
         chief = pres.get("chief_complaint", "")
-        hpi = pres.get("history_of_present_illness", "")
+        hpi = pres.get("history") or pres.get("history_of_present_illness", "")
         vitals = pres.get("vitals", {})
-        exam = pres.get("physical_exam", {})
-        labs = pres.get("initial_labs", {})
+        exam = pres.get("exam") or pres.get("physical_exam", {})
+        labs = pres.get("initial_labs") or pres.get("labs", {})
 
         patient_summary = f"Patient presentation: {chief}. HPI: {hpi}."
         findings: List[str] = []
@@ -237,6 +237,7 @@ class GroundedGenerationPipeline(Pipeline):
 
         generation_inputs: Dict[str, Any] = {
             "case_id": case_id,
+            "specialty": case_view.specialty,
             "patient_summary": patient_summary,
             "findings": findings,
             "retrieved_evidence": evidence_payload,

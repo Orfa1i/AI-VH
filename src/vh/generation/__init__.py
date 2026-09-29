@@ -30,6 +30,10 @@ from .pipeline import (
     get_default_retrieval_service,
 )
 
+from .baseline import (
+    NoRagBaselinePipeline,
+)
+
 try:
     from backend.llm.medgemma_service import medgemma_service, MedGemmaService
 except ImportError:
@@ -60,6 +64,7 @@ __all__ = [
     "GroundedGenerationPipeline",
     "QueryPlanner",
     "get_default_retrieval_service",
+    "NoRagBaselinePipeline",
     "medgemma_service",
     "MedGemmaService",
 ]

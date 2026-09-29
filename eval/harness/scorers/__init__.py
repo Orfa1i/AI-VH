@@ -22,6 +22,14 @@ from .generation import (
     GenerationScorer,
 )
 
+from .diagnostic import (
+    is_diagnostic_match,
+    evaluate_diagnostic_accuracy,
+    compute_per_case_accuracy,
+    compute_bootstrap_ci_difference,
+    compute_differential_agreement,
+)
+
 __all__ = [
     "RetrievalMetrics",
     "compute_recall_at_k",
@@ -37,4 +45,9 @@ __all__ = [
     "compute_fabricated_citation_rate",
     "compute_abstention_correct_rate",
     "GenerationScorer",
+    "is_diagnostic_match",
+    "evaluate_diagnostic_accuracy",
+    "compute_per_case_accuracy",
+    "compute_bootstrap_ci_difference",
+    "compute_differential_agreement",
 ]

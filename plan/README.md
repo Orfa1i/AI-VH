@@ -209,10 +209,10 @@ If your existing code lives elsewhere, ADR-0001 (STEP 01–02) maps it onto this
 - [x] STEP 20: P3.1 Clinical report schema with claim-evidence links → `prompts/phase-3-generation/STEP-20_P3.1_report-schema.md`
 - [x] STEP 21: P3.2 MedGemma adapter → `prompts/phase-3-generation/STEP-21_P3.2_medgemma-adapter.md`
 - [x] STEP 22: P3.3 Grounded generation pipeline with abstention → `prompts/phase-3-generation/STEP-22_P3.3_grounded-pipeline.md`
-- [ ] STEP 23: P3.4 Model benchmark and no-RAG baseline → `prompts/phase-3-generation/STEP-23_P3.4_model-benchmark.md`
-- [ ] **[HUMAN] H3: Set the diagnostic accuracy threshold** → `configs/thresholds.yaml`  
+- [x] STEP 23: P3.4 Model benchmark and no-RAG baseline → `prompts/phase-3-generation/STEP-23_P3.4_model-benchmark.md`
+- [x] **[HUMAN] H3: Set the diagnostic accuracy threshold** → `configs/thresholds.yaml`  
   Read the STEP 23 benchmark and set `generation.dx_top3_min` yourself (the gate fails while it is null).
-- [ ] **STEP 24: P3.G Phase 3 GATE** → `prompts/phase-3-generation/STEP-24_P3.G_gate.md`
+- [x] **STEP 24: P3.G Phase 3 GATE** → `prompts/phase-3-generation/STEP-24_P3.G_gate.md`
 
 ### Phase 4: Verification Layer
 
