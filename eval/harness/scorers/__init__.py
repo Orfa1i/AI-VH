@@ -30,6 +30,16 @@ from .diagnostic import (
     compute_differential_agreement,
 )
 
+from .deepeval import (
+    FaithfulnessScorer,
+    ContextualRelevancyScorer,
+    AnswerRelevancyScorer,
+    DeepEvalHarness,
+    DeepEvalTestCase,
+    PINNED_DEEPEVAL_VERSION,
+    PINNED_JUDGE_MODEL,
+)
+
 __all__ = [
     "RetrievalMetrics",
     "compute_recall_at_k",
@@ -50,4 +60,11 @@ __all__ = [
     "compute_per_case_accuracy",
     "compute_bootstrap_ci_difference",
     "compute_differential_agreement",
+    "FaithfulnessScorer",
+    "ContextualRelevancyScorer",
+    "AnswerRelevancyScorer",
+    "DeepEvalHarness",
+    "DeepEvalTestCase",
+    "PINNED_DEEPEVAL_VERSION",
+    "PINNED_JUDGE_MODEL",
 ]

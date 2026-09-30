@@ -1,0 +1,46 @@
+name: eval-rag
+
+on:
+  schedule:
+    # Nightly evaluation at 02:00 UTC
+    - cron: '0 2 * * *'
+  pull_request:
+    paths:
+      - 'src/vh/rag/**'
+      - 'src/vh/generation/**'
+      - 'eval/**'
+      - 'configs/thresholds.yaml'
+  workflow_dispatch:
+
+jobs:
+  eval-rag:
+    name: DeepEval RAG Quality Gate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pydantic pydantic-settings pyyaml pytest deepeval==2.4.0
+
+      - name: Run CI RAG Quality Evaluation
+        env:
+          DEEPEVAL_JUDGE_MODEL: "google/medgemma-4b"
+        run: |
+          python scripts/eval_rag_ci.py --sample-size 20 --report eval/reports/deepeval-ci-report.json
+
+      - name: Upload DeepEval Report Artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: deepeval-ci-report
+          path: eval/reports/deepeval-ci-report.json

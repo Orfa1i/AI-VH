@@ -219,7 +219,7 @@ If your existing code lives elsewhere, ADR-0001 (STEP 01–02) maps it onto this
 - [x] STEP 25: P4.1 Deterministic safety rules engine → `prompts/phase-4-verification/STEP-25_P4.1_safety-rules-engine.md`
 - [x] STEP 26: P4.2 Claim grounding and citation checker → `prompts/phase-4-verification/STEP-26_P4.2_grounding-checker.md`
 - [x] STEP 27: P4.3 Runtime guardrails and verified/flagged routing → `prompts/phase-4-verification/STEP-27_P4.3_guardrails-routing.md`
-- [ ] STEP 28: P4.4 DeepEval metrics in CI → `prompts/phase-4-verification/STEP-28_P4.4_deepeval-ci.md`
+- [x] STEP 28: P4.4 DeepEval metrics in CI → `prompts/phase-4-verification/STEP-28_P4.4_deepeval-ci.md`
 - [ ] STEP 29: P4.5 Fault-injection suite → `prompts/phase-4-verification/STEP-29_P4.5_fault-injection.md`
 - [ ] **[HUMAN] H4: Physician review of safety tables + judge calibration labels** → `docs/signoffs/H4-safety-and-judge.md`  
   A physician reviews every row in `configs/safety/` (approve or correct) and labels the 100 claim-evidence pairs in the calibration sheet (saved as `docs/signoffs/H4-judge-labels.csv`). Then have the agent mark approved rows as reviewed and run `vh verify calibration-score`.
