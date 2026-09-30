@@ -2,7 +2,8 @@
 
 - **Phase 6:** Doctor Review & Feedback Store
 - **Run after:** STEP 38 (P6.3) report shows Status: DONE.
-- **Next:** Human checkpoint(s) H6, then STEP 40 (P6.G): `plan/prompts/phase-6-feedback/STEP-40_P6.G_gate.md`
+- **Next:** STEP 40 (P6.G): `plan/prompts/phase-6-feedback/STEP-40_P6.G_gate.md`
+  (H6 is OPTIONAL/external and not a prerequisite).
 
 > Read `CLAUDE.md`, `docs/current-state.md` (once it exists) and the previous step report before starting. Work only on this step.
 

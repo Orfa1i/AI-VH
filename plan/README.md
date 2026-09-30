@@ -141,7 +141,8 @@ If your existing code lives elsewhere, ADR-0001 (STEP 01–02) maps it onto this
 - Review API with authorisation and independent overlap reviews.
 - Review UI in the existing shell, tested end-to-end.
 - Agreement measured; versioned snapshots are the only training input.
-- Doctor usability test passed.
+- Real-physician usability (H6) is an OPTIONAL external milestone, not an
+  implementation gate; the simulation/runtime path operates without real doctors.
 
 **Phase 7: Fine-Tuning & Model Lifecycle**
 - Purpose: Improve MedGemma from curated feedback; production changes only through evidence-gated promotion.
@@ -241,9 +242,12 @@ If your existing code lives elsewhere, ADR-0001 (STEP 01–02) maps it onto this
 - [x] STEP 37: P6.2 Review API with overlap sampling → `prompts/phase-6-feedback/STEP-37_P6.2_review-api.md`
 - [x] STEP 38: P6.3 Doctor review UI in the Clinical AI OS shell → `prompts/phase-6-feedback/STEP-38_P6.3_review-ui.md`
 - [x] STEP 39: P6.4 Reviewer agreement and feedback snapshots → `prompts/phase-6-feedback/STEP-39_P6.4_agreement-and-snapshots.md`
-- [ ] **[HUMAN] H6: Usability test with 2-3 doctors** → `docs/signoffs/H6-usability.md`  
-  Two or three doctors review real generated reports in the UI. Record findings, marking must-fix items. Must-fix items go through the FIX LOOP before you sign off.
-- [ ] **STEP 40: P6.G Phase 6 GATE** → `prompts/phase-6-feedback/STEP-40_P6.G_gate.md`
+- [ ] **[OPTIONAL / EXTERNAL] H6: Real-physician usability validation** → `docs/signoffs/H6-usability.md`  
+  Future external milestone, NOT a prerequisite for implementation or any gate.
+  If/when performed: two or three doctors review real generated reports in the UI;
+  record findings, marking must-fix items. Must-fix items go through the FIX LOOP
+  before any claim of physician validation. Never fabricate this file.
+- [x] **STEP 40: P6.G Phase 6 GATE** → `prompts/phase-6-feedback/STEP-40_P6.G_gate.md`
 
 ### Phase 7: Fine-Tuning & Model Lifecycle
 
@@ -274,6 +278,8 @@ If your existing code lives elsewhere, ADR-0001 (STEP 01–02) maps it onto this
 
 - Golden-set specialties (before STEP 05).
 - `generation.dx_top3_min` (H3) and `agents.encounter_score_min` (H5), set from measured baselines.
+- H6 real-physician usability is OPTIONAL/external (owner policy): never blocking,
+  never fabricated, never claimed by a gate.
 - Any change to a provisional threshold. Change thresholds only for a documented reason, never to make a failing gate pass.
 - When Phase 7 starts: STEP 41 stops as BLOCKED until `training.min_reviewed_cases` reviewed cases exist. Waiting for data is not a failure. While you wait, you may choose to run Phase 8, which depends only on Phase 5's event log; the default order stays strictly sequential.
 - Before real doctors review outputs, and before any deployment, confirm the governance items in H0.1 are still valid.

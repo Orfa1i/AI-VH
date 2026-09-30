@@ -61,16 +61,18 @@
 - **Phase 5 (Agents & Orchestration)**: **100% COMPLETE & CERTIFIED** (`phase-5-pass`).
   Steps 31-34 DONE; H5 set (`encounter_score_min: 0.30`); gate report
   `docs/phase-reports/phase-5.md` (260/260 green, eval PASS, all 4 metrics PASS).
-- **Phase 6 (Doctor Review & Feedback Store)**: **Steps 36, 37, 38, 39 COMPLETE**
-  (append-only store + review API + shell review UI with e2e + agreement and
-  versioned snapshots; 279/279 Python green, 13 vitest + 5 Playwright green).
-  Next: H6 (owner usability test), then Step 40 (P6.G).
-- **Test Suite**: 287 of 287 tests passing across `tests/` and `backend/tests/`.
+- **Phase 6 (Doctor Review & Feedback Store)**: **100% COMPLETE & CERTIFIED**
+  (`phase-6-pass`) on automated evidence under the H6-optional policy (ADR-0012).
+  Gate report `docs/phase-reports/phase-6.md` (288/288 green, eval PASS,
+  encounter mean 0.3596 ≥ 0.30, kappa UNMEASURED). Physician usability explicitly
+  unvalidated (future/external H6).
+- **Test Suite**: 288 of 288 tests passing across `tests/` and `backend/tests/`.
 - **Plan update (owner) adopted**: import-command governance rule; new
   `vh golden chunkmap-import` + `vh safety import-signoff` implemented, dry-run
   verified on real sign-offs, and tested (ADR-0011); `training.min_preference_pairs`
   key added by owner and registered in the loader (STEP-53 stays BLOCKED on null
-  by design). Full suite 288/288 green. H6 remains the blocker.
+  by design). H6 reclassified OPTIONAL/external (ADR-0012); Phase 6 certified
+  on automated evidence.
 - **Secret Scanner**: Clean pass (0 secrets).
 - **Backend Service**: Running on `http://127.0.0.1:8000`.
 - **Frontend Service**: Running on `http://localhost:5173`.
@@ -78,6 +80,8 @@
 ---
 
 ## 4. Concrete Next Steps
-1. **[HUMAN] H6: Usability test with 2-3 doctors** → `docs/signoffs/H6-usability.md`
-   (owner-run; must-fix items go through FIX LOOP before sign-off).
-2. **Then STEP 40 (P6.G Phase 6 GATE)**, then Phase 7.
+1. **Execute Step 41 (P7.1 Training dataset curation)**:
+   - Read `plan/prompts/phase-7-fine-tuning/STEP-41_P7.1_dataset-curation.md`.
+   - Note the plan's gating rule: STOP as BLOCKED until
+     `training.min_reviewed_cases` (500) reviewed cases exist (waiting for data
+     is not failure; Phase 8 may run in parallel at the owner's option).
