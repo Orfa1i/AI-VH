@@ -26,6 +26,21 @@
     - Added 9 acceptance and unit tests in `tests/test_step_33_acceptance.py` including end-to-end verification across 10 verified golden cases.
     - Authored Step 33 Report in `docs/steps/STEP-33.md`.
     - Full verification suite: **249 of 249 tests passing (100% green)** in 262.64s. Secret scanner: 0 secrets.
+    - Committed `30e90fc`, tag `step-33-pass`.
+  - **Step 34 (P5.4 Encounter Scoring and Deterministic Replay) - COMPLETE**:
+    - Built `src/vh/agents/scoring.py`: `EncounterScorer` (8 axes + weighted
+      composite), `EncounterScore`, `aggregate_encounter_scores`.
+    - Built `src/vh/agents/replay.py`: transcript record/replay, canonical
+      event-log hashing; `src/vh/agents/cli.py` (`vh replay <run_id>`).
+    - Registered `EncounterPipeline`/`EncounterHarnessScorer` in
+      `eval/harness` (`pipeline_name="encounter"`).
+    - FIX-LOOP: fixed Step 33 empty-workup defect (natural-named orders now
+      routed); regression test added, Step 33 suite re-run 10/10 green.
+    - 9 tests in `tests/test_step_34_acceptance.py`; 60/60 golden cases
+      completed, 60/60 replays byte-identical; distribution mean 0.3596.
+    - Authored `docs/steps/STEP-34.md` and `docs/decisions/ADR-0006…`.
+    - Full verification suite: **259 of 259 tests passing (100% green)**.
+    - Proposed H5 value: `agents.encounter_score_min = 0.30` (owner sets it).
 
 ---
 
@@ -43,8 +58,9 @@
 - **Phase 2 (Multi-Source RAG)**: **100% COMPLETE & CERTIFIED** (`phase-2-pass`).
 - **Phase 3 (Grounded Clinical Generation - MedGemma)**: **100% COMPLETE & CERTIFIED** (`phase-3-pass`).
 - **Phase 4 (Verification Layer)**: **100% COMPLETE & CERTIFIED** (`phase-4-pass`).
-- **Phase 5 (Agents & Orchestration)**: **Step 31, 32, 33 COMPLETE**. Ready for Step 34.
-- **Test Suite**: 249 of 249 tests passing across `tests/` and `backend/tests/`.
+- **Phase 5 (Agents & Orchestration)**: **Steps 31, 32, 33, 34 COMPLETE** (Step 33
+  committed `30e90fc`, tag `step-33-pass`). Blocked on human checkpoint H5.
+- **Test Suite**: 259 of 259 tests passing across `tests/` and `backend/tests/`.
 - **Secret Scanner**: Clean pass (0 secrets).
 - **Backend Service**: Running on `http://127.0.0.1:8000`.
 - **Frontend Service**: Running on `http://localhost:5173`.
@@ -52,15 +68,14 @@
 ---
 
 ## 4. Concrete Next Steps
-1. **Commit Step 33**:
-   - Stage and commit with message: `feat(agents): complete Step 33 orchestrator budgets and loop detection`.
-   - Apply tag `step-33-pass`.
-2. **Execute Step 34 (P5.4 Encounter scoring and deterministic replay)**:
-   - Read `plan/prompts/phase-5-agents/STEP-34_P5.4_encounter-scoring-replay.md`.
-   - Write acceptance criteria as tests first in `tests/test_step_34_acceptance.py`:
-     - Replay of identical seed + action log reproduces identical state and scores.
-     - Scorer computes encounter metrics (diagnostic accuracy, workup appropriateness, cost efficiency, safety).
-     - Score distribution across golden cases measured and recorded.
-   - Implement `EncounterScorer` and deterministic replay runner in `src/vh/agents/scorer.py` / `replay.py`.
-   - Run acceptance tests and full regression suite (`py -3.13 scripts/test_all.py test-all`).
-   - Author `docs/steps/STEP-34.md`.
+1. **[HUMAN] H5: Set the encounter score threshold** (BLOCKING):
+   - Read `docs/steps/STEP-34.md` distribution (60 verified cases, mean 0.3596,
+     range 0.1644-0.9944). Proposed value: `agents.encounter_score_min = 0.30`.
+   - Owner edits `configs/thresholds.yaml` (agents never edit it).
+   - Gate Step 35 FAILs while the value is null.
+2. **Execute Step 35 (P5.G Phase 5 GATE)** after H5:
+   - Read `plan/prompts/phase-5-agents/STEP-35_P5.G_gate.md`.
+   - Confirm STEP 31-34 reports DONE, run full regression + `make eval`,
+     compare the four `agents.*` metrics vs thresholds, write
+     `docs/phase-reports/phase-5.md`. PASS tags `phase-5-pass`.
+3. **Then Phase 6** (only after Phase 5 gate PASS): STEP 36 (P6.1).

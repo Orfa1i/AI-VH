@@ -29,6 +29,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         print("  vh synthea  : Synthea FHIR population generation and module runner")
         print("  vh cases    : Case builder, validation suite, and spot-check export")
         print("  vh verify   : Clinical verification rules, grounding, and calibration")
+        print("  vh replay   : Deterministic encounter replay from recorded LLM outputs")
         return 0
 
     command = argv[0].lower()
@@ -46,8 +47,11 @@ def main(argv: Optional[List[str]] = None) -> int:
     elif command == "verify":
         from vh.verification.cli import main as verify_main
         return verify_main(sub_args)
+    elif command == "replay":
+        from vh.agents.cli import main as replay_main
+        return replay_main(["replay"] + sub_args)
     else:
-        print(f"Unknown command suite: '{command}'. Available: golden, synthea, cases, verify.")
+        print(f"Unknown command suite: '{command}'. Available: golden, synthea, cases, verify, replay.")
         return 1
 
 

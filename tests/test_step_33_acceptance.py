@@ -263,3 +263,61 @@ def test_end_to_end_10_golden_cases():
 
     # Across the 10 golden cases, at least 90% must complete successfully end-to-end
     assert completed_count >= 9, f"Expected >= 9 of 10 golden cases to complete, got {completed_count}"
+
+
+def test_orders_natural_named_hidden_tests_regression():
+    """
+    FIX-LOOP regression (found in STEP 34): golden cases using natural order names
+    without LAB/DX prefixes or categories (e.g. "Cardiac Enzymes", "ECG") must still
+    have their indicated hidden diagnostics ordered. Previously the LAB/DX-prefix
+    filter silently ordered nothing, leaving every such encounter with an empty workup.
+    """
+    visible = VisiblePresentation(
+        presentation="Substernal pressure, diaphoresis.",
+        demographics={"age": 60, "gender": "male"},
+        history="Hypertension.",
+        current_medications=[],
+        allergies=[],
+        initial_vitals={"bp": "136/84", "hr": 88},
+        exam="Cardiovascular exam.",
+    )
+    case = CaseSpec(
+        case_id="CASE-ORCH-NATURAL-001",
+        specialty="Cardiology",
+        patient_ref="PAT-ORCH-NATURAL-001",
+        visible=visible,
+        hidden=[
+            HiddenResult(
+                order_code="Cardiac Enzymes",
+                order_name="Cardiac Enzymes",
+                result="Elevated High-Sensitivity Troponin",
+                turnaround_time_minutes=20,
+                category=None,
+            ),
+            HiddenResult(
+                order_code="ECG",
+                order_name="ECG",
+                result="ST elevation in anterior leads.",
+                turnaround_time_minutes=10,
+                category=None,
+            ),
+        ],
+        ground_truth=GroundTruth(
+            primary_dx="Acute Anterior STEMI",
+            acceptable_differential=["NSTEMI"],
+            expected_workup=["12-Lead ECG", "Troponin I"],
+            red_flags=["Cardiogenic shock"],
+        ),
+        status="verified",
+        version="1.0.0",
+    )
+    orchestrator = HospitalOrchestrator(
+        budget=EncounterBudget(max_steps=20, max_tokens=10000, max_cost=1.0, max_sim_time_minutes=300),
+    )
+    state = orchestrator.run_encounter(case_spec=case)
+
+    assert state.status == EncounterStatus.COMPLETED
+    order_steps = [s for s in state.history if s.action == "order_workup"]
+    assert len(order_steps) == 1
+    ordered = order_steps[0].payload.get("ordered_tests", [])
+    assert set(ordered) == {"Cardiac Enzymes", "ECG"}

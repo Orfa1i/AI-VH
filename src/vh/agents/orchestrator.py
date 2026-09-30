@@ -14,6 +14,7 @@ from pydantic import BaseModel, Field
 
 from vh.cases.spec import CaseSpec
 from vh.agents.environment import HospitalEnvironment
+from vh.agents.events import EventStore
 from vh.agents.roles.doctor import DoctorAgent
 from vh.agents.roles.nurse import NurseAgent
 from vh.agents.roles.lab import LabAgent
@@ -129,10 +130,17 @@ class HospitalOrchestrator:
         case_spec: CaseSpec,
         step_token_cost: int = 0,
         step_monetary_cost: float = 0.0,
+        run_id: Optional[str] = None,
+        seed: Optional[int] = None,
+        event_store: Optional[EventStore] = None,
     ) -> EncounterState:
         """
         Execute full clinical encounter pipeline from presentation to verified report.
         Runs Nurse -> Doctor -> Diagnostic orders -> Findings -> Pharmacy -> Assessment -> Verification.
+
+        Optional run_id/seed/event_store enable deterministic recording and replay
+        (STEP 34): pass the same run_id and recorded LLM outputs to reproduce the
+        canonical event log exactly. Defaults preserve the original behaviour.
         """
         state = EncounterState(
             case_id=case_spec.case_id,
@@ -140,7 +148,9 @@ class HospitalOrchestrator:
         )
 
         try:
-            env = HospitalEnvironment(case_spec=case_spec)
+            env = HospitalEnvironment(
+                case_spec=case_spec, seed=seed, run_id=run_id, event_store=event_store
+            )
             nurse = NurseAgent(agent_view=env.agent_view, environment=env)
             doctor = DoctorAgent(agent_view=env.agent_view, environment=env, adapter=self.adapter)
             lab = LabAgent(agent_view=env.agent_view, environment=env)
@@ -180,17 +190,50 @@ class HospitalOrchestrator:
                 state.termination_reason = budget_violation
                 return state
 
-            # Find hidden diagnostic orders matching this case to schedule appropriate tests
+            # Find hidden diagnostic orders matching this case to schedule appropriate tests.
+            # FIX-LOOP (STEP 34): every HiddenResult is an orderable diagnostic finding.
+            # The previous LAB/DX-prefix filter silently ordered nothing for golden
+            # cases using natural order names (e.g. "Cardiac Enzymes", "ECG"),
+            # leaving every encounter with an empty workup. Route all hidden items:
+            # lab-like via order_lab, imaging-like via order_imaging, uncategorized
+            # items via name heuristics (imaging keywords) defaulting to order_lab.
+            # The environment resolves orders by code-or-name either way.
             ordered_tests = []
             max_tat = 0
             for hidden in case_spec.hidden:
                 cat = (hidden.category or "").lower()
+                name = f"{hidden.order_code} {hidden.order_name}".lower()
                 if "lab" in cat or hidden.order_code.startswith("LAB"):
                     doctor.order_lab(hidden.order_code)
                     ordered_tests.append(hidden.order_code)
                     max_tat = max(max_tat, hidden.turnaround_time_minutes)
-                elif "imag" in cat or hidden.order_code.startswith("DX"):
+                elif (
+                    "imag" in cat
+                    or hidden.order_code.startswith("DX")
+                    or any(
+                        kw in cat or kw in name
+                        for kw in (
+                            "ecg",
+                            "ekg",
+                            "x-ray",
+                            "xray",
+                            "radiograph",
+                            "ct ",
+                            " ct",
+                            "mri",
+                            "ultrasound",
+                            "echo",
+                            "angio",
+                            "scan",
+                            "imaging",
+                        )
+                    )
+                ):
                     doctor.order_imaging(hidden.order_code)
+                    ordered_tests.append(hidden.order_code)
+                    max_tat = max(max_tat, hidden.turnaround_time_minutes)
+                else:
+                    doctor.order_lab(hidden.order_code)
                     ordered_tests.append(hidden.order_code)
                     max_tat = max(max_tat, hidden.turnaround_time_minutes)
 

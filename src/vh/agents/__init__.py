@@ -24,6 +24,18 @@ from .orchestrator import (
     HospitalOrchestrator,
     LoopDetectionConfig,
 )
+from .replay import (
+    RecordingAdapter,
+    ReplayAdapter,
+    ReplayBundle,
+    TranscriptEntry,
+    hash_event_log,
+    load_bundle,
+    record_encounter,
+    replay_encounter,
+    save_bundle,
+)
+from .scoring import EncounterScore, EncounterScorer, aggregate_encounter_scores
 
 try:
     from backend.simulation.orchestrator import orchestrator
@@ -35,6 +47,8 @@ __all__ = [
     "BaseAgent",
     "DoctorAgent",
     "EncounterBudget",
+    "EncounterScore",
+    "EncounterScorer",
     "EncounterState",
     "EncounterStatus",
     "EncounterStep",
@@ -47,7 +61,17 @@ __all__ = [
     "OrderStatus",
     "PharmacyAgent",
     "RadiologyAgent",
+    "RecordingAdapter",
+    "ReplayAdapter",
+    "ReplayBundle",
     "SimEvent",
     "ToolPermissionError",
+    "TranscriptEntry",
+    "aggregate_encounter_scores",
+    "hash_event_log",
+    "load_bundle",
     "orchestrator",
+    "record_encounter",
+    "replay_encounter",
+    "save_bundle",
 ]

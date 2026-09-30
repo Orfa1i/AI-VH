@@ -175,6 +175,9 @@ def run_evaluation(
         pipeline = pipeline_instance
     elif pipeline_name == "dummy":
         pipeline = DummyPipeline()
+    elif pipeline_name == "encounter":
+        from eval.harness.encounter import EncounterPipeline
+        pipeline = EncounterPipeline()
     elif pipeline_name in ("grounded", "medgemma"):
         from vh.generation.pipeline import GroundedGenerationPipeline
         pipeline = GroundedGenerationPipeline()
@@ -184,6 +187,9 @@ def run_evaluation(
     # Resolve scorer
     if scorer_instance is not None:
         scorer = scorer_instance
+    elif pipeline_name == "encounter":
+        from eval.harness.encounter import EncounterHarnessScorer
+        scorer = EncounterHarnessScorer()
     elif pipeline_name in ("grounded", "medgemma"):
         from eval.harness.scorers.generation import GenerationScorer
         scorer = GenerationScorer()

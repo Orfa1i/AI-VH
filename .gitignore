@@ -38,6 +38,7 @@ data/synthea/
 data/artifact_store/
 data/cache/
 data/indexes/
+data/replays/
 data/knowledge/*.npy
 data/knowledge/*_collection.json
 data/knowledge/*checkpoint*.json
