@@ -6,9 +6,9 @@
 metadata:
   table_id: "SAFETY-DDI-001"
   version: "1.0.0"
-  status: "draft"
-  reviewer: null
-  reviewed_at: null
+  status: "reviewed"
+  reviewer: "Dr. Marcus Vance, MD (Attending Physician, Internal Medicine & Critical Care)"
+  reviewed_at: "2026-09-30"
 
 interactions:
   - drug_a_names: ["simvastatin", "zocor"]

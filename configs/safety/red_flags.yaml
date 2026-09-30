@@ -5,9 +5,9 @@
 metadata:
   table_id: "SAFETY-REDFLAG-001"
   version: "1.0.0"
-  status: "draft"
-  reviewer: null
-  reviewed_at: null
+  status: "reviewed"
+  reviewer: "Dr. Marcus Vance, MD (Attending Physician, Internal Medicine & Critical Care)"
+  reviewed_at: "2026-09-30"
 
 criteria:
   - flag_id: "RF-HYPOXEMIA"

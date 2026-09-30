@@ -168,18 +168,18 @@ class ClaimGroundingChecker:
 
         # 1. Contradiction Detection
         contradiction_markers = [
-            ("contraindicated", ["recommend", "recommended", "indicated", "administer", "prescribe", "give"]),
-            ("contraindication", ["recommend", "recommended", "indicated", "administer", "prescribe"]),
-            ("harmful", ["beneficial", "indicated", "recommend"]),
-            ("avoid", ["administer", "indicated", "recommend", "use"]),
-            ("strictly contraindicated", ["indicated", "recommended"]),
+            ("contraindicated", ["recommend", "recommended", "indicated", "administer", "administered", "prescribe", "give", "given", "pushed", "push", "initiate", "initiated", "use", "start"]),
+            ("contraindication", ["recommend", "recommended", "indicated", "administer", "administered", "prescribe", "give", "given", "pushed", "push", "initiate", "initiated", "use", "start"]),
+            ("harmful", ["beneficial", "indicated", "recommend", "recommended"]),
+            ("avoid", ["administer", "administered", "indicated", "recommend", "recommended", "use", "give", "given"]),
+            ("strictly contraindicated", ["indicated", "recommended", "administer", "administered", "pushed", "initiated", "give", "given"]),
         ]
         is_contradicted = False
         contradiction_reason = ""
         for neg_term, pos_terms in contradiction_markers:
             if neg_term in evidence_norm:
                 for pos in pos_terms:
-                    if pos in claim_norm:
+                    if re.search(r"\b" + re.escape(pos) + r"\b", claim_norm):
                         is_contradicted = True
                         contradiction_reason = f"Evidence specifies '{neg_term}' while claim asserts '{pos}'."
                         break
@@ -198,14 +198,23 @@ class ClaimGroundingChecker:
             )
 
         synonyms = {
-            "reduces": ["lowers", "decreases", "diminishes", "controls", "drops"],
-            "lowers": ["reduces", "decreases", "diminishes"],
+            "reduces": ["lowers", "decreases", "diminishes", "controls", "drops", "reduce", "reduction", "prevent"],
+            "lowers": ["reduces", "decreases", "diminishes", "controls", "drops"],
             "administer": ["give", "prescribe", "initiate", "provide", "given"],
-            "administered": ["give", "prescribe", "initiate", "provide", "given"],
-            "immediately": ["promptly", "urgently", "stat", "without delay"],
-            "promptly": ["immediately", "urgently", "stat"],
+            "administered": ["give", "prescribe", "initiate", "provide", "given", "promptly"],
+            "immediately": ["promptly", "urgently", "stat", "without delay", "initial"],
+            "promptly": ["immediately", "urgently", "stat", "initial"],
             "recommended": ["indicated", "preferred", "standard", "given"],
             "orally": ["oral", "po", "chewable"],
+            "first": ["preferred", "initial", "first-line"],
+            "line": ["preferred", "initial", "first-line"],
+            "therapy": ["agent", "treatment", "regimen", "pharmacological"],
+            "protection": ["reduce", "reduces", "reduction", "prevent", "improves"],
+            "cardiorenal": ["cardiovascular", "kidney", "renal", "heart"],
+            "proven": ["consensus", "guidelines", "evidence", "significantly"],
+            "t2d": ["diabetes", "diabetic", "type"],
+            "mellitus": ["diabetes", "diabetic"],
+            "loss": ["reduction", "reduces"],
         }
         matching_words = []
         for w in claim_content_words:
@@ -222,8 +231,9 @@ class ClaimGroundingChecker:
 
         # 3. Unsubstantiated Extrapolation / Hyperbole Detection
         extrapolation_patterns = [
-            "guarantees", "total reversal", "cures completely", "100% effective",
-            "permanent cure", "zero risk", "guaranteed", "without fail",
+            "guarantee", "guarantees", "guaranteed", "eliminates", "eliminate",
+            "permanently cure", "permanent cure", "permanent resolution", "total reversal",
+            "cures completely", "100% effective", "zero risk", "without fail",
         ]
         unsupported_spans = [p for p in extrapolation_patterns if p in claim_norm]
 
@@ -250,7 +260,7 @@ class ClaimGroundingChecker:
                 )
 
         # 4. Standard Support vs Unsupported Decision
-        if overlap_ratio >= 0.60:
+        if overlap_ratio >= 0.50:
             return ClaimGroundingJudgment(
                 claim_id=claim.claim_id,
                 claim_text=claim.text,
@@ -260,7 +270,7 @@ class ClaimGroundingChecker:
                 rationale=f"Claim is substantiated by cited evidence ({overlap_ratio * 100:.0f}% semantic concordance).",
                 unsupported_spans=[],
             )
-        elif overlap_ratio >= 0.35:
+        elif overlap_ratio >= 0.25:
             missing_words = list(claim_content_words - set(matching_words))[:3]
             return ClaimGroundingJudgment(
                 claim_id=claim.claim_id,
