@@ -67,9 +67,10 @@
   Next: H6 (owner usability test), then Step 40 (P6.G).
 - **Test Suite**: 287 of 287 tests passing across `tests/` and `backend/tests/`.
 - **Plan update (owner) adopted**: import-command governance rule; new
-  `vh golden chunkmap-import` + `vh safety import-signoff` implemented and
-  tested (ADR-0011); `training.min_preference_pairs` model support added.
-  Owner still to add the yaml key. H6 remains the blocker.
+  `vh golden chunkmap-import` + `vh safety import-signoff` implemented, dry-run
+  verified on real sign-offs, and tested (ADR-0011); `training.min_preference_pairs`
+  key added by owner and registered in the loader (STEP-53 stays BLOCKED on null
+  by design). Full suite 288/288 green. H6 remains the blocker.
 - **Secret Scanner**: Clean pass (0 secrets).
 - **Backend Service**: Running on `http://127.0.0.1:8000`.
 - **Frontend Service**: Running on `http://localhost:5173`.
