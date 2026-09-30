@@ -40,6 +40,8 @@ data/cache/
 data/indexes/
 data/replays/
 data/feedback_snapshots/
+data/events-*.jsonl
+data/feedback-e2e.db
 data/knowledge/*.npy
 data/knowledge/*_collection.json
 data/knowledge/*checkpoint*.json

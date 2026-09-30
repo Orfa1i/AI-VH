@@ -67,9 +67,9 @@
   encounter mean 0.3596 ≥ 0.30, kappa UNMEASURED). Physician usability explicitly
   unvalidated (future/external H6).
 - **Test Suite**: 321 of 321 tests passing across `tests/` and `backend/tests/`.
-- **Phase 8 (Virtual Hospital Environment)**: **Step 46 COMPLETE** (read-only
-  SSE event stream with replay/resume; running in parallel per plan while
-  Phase 7 waits on data). Next: Step 47 (P8.2 2D dashboard).
+- **Phase 8 (Virtual Hospital Environment)**: **Steps 46, 47 COMPLETE**
+  (read-only SSE stream + 2D department board with live/replay; 5 vitest +
+  2 Playwright green). Next: Step 48 (P8.3 3D scene).
 - **Plan update (owner) adopted**: import-command governance rule; new
   `vh golden chunkmap-import` + `vh safety import-signoff` implemented, dry-run
   verified on real sign-offs, and tested (ADR-0011); `training.min_preference_pairs`
@@ -83,11 +83,7 @@
 ---
 
 ## 4. Concrete Next Steps
-1. **STEP 41 remains BLOCKED on data (0/500 countable)** — track + bridge
-   implemented, tested, and measured; needs approval for retrieval-grounded
-   accumulation + Synthea volume.
-2. **Execute Step 47 (P8.2 2D department dashboard)** driven only by the event
-   stream (no clinical logic in the view layer).
-3. **Owner rulings outstanding**: H7 physician-vs-optional under doctor-free
-   policy; `t_approve`/quality-bar values in `configs/training/curation.yaml`
-   (proposed 0.50); `training.min_preference_pairs` value before STEP 53.
+1. **Execute Step 48 (P8.3 3D hospital scene)** meeting performance targets,
+   driven only by the event stream.
+2. **STEP 41 remains BLOCKED on data (0/500 countable)**; owner rulings
+   outstanding (H7, `t_approve`, `min_preference_pairs` value).

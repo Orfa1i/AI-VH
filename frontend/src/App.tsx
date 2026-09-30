@@ -6,6 +6,7 @@ import { StaffManagementSection } from './components/management/StaffManagementS
 import { KnowledgeSearchSection } from './components/management/KnowledgeSearchSection';
 import { PhysicianReviewDashboard } from './components/dashboard/PhysicianReviewDashboard';
 import { DoctorReviewSection } from './components/review/DoctorReviewSection';
+import { DepartmentBoardSection } from './components/hospital/DepartmentBoardSection';
 import { InternalMedicineConsultModal } from './components/specialists/InternalMedicineConsultModal';
 import { RLDatasetModal } from './components/rl/RLDatasetModal';
 import { PolicyBenchmarkModal } from './components/rl/PolicyBenchmarkModal';
@@ -13,6 +14,7 @@ import { toggleGlobalMute, isGlobalMuted } from './utils/speechSynthesis';
 import {
   Activity,
   BedDouble,
+  Building2,
   Clock,
   Cpu,
   FileText,
@@ -32,7 +34,7 @@ import type {
   PatientRecord,
 } from './types';
 
-type PortalTab = 'INTAKE' | 'PATIENTS' | 'STAFF' | 'REPORTS' | 'REVIEW' | 'KNOWLEDGE' | 'BENCHMARK' | 
+type PortalTab = 'INTAKE' | 'PATIENTS' | 'STAFF' | 'REPORTS' | 'REVIEW' | 'WARDS' | 'KNOWLEDGE' | 'BENCHMARK' | 
 'JOURNEY';
 
 export const App: React.FC = () => {
@@ -327,6 +329,18 @@ export const App: React.FC = () => {
           </button>
 
           <button
+            onClick={() => setActiveTab('WARDS')}
+            className={`px-3.5 py-2 text-xs font-mono font-medium flex items-center gap-2 rounded transition cursor-pointer ${
+              activeTab === 'WARDS'
+                ? 'bg-sky-50 text-sky-700 border border-sky-300 shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent'
+            }`}
+          >
+            <Building2 className="w-3.5 h-3.5" />
+            <span>Department Board</span>
+          </button>
+
+          <button
             onClick={() => setActiveTab('KNOWLEDGE')}
             className={`px-3.5 py-2 text-xs font-mono font-medium flex items-center gap-2 rounded transition cursor-pointer ${
               activeTab === 'KNOWLEDGE'
@@ -407,6 +421,8 @@ export const App: React.FC = () => {
         )}
 
         {activeTab === 'REVIEW' && <DoctorReviewSection />}
+
+        {activeTab === 'WARDS' && <DepartmentBoardSection />}
 
         {activeTab === 'KNOWLEDGE' && <KnowledgeSearchSection />}
 

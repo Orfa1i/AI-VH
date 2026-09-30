@@ -159,17 +159,22 @@ def create_event_app(
             selected = events_after(stream.events, after)
         except KeyError as exc:
             raise HTTPException(status_code=404, detail=str(exc))
-        if live:
-            if stream._store is None:
-                raise HTTPException(status_code=400, detail="Live tail needs a store source.")
-            selected = list(stream.tail(poll_interval=0.0, max_events=limit or 1000))
-        elif limit is not None:
+        if live and stream._store is None:
+            raise HTTPException(status_code=400, detail="Live tail needs a store source.")
+        if not live and limit is not None:
             selected = selected[:limit]
         rate = _parse_speed(speed)
-        controller = ReplayController(selected, speed=rate)
-        delays = controller.planned_delays()
 
         def _generate() -> Iterator[str]:
+            if live:
+                # Stream arrivals incrementally; the connection stays open for
+                # new events (proper live semantics) with a bounded poll.
+                assert stream._store is not None
+                for event in stream.tail(poll_interval=0.5, max_events=limit or 1000):
+                    yield _event_frame(event)
+                return
+            controller = ReplayController(selected, speed=rate)
+            delays = controller.planned_delays()
             for index, event in enumerate(controller.play()):
                 if index > 0 and delays[index - 1] > 0:
                     time.sleep(min(delays[index - 1], 30.0))
