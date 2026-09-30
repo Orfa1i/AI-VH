@@ -5,6 +5,7 @@ import { PatientDirectorySection } from './components/management/PatientDirector
 import { StaffManagementSection } from './components/management/StaffManagementSection';
 import { KnowledgeSearchSection } from './components/management/KnowledgeSearchSection';
 import { PhysicianReviewDashboard } from './components/dashboard/PhysicianReviewDashboard';
+import { DoctorReviewSection } from './components/review/DoctorReviewSection';
 import { InternalMedicineConsultModal } from './components/specialists/InternalMedicineConsultModal';
 import { RLDatasetModal } from './components/rl/RLDatasetModal';
 import { PolicyBenchmarkModal } from './components/rl/PolicyBenchmarkModal';
@@ -31,7 +32,8 @@ import type {
   PatientRecord,
 } from './types';
 
-type PortalTab = 'INTAKE' | 'PATIENTS' | 'STAFF' | 'REPORTS' | 'KNOWLEDGE' | 'BENCHMARK' | 'JOURNEY';
+type PortalTab = 'INTAKE' | 'PATIENTS' | 'STAFF' | 'REPORTS' | 'REVIEW' | 'KNOWLEDGE' | 'BENCHMARK' | 
+'JOURNEY';
 
 export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<PortalTab>('INTAKE');
@@ -313,6 +315,18 @@ export const App: React.FC = () => {
           </button>
 
           <button
+            onClick={() => setActiveTab('REVIEW')}
+            className={`px-3.5 py-2 text-xs font-mono font-medium flex items-center gap-2 rounded transition cursor-pointer ${
+              activeTab === 'REVIEW'
+                ? 'bg-sky-50 text-sky-700 border border-sky-300 shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent'
+            }`}
+          >
+            <Stethoscope className="w-3.5 h-3.5" />
+            <span>Doctor Review</span>
+          </button>
+
+          <button
             onClick={() => setActiveTab('KNOWLEDGE')}
             className={`px-3.5 py-2 text-xs font-mono font-medium flex items-center gap-2 rounded transition cursor-pointer ${
               activeTab === 'KNOWLEDGE'
@@ -391,6 +405,8 @@ export const App: React.FC = () => {
             isSubmitting={isSubmittingReview}
           />
         )}
+
+        {activeTab === 'REVIEW' && <DoctorReviewSection />}
 
         {activeTab === 'KNOWLEDGE' && <KnowledgeSearchSection />}
 

@@ -189,13 +189,14 @@ class FeedbackStore:
         self._audit("reviewer_added", "system", "reviewers", reviewer_id)
         return reviewer_id
 
-    def register_reviewer(self, name: str, role: str) -> Tuple[str, str]:
+    def register_reviewer(self, name: str, role: str, token: Optional[str] = None) -> Tuple[str, str]:
         """Register a reviewer and issue a single-use-visible auth token.
 
         Only the sha256 hash is stored; the plaintext token is returned once.
+        A fixed token may be supplied for dev/demo seeding only.
         """
         reviewer_id = _new_id("rev")
-        token = secrets.token_urlsafe(32)
+        token = token or secrets.token_urlsafe(32)
         token_hash = hashlib.sha256(token.encode("utf-8")).hexdigest()
         self._conn.execute(
             "INSERT INTO reviewers (id, name, role, auth_token_hash, created_at)"
@@ -423,6 +424,17 @@ class FeedbackStore:
         self._conn.commit()
         self._audit("decision_recorded", actor, "review_sessions", session_id)
 
+    def get_reviewer_by_name(self, name: str) -> Optional[Dict[str, Any]]:
+        row = self._conn.execute("SELECT * FROM reviewers WHERE name = ?", (name,)).fetchone()
+        return dict(row) if row is not None else None
+
+    def get_original_by_case(self, case_id: str) -> Optional[Dict[str, Any]]:
+        row = self._conn.execute(
+            "SELECT * FROM reports_original WHERE case_id = ? ORDER BY created_at LIMIT 1",
+            (case_id,),
+        ).fetchone()
+        return dict(row) if row is not None else None
+
     def get_session(self, session_id: str) -> Dict[str, Any]:
         row = self._conn.execute(
             "SELECT * FROM review_sessions WHERE id = ?", (session_id,)
@@ -522,6 +534,8 @@ for _method_name in (
     "record_decision",
     "get_session",
     "get_assignment",
+    "get_reviewer_by_name",
+    "get_original_by_case",
     "open_assignments_for",
     "assignments_for_original",
     "reviewer_has_assignment",
