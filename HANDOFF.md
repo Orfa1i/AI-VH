@@ -58,8 +58,9 @@
 - **Phase 2 (Multi-Source RAG)**: **100% COMPLETE & CERTIFIED** (`phase-2-pass`).
 - **Phase 3 (Grounded Clinical Generation - MedGemma)**: **100% COMPLETE & CERTIFIED** (`phase-3-pass`).
 - **Phase 4 (Verification Layer)**: **100% COMPLETE & CERTIFIED** (`phase-4-pass`).
-- **Phase 5 (Agents & Orchestration)**: **Steps 31, 32, 33, 34 COMPLETE** (Step 33
-  committed `30e90fc`, tag `step-33-pass`). Blocked on human checkpoint H5.
+- **Phase 5 (Agents & Orchestration)**: **100% COMPLETE & CERTIFIED** (`phase-5-pass`).
+  Steps 31-34 DONE; H5 set (`encounter_score_min: 0.30`); gate report
+  `docs/phase-reports/phase-5.md` (260/260 green, eval PASS, all 4 metrics PASS).
 - **Test Suite**: 259 of 259 tests passing across `tests/` and `backend/tests/`.
 - **Secret Scanner**: Clean pass (0 secrets).
 - **Backend Service**: Running on `http://127.0.0.1:8000`.
@@ -68,14 +69,7 @@
 ---
 
 ## 4. Concrete Next Steps
-1. **[HUMAN] H5: Set the encounter score threshold** (BLOCKING):
-   - Read `docs/steps/STEP-34.md` distribution (60 verified cases, mean 0.3596,
-     range 0.1644-0.9944). Proposed value: `agents.encounter_score_min = 0.30`.
-   - Owner edits `configs/thresholds.yaml` (agents never edit it).
-   - Gate Step 35 FAILs while the value is null.
-2. **Execute Step 35 (P5.G Phase 5 GATE)** after H5:
-   - Read `plan/prompts/phase-5-agents/STEP-35_P5.G_gate.md`.
-   - Confirm STEP 31-34 reports DONE, run full regression + `make eval`,
-     compare the four `agents.*` metrics vs thresholds, write
-     `docs/phase-reports/phase-5.md`. PASS tags `phase-5-pass`.
-3. **Then Phase 6** (only after Phase 5 gate PASS): STEP 36 (P6.1).
+1. **Execute Step 36 (P6.1 Feedback data model, append-only)**:
+   - Read `plan/prompts/phase-6-feedback/STEP-36_P6.1_feedback-data-model.md`.
+   - Follow the gate loop (tests first, implement, full regression, report).
+2. **Then Phase 6 in order**: STEP 37, 38, 39, H6 (owner), STEP 40 (P6.G).

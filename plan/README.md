@@ -233,7 +233,7 @@ If your existing code lives elsewhere, ADR-0001 (STEP 01–02) maps it onto this
 - [x] STEP 34: P5.4 Encounter scoring and deterministic replay → `prompts/phase-5-agents/STEP-34_P5.4_encounter-scoring-replay.md`
 - [ ] **[HUMAN] H5: Set the encounter score threshold** → `configs/thresholds.yaml`  
   Read the STEP 34 results and set `agents.encounter_score_min` yourself (the gate fails while it is null).
-- [ ] **STEP 35: P5.G Phase 5 GATE** → `prompts/phase-5-agents/STEP-35_P5.G_gate.md`
+- [x] **STEP 35: P5.G Phase 5 GATE** → `prompts/phase-5-agents/STEP-35_P5.G_gate.md`
 
 ### Phase 6: Doctor Review & Feedback Store
 
