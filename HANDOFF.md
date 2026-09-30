@@ -61,10 +61,10 @@
 - **Phase 5 (Agents & Orchestration)**: **100% COMPLETE & CERTIFIED** (`phase-5-pass`).
   Steps 31-34 DONE; H5 set (`encounter_score_min: 0.30`); gate report
   `docs/phase-reports/phase-5.md` (260/260 green, eval PASS, all 4 metrics PASS).
-- **Phase 6 (Doctor Review & Feedback Store)**: **Step 36 COMPLETE**
-  (append-only store: 9 tables, trigger immutability, taxonomy, versioned
-  migrations; Step 36 report `docs/steps/STEP-36.md`).
-- **Test Suite**: 268 of 268 tests passing across `tests/` and `backend/tests/`.
+- **Phase 6 (Doctor Review & Feedback Store)**: **Steps 36, 37 COMPLETE**
+  (append-only store + review API with blinded overlap sampling; 274/274 green).
+  Next: Step 38 (P6.3 Review UI).
+- **Test Suite**: 274 of 274 tests passing across `tests/` and `backend/tests/`.
 - **Secret Scanner**: Clean pass (0 secrets).
 - **Backend Service**: Running on `http://127.0.0.1:8000`.
 - **Frontend Service**: Running on `http://localhost:5173`.
@@ -72,7 +72,7 @@
 ---
 
 ## 4. Concrete Next Steps
-1. **Execute Step 37 (P6.2 Review API with overlap sampling)**:
-   - Read `plan/prompts/phase-6-feedback/STEP-37_P6.2_review-api.md`.
+1. **Execute Step 38 (P6.3 Doctor review UI in the Clinical AI OS shell)**:
+   - Read `plan/prompts/phase-6-feedback/STEP-38_P6.3_review-ui.md`.
    - Follow the gate loop (tests first, implement, full regression, report).
-2. **Then Phase 6 in order**: STEP 38, 39, H6 (owner), STEP 40 (P6.G).
+2. **Then Phase 6 in order**: STEP 39, H6 (owner), STEP 40 (P6.G).
