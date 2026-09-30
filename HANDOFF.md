@@ -67,9 +67,9 @@
   encounter mean 0.3596 ≥ 0.30, kappa UNMEASURED). Physician usability explicitly
   unvalidated (future/external H6).
 - **Test Suite**: 327 of 327 tests passing across `tests/` and `backend/tests/`.
-- **Phase 8 (Virtual Hospital Environment)**: **Steps 46, 47, 48, 49 COMPLETE**
-  (SSE stream + 2D board + 3D scene + no-side-effect proof: 0 divergences,
-  lag under bar). Next: Step 50 (P8.G gate).
+- **Phase 8 (Virtual Hospital Environment)**: **100% COMPLETE & CERTIFIED**
+  (`phase-8-pass`). Gate report `docs/phase-reports/phase-8.md` (327/327 green,
+  eval PASS, 24 vitest + 10 e2e green, all 4 ui metrics PASS).
 - **Plan update (owner) adopted**: import-command governance rule; new
   `vh golden chunkmap-import` + `vh safety import-signoff` implemented, dry-run
   verified on real sign-offs, and tested (ADR-0011); `training.min_preference_pairs`
@@ -83,7 +83,7 @@
 ---
 
 ## 4. Concrete Next Steps
-1. **Execute Step 48 (P8.3 3D hospital scene)** meeting performance targets,
-   driven only by the event stream.
+1. **Execute Step 51 (P9.1 Imaging models as Radiology agent tools)** with its
+   mini-gate (`plan/prompts/phase-9-advanced/`).
 2. **STEP 41 remains BLOCKED on data (0/500 countable)**; owner rulings
    outstanding (H7, `t_approve`, `min_preference_pairs` value).
