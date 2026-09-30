@@ -64,27 +64,33 @@ def make_dummy_report(
 # 1. Production Mode Draft Table Rejection
 # -----------------------------------------------------------------------------
 
-def test_engine_refuses_draft_tables_in_production():
+def test_engine_refuses_draft_tables_in_production(tmp_path):
     """Verify engine raises SafetyConfigurationError when loaded with draft tables in production mode."""
     from vh.verification.rules.engine import (
         DeterministicSafetyEngine,
         SafetyConfigurationError,
     )
 
+    draft_table = tmp_path / "dose_ranges.yaml"
+    draft_table.write_text("metadata:\n  status: draft\n", encoding="utf-8")
+
     # In production mode, tables containing 'status: draft' MUST trigger failure
     with pytest.raises(SafetyConfigurationError) as exc_info:
-        engine = DeterministicSafetyEngine(mode="production")
+        engine = DeterministicSafetyEngine(mode="production", safety_dir=tmp_path)
         report = make_dummy_report(["Administer Aspirin 325 mg po"])
         engine.evaluate(report=report, patient_record={})
 
     assert "draft" in str(exc_info.value).lower()
 
 
-def test_engine_allows_draft_tables_in_dev_with_warning(caplog):
+def test_engine_allows_draft_tables_in_dev_with_warning(caplog, tmp_path):
     """Verify engine permits draft tables in dev mode with explicit warning logs."""
     from vh.verification.rules.engine import DeterministicSafetyEngine
 
-    engine = DeterministicSafetyEngine(mode="dev")
+    draft_table = tmp_path / "dose_ranges.yaml"
+    draft_table.write_text("metadata:\n  status: draft\n", encoding="utf-8")
+
+    engine = DeterministicSafetyEngine(mode="dev", safety_dir=tmp_path)
     report = make_dummy_report(["Administer Aspirin 325 mg po"])
     result = engine.evaluate(report=report, patient_record={})
 
