@@ -1,0 +1,42 @@
+# Curated Drug-Drug Interaction Knowledge Table
+# Source: DailyMed Section 7 (Drug Interactions), Lexicomp Clinical Reference
+# Note: NLM retired RxNav DDI API in Jan 2024; local curated interaction table adopted per ADR-0005.
+# Status: draft (Pending physician review at Checkpoint H4)
+
+metadata:
+  table_id: "SAFETY-DDI-001"
+  version: "1.0.0"
+  status: "draft"
+  reviewer: null
+  reviewed_at: null
+
+interactions:
+  - drug_a_names: ["simvastatin", "zocor"]
+    drug_b_names: ["amiodarone", "cordarone"]
+    severity: "critical"
+    message: "Amiodarone inhibits CYP3A4 metabolism of Simvastatin, markedly increasing risk of myopathy and fatal rhabdomyolysis."
+    evidence: "DailyMed Simvastatin SPL Section 7.1; FDA Drug Safety Communication"
+
+  - drug_a_names: ["simvastatin", "lovastatin"]
+    drug_b_names: ["clarithromycin", "erythromycin", "ketoconazole"]
+    severity: "critical"
+    message: "Potent CYP3A4 inhibitors dramatically increase statin serum concentrations, precipitating severe rhabdomyolysis."
+    evidence: "DailyMed Simvastatin SPL Contraindications Section 4"
+
+  - drug_a_names: ["clopidogrel", "plavix"]
+    drug_b_names: ["omeprazole", "esomeprazole"]
+    severity: "major"
+    message: "Omeprazole inhibits CYP2C19 activation of Clopidogrel, significantly reducing antiplatelet efficacy."
+    evidence: "FDA Boxed Warning on Clopidogrel and Omeprazole Concomitant Use"
+
+  - drug_a_names: ["aspirin", "nsaid", "ibuprofen"]
+    drug_b_names: ["warfarin", "coumadin", "rivaroxaban", "apixaban", "dabigatran"]
+    severity: "major"
+    message: "Concurrent antiplatelet and therapeutic anticoagulant therapy substantially increases major bleeding risk."
+    evidence: "CHEST Guideline for Antithrombotic Therapy"
+
+  - drug_a_names: ["potassium", "kcl"]
+    drug_b_names: ["spironolactone", "eplerenone", "triamterene"]
+    severity: "critical"
+    message: "Potassium supplementation combined with potassium-sparing diuretics precipitates life-threatening hyperkalemia."
+    evidence: "DailyMed Spironolactone SPL Warnings Section 5.1"

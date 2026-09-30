@@ -1,0 +1,63 @@
+# Curated Dose Ranges and Renal Adjustment Rules
+# Source: FDA Structured Product Labeling (DailyMed), AHA/ACC Guidelines, Lexicomp
+# Status: draft (Pending physician review at Checkpoint H4)
+
+metadata:
+  table_id: "SAFETY-DOSE-001"
+  version: "1.0.0"
+  status: "draft"
+  reviewer: null
+  reviewed_at: null
+
+drugs:
+  enoxaparin:
+    generic_name: "enoxaparin"
+    indication: "acute coronary syndrome / venous thromboembolism"
+    standard_dose: "1 mg/kg every 12 hours"
+    max_single_dose_mg: 150.0
+    renal_adjustments:
+      - egfr_threshold: 30.0
+        recommendation: "Reduce to 1 mg/kg subcutaneously once every 24 hours"
+        disallowed_patterns: ["every 12 hours", "q12h", "twice daily", "bid"]
+        required_patterns: ["once daily", "q24h", "every 24 hours"]
+        source: "DailyMed SPL Enoxaparin Sodium Section 2.2"
+
+  aspirin:
+    generic_name: "aspirin"
+    indication: "acute coronary syndrome"
+    min_dose_mg: 81.0
+    max_dose_mg: 325.0
+    renal_adjustments: []
+    source: "2023 AHA/ACC ACS Guideline Section 5.1"
+
+  metformin:
+    generic_name: "metformin"
+    indication: "type 2 diabetes mellitus"
+    max_daily_dose_mg: 2550.0
+    renal_adjustments:
+      - egfr_threshold: 30.0
+        recommendation: "Contraindicated in severe renal impairment (eGFR < 30 mL/min)"
+        disallowed_patterns: ["continue", "initiate", "administer", "mg"]
+        source: "FDA Drug Safety Communication Metformin in Renal Impairment"
+
+  amiodarone:
+    generic_name: "amiodarone"
+    indication: "ventricular arrhythmias"
+    max_single_dose_mg: 400.0
+    max_daily_dose_mg: 1200.0
+    renal_adjustments: []
+    source: "AHA ACLS Guidelines 2020"
+
+  metoprolol:
+    generic_name: "metoprolol"
+    indication: "hypertension / acute myocardial infarction"
+    max_daily_dose_mg: 400.0
+    renal_adjustments: []
+    source: "DailyMed SPL Metoprolol Tartrate"
+
+  ceftriaxone:
+    generic_name: "ceftriaxone"
+    indication: "community-acquired pneumonia"
+    max_daily_dose_g: 2.0
+    renal_adjustments: []
+    source: "2019 ATS/IDSA CAP Guidelines"

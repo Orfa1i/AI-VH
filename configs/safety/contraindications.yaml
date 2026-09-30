@@ -1,0 +1,46 @@
+# Curated Disease-Drug Absolute and Relative Contraindications
+# Source: FDA Boxed Warnings, DailyMed, AHA/ACC, ADA, ATS Guidelines
+# Status: draft (Pending physician review at Checkpoint H4)
+
+metadata:
+  table_id: "SAFETY-CONTRA-001"
+  version: "1.0.0"
+  status: "draft"
+  reviewer: null
+  reviewed_at: null
+
+contraindications:
+  - drug_identifier: "ketorolac"
+    drug_names: ["ketorolac", "toradol", "nsaid", "ibuprofen", "naproxen"]
+    condition_matches: ["peptic ulcer", "gi bleed", "gastrointestinal bleeding", "active bleeding", "renal failure"]
+    severity: "critical"
+    rationale: "NSAIDs precipitate gastrointestinal hemorrhage and acute renal decompensation in active peptic ulcer or renal failure."
+    source: "DailyMed Ketorolac Tromethamine Boxed Warning"
+
+  - drug_identifier: "beta_blockers"
+    drug_names: ["metoprolol", "atenolol", "propranolol", "carvedilol", "bisoprolol"]
+    condition_matches: ["cardiogenic shock", "second degree av block", "third degree av block", "severe bradycardia"]
+    severity: "critical"
+    rationale: "Beta-blockers depress cardiac inotropy and dromotropy in shock or advanced heart block."
+    source: "2023 AHA/ACC ACS Management Guideline"
+
+  - drug_identifier: "metformin"
+    drug_names: ["metformin", "glucophage"]
+    condition_matches: ["diabetic ketoacidosis", "metabolic acidosis", "lactic acidosis", "severe sepsis"]
+    severity: "critical"
+    rationale: "Metformin increases risk of fatal lactic acidosis in acute acidotic or hypoperfused states."
+    source: "DailyMed Metformin Boxed Warning"
+
+  - drug_identifier: "nitrates"
+    drug_names: ["nitroglycerin", "isosorbide", "nitrate"]
+    condition_matches: ["right ventricular infarction", "pde-5 inhibitor", "sildenafil", "tadalafil", "severe hypotension"]
+    severity: "critical"
+    rationale: "Nitrates cause catastrophic refractory hypotension in right ventricular infarction or with concurrent PDE-5 inhibitors."
+    source: "2023 AHA/ACC Guideline for ACS Management"
+
+  - drug_identifier: "sglt2_inhibitors"
+    drug_names: ["empagliflozin", "dapagliflozin", "canagliflozin", "sglt2"]
+    condition_matches: ["diabetic ketoacidosis", "acute starvation", "prolonged fasting"]
+    severity: "critical"
+    rationale: "SGLT2 inhibitors exacerbate euglycemic ketoacidosis in acute decompensation."
+    source: "FDA Drug Safety Communication on SGLT2 Inhibitors and DKA"

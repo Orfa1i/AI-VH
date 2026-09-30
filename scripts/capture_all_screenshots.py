@@ -231,7 +231,7 @@ def run_capture_pipeline():
     print("\nGenerating Screenshots/README.md gallery index...")
     readme_path = SCREENSHOTS_DIR / "README.md"
     readme_lines = [
-        "# AI Virtual Hospital (AI-VH) — Visual Interface Catalog",
+        "# AI Virtual Hospital (AI-VH): Visual Interface Catalog",
         "",
         "This directory contains high-resolution (1920×1080 / HiDPI) screenshots capturing every routed view, portal workspace, specialist modal, and 3D simulation canvas defined in the AI Virtual Hospital platform.",
         "",

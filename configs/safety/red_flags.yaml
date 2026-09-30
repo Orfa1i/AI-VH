@@ -1,0 +1,55 @@
+# Curated Physiological Red-Flag Clinical Criteria
+# Source: Surviving Sepsis Campaign, AHA/ACC Guidelines, ATLS Protocol
+# Status: draft (Pending physician review at Checkpoint H4)
+
+metadata:
+  table_id: "SAFETY-REDFLAG-001"
+  version: "1.0.0"
+  status: "draft"
+  reviewer: null
+  reviewed_at: null
+
+criteria:
+  - flag_id: "RF-HYPOXEMIA"
+    name: "Severe Hypoxemia"
+    parameter: "spo2"
+    operator: "lt"
+    threshold: 90.0
+    unit: "%"
+    severity: "critical"
+    required_keywords: ["oxygen", "o2", "ventilat", "airway", "respirat", "hypox"]
+    message: "Patient exhibits severe hypoxemia (SpO2 < 90%). The report must explicitly order oxygenation or airway management."
+    evidence: "Surviving Sepsis Campaign 2021 Guideline Section 4.2"
+
+  - flag_id: "RF-HYPOTENSION"
+    name: "Profound Hypotension"
+    parameter: "sbp"
+    operator: "lt"
+    threshold: 90.0
+    unit: "mmHg"
+    severity: "critical"
+    required_keywords: ["fluid", "resuscitat", "bolus", "vasopressor", "norepinephrine", "hypotension", "shock"]
+    message: "Patient exhibits profound hypotension (SBP < 90 mmHg). The report must address hemodynamic stabilization."
+    evidence: "AHA ACLS Hypotension and Shock Algorithm"
+
+  - flag_id: "RF-SEVERE-TACHYCARDIA"
+    name: "Severe Tachycardia"
+    parameter: "hr"
+    operator: "gt"
+    threshold: 120.0
+    unit: "bpm"
+    severity: "major"
+    required_keywords: ["tachycardia", "rate control", "ecg", "rhythm", "beta-blocker", "cardioversion"]
+    message: "Patient exhibits severe tachycardia (HR > 120 bpm). The report must evaluate cardiac etiology or rate control."
+    evidence: "AHA Adult Tachycardia with Pulse Algorithm"
+
+  - flag_id: "RF-SEVERE-HYPERKALEMIA"
+    name: "Severe Hyperkalemia"
+    parameter: "potassium"
+    operator: "gt"
+    threshold: 6.0
+    unit: "mEq/L"
+    severity: "critical"
+    required_keywords: ["hyperkalemia", "calcium", "gluconate", "insulin", "albuterol", "dialysis"]
+    message: "Patient exhibits critical hyperkalemia (K > 6.0 mEq/L). The report must order membrane stabilization and shifting."
+    evidence: "ERC Resuscitation Highlights in Hyperkalemia"
