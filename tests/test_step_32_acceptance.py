@@ -231,8 +231,21 @@ def test_specialized_roles_functional_behavior(sample_case_spec):
     radiology = RadiologyAgent(agent_view=view, environment=env)
     rad_finding = radiology.interpret_imaging("DX-ECG")
     assert "T-wave inversions" in str(rad_finding["report_text"])
-    with pytest.raises(NotImplementedError, match="stubbed until Phase 9"):
-        radiology.inspect_image_pixels("DX-ECG")
+    # STEP-51 replaced the Phase 9 stub with reference imaging tools:
+    # pixel inspection now executes with typed, labeled model output.
+    import numpy as np
+
+    from vh.agents.tools.imaging import generate_fracture_phantom
+
+    phantom = generate_fracture_phantom(seed=99, fracture=True)
+    tool_out = radiology.inspect_image_pixels("DX-WRIST", image=phantom["pixels"])
+    assert tool_out["finding"] == "fracture_detected"
+    assert tool_out["interpretation"] == "model-output"
+    assert tool_out["output_id"].startswith("IMG-")
+    with pytest.raises(ValueError, match="Unknown imaging tool"):
+        radiology.inspect_image_pixels("DX-WRIST", image=np.zeros((8, 8)), tool="nope")
+    with pytest.raises(ValueError, match="requires an image array"):
+        radiology.inspect_image_pixels("DX-WRIST")
 
     # 5. Pharmacy: checks medication info and performs allergy/interaction checks via P4.1 rules
     pharmacy = PharmacyAgent(agent_view=view, environment=env)

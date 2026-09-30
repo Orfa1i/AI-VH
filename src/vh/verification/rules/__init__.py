@@ -8,6 +8,7 @@ Provides zero-LLM deterministic rules for clinical verification:
 - Dose range and renal adjustment checking
 - Patient data contradiction auditing
 - Emergency physiological red-flag coverage
+- Imaging-evidence citation checking (P9.1)
 - Deterministic safety engine coordinator
 """
 
@@ -18,6 +19,7 @@ from .interaction import DrugInteractionRule
 from .dose import DoseRangeRule
 from .contradiction import PatientDataContradictionRule
 from .red_flags import RedFlagCoverageRule
+from .imaging import ImagingCitationRule
 from .engine import (
     DeterministicSafetyEngine,
     SafetyConfigurationError,
@@ -33,6 +35,7 @@ __all__ = [
     "DoseRangeRule",
     "PatientDataContradictionRule",
     "RedFlagCoverageRule",
+    "ImagingCitationRule",
     "DeterministicSafetyEngine",
     "SafetyConfigurationError",
     "SafetyEvaluationResult",

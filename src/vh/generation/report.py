@@ -5,6 +5,7 @@ Exports JSON Schema for MedGemma constrained decoding.
 """
 
 import json
+import re
 from pathlib import Path
 from typing import Any, Dict, List, Literal, Optional, Set, Union
 from pydantic import BaseModel, Field
@@ -154,3 +155,77 @@ def export_clinical_report_json_schema(
     schema = ClinicalReport.model_json_schema()
     target.write_text(json.dumps(schema, indent=2), encoding="utf-8")
     return schema
+
+
+# --- P9.1 imaging-evidence citation requirement ---
+# Imaging claims (Step-51 reference tools and any future radiology models)
+# must cite a tool-output evidence id (prefix IMG-) that the reviewer has
+# actually produced. Anything else is flagged as an uncited imaging claim.
+
+IMAGING_CITATION_PREFIX = "IMG-"
+
+IMAGING_SUBSTRING_KEYWORDS = (
+    "fracture",
+    "xray",
+    "x-ray",
+    "radiograph",
+    "ultrasound",
+    "osteophyte",
+    "kellgren",
+    "imaging",
+    "mammograph",
+)
+
+IMAGING_BOUNDED_KEYWORDS = ("ct", "mri", "dx")
+
+
+def _mentions_imaging(text: str) -> bool:
+    lowered = f" {text.lower()} "
+    if any(keyword in lowered for keyword in IMAGING_SUBSTRING_KEYWORDS):
+        return True
+    tokens = set(re.split(r"[^a-z0-9]+", lowered))
+    return any(keyword in tokens for keyword in IMAGING_BOUNDED_KEYWORDS)
+
+
+def _iter_claim_dicts(report: Any) -> List[Dict[str, Any]]:
+    if isinstance(report, dict):
+        raw_claims = report.get("claims", []) or []
+    else:
+        raw_claims = getattr(report, "claims", []) or []
+    claims: List[Dict[str, Any]] = []
+    for item in raw_claims:
+        if isinstance(item, dict):
+            claims.append(
+                {
+                    "claim_id": str(item.get("claim_id", "")),
+                    "text": str(item.get("text", "")),
+                    "evidence_ids": list(item.get("evidence_ids", []) or []),
+                }
+            )
+        else:
+            claims.append(
+                {
+                    "claim_id": str(getattr(item, "claim_id", "")),
+                    "text": str(getattr(item, "text", "")),
+                    "evidence_ids": list(getattr(item, "evidence_ids", []) or []),
+                }
+            )
+    return claims
+
+
+def find_uncited_imaging_claims(report: Any, valid_tool_ids: Set[str]) -> List[str]:
+    """Claim ids that mention imaging without citing a known tool output.
+
+    A claim is satisfied only when one of its evidence ids is present in
+    valid_tool_ids (tool outputs issued by an imaging tool run). Ordinary
+    literature chunks never satisfy an imaging claim.
+    """
+    valid = set(valid_tool_ids)
+    flagged: List[str] = []
+    for claim in _iter_claim_dicts(report):
+        if not claim["claim_id"] or not _mentions_imaging(claim["text"]):
+            continue
+        if any(evidence_id in valid for evidence_id in claim["evidence_ids"]):
+            continue
+        flagged.append(claim["claim_id"])
+    return flagged

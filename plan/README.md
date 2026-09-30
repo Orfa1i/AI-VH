@@ -273,7 +273,7 @@ If your existing code lives elsewhere, ADR-0001 (STEP 01–02) maps it onto this
 
 ### Phase 9: Advanced Intelligence
 
-- [ ] STEP 51: P9.1 Imaging models as Radiology agent tools → `prompts/phase-9-advanced/STEP-51_P9.1_imaging-tools.md`
+- [x] STEP 51: P9.1 Imaging models as Radiology agent tools → `prompts/phase-9-advanced/STEP-51_P9.1_imaging-tools.md`
 - [ ] STEP 52: P9.2 Knowledge graph experiment → `prompts/phase-9-advanced/STEP-52_P9.2_knowledge-graph.md`
 - [ ] STEP 53: P9.3 Preference optimisation (DPO) → `prompts/phase-9-advanced/STEP-53_P9.3_preference-optimization.md`
 - [ ] STEP 54: P9.4 New agent / department scaffold → `prompts/phase-9-advanced/STEP-54_P9.4_new-agent-template.md`

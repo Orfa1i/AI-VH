@@ -19,6 +19,7 @@ from .interaction import DrugInteractionRule
 from .dose import DoseRangeRule
 from .contradiction import PatientDataContradictionRule
 from .red_flags import RedFlagCoverageRule
+from .imaging import ImagingCitationRule
 
 logger = get_logger("vh.verification.engine")
 REPO_ROOT = Path(__file__).resolve().parents[4]
@@ -63,6 +64,7 @@ class DeterministicSafetyEngine:
             DoseRangeRule(),
             PatientDataContradictionRule(),
             RedFlagCoverageRule(),
+            ImagingCitationRule(),
         ]
 
         self._load_safety_tables()
