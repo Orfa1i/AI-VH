@@ -1,0 +1,16 @@
+# AI-VH Multi-Agent Orchestrator Configuration
+version: "1.0.0"
+
+budgets:
+  max_steps: 25
+  max_tokens: 16384
+  max_cost: 1.00
+  max_sim_time_minutes: 360
+
+loop_detection:
+  max_repeated_actions: 3
+  max_stagnant_steps: 5
+
+verification:
+  require_verification: true
+  fail_closed: true

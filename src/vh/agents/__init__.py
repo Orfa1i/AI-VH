@@ -16,6 +16,15 @@ from .roles import (
     ToolPermissionError,
 )
 
+from .orchestrator import (
+    EncounterBudget,
+    EncounterState,
+    EncounterStatus,
+    EncounterStep,
+    HospitalOrchestrator,
+    LoopDetectionConfig,
+)
+
 try:
     from backend.simulation.orchestrator import orchestrator
 except ImportError:
@@ -25,9 +34,15 @@ __all__ = [
     "ActionResponse",
     "BaseAgent",
     "DoctorAgent",
+    "EncounterBudget",
+    "EncounterState",
+    "EncounterStatus",
+    "EncounterStep",
     "EventStore",
     "HospitalEnvironment",
+    "HospitalOrchestrator",
     "LabAgent",
+    "LoopDetectionConfig",
     "NurseAgent",
     "OrderStatus",
     "PharmacyAgent",
