@@ -31,7 +31,7 @@ agents:
   permission_violations: 0
   runaway_loops: 0
   replay_mismatch_count: 0
-  encounter_score_min: null
+  encounter_score_min: 0.30
 review:
   kappa_min: 0.60
   overlap_fraction: 0.15
