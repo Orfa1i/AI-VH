@@ -31,7 +31,17 @@ class DrugInteractionRule(SafetyRule):
             return findings
 
         norm_current_meds = [normalize_term(m) for m in current_meds if m]
-        interactions_table = knowledge.get("interactions", [])
+        raw_table = knowledge.get("interactions", [])
+        # Accept both the bare interactions list (direct rule calls) and the
+        # full table document {metadata, interactions} (engine-loaded tables).
+        # FIX-LOOP (automated-review track): the engine shape previously crashed
+        # here, producing a spurious critical on every evaluation.
+        if isinstance(raw_table, dict):
+            interactions_table = raw_table.get("interactions", [])
+        elif isinstance(raw_table, list):
+            interactions_table = raw_table
+        else:
+            interactions_table = []
 
         # Default rules if table not supplied
         if not interactions_table:

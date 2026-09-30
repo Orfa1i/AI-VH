@@ -322,3 +322,23 @@ def test_engine_determinism_property():
             assert f1.severity == f2.severity
             assert f1.message == f2.message
             assert f1.claim_ids == f2.claim_ids
+
+
+def test_engine_with_real_tables_no_spurious_ddi_critical():
+    """FIX-LOOP regression (found via automated-review track): the engine loads
+    full table documents ({metadata, interactions}), which the DDI rule
+    previously mistook for the bare interactions list, crashing into a
+    spurious critical on every evaluation. A benign report must evaluate
+    cleanly with zero exception-driven findings."""
+    from vh.verification.rules.engine import DeterministicSafetyEngine
+
+    report = make_dummy_report(
+        recommendations=["Aspirin 325 mg daily with food."],
+        differential=["Non-ST-Elevation Myocardial Infarction"],
+    )
+    engine = DeterministicSafetyEngine(mode="dev")
+    result = engine.evaluate(report=report, patient_record={"allergies": [], "current_medications": []})
+    assert result.critical_count == 0
+    assert all("unexpected exception" not in f.message for f in result.findings)
+    assert all(f.rule_id != "RULE-DDI-001" or f.severity != "critical" for f in result.findings)
+

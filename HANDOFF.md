@@ -80,8 +80,10 @@
 ---
 
 ## 4. Concrete Next Steps
-1. **Execute Step 41 (P7.1 Training dataset curation)**:
-   - Read `plan/prompts/phase-7-fine-tuning/STEP-41_P7.1_dataset-curation.md`.
-   - Note the plan's gating rule: STOP as BLOCKED until
-     `training.min_reviewed_cases` (500) reviewed cases exist (waiting for data
-     is not failure; Phase 8 may run in parallel at the owner's option).
+1. **STEP 41 is BLOCKED on data (0/500)** — automated track implemented+tested
+   (`src/vh/training/auto_review.py`, `curation.py`, migration 0003; report
+   `docs/steps/STEP-41.md`). Concrete next implementation (needs approval):
+   encounter → `store_original` ingestion bridge, then accumulate snapshots.
+2. **Owner rulings outstanding**: H7 physician-vs-optional under doctor-free
+   policy; `t_approve`/quality-bar values in `configs/training/curation.yaml`
+   (proposed 0.50); `training.min_preference_pairs` value before STEP 53.

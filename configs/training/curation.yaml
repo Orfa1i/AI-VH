@@ -1,0 +1,17 @@
+# Automated-review curation config (agent-owned; NOT thresholds.yaml).
+# t_approve and quality bars are proposed values; the project owner tunes them.
+# Safety gates (safety_regressions = 0, fail-closed validation) live in
+# configs/thresholds.yaml and are never relaxed here.
+version: "1.0.0"
+t_approve: 0.50
+gray_zone_policy: reject
+min_per_specialty: 20
+similarity_threshold: 0.8
+split_ratios:
+  train: 0.7
+  val: 0.15
+  test: 0.15
+split_seed: 42
+ground_truth_tiers:
+  - physician-verified-golden-v1
+  - programmatic-template-v1

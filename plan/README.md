@@ -147,6 +147,10 @@ If your existing code lives elsewhere, ADR-0001 (STEP 01–02) maps it onto this
 **Phase 7: Fine-Tuning & Model Lifecycle**
 - Purpose: Improve MedGemma from curated feedback; production changes only through evidence-gated promotion.
 - Curated dataset split by patient, zero contamination.
+- The 500-case training gate counts **automated-reviewed** cases (approved
+  automated track, ADR-0013): distinct patients with approve/correct decisions,
+  complete provenance, and passed revalidation. Human-reviewed data, if ever
+  added, stays in separate artifacts and is never mixed unlabeled.
 - Reproducible LoRA fine-tuning with full lineage.
 - Registry with evidence-gated promotion, shadow mode and rollback.
 - Candidate beats production with zero safety regressions and blinded physician preference.

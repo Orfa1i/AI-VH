@@ -31,6 +31,19 @@ TAXONOMY_PATH = REPO_ROOT / "configs" / "feedback" / "taxonomy.yaml"
 VALID_OPS = {"replace", "add", "remove"}
 VALID_RATINGS = {"correct", "partially_correct", "incorrect"}
 VALID_DECISIONS = {"approve", "correct", "reject"}
+VALID_REVIEWER_TYPES = {"human", "automated"}
+AUTOMATED_ACTOR_PREFIX = "auto_"
+
+
+def _is_automated_actor(actor: Any) -> bool:
+    return isinstance(actor, str) and actor.startswith(AUTOMATED_ACTOR_PREFIX)
+
+
+def _refuse_automated_actor(action: str, actor: Any) -> None:
+    if _is_automated_actor(actor):
+        raise ValueError(
+            f"Automated identity {actor!r} cannot perform human-review action {action!r}."
+        )
 
 PathLike = Union[str, int]
 EditPath = List[PathLike]
@@ -189,19 +202,31 @@ class FeedbackStore:
         self._audit("reviewer_added", "system", "reviewers", reviewer_id)
         return reviewer_id
 
-    def register_reviewer(self, name: str, role: str, token: Optional[str] = None) -> Tuple[str, str]:
+    def register_reviewer(
+        self,
+        name: str,
+        role: str,
+        token: Optional[str] = None,
+        reviewer_type: str = "human",
+    ) -> Tuple[str, str]:
         """Register a reviewer and issue a single-use-visible auth token.
 
         Only the sha256 hash is stored; the plaintext token is returned once.
         A fixed token may be supplied for dev/demo seeding only.
+        reviewer_type is 'human' or 'automated' (automated identities are
+        namespaced `auto_*` and can never write human review rows).
         """
-        reviewer_id = _new_id("rev")
+        if reviewer_type not in VALID_REVIEWER_TYPES:
+            raise ValueError(f"Unknown reviewer_type: {reviewer_type!r}")
+        # Automated identities are namespaced `auto_*` so the human-path write
+        # gates recognize them; human reviewers keep `rev-*` ids.
+        reviewer_id = _new_id("auto" if reviewer_type == "automated" else "rev")
         token = token or secrets.token_urlsafe(32)
         token_hash = hashlib.sha256(token.encode("utf-8")).hexdigest()
         self._conn.execute(
-            "INSERT INTO reviewers (id, name, role, auth_token_hash, created_at)"
-            " VALUES (?, ?, ?, ?, ?)",
-            (reviewer_id, name, role, token_hash, _utcnow()),
+            "INSERT INTO reviewers (id, name, role, auth_token_hash, reviewer_type, created_at)"
+            " VALUES (?, ?, ?, ?, ?, ?)",
+            (reviewer_id, name, role, token_hash, reviewer_type, _utcnow()),
         )
         self._audit("reviewer_added", "system", "reviewers", reviewer_id)
         return reviewer_id, token
@@ -260,6 +285,7 @@ class FeedbackStore:
         self._audit("verification_updated", actor, "reports_original", original_id)
 
     def assign_review(self, original_id: str, reviewer_id: str) -> str:
+        _refuse_automated_actor("assign_review", reviewer_id)
         assignment_id = _new_id("asg")
         self._conn.execute(
             "INSERT INTO review_assignments (id, original_id, reviewer_id, status, created_at)"
@@ -270,6 +296,11 @@ class FeedbackStore:
         return assignment_id
 
     def start_session(self, assignment_id: str) -> str:
+        assignment = self._conn.execute(
+            "SELECT reviewer_id FROM review_assignments WHERE id = ?", (assignment_id,)
+        ).fetchone()
+        if assignment is not None:
+            _refuse_automated_actor("start_session", assignment["reviewer_id"])
         session_id = _new_id("ses")
         self._conn.execute(
             "INSERT INTO review_sessions (id, assignment_id, started_at, ended_at)"
@@ -287,6 +318,7 @@ class FeedbackStore:
         value: Optional[Any] = None,
         actor: str = "doctor",
     ) -> int:
+        _refuse_automated_actor("add_edit", actor)
         if op not in VALID_OPS:
             raise ValueError(f"Unknown edit op: {op!r}")
         row = self._conn.execute(
@@ -316,6 +348,7 @@ class FeedbackStore:
         taxonomy_code: str,
         actor: str = "doctor",
     ) -> int:
+        _refuse_automated_actor("rate_claim", actor)
         if rating not in VALID_RATINGS:
             raise ValueError(f"Unknown claim rating: {rating!r}")
         if taxonomy_code not in _taxonomy_codes():
@@ -329,6 +362,7 @@ class FeedbackStore:
         return int(cursor.lastrowid or 0)
 
     def add_comment(self, session_id: str, author: str, text: str) -> int:
+        _refuse_automated_actor("add_comment", author)
         cursor = self._conn.execute(
             "INSERT INTO comments (session_id, author, text, created_at) VALUES (?, ?, ?, ?)",
             (session_id, author, text, _utcnow()),
@@ -371,6 +405,7 @@ class FeedbackStore:
         actor: str = "doctor",
         decision: Optional[str] = None,
     ) -> str:
+        _refuse_automated_actor("finalize_report", actor)
         session = self._conn.execute(
             "SELECT assignment_id FROM review_sessions WHERE id = ?", (session_id,)
         ).fetchone()
@@ -406,6 +441,7 @@ class FeedbackStore:
 
     def record_decision(self, session_id: str, decision: str, actor: str = "doctor") -> None:
         """Close a session with a decision (used for rejections: no final report)."""
+        _refuse_automated_actor("record_decision", actor)
         if decision not in VALID_DECISIONS:
             raise ValueError(f"Unknown decision: {decision!r}")
         session = self._conn.execute(
@@ -534,6 +570,98 @@ class FeedbackStore:
         row = self._conn.execute("SELECT COUNT(*) FROM audit_log").fetchone()
         return int(row[0])
 
+    def create_automated_review(self, record: Dict[str, Any]) -> str:
+        """Persist one automated evaluation. Human tables are never touched."""
+        reviewer_id = str(record.get("reviewer_id", ""))
+        if not _is_automated_actor(reviewer_id):
+            raise ValueError(
+                "Automated reviews require an `auto_*` reviewer identity; "
+                "human reviews use the session path instead."
+            )
+        for key in (
+            "case_id",
+            "patient_ref",
+            "original_report",
+            "ground_truth_source",
+            "ground_truth_version",
+            "validator_versions",
+            "metrics",
+            "decision",
+        ):
+            if key not in record:
+                raise ValueError(f"Automated review record missing provenance: {key!r}")
+        review_id = _new_id("arw")
+        original_json = json.dumps(record["original_report"], sort_keys=True)
+        self._conn.execute(
+            "INSERT INTO automated_reviews (id, case_id, patient_ref, original_report_json,"
+            " original_sha256, ground_truth_source, ground_truth_version,"
+            " validator_versions_json, metrics_json, decision, reasons_json,"
+            " sanitized_removed_json, reviewer_id, evaluated_at)"
+            " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (
+                review_id,
+                str(record["case_id"]),
+                str(record["patient_ref"]),
+                original_json,
+                hashlib.sha256(original_json.encode("utf-8")).hexdigest(),
+                str(record["ground_truth_source"]),
+                str(record["ground_truth_version"]),
+                json.dumps(record["validator_versions"], sort_keys=True),
+                json.dumps(record["metrics"], sort_keys=True),
+                str(record["decision"]),
+                json.dumps(list(record.get("reasons", [])), sort_keys=True),
+                json.dumps(list(record.get("sanitized_removed", [])), sort_keys=True),
+                reviewer_id,
+                str(record.get("evaluated_at") or _utcnow()),
+            ),
+        )
+        self._audit("automated_review_recorded", reviewer_id, "automated_reviews", review_id)
+        return review_id
+
+    def create_automated_target(
+        self,
+        review_id: str,
+        target: Dict[str, Any],
+        derivation: str,
+        repair_ops: Optional[List[Dict[str, Any]]] = None,
+        revalidation_pass: bool = False,
+        reviewer_id: str = "auto-validator",
+    ) -> str:
+        """Persist the SFT target of an automated review. Never a 'final report'."""
+        if derivation not in {"as-is", "repaired"}:
+            raise ValueError(f"Unknown automated derivation: {derivation!r}")
+        if not _is_automated_actor(reviewer_id):
+            raise ValueError("Automated targets require an `auto_*` reviewer identity.")
+        target_id = _new_id("atg")
+        self._conn.execute(
+            "INSERT INTO automated_targets (id, review_id, target_json, derivation,"
+            " repair_ops_json, revalidation_pass, created_at)"
+            " VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (
+                target_id,
+                review_id,
+                json.dumps(target, sort_keys=True),
+                derivation,
+                json.dumps(list(repair_ops or []), sort_keys=True),
+                1 if revalidation_pass else 0,
+                _utcnow(),
+            ),
+        )
+        self._audit("automated_target_recorded", reviewer_id, "automated_targets", target_id)
+        return target_id
+
+    def list_automated_reviews(self) -> List[Dict[str, Any]]:
+        return [
+            dict(r)
+            for r in self._conn.execute(
+                "SELECT * FROM automated_reviews ORDER BY evaluated_at, id"
+            ).fetchall()
+        ]
+
+    def automated_review_count(self) -> int:
+        row = self._conn.execute("SELECT COUNT(*) FROM automated_reviews").fetchone()
+        return int(row[0])
+
     def list_audit(self) -> List[Dict[str, Any]]:
         return [
             dict(r) for r in self._conn.execute("SELECT * FROM audit_log ORDER BY id").fetchall()
@@ -586,5 +714,9 @@ for _method_name in (
     "audit_count",
     "list_audit",
     "close",
+    "create_automated_review",
+    "create_automated_target",
+    "list_automated_reviews",
+    "automated_review_count",
 ):
     setattr(FeedbackStore, _method_name, _synchronized(getattr(FeedbackStore, _method_name)))

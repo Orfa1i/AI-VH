@@ -9,6 +9,12 @@
 ## Context
 Requires a feedback snapshot with at least `training.min_reviewed_cases` reviewed cases. If there are fewer, stop with Status: BLOCKED (waiting for data is not a test failure).
 
+Automation track (approved): the count covers **automated-reviewed** cases only --
+distinct `patient_ref`s with approve/correct decisions, complete provenance, and
+passed revalidation (see ADR-0013). The SFT target is the automated-target
+artifact, never a "doctor-final". Human-reviewed data, if ever added, is curated
+from separate snapshot sections and never mixed unlabeled.
+
 ## Task
 - Filters: exclude cases whose overlap reviews disagree; exclude rejected-without-correction reports from SFT (keep them for preference data later); remove near-duplicates.
 - SFT format: input = AgentView + evidence blocks in exactly the production prompt format; target = the doctor-final report JSON.

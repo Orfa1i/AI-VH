@@ -57,6 +57,7 @@ def build_snapshot(
     output_dir: str,
     version: str,
     registry_db: Optional[str] = None,
+    artifact_name: str = "feedback-snapshot",
 ) -> Dict[str, Any]:
     """Export a versioned, reproducible snapshot bundle from the store."""
     out = Path(output_dir)
@@ -145,10 +146,51 @@ def build_snapshot(
     _dump_jsonl(out / "ratings.jsonl", ratings)
     (out / "agreement.json").write_text(json.dumps(agreement, indent=2, sort_keys=True), encoding="utf-8")
 
-    dataset_sha = hashlib.sha256(
-        "\n".join(f"{name}:{_sha_file(out / name)}" for name in (*DATA_FILES, "agreement.json")).encode(
-            "utf-8"
+    # Automated-reviewed track (additive; human sections above are unchanged).
+    # Automated rows live in their own tables and are exported to their own
+    # files, so the two datasets can never be confused.
+    auto_reviews: List[Dict[str, Any]] = []
+    for row in store.list_automated_reviews():
+        auto_reviews.append(
+            {
+                "id": row["id"],
+                "case_id": row["case_id"],
+                "patient_ref": row["patient_ref"],
+                "reviewer_type": "automated",
+                "reviewer_id": row["reviewer_id"],
+                "decision": row["decision"],
+                "reasons": json.loads(row.get("reasons_json") or "[]"),
+                "metrics": json.loads(row.get("metrics_json") or "{}"),
+                "validator_versions": json.loads(row.get("validator_versions_json") or "{}"),
+                "ground_truth_source": row["ground_truth_source"],
+                "ground_truth_version": row["ground_truth_version"],
+                "original_sha256": row["original_sha256"],
+                "original_report": json.loads(row["original_report_json"]),
+                "evaluated_at": row["evaluated_at"],
+            }
         )
+    auto_targets: List[Dict[str, Any]] = []
+    target_rows = store._conn.execute("SELECT * FROM automated_targets ORDER BY id").fetchall()
+    for row in target_rows:
+        record = dict(row)
+        auto_targets.append(
+            {
+                "id": record["id"],
+                "review_id": record["review_id"],
+                "reviewer_type": "automated",
+                "target": json.loads(record["target_json"]),
+                "derivation": record["derivation"],
+                "repair_ops": json.loads(record.get("repair_ops_json") or "[]"),
+                "revalidation_pass": bool(record.get("revalidation_pass")),
+                "created_at": record["created_at"],
+            }
+        )
+    _dump_jsonl(out / "automated_reviews.jsonl", auto_reviews)
+    _dump_jsonl(out / "automated_targets.jsonl", auto_targets)
+
+    data_files = (*DATA_FILES, "agreement.json", "automated_reviews.jsonl", "automated_targets.jsonl")
+    dataset_sha = hashlib.sha256(
+        "\n".join(f"{name}:{_sha_file(out / name)}" for name in data_files).encode("utf-8")
     ).hexdigest()
 
     lineage = {"golden_version": "v1", "code_version": _code_version()}
@@ -158,6 +200,8 @@ def build_snapshot(
         "edits": len(edits),
         "finals": len(finals),
         "ratings": len(ratings),
+        "automated_reviews": len(auto_reviews),
+        "automated_targets": len(auto_targets),
     }
 
     artifact_id = ""
@@ -168,7 +212,7 @@ def build_snapshot(
         )
         record = registry.register_artifact(
             kind="dataset",
-            name="feedback-snapshot",
+            name=artifact_name,
             version=version,
             content=dataset_sha.encode("utf-8"),
             parent_ids=["golden-v1"],
