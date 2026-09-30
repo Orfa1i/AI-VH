@@ -32,11 +32,11 @@ VALID_OPS = {"replace", "add", "remove"}
 VALID_RATINGS = {"correct", "partially_correct", "incorrect"}
 VALID_DECISIONS = {"approve", "correct", "reject"}
 VALID_REVIEWER_TYPES = {"human", "automated"}
-AUTOMATED_ACTOR_PREFIX = "auto_"
+AUTOMATED_ACTOR_PREFIXES = ("auto_", "auto-")
 
 
 def _is_automated_actor(actor: Any) -> bool:
-    return isinstance(actor, str) and actor.startswith(AUTOMATED_ACTOR_PREFIX)
+    return isinstance(actor, str) and actor.startswith(AUTOMATED_ACTOR_PREFIXES)
 
 
 def _refuse_automated_actor(action: str, actor: Any) -> None:
@@ -658,6 +658,20 @@ class FeedbackStore:
             ).fetchall()
         ]
 
+    def list_automated_targets(self) -> List[Dict[str, Any]]:
+        return [
+            dict(r)
+            for r in self._conn.execute("SELECT * FROM automated_targets ORDER BY id").fetchall()
+        ]
+
+    def get_automated_target_by_review(self, review_id: str) -> Dict[str, Any]:
+        row = self._conn.execute(
+            "SELECT * FROM automated_targets WHERE review_id = ?", (review_id,)
+        ).fetchone()
+        if row is None:
+            raise KeyError(f"Automated target not found for review: {review_id}")
+        return dict(row)
+
     def automated_review_count(self) -> int:
         row = self._conn.execute("SELECT COUNT(*) FROM automated_reviews").fetchone()
         return int(row[0])
@@ -717,6 +731,8 @@ for _method_name in (
     "create_automated_review",
     "create_automated_target",
     "list_automated_reviews",
+    "list_automated_targets",
+    "get_automated_target_by_review",
     "automated_review_count",
 ):
     setattr(FeedbackStore, _method_name, _synchronized(getattr(FeedbackStore, _method_name)))

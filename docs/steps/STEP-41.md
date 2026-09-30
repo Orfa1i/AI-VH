@@ -54,6 +54,9 @@
 - H7 (blinded physician comparison) still needs the owner ruling flagged in
   the approved design: physician vs optional/external under the doctor-free
   policy. Unblocks Phase 7's end, not its start.
-- Accumulation path forward: encounter runner → `store_original` ingestion
-  bridge (not yet built) → automated evaluation → snapshots → counter.
-  The ingestion bridge is the concrete next implementation step once approved.
+- Accumulation bridge built and measured (`src/vh/training/accumulate.py`,
+  `tests/test_accumulation.py`): 60 golden encounters ingested and evaluated,
+  0 countable — all reject on `schema_invalid` because headless encounter
+  reports cite placeholder evidence ids with no resolvable retrieval context.
+  Next bottleneck (needs approval): wire retrieval evidence into the evaluated
+  reports (grounded-pipeline path) and scale patients via Synthea.

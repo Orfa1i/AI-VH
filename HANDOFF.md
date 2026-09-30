@@ -80,10 +80,10 @@
 ---
 
 ## 4. Concrete Next Steps
-1. **STEP 41 is BLOCKED on data (0/500)** — automated track implemented+tested
-   (`src/vh/training/auto_review.py`, `curation.py`, migration 0003; report
-   `docs/steps/STEP-41.md`). Concrete next implementation (needs approval):
-   encounter → `store_original` ingestion bridge, then accumulate snapshots.
+1. **STEP 41 is BLOCKED on data (0/500 countable; 60 evaluated, all rejected
+   on unresolvable evidence)** — track + accumulation bridge implemented and
+   tested. Next implementation (needs approval): retrieval-grounded report
+   path for accumulation + Synthea patient volume.
 2. **Owner rulings outstanding**: H7 physician-vs-optional under doctor-free
    policy; `t_approve`/quality-bar values in `configs/training/curation.yaml`
    (proposed 0.50); `training.min_preference_pairs` value before STEP 53.
