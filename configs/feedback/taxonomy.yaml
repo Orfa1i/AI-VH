@@ -1,0 +1,33 @@
+# AI-VH doctor-review error taxonomy (STEP 36 / P6.1).
+# Every claim rating references one of these codes. Only the project owner
+# changes this file; the feedback store validates codes against it at runtime.
+version: "1.0.0"
+
+error_types:
+  - code: wrong_diagnosis
+    label: Wrong diagnosis
+    description: Primary diagnosis is clinically incorrect.
+  - code: missed_diagnosis
+    label: Missed diagnosis
+    description: A diagnosis that should appear in the differential is absent.
+  - code: missed_red_flag
+    label: Missed red flag
+    description: A critical warning sign or contraindication was not addressed.
+  - code: bad_citation
+    label: Bad citation
+    description: Cited evidence does not exist or does not support the claim.
+  - code: unsupported_claim
+    label: Unsupported claim
+    description: Clinical claim carries no valid evidence link.
+  - code: unsafe_recommendation
+    label: Unsafe recommendation
+    description: Recommended action is contraindicated or unsafe for this patient.
+  - code: dosing_error
+    label: Dosing error
+    description: Wrong drug dose, unit, frequency, or renal adjustment.
+  - code: formatting
+    label: Formatting
+    description: Non-clinical structural or style defect in the report.
+  - code: other
+    label: Other
+    description: Any defect not covered above; explain in the comment field.

@@ -237,7 +237,7 @@ If your existing code lives elsewhere, ADR-0001 (STEP 01–02) maps it onto this
 
 ### Phase 6: Doctor Review & Feedback Store
 
-- [ ] STEP 36: P6.1 Feedback data model (append-only) → `prompts/phase-6-feedback/STEP-36_P6.1_feedback-data-model.md`
+- [x] STEP 36: P6.1 Feedback data model (append-only) → `prompts/phase-6-feedback/STEP-36_P6.1_feedback-data-model.md`
 - [ ] STEP 37: P6.2 Review API with overlap sampling → `prompts/phase-6-feedback/STEP-37_P6.2_review-api.md`
 - [ ] STEP 38: P6.3 Doctor review UI in the Clinical AI OS shell → `prompts/phase-6-feedback/STEP-38_P6.3_review-ui.md`
 - [ ] STEP 39: P6.4 Reviewer agreement and feedback snapshots → `prompts/phase-6-feedback/STEP-39_P6.4_agreement-and-snapshots.md`
