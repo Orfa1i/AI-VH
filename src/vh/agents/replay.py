@@ -196,8 +196,14 @@ def replay_encounter(
     bundle: ReplayBundle,
     case_spec: CaseSpec,
     budget: Optional[EncounterBudget] = None,
+    event_store: Optional[EventStore] = None,
 ) -> Tuple[EncounterState, str]:
-    """Re-execute a recorded encounter deterministically from its LLM transcript."""
+    """Re-execute a recorded encounter deterministically from its LLM transcript.
+
+    An external event store may be supplied (e.g. with a live UI tail
+    attached); the replayed log hash is computed over exactly what landed in
+    the store used for the run.
+    """
     if bundle.case_id != case_spec.case_id:
         raise ValueError(
             f"Replay bundle case '{bundle.case_id}' does not match "
@@ -205,7 +211,7 @@ def replay_encounter(
         )
     adapter = ReplayAdapter(bundle.transcript)
     orchestrator = HospitalOrchestrator(budget=budget, adapter=adapter)
-    store = EventStore()
+    store = event_store if event_store is not None else EventStore()
     state = orchestrator.run_encounter(
         case_spec, run_id=bundle.run_id, seed=bundle.seed, event_store=store
     )

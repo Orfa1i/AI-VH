@@ -66,10 +66,10 @@
   Gate report `docs/phase-reports/phase-6.md` (288/288 green, eval PASS,
   encounter mean 0.3596 ≥ 0.30, kappa UNMEASURED). Physician usability explicitly
   unvalidated (future/external H6).
-- **Test Suite**: 321 of 321 tests passing across `tests/` and `backend/tests/`.
-- **Phase 8 (Virtual Hospital Environment)**: **Steps 46, 47, 48 COMPLETE**
-  (SSE stream + 2D board + 3D scene with fps/load gates passing; 6 vitest +
-  3 Playwright green). Next: Step 49 (P8.4 UI integration + no-side-effect).
+- **Test Suite**: 327 of 327 tests passing across `tests/` and `backend/tests/`.
+- **Phase 8 (Virtual Hospital Environment)**: **Steps 46, 47, 48, 49 COMPLETE**
+  (SSE stream + 2D board + 3D scene + no-side-effect proof: 0 divergences,
+  lag under bar). Next: Step 50 (P8.G gate).
 - **Plan update (owner) adopted**: import-command governance rule; new
   `vh golden chunkmap-import` + `vh safety import-signoff` implemented, dry-run
   verified on real sign-offs, and tested (ADR-0011); `training.min_preference_pairs`
