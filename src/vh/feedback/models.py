@@ -435,6 +435,44 @@ class FeedbackStore:
         ).fetchone()
         return dict(row) if row is not None else None
 
+    def list_originals(self) -> List[Dict[str, Any]]:
+        return [
+            dict(r)
+            for r in self._conn.execute(
+                "SELECT * FROM reports_original ORDER BY created_at, id"
+            ).fetchall()
+        ]
+
+    def all_claim_ratings(self) -> List[Dict[str, Any]]:
+        return [
+            dict(r)
+            for r in self._conn.execute("SELECT * FROM claim_ratings ORDER BY id").fetchall()
+        ]
+
+    def decided_sessions_for_original(self, original_id: str) -> List[Dict[str, Any]]:
+        return [
+            dict(r)
+            for r in self._conn.execute(
+                "SELECT rs.* FROM review_sessions rs"
+                " JOIN review_assignments ra ON ra.id = rs.assignment_id"
+                " WHERE ra.original_id = ? AND rs.decision IS NOT NULL"
+                " ORDER BY rs.started_at, rs.id",
+                (original_id,),
+            ).fetchall()
+        ]
+
+    def decision_latencies(self) -> List[Dict[str, Any]]:
+        return [
+            dict(r)
+            for r in self._conn.execute(
+                "SELECT ra.reviewer_id, rev.name, rs.started_at, rs.ended_at"
+                " FROM review_sessions rs"
+                " JOIN review_assignments ra ON ra.id = rs.assignment_id"
+                " JOIN reviewers rev ON rev.id = ra.reviewer_id"
+                " WHERE rs.decision IS NOT NULL ORDER BY rs.ended_at"
+            ).fetchall()
+        ]
+
     def get_session(self, session_id: str) -> Dict[str, Any]:
         row = self._conn.execute(
             "SELECT * FROM review_sessions WHERE id = ?", (session_id,)
@@ -536,6 +574,10 @@ for _method_name in (
     "get_assignment",
     "get_reviewer_by_name",
     "get_original_by_case",
+    "list_originals",
+    "all_claim_ratings",
+    "decided_sessions_for_original",
+    "decision_latencies",
     "open_assignments_for",
     "assignments_for_original",
     "reviewer_has_assignment",

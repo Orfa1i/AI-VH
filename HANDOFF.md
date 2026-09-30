@@ -61,10 +61,11 @@
 - **Phase 5 (Agents & Orchestration)**: **100% COMPLETE & CERTIFIED** (`phase-5-pass`).
   Steps 31-34 DONE; H5 set (`encounter_score_min: 0.30`); gate report
   `docs/phase-reports/phase-5.md` (260/260 green, eval PASS, all 4 metrics PASS).
-- **Phase 6 (Doctor Review & Feedback Store)**: **Steps 36, 37, 38 COMPLETE**
-  (append-only store + review API + shell review UI with e2e; 274/274 Python
-  green, 13 vitest + 5 Playwright green). Next: Step 39 (P6.4 Agreement).
-- **Test Suite**: 274 of 274 tests passing across `tests/` and `backend/tests/`.
+- **Phase 6 (Doctor Review & Feedback Store)**: **Steps 36, 37, 38, 39 COMPLETE**
+  (append-only store + review API + shell review UI with e2e + agreement and
+  versioned snapshots; 279/279 Python green, 13 vitest + 5 Playwright green).
+  Next: H6 (owner usability test), then Step 40 (P6.G).
+- **Test Suite**: 279 of 279 tests passing across `tests/` and `backend/tests/`.
 - **Secret Scanner**: Clean pass (0 secrets).
 - **Backend Service**: Running on `http://127.0.0.1:8000`.
 - **Frontend Service**: Running on `http://localhost:5173`.
@@ -72,7 +73,6 @@
 ---
 
 ## 4. Concrete Next Steps
-1. **Execute Step 39 (P6.4 Reviewer agreement and feedback snapshots)**:
-   - Read `plan/prompts/phase-6-feedback/STEP-39_P6.4_agreement-and-snapshots.md`.
-   - Follow the gate loop (tests first, implement, full regression, report).
-2. **Then Phase 6 in order**: H6 (owner usability test), STEP 40 (P6.G).
+1. **[HUMAN] H6: Usability test with 2-3 doctors** → `docs/signoffs/H6-usability.md`
+   (owner-run; must-fix items go through FIX LOOP before sign-off).
+2. **Then STEP 40 (P6.G Phase 6 GATE)**, then Phase 7.
