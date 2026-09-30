@@ -1,0 +1,90 @@
+# AI-VH Agent Tool Permission Matrix
+# Enforced strictly at the tool layer. Blocks and logs any unauthorized tool calls.
+version: "1.0.0"
+
+doctor:
+  role: "doctor"
+  description: "Attending physician responsible for diagnosis, clinical workup, and treatment decisions"
+  allowed_tools:
+    - "request_vitals"
+    - "order_lab"
+    - "order_imaging"
+    - "order_medication"
+    - "diagnose"
+    - "consult"
+    - "submit_report"
+    - "check_medication_info"
+    - "check_allergies"
+  forbidden_tools:
+    - "analyze_specimen"
+    - "inspect_image_pixels"
+
+nurse:
+  role: "nurse"
+  description: "Clinical nurse responsible for triage vitals, continuous monitoring, and patient observations"
+  allowed_tools:
+    - "request_vitals"
+    - "record_vitals"
+    - "record_observation"
+    - "record_nursing_notes"
+  forbidden_tools:
+    - "order_medication"
+    - "diagnose"
+    - "order_lab"
+    - "order_imaging"
+    - "submit_report"
+    - "analyze_specimen"
+    - "inspect_image_pixels"
+
+lab:
+  role: "lab"
+  description: "Clinical laboratory technician providing quantitative diagnostic assays and reference flags"
+  allowed_tools:
+    - "analyze_specimen"
+    - "get_lab_result"
+  forbidden_tools:
+    - "request_vitals"
+    - "record_vitals"
+    - "record_observation"
+    - "order_medication"
+    - "diagnose"
+    - "order_lab"
+    - "order_imaging"
+    - "submit_report"
+    - "inspect_image_pixels"
+
+radiology:
+  role: "radiology"
+  description: "Diagnostic radiologist providing study impressions and imaging report narratives"
+  allowed_tools:
+    - "interpret_imaging"
+    - "inspect_image_pixels"
+  forbidden_tools:
+    - "request_vitals"
+    - "record_vitals"
+    - "record_observation"
+    - "order_medication"
+    - "diagnose"
+    - "order_lab"
+    - "order_imaging"
+    - "submit_report"
+    - "analyze_specimen"
+
+pharmacy:
+  role: "pharmacy"
+  description: "Clinical pharmacist reviewing pharmacology, dose titration, drug interactions, and contraindications"
+  allowed_tools:
+    - "get_medication_info"
+    - "check_allergies"
+    - "check_interactions"
+    - "check_renal_dosing"
+  forbidden_tools:
+    - "request_vitals"
+    - "record_vitals"
+    - "record_observation"
+    - "order_lab"
+    - "order_imaging"
+    - "diagnose"
+    - "submit_report"
+    - "analyze_specimen"
+    - "inspect_image_pixels"

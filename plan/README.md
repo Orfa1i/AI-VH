@@ -228,7 +228,7 @@ If your existing code lives elsewhere, ADR-0001 (STEP 01–02) maps it onto this
 ### Phase 5: Agents & Orchestration (headless)
 
 - [x] STEP 31: P5.1 Hospital environment simulator and event log → `prompts/phase-5-agents/STEP-31_P5.1_environment-simulator.md`
-- [ ] STEP 32: P5.2 Specialised agents and tool permissions → `prompts/phase-5-agents/STEP-32_P5.2_agents-permissions.md`
+- [x] STEP 32: P5.2 Specialised agents and tool permissions → `prompts/phase-5-agents/STEP-32_P5.2_agents-permissions.md`
 - [ ] STEP 33: P5.3 Orchestrator, budgets and loop detection → `prompts/phase-5-agents/STEP-33_P5.3_orchestrator.md`
 - [ ] STEP 34: P5.4 Encounter scoring and deterministic replay → `prompts/phase-5-agents/STEP-34_P5.4_encounter-scoring-replay.md`
 - [ ] **[HUMAN] H5: Set the encounter score threshold** → `configs/thresholds.yaml`  
