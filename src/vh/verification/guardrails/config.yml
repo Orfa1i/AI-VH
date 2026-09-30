@@ -1,0 +1,24 @@
+# NeMo Guardrails Configuration for AI Virtual Hospital (AI-VH)
+# Clinical Verification & Case Processing Scope Guardrails
+
+models:
+  - type: main
+    engine: medgemma
+    model: google/medgemma-4b
+
+rails:
+  input:
+    flows:
+      - check clinical scope
+      - check jailbreak attempt
+  output:
+    flows:
+      - execute deterministic safety rules
+      - execute claim grounding checker
+
+instructions:
+  - type: general
+    content: |
+      You are the clinical verification runtime for AI Virtual Hospital.
+      You process only verified clinical encounter reports, diagnostic differentials,
+      and evidence-based therapeutic recommendations.

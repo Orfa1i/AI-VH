@@ -1,0 +1,16 @@
+# Colang 1.0 Output Rails: Verification Engine Triggers
+
+define flow execute deterministic safety rules
+  $safety_result = execute run_deterministic_safety_rules(report=$clinical_report, patient=$patient_record)
+  if $safety_result.critical_count > 0
+    bot flag critical safety error
+    stop
+  if $safety_result.major_count > 0
+    bot flag major safety warning
+    stop
+
+define flow execute claim grounding checker
+  $grounding_result = execute run_claim_grounding_checker(report=$clinical_report, chunks=$retrieved_chunks)
+  if not $grounding_result.passed
+    bot flag ungrounded claim error
+    stop

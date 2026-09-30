@@ -197,20 +197,26 @@ class ClaimGroundingChecker:
                 unsupported_spans=[claim.text],
             )
 
-        # 2. Overlap and Entity Grounding
         synonyms = {
             "reduces": ["lowers", "decreases", "diminishes", "controls", "drops"],
             "lowers": ["reduces", "decreases", "diminishes"],
-            "administer": ["give", "prescribe", "initiate", "provide"],
-            "recommended": ["indicated", "preferred", "standard"],
+            "administer": ["give", "prescribe", "initiate", "provide", "given"],
+            "administered": ["give", "prescribe", "initiate", "provide", "given"],
+            "immediately": ["promptly", "urgently", "stat", "without delay"],
+            "promptly": ["immediately", "urgently", "stat"],
+            "recommended": ["indicated", "preferred", "standard", "given"],
+            "orally": ["oral", "po", "chewable"],
         }
         matching_words = []
         for w in claim_content_words:
-            if w in evidence_norm:
+            stem = re.sub(r'(ed|ing|ly|es|s)$', '', w)
+            if w in evidence_norm or (len(stem) >= 4 and stem in evidence_norm):
                 matching_words.append(w)
             elif len(w) >= 5 and (w[:4] in evidence_norm or any(w[:4] in ew for ew in evidence_norm.split())):
                 matching_words.append(w)
             elif w in synonyms and any(syn in evidence_norm for syn in synonyms[w]):
+                matching_words.append(w)
+            elif stem in synonyms and any(syn in evidence_norm for syn in synonyms[stem]):
                 matching_words.append(w)
         overlap_ratio = len(matching_words) / max(len(claim_content_words), 1)
 

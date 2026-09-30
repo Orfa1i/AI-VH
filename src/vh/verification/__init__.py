@@ -26,6 +26,11 @@ from .rules import (
     SafetyEvaluationResult,
     SafetyRule,
 )
+from .router import (
+    ClinicalVerificationRouter,
+    VerificationEnvelope,
+    VerificationStatus,
+)
 
 __all__ = [
     "ClaimGroundingChecker",
@@ -46,4 +51,7 @@ __all__ = [
     "SafetyConfigurationError",
     "SafetyEvaluationResult",
     "SafetyRule",
+    "ClinicalVerificationRouter",
+    "VerificationEnvelope",
+    "VerificationStatus",
 ]
