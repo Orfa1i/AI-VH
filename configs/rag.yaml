@@ -54,3 +54,12 @@ retrieval:
   source_diversity_cap: 0.6
   exclude_superseded: true
   top_k: 10
+
+# Knowledge-graph augmented retrieval (STEP 52 / P9.2).
+# Adopted by measurement: +0.2155 MRR over RAG-only with no safety regression
+# (see docs/decisions/ADR-0015-knowledge-graph.md). Leave off only if a later
+# A/B reverses this result.
+kgraph:
+  enabled: true
+  boost: 0.5
+  max_appended_chunks: 2
