@@ -265,7 +265,7 @@ If your existing code lives elsewhere, ADR-0001 (STEP 01–02) maps it onto this
 
 ### Phase 8: Virtual Hospital Environment (2D then 3D)
 
-- [ ] STEP 46: P8.1 Read-only event stream API → `prompts/phase-8-virtual-hospital/STEP-46_P8.1_event-stream-api.md`
+- [x] STEP 46: P8.1 Read-only event stream API → `prompts/phase-8-virtual-hospital/STEP-46_P8.1_event-stream-api.md`
 - [ ] STEP 47: P8.2 2D department dashboard → `prompts/phase-8-virtual-hospital/STEP-47_P8.2_dashboard-2d.md`
 - [ ] STEP 48: P8.3 3D hospital scene → `prompts/phase-8-virtual-hospital/STEP-48_P8.3_scene-3d.md`
 - [ ] STEP 49: P8.4 UI integration and no-side-effect proof → `prompts/phase-8-virtual-hospital/STEP-49_P8.4_ui-integration-tests.md`
