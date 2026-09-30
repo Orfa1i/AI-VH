@@ -239,6 +239,35 @@ def test_safety_import_preserves_real_file_comments(tmp_path: Path):
     assert len(data["criteria"]) == len(yaml.safe_load(real_text)["criteria"])
 
 
+def test_safety_import_bold_verdict_format(tmp_path: Path):
+    """Regression (real-H4 dry run): `**Verdict:** APPROVED` (bold markers)
+    counts as approval; `NEEDS CORRECTION` does not."""
+    from vh.verification.safety_import import apply_safety_signoff
+
+    safety_dir = tmp_path / "safety"
+    safety_dir.mkdir()
+    (safety_dir / "red_flags.yaml").write_text(
+        yaml.safe_dump(_safety_table("SAFETY-REDFLAG-001", [])), encoding="utf-8"
+    )
+    (safety_dir / "dose_ranges.yaml").write_text(
+        yaml.safe_dump(_safety_table("SAFETY-DOSE-001", [])), encoding="utf-8"
+    )
+    signoff_path = tmp_path / "H4.md"
+    signoff_path.write_text(
+        "# Sign-off: H4\n\n- **Reviewer:** Dr. Test, MD\n- **Date:** 2026-09-30\n\n"
+        "## Tables\n\n1. **`configs/safety/red_flags.yaml`**:\n"
+        "- **Verdict:** APPROVED. Promoted to `status: reviewed`.\n\n"
+        "2. **`configs/safety/dose_ranges.yaml`**:\n"
+        "- **Verdict:** NEEDS CORRECTION before approval.\n",
+        encoding="utf-8",
+    )
+
+    result = apply_safety_signoff(str(signoff_path), str(safety_dir))
+    assert result["tables_approved"] == ["red_flags.yaml"]
+    red_after = yaml.safe_load((safety_dir / "red_flags.yaml").read_text(encoding="utf-8"))
+    assert red_after["metadata"]["status"] == "reviewed"
+
+
 def test_golden_chunkmap_import_cli(tmp_path: Path):
     """`vh golden chunkmap-import` is wired and exits 0."""
     chunkmap_path = tmp_path / "chunkmap.json"

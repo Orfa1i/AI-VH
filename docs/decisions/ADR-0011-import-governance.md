@@ -36,3 +36,12 @@ STEP-53 needs a new `training.min_preference_pairs` threshold key.
 - Owner actions outstanding: add `min_preference_pairs: null` under
   `training:` in `configs/thresholds.yaml` (then set a value before STEP 53),
   then I add the key to `REQUIRED_KEYS`. H6 still blocks Phase 6.
+
+## 4. Dry-run verification on real sign-offs (no repo writes)
+
+- Real H2 sign-off over a chunk-map copy: 0 corrections, byte-identical.
+- Real H4 sign-off over a safety-dir copy: all 4 tables approved, 0 rows
+  corrected. This dry run caught two real-format gaps, fixed with tests:
+  bold-markdown verdicts (`**Verdict:** APPROVED`) and per-table verdict
+  binding via numbered-item blocks (a coarse `##`-section split would have
+  cross-approved mixed-verdict sections).

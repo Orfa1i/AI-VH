@@ -28,7 +28,7 @@ _CORRECTION_RE = re.compile(
     r"(?P<field>[A-Za-z_][A-Za-z0-9_]*)\s*=\s*(?P<value>.+?)\s*$"
 )
 _TABLE_REF_RE = re.compile(r"(?:configs/safety/|`)([A-Za-z0-9_.-]+\.yaml)`?")
-_APPROVAL_RE = re.compile(r"verdict:\s*approved", re.IGNORECASE)
+_APPROVAL_RE = re.compile(r"verdict:\W*approved\b", re.IGNORECASE)
 _REVIEWER_RE = re.compile(r"\*\*Reviewer:\*\*\s*(.+?)\s*$", re.MULTILINE)
 _DATE_RE = re.compile(r"\*\*Date:\*\*\s*(\d{4}-\d{2}-\d{2})", re.MULTILINE)
 
@@ -70,17 +70,13 @@ def parse_safety_corrections(signoff_text: str) -> List[Dict[str, Any]]:
 
 
 def _split_sections(signoff_text: str) -> List[str]:
-    sections: List[str] = []
-    current: List[str] = []
-    for line in signoff_text.splitlines():
-        if line.startswith("## ") and current:
-            sections.append("\n".join(current))
-            current = [line]
-        else:
-            current.append(line)
-    if current:
-        sections.append("\n".join(current))
-    return sections
+    """Split into `##`-heading blocks and numbered-item blocks.
+
+    Verdicts bind to their own block, so a mixed-verdict section (like the
+    real H4 audit, with one numbered item per table) cannot cross-approve.
+    """
+    parts = re.split(r"(?m)^(?=##\s+|\d+\.\s+)", signoff_text)
+    return [part for part in parts if part.strip()]
 
 
 def parse_table_approvals(signoff_text: str, known_files: List[str]) -> List[str]:
