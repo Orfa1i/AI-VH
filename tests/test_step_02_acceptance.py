@@ -60,19 +60,33 @@ def test_thresholds_loader_null_reported_as_not_set():
 
     loader_obj = load_thresholds()
 
-    # dx_top3_min is null in generation
+    # dx_top3_min is null in generation (H3 not yet applied in this file)
     assert loader_obj.is_set("generation", "dx_top3_min") is False
     status_dx = loader_obj.get_status("generation", "dx_top3_min")
     assert status_dx == ThresholdStatus.NOT_SET
 
-    # encounter_score_min is null in agents
-    assert loader_obj.is_set("agents", "encounter_score_min") is False
-    status_enc = loader_obj.get_status("agents", "encounter_score_min")
-    assert status_enc == ThresholdStatus.NOT_SET
-
     # Evaluating a gate that uses a NOT SET threshold MUST fail
     gate_passed = loader_obj.evaluate_gate("generation", "dx_top3_min", candidate_value=0.95)
     assert gate_passed is False, "A gate using a NOT SET threshold must evaluate to False (fail)"
+
+
+@pytest.mark.unit
+def test_thresholds_loader_set_values_pass_gates():
+    """Verify that owner-set thresholds (H5: agents.encounter_score_min = 0.30) report
+    SET and evaluate gates by comparison. FIX-LOOP (Phase 5 gate): this replaces the
+    stale Step 02 assumption that encounter_score_min is permanently null."""
+    from vh.common.thresholds import load_thresholds, ThresholdStatus
+
+    loader_obj = load_thresholds()
+
+    assert loader_obj.is_set("agents", "encounter_score_min") is True
+    status_enc = loader_obj.get_status("agents", "encounter_score_min")
+    assert status_enc == ThresholdStatus.SET
+    assert loader_obj.get("agents", "encounter_score_min") == 0.30
+
+    # Measured Step 34 mean (0.3596) clears the minimum; a low candidate does not.
+    assert loader_obj.evaluate_gate("agents", "encounter_score_min", candidate_value=0.3596) is True
+    assert loader_obj.evaluate_gate("agents", "encounter_score_min", candidate_value=0.10) is False
 
 
 @pytest.mark.unit

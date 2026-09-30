@@ -19,8 +19,8 @@ from pydantic import BaseModel, Field
 from vh.agents.orchestrator import EncounterBudget, EncounterState, EncounterStatus
 from vh.cases.spec import CaseSpec
 
-# Composite weights. Proposed threshold for agents.encounter_score_min: 0.70
-# (see docs/steps/STEP-34.md). The project owner sets the threshold value.
+# Composite weights. H5 set agents.encounter_score_min = 0.30
+# (see docs/steps/STEP-34.md). The project owner owns the threshold value.
 WEIGHT_DX_TOP1 = 0.35
 WEIGHT_DX_TOP3 = 0.20
 WEIGHT_WORKUP_RECALL = 0.12
