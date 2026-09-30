@@ -60,8 +60,15 @@ class DoseRangeRule(SafetyRule):
                         }
                     ],
                 },
+                "aspirin": {
+                    "generic_name": "aspirin",
+                    "max_dose_mg": 325.0,
+                    "renal_adjustments": [],
+                    "source": "2023 AHA/ACC ACS Guideline Section 5.1",
+                },
                 "metformin": {
                     "generic_name": "metformin",
+                    "max_daily_dose_mg": 2550.0,
                     "renal_adjustments": [
                         {
                             "egfr_threshold": 30.0,
@@ -71,6 +78,13 @@ class DoseRangeRule(SafetyRule):
                         }
                     ],
                 },
+                "amiodarone": {
+                    "generic_name": "amiodarone",
+                    "max_single_dose_mg": 400.0,
+                    "max_daily_dose_mg": 1200.0,
+                    "renal_adjustments": [],
+                    "source": "AHA ACLS Guidelines 2020",
+                },
             }
 
         drugs_dict = dose_table.get("drugs", dose_table)
@@ -78,11 +92,41 @@ class DoseRangeRule(SafetyRule):
         for drug_key, drug_info in drugs_dict.items():
             generic_name = normalize_term(drug_info.get("generic_name", drug_key))
             renal_rules = drug_info.get("renal_adjustments", [])
+            max_dose = (
+                drug_info.get("max_single_dose_mg")
+                or drug_info.get("max_dose_mg")
+                or drug_info.get("max_daily_dose_mg")
+            )
 
             for rec in report.recommendations:
                 rec_norm = normalize_term(rec.text)
                 if not re.search(r"\b" + re.escape(generic_name) + r"\b", rec_norm):
                     continue
+
+                # Check maximum dosage limits
+                if max_dose is not None:
+                    try:
+                        max_limit = float(max_dose)
+                        dose_match = re.search(r"(\d+(?:\.\d+)?)\s*mg", rec_norm)
+                        if dose_match:
+                            prescribed_dose = float(dose_match.group(1))
+                            if prescribed_dose > max_limit:
+                                source = drug_info.get("source", "FDA Package Insert")
+                                findings.append(
+                                    Finding(
+                                        rule_id=self.rule_id,
+                                        severity="critical",
+                                        claim_ids=rec.claim_ids,
+                                        message=(
+                                            f"Supratherapeutic dosage violation: Recommendation '{rec.text}' prescribes "
+                                            f"{prescribed_dose} mg of '{generic_name.upper()}', exceeding maximum safe dosage limit of "
+                                            f"{max_limit} mg."
+                                        ),
+                                        evidence=source,
+                                    )
+                                )
+                    except (ValueError, TypeError):
+                        pass
 
                 # Check renal adjustments if eGFR is known
                 if egfr is not None:

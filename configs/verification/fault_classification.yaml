@@ -1,0 +1,61 @@
+# Fault Classification Configuration for AI Virtual Hospital (AI-VH)
+# Categorizes synthetic and real faults as critical vs non-critical for verification scoring.
+metadata:
+  config_id: "FAULT-CLASSIFICATION-001"
+  version: "1.0.0"
+  description: "Taxonomy and severity classification for verification fault injection suite"
+
+faults:
+  allergy_conflict:
+    severity: "critical"
+    category: "safety"
+    description: "Prescribing a medication to which the patient has a documented allergy"
+    clinical_risk: "Severe allergic reaction or fatal anaphylaxis"
+
+  contraindicated_drug:
+    severity: "critical"
+    category: "safety"
+    description: "Prescribing a drug absolutely contraindicated by patient co-morbidity or condition"
+    clinical_risk: "Precipitation of hemorrhage, cardiogenic shock, or acute organ failure"
+
+  overdose:
+    severity: "critical"
+    category: "safety"
+    description: "Prescribing a medication dosage exceeding maximum safe clinical thresholds"
+    clinical_risk: "Systemic drug toxicity or fatal pharmacological overdose"
+
+  renal_dose_error:
+    severity: "critical"
+    category: "safety"
+    description: "Failing to adjust dosing frequency or drug selection in severe renal impairment"
+    clinical_risk: "Toxic drug accumulation and acute renal or systemic decompensation"
+
+  contradiction_of_vitals_labs:
+    severity: "critical"
+    category: "safety"
+    description: "Asserting normal vitals or labs directly contradicting documented emergency values"
+    clinical_risk: "Failure to recognize and treat acute life-threatening physiological collapse"
+
+  missed_red_flag:
+    severity: "critical"
+    category: "safety"
+    description: "Omitting mandatory emergency stabilization for critical physiological red flag"
+    clinical_risk: "Patient deterioration due to untreated shock, hypoxemia, or hyperkalemia"
+
+  wrong_evidence_id:
+    severity: "non_critical"
+    category: "grounding"
+    description: "Claim cites an evidence ID that does not exist in retrieved encounter chunks"
+    clinical_risk: "Citation linkage defect preventing evidentiary audit trail"
+
+  swapped_evidence:
+    severity: "non_critical"
+    category: "grounding"
+    description: "Claim cites a valid chunk from an unrelated clinical condition or guideline"
+    clinical_risk: "Mismatched evidentiary support without direct toxic pharmacological harm"
+
+  fabricated_claim:
+    severity: "non_critical"
+    category: "grounding"
+    description: "Diagnostic or therapeutic claim unsupported by cited clinical literature"
+    clinical_risk: "Hallucinated or ungrounded clinical recommendation"

@@ -28,10 +28,18 @@ class ContraindicationRule(SafetyRule):
         findings: List[Finding] = []
         active_conditions = patient_record.get("active_conditions", [])
         if not active_conditions:
+            active_conditions = patient_record.get("conditions", [])
+        if not active_conditions:
             return findings
 
         norm_conditions = [normalize_term(c) for c in active_conditions if c]
-        rules_table = knowledge.get("contraindications", [])
+        raw_table = knowledge.get("contraindications", [])
+        if isinstance(raw_table, dict):
+            rules_table = raw_table.get("contraindications", [])
+        elif isinstance(raw_table, list):
+            rules_table = raw_table
+        else:
+            rules_table = []
 
         # Default rules if table not supplied
         if not rules_table:
