@@ -6,8 +6,16 @@ Routes subcommands:
   vh cases    : Case builder, validation suite, and spot-check review export
 """
 
+from pathlib import Path
 import sys
 from typing import List, Optional
+
+# Ensure src and repo root are in sys.path when CLI is executed directly
+SRC_ROOT = Path(__file__).resolve().parent.parent
+REPO_ROOT = SRC_ROOT.parent
+for p in [str(SRC_ROOT), str(REPO_ROOT)]:
+    if p not in sys.path:
+        sys.path.insert(0, p)
 
 
 def main(argv: Optional[List[str]] = None) -> int:
@@ -20,6 +28,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         print("  vh golden   : Golden case authoring, validation, export, and release")
         print("  vh synthea  : Synthea FHIR population generation and module runner")
         print("  vh cases    : Case builder, validation suite, and spot-check export")
+        print("  vh verify   : Clinical verification rules, grounding, and calibration")
         return 0
 
     command = argv[0].lower()
@@ -34,8 +43,11 @@ def main(argv: Optional[List[str]] = None) -> int:
     elif command == "cases":
         from vh.cases.cli import main as cases_main
         return cases_main(sub_args)
+    elif command == "verify":
+        from vh.verification.cli import main as verify_main
+        return verify_main(sub_args)
     else:
-        print(f"Unknown command suite: '{command}'. Available: golden, synthea, cases.")
+        print(f"Unknown command suite: '{command}'. Available: golden, synthea, cases, verify.")
         return 1
 
 

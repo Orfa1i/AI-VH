@@ -1,11 +1,49 @@
 """
-Clinical verification, guardrails, and fault injection validation module for AI-VH.
-Provides safety checks, medication interaction verification, and evaluation judges.
+Clinical verification, safety rules, guardrails, and grounding validation module for AI-VH.
+Provides deterministic safety checks, medication interaction verification,
+claim-level factual grounding judges, and calibration tools.
 """
 
-try:
-    from backend.agents.pharmacist import pharmacist_agent
-except ImportError:
-    pharmacist_agent = None
+from .grounding import (
+    ClaimGroundingChecker,
+    ClaimGroundingJudgment,
+    GroundingVerdict,
+    ReportGroundingResult,
+    compute_cohens_kappa,
+    compute_confusion_matrix,
+    evaluate_calibration,
+)
+from .rules import (
+    AllergyRule,
+    ContraindicationRule,
+    DeterministicSafetyEngine,
+    DoseRangeRule,
+    DrugInteractionRule,
+    Finding,
+    PatientDataContradictionRule,
+    RedFlagCoverageRule,
+    SafetyConfigurationError,
+    SafetyEvaluationResult,
+    SafetyRule,
+)
 
-__all__ = ["pharmacist_agent"]
+__all__ = [
+    "ClaimGroundingChecker",
+    "ClaimGroundingJudgment",
+    "GroundingVerdict",
+    "ReportGroundingResult",
+    "compute_cohens_kappa",
+    "compute_confusion_matrix",
+    "evaluate_calibration",
+    "AllergyRule",
+    "ContraindicationRule",
+    "DeterministicSafetyEngine",
+    "DoseRangeRule",
+    "DrugInteractionRule",
+    "Finding",
+    "PatientDataContradictionRule",
+    "RedFlagCoverageRule",
+    "SafetyConfigurationError",
+    "SafetyEvaluationResult",
+    "SafetyRule",
+]
