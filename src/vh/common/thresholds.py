@@ -115,7 +115,7 @@ REQUIRED_KEYS: Dict[str, set[str]] = {
     "verification": {"critical_fault_detection", "noncritical_fault_detection", "false_flag_rate_max", "judge_kappa_min", "faithfulness_min", "contextual_relevancy_min", "p95_latency_s"},
     "agents": {"permission_violations", "runaway_loops", "replay_mismatch_count", "encounter_score_min"},
     "review": {"kappa_min", "overlap_fraction"},
-    "training": {"min_reviewed_cases", "safety_regressions", "must_beat_production"},
+    "training": {"min_reviewed_cases", "safety_regressions", "must_beat_production", "min_preference_pairs"},
     "ui": {"min_fps", "max_load_s", "max_sync_lag_ms", "output_divergence_count"}
 }
 
