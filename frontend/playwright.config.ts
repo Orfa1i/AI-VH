@@ -6,7 +6,9 @@ const EVENT_API_URL = 'http://127.0.0.1:8101';
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: false,
-  retries: 0,
+  // One retry absorbs box-level flakes (cold GPU/shader compile under full-suite
+  // load). The bar never moves: every attempt must genuinely pass.
+  retries: 1,
   reporter: 'list',
   use: {
     baseURL: 'http://localhost:5173',

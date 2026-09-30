@@ -7,6 +7,7 @@ import { KnowledgeSearchSection } from './components/management/KnowledgeSearchS
 import { PhysicianReviewDashboard } from './components/dashboard/PhysicianReviewDashboard';
 import { DoctorReviewSection } from './components/review/DoctorReviewSection';
 import { DepartmentBoardSection } from './components/hospital/DepartmentBoardSection';
+import { DepartmentBoard3DSection } from './components/hospital3d/DepartmentBoard3DSection';
 import { InternalMedicineConsultModal } from './components/specialists/InternalMedicineConsultModal';
 import { RLDatasetModal } from './components/rl/RLDatasetModal';
 import { PolicyBenchmarkModal } from './components/rl/PolicyBenchmarkModal';
@@ -14,6 +15,7 @@ import { toggleGlobalMute, isGlobalMuted } from './utils/speechSynthesis';
 import {
   Activity,
   BedDouble,
+  Box,
   Building2,
   Clock,
   Cpu,
@@ -34,7 +36,7 @@ import type {
   PatientRecord,
 } from './types';
 
-type PortalTab = 'INTAKE' | 'PATIENTS' | 'STAFF' | 'REPORTS' | 'REVIEW' | 'WARDS' | 'KNOWLEDGE' | 'BENCHMARK' | 
+type PortalTab = 'INTAKE' | 'PATIENTS' | 'STAFF' | 'REPORTS' | 'REVIEW' | 'WARDS' | 'HOSPITAL3D' | 'KNOWLEDGE' | 'BENCHMARK' | 
 'JOURNEY';
 
 export const App: React.FC = () => {
@@ -341,6 +343,18 @@ export const App: React.FC = () => {
           </button>
 
           <button
+            onClick={() => setActiveTab('HOSPITAL3D')}
+            className={`px-3.5 py-2 text-xs font-mono font-medium flex items-center gap-2 rounded transition cursor-pointer ${
+              activeTab === 'HOSPITAL3D'
+                ? 'bg-sky-50 text-sky-700 border border-sky-300 shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent'
+            }`}
+          >
+            <Box className="w-3.5 h-3.5" />
+            <span>3D Hospital</span>
+          </button>
+
+          <button
             onClick={() => setActiveTab('KNOWLEDGE')}
             className={`px-3.5 py-2 text-xs font-mono font-medium flex items-center gap-2 rounded transition cursor-pointer ${
               activeTab === 'KNOWLEDGE'
@@ -423,6 +437,8 @@ export const App: React.FC = () => {
         {activeTab === 'REVIEW' && <DoctorReviewSection />}
 
         {activeTab === 'WARDS' && <DepartmentBoardSection />}
+
+        {activeTab === 'HOSPITAL3D' && <DepartmentBoard3DSection />}
 
         {activeTab === 'KNOWLEDGE' && <KnowledgeSearchSection />}
 
