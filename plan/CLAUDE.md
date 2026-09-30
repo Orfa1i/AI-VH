@@ -33,7 +33,7 @@ A defect found later in an earlier phase reopens that phase's gate: fix it there
 - Never skip, weaken, xfail or delete a test to make a suite pass.
 - Never edit `configs/thresholds.yaml`. Propose values in the step report; the project owner edits it.
 - Never modify a released golden set (`eval/golden/vN/`). New content means a new version.
-- Never mark anything as physician-verified or signed off. Sign-offs are human-written files in `docs/signoffs/`; you may only check that they exist and read them.
+- Never mark anything as physician-verified, reviewed or signed off on your own judgement. Sign-offs are human-written files in `docs/signoffs/`; you may read them but never write or edit them. A status changes only through an import command (`vh golden import-signoff`, `vh golden chunkmap-import`, `vh safety import-signoff`) that applies exactly what the sign-off file lists.
 - Synthetic data only. No real patient data anywhere: repo, fixtures, logs or prompts. No real identifiable images.
 - Never invent a citation, reference, clinical code (LOINC, SNOMED CT, RxNorm) or source. If unsure, leave it empty and flag it.
 - Agents and pipelines receive only `AgentView`. Only the environment and the evaluation scorers may read `CaseSpec.hidden` or `ground_truth`.

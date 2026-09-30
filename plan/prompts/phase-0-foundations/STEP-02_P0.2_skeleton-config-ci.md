@@ -61,6 +61,7 @@ training:
   min_reviewed_cases: 500
   safety_regressions: 0
   must_beat_production: true
+  min_preference_pairs: null   # set before STEP 53 (P9.3)
 ui:
   min_fps: 50
   max_load_s: 5

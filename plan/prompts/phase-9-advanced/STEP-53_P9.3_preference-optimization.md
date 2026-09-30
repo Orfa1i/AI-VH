@@ -7,7 +7,7 @@
 > Read `CLAUDE.md`, `docs/current-state.md` (once it exists) and the previous step report before starting. Work only on this step.
 
 ## Context
-Prerequisites: enough preference pairs (set a minimum in thresholds, e.g. `training.min_preference_pairs`, before starting) and `review.kappa_min` met. If not met, stop with Status: BLOCKED.
+Prerequisites: at least `training.min_preference_pairs` preference pairs (the project owner sets this value; while it is null, stop with Status: BLOCKED) and `review.kappa_min` met. If either is not met, stop with Status: BLOCKED.
 
 ## Task
 - Preference pairs: doctor-final (chosen) vs original AI report (rejected) where the doctor corrected it.

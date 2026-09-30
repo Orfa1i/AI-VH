@@ -129,7 +129,19 @@ def cmd_release(args: argparse.Namespace) -> int:
     return 0
 
 
-def main() -> int:
+def cmd_chunkmap_import(args: argparse.Namespace) -> int:
+    """Apply H2 sign-off corrections to the chunk map, exactly as listed."""
+    from .chunkmap import apply_chunkmap_corrections
+
+    res = apply_chunkmap_corrections(args.signoff, args.chunkmap)
+    print("Chunk-Map Sign-off Import Completed:")
+    print(f"  Sign-off file: {res['signoff_file']}")
+    print(f"  Chunk map:     {res['chunkmap_file']}")
+    print(f"  Corrections:   {res['corrections_applied']}")
+    return 0
+
+
+def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description="AI-VH Golden Set Management CLI")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
@@ -166,7 +178,17 @@ def main() -> int:
     p_rel.add_argument("--version", default="v1", help="Release version tag (e.g. v1)")
     p_rel.set_defaults(func=cmd_release)
 
-    args = parser.parse_args()
+    # chunkmap-import
+    p_cmi = subparsers.add_parser(
+        "chunkmap-import", help="Apply H2 sign-off corrections to the chunk map"
+    )
+    p_cmi.add_argument("--signoff", required=True, help="Path to H2 sign-off markdown file")
+    p_cmi.add_argument(
+        "--chunkmap", default="eval/golden/v1-chunkmap.json", help="Path to chunk-map JSON file"
+    )
+    p_cmi.set_defaults(func=cmd_chunkmap_import)
+
+    args = parser.parse_args(argv)
     return args.func(args)
 
 

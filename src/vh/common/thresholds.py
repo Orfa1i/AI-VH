@@ -79,6 +79,8 @@ class TrainingThresholds(BaseModel):
     min_reviewed_cases: int
     safety_regressions: int
     must_beat_production: bool
+    # Updated STEP-02/53: owner sets this before STEP 53; null means BLOCKED.
+    min_preference_pairs: Optional[int] = None
 
 
 class UIThresholds(BaseModel):
@@ -174,9 +176,15 @@ class ThresholdsLoader:
         if section not in self._raw_data:
             raise MissingThresholdError(f"Threshold section not found: '{section}'")
         section_dict = self._raw_data[section]
-        if key not in section_dict:
-            raise MissingThresholdError(f"Threshold key not found: '{section}.{key}'")
-        return section_dict[key]
+        if key in section_dict:
+            return section_dict[key]
+        # Forward compatibility: a key known to the schema but not yet present
+        # in the file (owner-provisioned provisional key) resolves to its
+        # schema default (typically None -> NOT SET -> gates fail until set).
+        section_model = getattr(self.config, section, None)
+        if section_model is not None and key in type(section_model).model_fields:
+            return getattr(section_model, key)
+        raise MissingThresholdError(f"Threshold key not found: '{section}.{key}'")
 
     def is_set(self, section: str, key: str) -> bool:
         """Returns True if the threshold has a non-null value, False if null (NOT SET)."""

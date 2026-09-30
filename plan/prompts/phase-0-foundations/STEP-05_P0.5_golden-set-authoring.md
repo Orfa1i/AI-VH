@@ -13,7 +13,7 @@ You may draft golden cases but you cannot verify them. Only a physician can, thr
 - CLI `vh golden new | validate | export | import-signoff | release`.
 - `export` renders draft cases into a reviewer packet (Markdown and PDF) with a checkbox per field and space for corrections.
 - `import-signoff` reads `docs/signoffs/golden-v{N}.md` (format: `plan/prompts/_templates/SIGNOFF.md`) and sets `status: verified` only for case ids listed as approved there, recording reviewer and date.
-- `release` creates a frozen `eval/golden/v{N}/` containing verified cases only.
+- `release --version N` creates a frozen `eval/golden/vN/` containing verified cases only.
 - Draft 60 seed cases (20 per specialty) with `status: draft`. Supporting references must point to open sources (PubMed IDs, DailyMed set ids, published guideline sections). If you cannot identify a real reference, leave it empty and flag it. Never invent a citation.
 
 ## Acceptance criteria (write these as tests first)

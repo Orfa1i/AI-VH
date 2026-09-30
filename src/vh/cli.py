@@ -31,6 +31,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         print("  vh verify   : Clinical verification rules, grounding, and calibration")
         print("  vh replay   : Deterministic encounter replay from recorded LLM outputs")
         print("  vh feedback : Doctor feedback snapshot export")
+        print("  vh safety   : Safety-table sign-off import (H4)")
         return 0
 
     command = argv[0].lower()
@@ -54,8 +55,11 @@ def main(argv: Optional[List[str]] = None) -> int:
     elif command == "feedback":
         from vh.feedback.cli import main as feedback_main
         return feedback_main(sub_args)
+    elif command == "safety":
+        from vh.verification.cli import main as safety_main
+        return safety_main(sub_args)
     else:
-        print(f"Unknown command suite: '{command}'. Available: golden, synthea, cases, verify, replay, feedback.")
+        print(f"Unknown command suite: '{command}'. Available: golden, synthea, cases, verify, replay, feedback, safety.")
         return 1
 
 

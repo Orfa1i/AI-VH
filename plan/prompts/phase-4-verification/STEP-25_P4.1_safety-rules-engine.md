@@ -19,11 +19,13 @@ Deterministic rules are the last line of defence and must not depend on an LLM. 
   - Patient-data contradiction (report states a value that differs from the record).
   - Red-flag coverage: if visible data meets red-flag criteria (configurable table, e.g., SpO2 < 90%, SBP < 90 mmHg), the report must address it.
 - Curated tables in `configs/safety/` (dose ranges, contraindications, red-flag criteria) for drugs and conditions in the golden-set specialties. Each row has a source reference and `status: draft` until physician-reviewed (checkpoint H4).
+- `vh safety import-signoff` reads `docs/signoffs/H4-safety-and-judge.md` and sets `status: reviewed` only on rows listed there as approved, recording reviewer and date; corrected rows are updated exactly as written in the sign-off.
 
 ## Acceptance criteria (write these as tests first)
 - Every rule has at least one positive and one negative unit test.
 - Rules are deterministic (property test: same input, same output).
 - The engine refuses to run with a draft table in `production` mode (allowed in dev with a warning).
+- `import-signoff` marks only rows listed as approved; every other row stays draft (test).
 
 ## Deliverables
 - `src/vh/verification/rules/`, `configs/safety/`, ADR-0005

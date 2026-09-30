@@ -262,6 +262,15 @@ def main(argv: Optional[List[str]] = None) -> int:
     score_parser = subparsers.add_parser("calibration-score", help="Compute Cohen's kappa and confusion matrix from physician labels")
     score_parser.add_argument("--labels", type=str, default=None, help="Path to physician labels CSV (default: docs/signoffs/H4-judge-labels.csv)")
 
+    # import-signoff subcommand (updated STEP-25: `vh safety import-signoff`)
+    import_parser = subparsers.add_parser(
+        "import-signoff", help="Apply H4 safety-table approvals and corrections exactly as listed"
+    )
+    import_parser.add_argument("--signoff", type=str, required=True, help="Path to H4 sign-off markdown file")
+    import_parser.add_argument(
+        "--safety-dir", type=str, default="configs/safety", help="Safety tables directory"
+    )
+
     args = parser.parse_args(argv)
 
     if args.subcommand == "calibration-export":
@@ -271,6 +280,16 @@ def main(argv: Optional[List[str]] = None) -> int:
         labels = Path(args.labels) if args.labels else None
         code, _ = run_calibration_score(labels_path=labels)
         return code
+    elif args.subcommand == "import-signoff":
+        from .safety_import import apply_safety_signoff
+
+        res = apply_safety_signoff(args.signoff, args.safety_dir)
+        print("Safety Sign-off Import Completed:")
+        print(f"  Sign-off file:    {res['signoff_file']}")
+        print(f"  Safety directory: {res['safety_dir']}")
+        print(f"  Tables approved:  {res['tables_approved']}")
+        print(f"  Rows corrected:   {res['rows_corrected']}")
+        return 0
     else:
         parser.print_help()
         return 1

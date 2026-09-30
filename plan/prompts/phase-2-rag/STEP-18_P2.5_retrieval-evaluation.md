@@ -11,6 +11,7 @@ Retrieval quality is measured against the golden set's supporting references bef
 
 ## Task
 - Map each golden case's `supporting_references` to chunk ids in the current index. Write the mapping to `eval/golden/v{N}-chunkmap.json` as a draft for human confirmation (checkpoint H2). List unmappable references.
+- `vh golden chunkmap-import` applies the corrections listed in `docs/signoffs/H2-chunkmap.md` to the chunk map exactly as written (no other changes), then re-runs this step's evaluation.
 - Build queries only from `AgentView` data plus fixed question templates (e.g., "diagnostic workup for <presentation>"), never from ground-truth text.
 - Scorers: Recall@5, Recall@10, MRR, per-source recall, traceability rate, duplicate rate, stale-retrieval count, p95 latency.
 - Experiments: both embedding candidates, reranker on and off. Record results and the chosen configuration in ADR-0003 and make it the default.
@@ -18,6 +19,7 @@ Retrieval quality is measured against the golden set's supporting references bef
 
 ## Acceptance criteria (write these as tests first)
 - Every scorer is unit-tested on fixtures with known answers.
+- `chunkmap-import` changes only the entries listed in the sign-off file (test).
 - Experiment results are reproducible from their run_ids.
 - The chosen configuration's metrics are reported against `retrieval.*` thresholds.
 

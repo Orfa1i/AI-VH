@@ -65,7 +65,11 @@
   (append-only store + review API + shell review UI with e2e + agreement and
   versioned snapshots; 279/279 Python green, 13 vitest + 5 Playwright green).
   Next: H6 (owner usability test), then Step 40 (P6.G).
-- **Test Suite**: 279 of 279 tests passing across `tests/` and `backend/tests/`.
+- **Test Suite**: 287 of 287 tests passing across `tests/` and `backend/tests/`.
+- **Plan update (owner) adopted**: import-command governance rule; new
+  `vh golden chunkmap-import` + `vh safety import-signoff` implemented and
+  tested (ADR-0011); `training.min_preference_pairs` model support added.
+  Owner still to add the yaml key. H6 remains the blocker.
 - **Secret Scanner**: Clean pass (0 secrets).
 - **Backend Service**: Running on `http://127.0.0.1:8000`.
 - **Frontend Service**: Running on `http://localhost:5173`.
