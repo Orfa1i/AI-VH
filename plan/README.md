@@ -236,7 +236,7 @@ If your existing code lives elsewhere, ADR-0001 (STEP 01–02) maps it onto this
 - [x] STEP 32: P5.2 Specialised agents and tool permissions → `prompts/phase-5-agents/STEP-32_P5.2_agents-permissions.md`
 - [x] STEP 33: P5.3 Orchestrator, budgets and loop detection → `prompts/phase-5-agents/STEP-33_P5.3_orchestrator.md`
 - [x] STEP 34: P5.4 Encounter scoring and deterministic replay → `prompts/phase-5-agents/STEP-34_P5.4_encounter-scoring-replay.md`
-- [ ] **[HUMAN] H5: Set the encounter score threshold** → `configs/thresholds.yaml`  
+- [x] **[HUMAN] H5: Set the encounter score threshold** → `configs/thresholds.yaml`  
   Read the STEP 34 results and set `agents.encounter_score_min` yourself (the gate fails while it is null).
 - [x] **STEP 35: P5.G Phase 5 GATE** → `prompts/phase-5-agents/STEP-35_P5.G_gate.md`
 
