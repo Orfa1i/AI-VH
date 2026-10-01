@@ -90,7 +90,15 @@
   - Updated `docker-compose.yml` with self-hosted `synthea` service.
   - Authored documentation in `docs/SYNTHEA_INTEGRATION.md` with explicit clinical disclaimer and Saudi healthcare localization guide.
   - Added 9 unit and integration tests in `tests/test_synthea_integration.py` (all passing).
-- **Backend Service**: Running on `http://127.0.0.1:8000`.
+- **Synthetic Population Generator Fix**:
+  - Root Cause Diagnosed: Stale background server process launched prior to mounting demo patient router caused HTTP 404 on generation requests, compounded by lack of `src` on `sys.path` when running python/uvicorn directly.
+  - Hardened `backend/__init__.py`, `backend/main.py`, and `backend/api/demo_patients.py` with programmatic `src/` resolution into `sys.path`.
+  - Hardened Docker runner in `src/vh/synthea/service.py` to inspect local image existence (`docker image inspect ai-vh-synthea:latest`) before attempting container runs, preventing slow network pulls or command hangs.
+  - Defaulted `allow_docker=False` in `GeneratePatientsRequest` for sub-second UI generation.
+  - Enhanced `DemoPatientsSection.tsx` error handling to parse real HTTP status and `detail` error bodies, with clear emerald/rose visual feedback for success and error states.
+  - Stale server process terminated and restarted on `http://127.0.0.1:8000` with `--reload`.
+  - Verified live generation endpoint with exact screenshot parameters (`population: 7, seed: 101, state: 'New York', gender: 'M', age_range: [25, 75]`), returning 200 OK and 7 synthetic patients.
+- **Backend Service**: Running on `http://127.0.0.1:8000` with hot-reload enabled.
 - **Frontend Service**: Running on `http://localhost:5173`.
 
 ---
@@ -100,4 +108,5 @@
    Extend `synthea/modules/custom/` with native epidemiological transition graphs for Sickle Cell Vaso-Occlusive Crisis and MERS-CoV surveillance.
 2. **Batch Import & Simulation Harness**:
    Provide automated CLI batch ingestion (`vh synthea import-population`) to run simulated multi-agent hospital encounters across large synthetic cohorts.
+
 
