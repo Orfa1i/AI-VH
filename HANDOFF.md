@@ -81,15 +81,23 @@
   by design). H6 reclassified OPTIONAL/external (ADR-0012); Phase 6 certified
   on automated evidence.
 - **Secret Scanner**: Clean pass (0 secrets).
+- **Synthea Synthetic Patient Integration (FHIR R4)**: **100% COMPLETE**
+  - Built `src/vh/synthea/fhir_adapter.py`: comprehensive adapter mapping all 9 FHIR R4 resources (Patient, Encounter, Condition, Observation, MedicationRequest, AllergyIntolerance, Procedure, Immunization, CarePlan) into internal domain models and reverse-chronological clinical timelines.
+  - Built `src/vh/synthea/service.py` (`DemoDataService`): isolated service layer with in-memory caching, offline bundle indexing, self-hosted Docker/JAR/deterministic generator execution, and hospital admission bridge.
+  - Bundled verified offline demo dataset in `data/synthea/demo_patients/` with 5 diverse clinical cases (NSTEMI, Pneumonia, DKA, Pediatric Asthma, Geriatric Multi-Morbidity).
+  - Built internal REST endpoints in `backend/api/demo_patients.py`: `GET /api/demo-patients`, `GET /api/demo-patients/:id`, `GET /api/demo-patients/:id/timeline`, `GET /api/demo-patients/:id/raw`, `POST /api/demo-patients/generate`, `POST /api/demo-patients/:id/admit`.
+  - Built UI components in `frontend/src/components/synthea/`: `DemoPatientsSection.tsx` and `SyntheticTimelineModal.tsx` with multi-category timeline filtering, raw FHIR inspector, and generation controls; registered `SYNTHEA` portal tab in `App.tsx`.
+  - Updated `docker-compose.yml` with self-hosted `synthea` service.
+  - Authored documentation in `docs/SYNTHEA_INTEGRATION.md` with explicit clinical disclaimer and Saudi healthcare localization guide.
+  - Added 9 unit and integration tests in `tests/test_synthea_integration.py` (all passing).
 - **Backend Service**: Running on `http://127.0.0.1:8000`.
 - **Frontend Service**: Running on `http://localhost:5173`.
 
 ---
 
 ## 4. Concrete Next Steps
-1. **All 54 plan steps are DONE, PASS-certified, or BLOCKED by design.**
-   Executable work is complete; only owner-gated items remain:
-   STEP 41 data (0/500), STEP 53 threshold value, H6/H7 optional-external.
-2. **Owner rulings outstanding**: H7 physician-vs-optional under doctor-free
-   policy; `t_approve`/quality-bar values in `configs/training/curation.yaml`
-   (proposed 0.50); `training.min_preference_pairs` value before STEP 53.
+1. **Explore Advanced Saudi Healthcare Custom Modules**:
+   Extend `synthea/modules/custom/` with native epidemiological transition graphs for Sickle Cell Vaso-Occlusive Crisis and MERS-CoV surveillance.
+2. **Batch Import & Simulation Harness**:
+   Provide automated CLI batch ingestion (`vh synthea import-population`) to run simulated multi-agent hospital encounters across large synthetic cohorts.
+

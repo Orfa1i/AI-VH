@@ -11,6 +11,7 @@ import { DepartmentBoard3DSection } from './components/hospital3d/DepartmentBoar
 import { InternalMedicineConsultModal } from './components/specialists/InternalMedicineConsultModal';
 import { RLDatasetModal } from './components/rl/RLDatasetModal';
 import { PolicyBenchmarkModal } from './components/rl/PolicyBenchmarkModal';
+import { DemoPatientsSection } from './components/synthea/DemoPatientsSection';
 import { toggleGlobalMute, isGlobalMuted } from './utils/speechSynthesis';
 import {
   Activity,
@@ -23,6 +24,7 @@ import {
   Radio,
   Scale,
   Search,
+  Sparkles,
   Stethoscope,
   Terminal,
   Users,
@@ -37,7 +39,7 @@ import type {
 } from './types';
 
 type PortalTab = 'INTAKE' | 'PATIENTS' | 'STAFF' | 'REPORTS' | 'REVIEW' | 'WARDS' | 'HOSPITAL3D' | 'KNOWLEDGE' | 'BENCHMARK' | 
-'JOURNEY';
+'JOURNEY' | 'SYNTHEA';
 
 export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<PortalTab>('INTAKE');
@@ -389,6 +391,18 @@ export const App: React.FC = () => {
             <Activity className="w-3.5 h-3.5" />
             <span>Patient Journey Graph</span>
           </button>
+
+          <button
+            onClick={() => setActiveTab('SYNTHEA')}
+            className={`px-3.5 py-2 text-xs font-mono font-medium flex items-center gap-2 rounded transition cursor-pointer ${
+              activeTab === 'SYNTHEA'
+                ? 'bg-sky-50 text-sky-700 border border-sky-300 shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent'
+            }`}
+          >
+            <Sparkles className="w-3.5 h-3.5 text-sky-600" />
+            <span>Synthetic Patients</span>
+          </button>
         </nav>
 
         {/* Right: Hospital Census Quick Stats */}
@@ -474,6 +488,12 @@ export const App: React.FC = () => {
 
         {activeTab === 'JOURNEY' && (
           <PatientJourneyFlowPage onBackToPortal={() => setActiveTab('INTAKE')} />
+        )}
+
+        {activeTab === 'SYNTHEA' && (
+          <DemoPatientsSection
+            onAdmitSuccess={() => setPatientRefreshCounter((prev) => prev + 1)}
+          />
         )}
       </main>
 

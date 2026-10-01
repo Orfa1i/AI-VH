@@ -32,9 +32,9 @@ models/**/*.pt
 # Large Raw Books (keep directory, ignore giant binary PDFs)
 *.pdf
 
-# Knowledge Embeddings & Dumps
 *.npy
-data/synthea/
+data/synthea/*
+!data/synthea/demo_patients/
 data/artifact_store/
 data/cache/
 data/indexes/

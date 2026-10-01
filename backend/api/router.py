@@ -16,9 +16,11 @@ from ..simulation.orchestrator import orchestrator
 from ..simulation.event_bus import event_bus
 from ..clinical.cases import BENCHMARK_CASES
 from ..rl.evaluator import PolicyEvaluator
+from .demo_patients import router as demo_patients_router
 
 logger = logging.getLogger("APIRouter")
 api_router = APIRouter(prefix="/api")
+api_router.include_router(demo_patients_router)
 
 
 class SimulationRequest(BaseModel):

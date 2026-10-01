@@ -19,6 +19,17 @@ services:
       timeout: 5s
       retries: 5
 
+  synthea:
+    build:
+      context: .
+      dockerfile: docker/synthea/Dockerfile
+    image: ai_vh_synthea:latest
+    container_name: ai_vh_synthea
+    volumes:
+      - ./data/synthea/output:/output
+    profiles:
+      - tools
+
 volumes:
   postgres_data:
     driver: local

@@ -1,0 +1,410 @@
+{
+  "resourceType": "Bundle",
+  "id": "bundle-demo-001-nstemi",
+  "type": "transaction",
+  "timestamp": "2026-03-15T08:00:00Z",
+  "entry": [
+    {
+      "fullUrl": "urn:uuid:pat-demo-001",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-demo-001",
+        "identifier": [
+          {
+            "system": "https://github.com/synthetichealth/synthea",
+            "value": "SYNTH-DEMO-001"
+          }
+        ],
+        "name": [
+          {
+            "use": "official",
+            "family": "Miller",
+            "given": ["Robert", "Thomas"]
+          }
+        ],
+        "gender": "male",
+        "birthDate": "1964-04-12",
+        "address": [
+          {
+            "city": "Boston",
+            "state": "Massachusetts",
+            "country": "US"
+          }
+        ],
+        "telecom": [
+          {
+            "system": "phone",
+            "value": "555-019-2831",
+            "use": "home"
+          }
+        ]
+      },
+      "request": {"method": "POST", "url": "Patient"}
+    },
+    {
+      "fullUrl": "urn:uuid:enc-demo-001",
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-demo-001",
+        "status": "finished",
+        "class": {
+          "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+          "code": "IMP",
+          "display": "inpatient encounter"
+        },
+        "subject": {"reference": "urn:uuid:pat-demo-001"},
+        "period": {
+          "start": "2026-03-15T06:30:00Z",
+          "end": "2026-03-15T15:00:00Z"
+        },
+        "reasonCode": [
+          {
+            "coding": [
+              {
+                "system": "http://snomed.info/sct",
+                "code": "22298006",
+                "display": "Acute NSTEMI (Cardiac Telemetry)"
+              }
+            ]
+          }
+        ],
+        "participant": [
+          {
+            "actor": {
+              "reference": "urn:uuid:clin-vance-001",
+              "display": "Dr. Marcus Vance, MD, FACP"
+            }
+          }
+        ]
+      },
+      "request": {"method": "POST", "url": "Encounter"}
+    },
+    {
+      "fullUrl": "urn:uuid:cond-demo-001-nstemi",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "cond-demo-001-nstemi",
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "22298006",
+              "display": "Myocardial infarction"
+            }
+          ]
+        },
+        "subject": {"reference": "urn:uuid:pat-demo-001"},
+        "onsetDateTime": "2026-03-15T05:45:00Z"
+      },
+      "request": {"method": "POST", "url": "Condition"}
+    },
+    {
+      "fullUrl": "urn:uuid:cond-demo-001-htn",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "cond-demo-001-htn",
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "38341003",
+              "display": "Hypertension"
+            }
+          ]
+        },
+        "subject": {"reference": "urn:uuid:pat-demo-001"},
+        "onsetDateTime": "2018-09-10T00:00:00Z"
+      },
+      "request": {"method": "POST", "url": "Condition"}
+    },
+    {
+      "fullUrl": "urn:uuid:obs-demo-001-hr",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-demo-001-hr",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "vital-signs"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "8867-4",
+              "display": "Heart rate"
+            }
+          ]
+        },
+        "subject": {"reference": "urn:uuid:pat-demo-001"},
+        "effectiveDateTime": "2026-03-15T06:45:00Z",
+        "valueQuantity": {
+          "value": 76.0,
+          "unit": "/min",
+          "system": "http://unitsofmeasure.org",
+          "code": "/min"
+        }
+      },
+      "request": {"method": "POST", "url": "Observation"}
+    },
+    {
+      "fullUrl": "urn:uuid:obs-demo-001-bp",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-demo-001-bp",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "vital-signs"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "85354-9",
+              "display": "Blood pressure systolic & diastolic"
+            }
+          ]
+        },
+        "subject": {"reference": "urn:uuid:pat-demo-001"},
+        "effectiveDateTime": "2026-03-15T06:45:00Z",
+        "component": [
+          {
+            "code": {
+              "coding": [
+                {"system": "http://loinc.org", "code": "8480-6", "display": "Systolic blood pressure"}
+              ]
+            },
+            "valueQuantity": {
+              "value": 128.0,
+              "unit": "mmHg",
+              "system": "http://unitsofmeasure.org",
+              "code": "mm[Hg]"
+            }
+          },
+          {
+            "code": {
+              "coding": [
+                {"system": "http://loinc.org", "code": "8462-4", "display": "Diastolic blood pressure"}
+              ]
+            },
+            "valueQuantity": {
+              "value": 82.0,
+              "unit": "mmHg",
+              "system": "http://unitsofmeasure.org",
+              "code": "mm[Hg]"
+            }
+          }
+        ]
+      },
+      "request": {"method": "POST", "url": "Observation"}
+    },
+    {
+      "fullUrl": "urn:uuid:obs-demo-001-trop",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-demo-001-trop",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "49563-0",
+              "display": "Cardiac troponin I in Serum or Plasma"
+            }
+          ]
+        },
+        "subject": {"reference": "urn:uuid:pat-demo-001"},
+        "effectiveDateTime": "2026-03-15T07:15:00Z",
+        "valueQuantity": {
+          "value": 245.0,
+          "unit": "ng/L",
+          "system": "http://unitsofmeasure.org",
+          "code": "ng/L"
+        }
+      },
+      "request": {"method": "POST", "url": "Observation"}
+    },
+    {
+      "fullUrl": "urn:uuid:med-demo-001-asa",
+      "resource": {
+        "resourceType": "MedicationRequest",
+        "id": "med-demo-001-asa",
+        "status": "active",
+        "intent": "order",
+        "medicationCodeableConcept": {
+          "coding": [
+            {
+              "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+              "code": "312961",
+              "display": "Aspirin 81 MG Oral Tablet"
+            }
+          ]
+        },
+        "subject": {"reference": "urn:uuid:pat-demo-001"},
+        "authoredOn": "2026-03-15T07:30:00Z",
+        "dosageInstruction": [
+          {"text": "81 mg oral once daily indefinitely"}
+        ]
+      },
+      "request": {"method": "POST", "url": "MedicationRequest"}
+    },
+    {
+      "fullUrl": "urn:uuid:med-demo-001-atorv",
+      "resource": {
+        "resourceType": "MedicationRequest",
+        "id": "med-demo-001-atorv",
+        "status": "active",
+        "intent": "order",
+        "medicationCodeableConcept": {
+          "coding": [
+            {
+              "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+              "code": "617314",
+              "display": "Atorvastatin 80 MG Oral Tablet"
+            }
+          ]
+        },
+        "subject": {"reference": "urn:uuid:pat-demo-001"},
+        "authoredOn": "2026-03-15T07:35:00Z",
+        "dosageInstruction": [
+          {"text": "80 mg oral once daily at bedtime"}
+        ]
+      },
+      "request": {"method": "POST", "url": "MedicationRequest"}
+    },
+    {
+      "fullUrl": "urn:uuid:alg-demo-001-pen",
+      "resource": {
+        "resourceType": "AllergyIntolerance",
+        "id": "alg-demo-001-pen",
+        "clinicalStatus": {
+          "coding": [
+            {"system": "http://terminology.hl7.org/CodeSystem/allergyintolerance-clinical", "code": "active"}
+          ]
+        },
+        "criticality": "high",
+        "code": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "373270004",
+              "display": "Penicillin"
+            }
+          ]
+        },
+        "patient": {"reference": "urn:uuid:pat-demo-001"},
+        "recordedDate": "2015-06-20T10:00:00Z"
+      },
+      "request": {"method": "POST", "url": "AllergyIntolerance"}
+    },
+    {
+      "fullUrl": "urn:uuid:proc-demo-001-ecg",
+      "resource": {
+        "resourceType": "Procedure",
+        "id": "proc-demo-001-ecg",
+        "status": "completed",
+        "code": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "164847006",
+              "display": "12-lead electrocardiogram"
+            }
+          ]
+        },
+        "subject": {"reference": "urn:uuid:pat-demo-001"},
+        "performedDateTime": "2026-03-15T06:50:00Z"
+      },
+      "request": {"method": "POST", "url": "Procedure"}
+    },
+    {
+      "fullUrl": "urn:uuid:imm-demo-001-flu",
+      "resource": {
+        "resourceType": "Immunization",
+        "id": "imm-demo-001-flu",
+        "status": "completed",
+        "vaccineCode": {
+          "coding": [
+            {
+              "system": "http://hl7.org/fhir/sid/cvx",
+              "code": "140",
+              "display": "Influenza, seasonal, injectable, preservative free"
+            }
+          ]
+        },
+        "patient": {"reference": "urn:uuid:pat-demo-001"},
+        "occurrenceDateTime": "2025-10-14T09:30:00Z"
+      },
+      "request": {"method": "POST", "url": "Immunization"}
+    },
+    {
+      "fullUrl": "urn:uuid:cp-demo-001-rehab",
+      "resource": {
+        "resourceType": "CarePlan",
+        "id": "cp-demo-001-rehab",
+        "status": "active",
+        "intent": "order",
+        "title": "Post-Myocardial Infarction Management & Cardiac Rehab Plan",
+        "subject": {"reference": "urn:uuid:pat-demo-001"},
+        "period": {
+          "start": "2026-03-15T08:00:00Z"
+        },
+        "activity": [
+          {
+            "detail": {
+              "code": {
+                "coding": [
+                  {
+                    "system": "http://snomed.info/sct",
+                    "code": "698358001",
+                    "display": "Dual antiplatelet therapy adherence and telemetry diuresis monitoring"
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "request": {"method": "POST", "url": "CarePlan"}
+    }
+  ]
+}
