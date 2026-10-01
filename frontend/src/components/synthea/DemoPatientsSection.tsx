@@ -297,18 +297,19 @@ export const DemoPatientsSection: React.FC<DemoPatientsSectionProps> = ({
             {filteredPatients.map((patient) => (
               <div
                 key={patient.id}
-                className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs hover:border-sky-300 hover:shadow-md transition flex flex-col justify-between"
+                onClick={() => setSelectedPatientId(patient.id)}
+                className="group bg-white border border-slate-200 rounded-xl p-5 shadow-xs hover:border-sky-400 hover:shadow-md transition flex flex-col justify-between cursor-pointer"
               >
                 <div>
                   {/* Top Demographics Bar */}
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-700 font-mono font-bold text-sm">
+                      <div className="w-10 h-10 rounded-lg bg-slate-100 group-hover:bg-sky-50 group-hover:border-sky-200 border border-slate-200 flex items-center justify-center text-slate-700 group-hover:text-sky-700 font-mono font-bold text-sm transition">
                         {patient.gender === 'male' ? 'M' : 'F'}
                       </div>
                       <div>
-                        <h3 className="text-sm font-bold text-slate-900 font-mono">
-                          {patient.name}
+                        <h3 className="text-sm font-bold text-slate-900 group-hover:text-sky-700 font-mono transition flex items-center gap-1.5">
+                          <span>{patient.name}</span>
                         </h3>
                         <p className="text-[11px] text-slate-500 font-mono">
                           {patient.age} yrs • {patient.gender.toUpperCase()} • {patient.city}, {patient.state}
@@ -374,15 +375,21 @@ export const DemoPatientsSection: React.FC<DemoPatientsSectionProps> = ({
                 {/* Bottom Actions */}
                 <div className="flex items-center gap-2 pt-3 border-t border-slate-100 font-mono">
                   <button
-                    onClick={() => setSelectedPatientId(patient.id)}
-                    className="flex-1 py-1.5 px-3 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold rounded-md transition cursor-pointer flex items-center justify-center gap-1.5 border border-slate-200"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedPatientId(patient.id);
+                    }}
+                    className="flex-1 py-1.5 px-3 bg-sky-50 hover:bg-sky-100 text-sky-800 text-xs font-bold rounded-md transition cursor-pointer flex items-center justify-center gap-1.5 border border-sky-200"
                   >
-                    <Clock className="w-3.5 h-3.5 text-slate-600" />
-                    <span>Inspect Timeline</span>
+                    <Clock className="w-3.5 h-3.5 text-sky-600" />
+                    <span>View Case Details</span>
                   </button>
 
                   <button
-                    onClick={() => handleAdmit(patient.id, patient.name)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleAdmit(patient.id, patient.name);
+                    }}
                     className="py-1.5 px-3 bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold rounded-md transition cursor-pointer flex items-center justify-center gap-1 shadow-2xs"
                     title="Admit directly into hospital wards"
                   >
