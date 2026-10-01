@@ -3,6 +3,13 @@ AI Virtual Hospital (AI-VH) Main Backend Application
 Serves REST endpoints and WebSocket live streaming for the 3D Hospital and Physician Review Dashboard.
 """
 
+import sys
+from pathlib import Path
+
+_src_dir = str(Path(__file__).resolve().parent.parent / "src")
+if _src_dir not in sys.path:
+    sys.path.insert(0, _src_dir)
+
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 import asyncio

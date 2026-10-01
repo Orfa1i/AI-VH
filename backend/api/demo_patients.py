@@ -8,9 +8,15 @@ SyntheticMass (synthea.mitre.org) is retired and strictly avoided.
 """
 
 import logging
+import sys
+from pathlib import Path
 from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
+
+_src_dir = str(Path(__file__).resolve().parent.parent.parent / "src")
+if _src_dir not in sys.path:
+    sys.path.insert(0, _src_dir)
 
 from vh.synthea.config import SyntheaGenerationConfig
 from vh.synthea.service import SYNTHETIC_DISCLAIMER, demo_data_service
@@ -29,7 +35,7 @@ class GeneratePatientsRequest(BaseModel):
     city: Optional[str] = Field(default=None, description="Optional city within state")
     gender: Optional[str] = Field(default=None, description="Optional gender filter (M or F)")
     age_range: Optional[List[int]] = Field(default=None, description="Optional [min_age, max_age]")
-    allow_docker: bool = Field(default=True, description="Attempt Docker container execution if available")
+    allow_docker: bool = Field(default=False, description="Attempt Docker container execution if available")
 
 
 @router.get("")

@@ -164,21 +164,28 @@ class DemoDataService:
                     text=True
                 )
                 if check.returncode == 0:
-                    cmd = [
-                        "docker", "run", "--rm",
-                        "-v", f"{target_dir.resolve()}:/output",
-                        "ai-vh-synthea:latest",
-                        "-s", str(config.seed),
-                        "-cs", str(config.clinician_seed),
-                        "-p", str(config.population),
-                        config.state
-                    ]
-                    res = subprocess.run(cmd, capture_output=True, timeout=60, text=True)
-                    if res.returncode == 0:
-                        fhir_files = list(target_dir.glob("fhir/*.json")) or list(target_dir.glob("*.json"))
-                        if fhir_files:
-                            generated_bundle_files = fhir_files
-                            mode_used = "docker"
+                    img_check = subprocess.run(
+                        ["docker", "image", "inspect", "ai-vh-synthea:latest"],
+                        capture_output=True,
+                        timeout=3,
+                        text=True
+                    )
+                    if img_check.returncode == 0:
+                        cmd = [
+                            "docker", "run", "--rm",
+                            "-v", f"{target_dir.resolve()}:/output",
+                            "ai-vh-synthea:latest",
+                            "-s", str(config.seed),
+                            "-cs", str(config.clinician_seed),
+                            "-p", str(config.population),
+                            config.state
+                        ]
+                        res = subprocess.run(cmd, capture_output=True, timeout=60, text=True)
+                        if res.returncode == 0:
+                            fhir_files = list(target_dir.glob("fhir/*.json")) or list(target_dir.glob("*.json"))
+                            if fhir_files:
+                                generated_bundle_files = fhir_files
+                                mode_used = "docker"
             except Exception as e:
                 logger.info(f"Docker Synthea run unavailable ({e}); proceeding with deterministic engine.")
 

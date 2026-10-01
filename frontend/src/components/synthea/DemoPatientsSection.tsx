@@ -55,6 +55,7 @@ export const DemoPatientsSection: React.FC<DemoPatientsSectionProps> = ({
   const [genAgeMax, setGenAgeMax] = useState<number>(75);
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [genFeedback, setGenFeedback] = useState<string | null>(null);
+  const [genError, setGenError] = useState<string | null>(null);
 
   // Toast / Status state
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -82,12 +83,14 @@ export const DemoPatientsSection: React.FC<DemoPatientsSectionProps> = ({
     e.preventDefault();
     setIsGenerating(true);
     setGenFeedback(null);
+    setGenError(null);
     try {
       const payload: Record<string, any> = {
         population: genPopulation,
         seed: genSeed,
         state: genState,
         age_range: [genAgeMin, genAgeMax],
+        allow_docker: false,
       };
       if (genGender) {
         payload.gender = genGender;
@@ -106,13 +109,21 @@ export const DemoPatientsSection: React.FC<DemoPatientsSectionProps> = ({
         setTimeout(() => {
           setIsGenModalOpen(false);
           setGenFeedback(null);
-        }, 1200);
+          setGenError(null);
+        }, 1400);
       } else {
-        setGenFeedback('Failed to generate patients. Server error.');
+        let errorDetail = `HTTP ${res.status}: ${res.statusText || 'Request failed'}`;
+        try {
+          const errData = await res.json();
+          if (errData && errData.detail) {
+            errorDetail = typeof errData.detail === 'string' ? errData.detail : JSON.stringify(errData.detail);
+          }
+        } catch (_) {}
+        setGenError(`Failed to generate patients: ${errorDetail}`);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error generating patients:', err);
-      setGenFeedback('Network error while requesting Synthea generation.');
+      setGenError(`Network error while requesting Synthea generation: ${err?.message || err}`);
     } finally {
       setIsGenerating(false);
     }
@@ -129,9 +140,21 @@ export const DemoPatientsSection: React.FC<DemoPatientsSectionProps> = ({
           onAdmitSuccess();
         }
         setTimeout(() => setToastMessage(null), 3500);
+      } else {
+        let msg = `HTTP ${res.status}`;
+        try {
+          const errData = await res.json();
+          if (errData?.detail) {
+            msg = typeof errData.detail === 'string' ? errData.detail : JSON.stringify(errData.detail);
+          }
+        } catch (_) {}
+        setToastMessage(`Failed to admit ${patientName}: ${msg}`);
+        setTimeout(() => setToastMessage(null), 4000);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error admitting patient:', err);
+      setToastMessage(`Network error admitting ${patientName}: ${err?.message || err}`);
+      setTimeout(() => setToastMessage(null), 4000);
     }
   };
 
@@ -229,7 +252,11 @@ export const DemoPatientsSection: React.FC<DemoPatientsSectionProps> = ({
 
           {/* Generate Synthetic Population Action */}
           <button
-            onClick={() => setIsGenModalOpen(true)}
+            onClick={() => {
+              setGenFeedback(null);
+              setGenError(null);
+              setIsGenModalOpen(true);
+            }}
             className="px-3.5 py-2 rounded-md bg-sky-600 hover:bg-sky-500 text-white font-mono font-bold text-xs flex items-center gap-1.5 shadow-xs transition cursor-pointer"
           >
             <PlusCircle className="w-4 h-4" />
@@ -473,8 +500,16 @@ export const DemoPatientsSection: React.FC<DemoPatientsSectionProps> = ({
               </div>
 
               {genFeedback && (
-                <div className="p-2.5 rounded bg-sky-50 border border-sky-200 text-sky-800 text-[11px] font-mono">
-                  {genFeedback}
+                <div className="p-2.5 rounded bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] font-mono flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
+                  <span>{genFeedback}</span>
+                </div>
+              )}
+
+              {genError && (
+                <div className="p-2.5 rounded bg-rose-50 border border-rose-200 text-rose-800 text-[11px] font-mono flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
+                  <span>{genError}</span>
                 </div>
               )}
 
