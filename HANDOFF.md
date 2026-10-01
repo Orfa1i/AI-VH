@@ -98,6 +98,11 @@
   - Enhanced `DemoPatientsSection.tsx` error handling to parse real HTTP status and `detail` error bodies, with clear emerald/rose visual feedback for success and error states.
   - Stale server process terminated and restarted on `http://127.0.0.1:8000` with `--reload`.
   - Verified live generation endpoint with exact screenshot parameters (`population: 7, seed: 101, state: 'New York', gender: 'M', age_range: [25, 75]`), returning 200 OK and 7 synthetic patients.
+- **UI Case Details Affordance & Multi-Agent Simulation**:
+  - Enhanced `DemoPatientsSection.tsx` to make entire patient cards interactive with hover effects and pointer cursor.
+  - Replaced ambiguous "Inspect Timeline" label with a prominent "View Case Details" button.
+  - Stopped event propagation on the "Admit" action so admission can be triggered without opening the modal.
+  - Verified end-to-end multi-agent clinical diagnostic simulation for synthetic patient Thomas Garcia (`pat-101-0001` admitted as `CASE-SYNTH-pat-101-0001`): completed encounter `ENC-5737E789`, generated clinical report `REP-37E789`, and submitted physician review `REV-0BF0DB` with 20 multi-agent event trace.
 - **Backend Service**: Running on `http://127.0.0.1:8000` with hot-reload enabled.
 - **Frontend Service**: Running on `http://localhost:5173`.
 
