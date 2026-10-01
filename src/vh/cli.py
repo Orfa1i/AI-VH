@@ -32,6 +32,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         print("  vh replay   : Deterministic encounter replay from recorded LLM outputs")
         print("  vh feedback : Doctor feedback snapshot export")
         print("  vh safety   : Safety-table sign-off import (H4)")
+        print("  vh new-agent: Generate a new agent role scaffold")
         return 0
 
     command = argv[0].lower()
@@ -58,8 +59,11 @@ def main(argv: Optional[List[str]] = None) -> int:
     elif command == "safety":
         from vh.verification.cli import main as safety_main
         return safety_main(sub_args)
+    elif command == "new-agent":
+        from vh.agents.cli import main as agents_main
+        return agents_main(["new-agent"] + sub_args)
     else:
-        print(f"Unknown command suite: '{command}'. Available: golden, synthea, cases, verify, replay, feedback, safety.")
+        print(f"Unknown command suite: '{command}'. Available: golden, synthea, cases, verify, replay, feedback, safety, new-agent.")
         return 1
 
 

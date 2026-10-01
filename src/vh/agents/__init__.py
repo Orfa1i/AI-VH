@@ -9,6 +9,7 @@ from .environment import ActionResponse, HospitalEnvironment, OrderStatus
 from .roles import (
     BaseAgent,
     DoctorAgent,
+    ICUAgent,
     LabAgent,
     NurseAgent,
     PharmacyAgent,
@@ -55,6 +56,7 @@ __all__ = [
     "EventStore",
     "HospitalEnvironment",
     "HospitalOrchestrator",
+    "ICUAgent",
     "LabAgent",
     "LoopDetectionConfig",
     "NurseAgent",

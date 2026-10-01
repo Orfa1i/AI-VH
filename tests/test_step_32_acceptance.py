@@ -323,3 +323,22 @@ def test_agent_events_propagated_to_environment_store(sample_case_spec):
     doc_event = events[-1]
     assert doc_event.actor == "doctor"
     assert doc_event.action == "consult"
+
+
+def test_permissions_config_loads_with_role_entries():
+    """FIX-LOOP regression (found via Step 54): the permissions config path
+    previously resolved inside src/, so every role loaded empty permission
+    sets and the tool layer gated nothing. The config must load for real."""
+    from vh.agents.roles.base import PERMISSIONS_CONFIG_PATH, load_permissions_for_role
+
+    assert PERMISSIONS_CONFIG_PATH.exists(), f"missing: {PERMISSIONS_CONFIG_PATH}"
+    doctor = load_permissions_for_role("doctor")
+    assert "order_lab" in doctor["allowed_tools"]
+    assert "diagnose" in doctor["allowed_tools"]
+    assert "analyze_specimen" in doctor["forbidden_tools"]
+    nurse = load_permissions_for_role("nurse")
+    assert "request_vitals" in nurse["allowed_tools"]
+    assert "diagnose" in nurse["forbidden_tools"]
+    icu = load_permissions_for_role("icu")
+    assert "monitor_vitals" in icu["allowed_tools"]
+    assert "diagnose" in icu["forbidden_tools"]

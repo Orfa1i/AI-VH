@@ -88,3 +88,20 @@ pharmacy:
     - "submit_report"
     - "analyze_specimen"
     - "inspect_image_pixels"
+
+icu:
+  role: "icu"
+  description: "Intensive care monitoring agent reporting vital-sign flags and acuity summaries"
+  allowed_tools:
+    - "monitor_vitals"
+    - "assess_acuity"
+    - "record_icu_note"
+  forbidden_tools:
+    - "order_medication"
+    - "diagnose"
+    - "order_lab"
+    - "order_imaging"
+    - "submit_report"
+    - "prescribe"
+    - "analyze_specimen"
+    - "inspect_image_pixels"

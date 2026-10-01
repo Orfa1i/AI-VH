@@ -79,10 +79,57 @@ def main(argv: Optional[List[str]] = None) -> int:
     replay_p.add_argument("run_id", help="Recorded run identifier")
     replay_p.add_argument("--replays-dir", default=None, help="Replay bundle directory")
     replay_p.add_argument("--golden-dir", default=None, help="Golden set directory")
+    new_p = sub.add_parser("new-agent", help="Generate a new agent role scaffold")
+    new_p.add_argument("role", help="Lowercase role name (e.g. icu)")
+    new_p.add_argument("--department", default="", help="Department display name")
+    new_p.add_argument(
+        "--tools", default="", help="Comma-separated tool names (default: review_status,record_note)"
+    )
+    new_p.add_argument("--output-dir", default=None, help="Output root (default: repository layout)")
     args = parser.parse_args(argv)
 
     if args.command == "replay":
         return cmd_replay(args)
+    elif args.command == "new-agent":
+        from vh.agents.scaffold import generate_agent_scaffold
+
+        tools = [t.strip() for t in str(args.tools).split(",") if t.strip()] or None
+        if args.output_dir:
+            result = generate_agent_scaffold(
+                role=args.role,
+                department=args.department or "",
+                tools=tools,
+                output_dir=args.output_dir,
+            )
+        else:
+            import shutil
+
+            tmp = generate_agent_scaffold(
+                role=args.role,
+                department=args.department or "",
+                tools=tools,
+                output_dir=str(REPO_ROOT / "data" / "scaffold-tmp"),
+            )
+            layout = {
+                "agent_class": REPO_ROOT / "src" / "vh" / "agents" / "roles" / f"{tmp['role']}.py",
+                "prompt": REPO_ROOT / "src" / "vh" / "prompt_templates" / tmp["role"] / "1.0.0.md",
+                "permissions": REPO_ROOT / "configs" / "agents" / f"{tmp['role']}.snippet.yaml",
+                "tests": REPO_ROOT / "tests" / f"test_{tmp['role']}_agent.py",
+                "docs": REPO_ROOT / "docs" / "agents" / f"{tmp['role']}.md",
+            }
+            generated = {key: Path(path) for key, path in tmp["files"].items()}
+            for key, dest in layout.items():
+                dest.parent.mkdir(parents=True, exist_ok=True)
+                shutil.move(str(generated[key]), str(dest))
+                tmp["files"][key] = str(dest)
+            shutil.rmtree(str(REPO_ROOT / "data" / "scaffold-tmp"), ignore_errors=True)
+            result = tmp
+        print(f"Agent scaffold generated for role '{result['role']}':")
+        for key, path in result["files"].items():
+            print(f"  {key:12s}: {path}")
+        print(f"  prompt_spec : {result['prompt_spec']}")
+        print("Next: implement the stubs, apply the permission snippet deliberately, test, fix, gate.")
+        return 0
     parser.print_help()
     return 1
 

@@ -70,10 +70,10 @@
 - **Phase 8 (Virtual Hospital Environment)**: **100% COMPLETE & CERTIFIED**
   (`phase-8-pass`). Gate report `docs/phase-reports/phase-8.md` (327/327 green,
   eval PASS, 24 vitest + 10 e2e green, all 4 ui metrics PASS).
-- **Phase 9 (Advanced Intelligence)**: **Steps 51, 52 COMPLETE** (reference
-  imaging tools; KG adopted on +0.2155 MRR with no safety regression).
-  Next: Step 53 (P9.3 DPO — BLOCKED on null `min_preference_pairs` by design).
-- **Test Suite**: 342 of 342 tests passing across `tests/` and `backend/tests/`.
+- **Phase 9 (Advanced Intelligence)**: **Steps 51, 52, 54 COMPLETE** (reference
+  imaging tools; KG adopted on +0.2155 MRR; agent scaffold + ICU proof agent
+  with mini-gates PASS). Step 53 BLOCKED on null `min_preference_pairs`.
+- **Test Suite**: 349 of 349 tests passing across `tests/` and `backend/tests/`.
 - **Plan update (owner) adopted**: import-command governance rule; new
   `vh golden chunkmap-import` + `vh safety import-signoff` implemented, dry-run
   verified on real sign-offs, and tested (ADR-0011); `training.min_preference_pairs`
@@ -87,8 +87,9 @@
 ---
 
 ## 4. Concrete Next Steps
-1. **STEP 53 is BLOCKED by design** until the owner sets
-   `training.min_preference_pairs` (currently null).
-2. **STEP 41 remains BLOCKED on data (0/500 countable)**; owner rulings
-   outstanding (H7, `t_approve`).
-3. **Otherwise executable now: Step 54** (P9.4 new agent/department scaffold).
+1. **All 54 plan steps are DONE, PASS-certified, or BLOCKED by design.**
+   Executable work is complete; only owner-gated items remain:
+   STEP 41 data (0/500), STEP 53 threshold value, H6/H7 optional-external.
+2. **Owner rulings outstanding**: H7 physician-vs-optional under doctor-free
+   policy; `t_approve`/quality-bar values in `configs/training/curation.yaml`
+   (proposed 0.50); `training.min_preference_pairs` value before STEP 53.

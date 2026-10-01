@@ -13,7 +13,7 @@ from vh.agents.events import SimEvent
 from vh.common.prompts import load_prompt_template
 from vh.generation.medgemma import MedGemmaAdapter
 
-REPO_ROOT = Path(__file__).resolve().parent.parent.parent.parent
+REPO_ROOT = Path(__file__).resolve().parent.parent.parent.parent.parent
 PERMISSIONS_CONFIG_PATH = REPO_ROOT / "configs" / "agents" / "permissions.yaml"
 
 
