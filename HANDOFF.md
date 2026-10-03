@@ -114,17 +114,28 @@
   - **10. Patient Journey Graph Relocation**: Preserved and relocated the interactive 2D `PatientJourneyFlowPage` into the top-right header action slot. Clicking the badge opens the complete 2D clinical architecture flow diagram in a modal viewport with a "Back to Portal" dismissal button.
   - **11. Clinical Report Workflow Verified**: Executed full end-to-end simulation for patient Robert Miller (`REP-4901A1`, Acute NSTEMI). Confirmed arrival into Pending Reviews, submitted physician evaluation rubric (`REV-C98B2F`), verified pending count decremented to 0, and confirmed report automatically archived in the 'Reviewing' repository with 5.0/5.0 score.
   - **12. Header Cleanup & Relocation**: Preserved and relocated the interactive 2D `PatientJourneyFlowPage` into the top-right header action slot with "Back to Portal" dismissal. Removed legacy census counters. Commit `5ea4285`.
-  - **14. Revert of Image-Inspired Redesign**: Per user instruction, the exploratory UI and structural modifications based on `screen (1).png` have been safely reverted. All working modifications were cleanly preserved on a dedicated backup branch (`backup/image-refactor` at commit `ce50dc5`). The active working tree on `master` is restored to commit `a865f56e9b` with complete test coverage (38/38 Vitest frontend tests green, 67/67 pytest backend tests green, 0 build/lint errors).
+  - **14. Revert of Image-Inspired Redesign**: Per user instruction, the exploratory UI and structural modifications based on `screen (1).png` were safely reverted and archived on dedicated branch `backup/image-refactor` (commit `ce50dc5`).
+  - **15. 6-Agent Error Detection, Synchronization & Verification**: Executed a comprehensive platform diagnostic with 6 specialized agents (3 Debugger/Testers, 2 QA Specialists, 1 Review & Edit Lead Engineer):
+    - **Stepper Desynchronization Resolved**: Scoped `HospitalFlowDiagram.tsx` event checking to `currentCase.id`; mapped progress dynamically (Intake 25%, Doctor Exam 50%, Cases Area 75%, Discharge 100%). Node 3 (Cases Area) now activates properly (`border-sky-500 ring-1 ring-sky-500/30`) when a patient is mid-flow awaiting workup.
+    - **Selection-Driven Network Storm Eliminated**: Removed `selectedId` from `useCallback` in `ReviewedReportsSection.tsx` and used functional state updater, preventing repeated full-table re-fetches on card selection.
+    - **RAF CPU Burn Fixed**: Optimized `ActiveEncounterProgressBar.tsx` interpolation loop to stop scheduling `requestAnimationFrame` once target progress is reached (`Math.abs(diff) < 0.2`).
+    - **WebSocket & Lifecycle Memory Leaks Cleared**: In `PatientJourneyFlowPage.tsx`, added `isMountedRef` and cleared `reconnectTimerRef` on unmount; eliminated TDZ access on `handleIncomingEvent`.
+    - **Discharge Notifications & Event Bus Synchronization**: In `LeftNotificationDrawer.tsx`, added handlers for `ENCOUNTER_CLOSED` / `DISCHARGE` with emerald check icon and slide-in toast alerts; cleaned up unmounted timer ref.
+    - **SQLite Concurrency & Resource Cleanup**: Enabled WAL mode (`PRAGMA journal_mode = WAL;`, `busy_timeout = 30000;`, `synchronous = NORMAL;`) in `connection.py`; cleared `bed_number = NULL` on discharge in `repository.py`; cleared `event_bus.events` in `purge_mock_data()`.
+    - **RAG Acronym Preservation & False Positive Prevention**: Preserved 2-letter clinical acronyms (`MI`, `PE`, `CT`, `BP`, `O2`) in `vector_index.py`; set minimum score threshold `> 0.01` to eliminate zero-score false-positive matches.
+    - **Three.js JSDOM Test Warning Cleanup**: In `Scene3D.test.tsx`, eliminated 54 JSDOM unrecognized element warnings.
+    - **Complete Verification**: 38/38 Vitest frontend tests green (0 warnings), 67/67 pytest backend tests green, frontend production build green with 0 errors. Commit `ee33fba`.
 - **Backend Service**: Running live on `http://127.0.0.1:8000` (FastAPI + MedGemma NF4 on RTX 4060).
 - **Frontend Service**: Running live on `http://127.0.0.1:5173` (Vite + React + Tailwind + Lucide).
 
 ---
 
 ## 4. Concrete Next Steps
-1. **Interactive Trajectory Stepper**: Verify the enhanced `ActiveTrajectoryStepper` within the Patient Journey Graph modal on `master` ([http://127.0.0.1:5173](http://127.0.0.1:5173)), including tooltips, animated progress, and stage details.
-2. **State Synchronization Bugs (Discrete Implementation)**: If desired, implement the 4 state synchronization fixes (dynamic stepper mapping, reports review transfer, census eviction post-discharge, completion toast) in isolation without visual layout refactoring.
-3. **Live Encounter Simulation**: Run a clinical encounter simulation via Case Intake to verify real-time event propagation and telemetry.
-4. **Physician Reviewing Workflow**: Verify doctor report reviews and manual DPO fine-tuning controls under the Reviewing tab.
+1. **Interactive Trajectory Stepper & HUD Verification**: Open the Patient Journey Graph in the browser ([http://127.0.0.1:5173](http://127.0.0.1:5173)), select patient Charles Brown in Cases Area, and verify Node 3 active highlight and 75% progress.
+2. **Discharge & Toast Notification Verification**: Complete an encounter simulation and observe the emerald discharge toast alert in the Left Notification Drawer.
+3. **Doctor Reviewing & Fine-Tuning Console**: Inspect the 'Reviewing' tab and verify that selecting reviewed reports is instantaneous without network storms.
+4. **Live Encounter Simulation**: Admit a new synthetic patient from Case Intake and verify end-to-end multi-agent clinical flow.
+
 
 
 
