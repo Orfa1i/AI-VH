@@ -110,17 +110,19 @@
   - **4. Manual Fine-Tuning Enforcement**: Enforced strictly manual model training. Created `POST /api/rl/train` (`ManualTrainingRequest`) and `GET /api/rl/train/status` in `backend/api/router.py`. Added manual training console in both `ReviewedReportsSection` and `RLDatasetModal` with explicit confirmation buttons, configurable hyperparameters, and dry-run safety modes.
   - **7. Progress Bar & Real-time Live Updates**: Built `ActiveEncounterProgressBar.tsx` with smooth dynamic 0%–100% milestone tracking (Intake & Vitals → Nurse Triage → Attending Exam & Harrison's RAG → Diagnostic Labs & Pharmacy → Clinical Report Ready). Completely resolved the previous 16% stall bug through interpolated progression and WebSocket event synchronization.
   - **8. Left Slide-In/Out Notification System**: Built `LeftNotificationDrawer.tsx`, completely replacing the old static `EventStreamHUD`. Docked to the left edge with a subtle floating trigger, unread event badge counter, real-time slide-in event toasts, and a full categorical slide-out feed.
-  - **9. UI Element Cleanup**: Removed `System Sync Live`, `Clinical AI 4B`, `Dr. Vance RAG` (dock button), and `Patient Journey Graph` from the interface, providing a streamlined, distraction-free clinical command horizon.
-  - **10. Clinical Report Workflow Verified**: Executed full end-to-end simulation for patient Robert Miller (`REP-4901A1`, Acute NSTEMI). Confirmed arrival into Pending Reviews, submitted physician evaluation rubric (`REV-C98B2F`), verified pending count decremented to 0, and confirmed report automatically archived in the 'Reviewing' repository with 5.0/5.0 score.
-  - **11. Full Verification Suite**: 34 of 34 frontend tests passing (`npm test`), production build passing (`tsc -b && vite build` in 1.20s), linter passing with 0 errors (`oxlint`). Commit `37349b9`.
+  - **9. UI Element Cleanup & Header Polishing**: Removed `System Sync Live`, `Clinical AI 4B`, and `Dr. Vance RAG` (dock button) from the interface. Removed the 3 census statistics ("Admitted Patients", "Pending Reviews", "Evaluated") from the top right of the navigation header.
+  - **10. Patient Journey Graph Relocation**: Preserved and relocated the interactive 2D `PatientJourneyFlowPage` into the top-right header action slot. Clicking the badge opens the complete 2D clinical architecture flow diagram in a modal viewport with a "Back to Portal" dismissal button.
+  - **11. Clinical Report Workflow Verified**: Executed full end-to-end simulation for patient Robert Miller (`REP-4901A1`, Acute NSTEMI). Confirmed arrival into Pending Reviews, submitted physician evaluation rubric (`REV-C98B2F`), verified pending count decremented to 0, and confirmed report automatically archived in the 'Reviewing' repository with 5.0/5.0 score.
+  - **12. Full Verification Suite**: 34 of 34 frontend tests passing (`npm test`), production build passing (`tsc -b && vite build`), linter passing with 0 errors (`oxlint`). Commit `5ea4285`.
 - **Backend Service**: Running live on `http://127.0.0.1:8000` (FastAPI + MedGemma NF4 on RTX 4060).
 - **Frontend Service**: Running live on `http://127.0.0.1:5173` (Vite + React + Tailwind + Lucide).
 
 ---
 
 ## 4. Concrete Next Steps
-1. **Live Encounter Simulation**: Open Case Intake & Triage in the browser ([http://127.0.0.1:5173](http://127.0.0.1:5173)) and admit a patient to observe the smooth 0%–100% progress bar and left slide-in event toasts in real time.
-2. **Reviewing Archive Verification**: Check the **Reviewing** tab to view the newly archived, clinically evaluated case for Robert Miller.
-3. **Manual DPO Fine-Tuning**: Trigger a manual fine-tuning run from the Reviewing console to incorporate the newly reviewed encounter into the MedGemma LoRA adapter.
+1. **Interactive Clinical Pathway Exploration**: Click the "Patient Journey Graph" button in the top-right header to review the full 2D hospital flow architecture and clinical process graph.
+2. **Live Encounter Simulation**: Open Case Intake & Triage in the browser ([http://127.0.0.1:5173](http://127.0.0.1:5173)) and admit a patient to observe the smooth 0%–100% progress bar and left slide-in event toasts in real time.
+3. **Reviewing Archive Verification**: Check the **Reviewing** tab to view the newly archived, clinically evaluated case for Robert Miller.
+4. **Manual DPO Fine-Tuning**: Trigger a manual fine-tuning run from the Reviewing console to incorporate the newly reviewed encounter into the MedGemma LoRA adapter.
 
 
