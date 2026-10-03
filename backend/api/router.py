@@ -6,11 +6,12 @@ Exposes endpoints for simulation control, clinical reports, physician review, an
 from typing import Dict, Any, List, Optional
 from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 import asyncio
 import json
 import logging
 import random
+import uuid
 from datetime import datetime
 
 from ..simulation.orchestrator import orchestrator
@@ -25,8 +26,8 @@ api_router.include_router(demo_patients_router)
 
 
 class ManualTrainingRequest(BaseModel):
-    epochs: Optional[int] = 4
-    learning_rate: Optional[float] = 2e-4
+    epochs: int = Field(default=4, ge=1, le=50)
+    learning_rate: float = Field(default=2e-4, gt=1e-6, lt=1e-2)
     dry_run: Optional[bool] = None
     output_dir: Optional[str] = "models/medgemma-dpo-lora"
     include_calibrations: Optional[bool] = True
@@ -177,7 +178,7 @@ async def review_medications_pharmacy(req: PharmacyReviewRequest):
 async def list_cases():
     """Returns active patient cases from the database (starts empty for fresh manual entry)."""
     try:
-        patients = orchestrator.db.list_patients(limit=100)
+        patients = orchestrator.db.list_patients(status="ADMITTED", limit=100)
         return [
             {
                 "id": p["id"],
@@ -190,6 +191,7 @@ async def list_cases():
                 "bed_number": p.get("bed_number", ""),
             }
             for p in patients
+            if p.get("admission_status") != "DISCHARGED"
         ]
     except Exception as e:
         logger.error(f"Error listing cases from patients: {e}", exc_info=True)
@@ -283,6 +285,7 @@ async def purge_mock_data():
         orchestrator.reports.clear()
         orchestrator.encounters.clear()
         orchestrator.reviews.clear()
+        event_bus.events.clear()
         logger.info(f"Purged mock data: {deleted}")
         return {"status": "success", "message": "Mock data purged successfully", "deleted": deleted}
     except Exception as e:
@@ -356,7 +359,10 @@ async def submit_review(req: PhysicianReviewRequest):
         )
         return review.model_dump()
     except ValueError as ve:
-        raise HTTPException(status_code=404, detail=str(ve))
+        err_msg = str(ve)
+        if "not found" in err_msg.lower():
+            raise HTTPException(status_code=404, detail=err_msg)
+        raise HTTPException(status_code=422, detail=err_msg)
     except Exception as e:
         logger.error(f"Review submission error: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
@@ -447,7 +453,7 @@ async def trigger_manual_fine_tuning(req: Optional[ManualTrainingRequest] = None
             dry_run=is_dry_run,
         )
 
-        result = run_dpo_training(config)
+        result = await asyncio.to_thread(run_dpo_training, config)
         _training_state["status"] = "COMPLETED"
         _training_state["last_run"] = datetime.utcnow().isoformat()
         _training_state["last_result"] = result
@@ -560,6 +566,23 @@ async def discharge_patient_endpoint(patient_id: str):
     success = orchestrator.db.discharge_patient(patient_id)
     if not success:
         raise HTTPException(status_code=404, detail=f"Patient '{patient_id}' not found or already discharged")
+
+    try:
+        from ..simulation.events import HospitalEvent, EventType
+        discharge_event = HospitalEvent(
+            id=f"EVT-{uuid.uuid4().hex[:8]}",
+            event_type=EventType.ENCOUNTER_CLOSED,
+            encounter_id=f"ENC-DISCHARGE-{patient_id}",
+            patient_id=patient_id,
+            sender_agent_id="attending_physician",
+            department="EMERGENCY_DEPARTMENT",
+            payload={"patient_id": patient_id, "status": "DISCHARGED"},
+            summary=f"Patient {patient_id} has been discharged from the hospital.",
+        )
+        await event_bus.publish(discharge_event)
+    except Exception as e:
+        logger.warning(f"Failed to publish discharge event: {e}")
+
     return {"status": "DISCHARGED", "patient_id": patient_id}
 
 

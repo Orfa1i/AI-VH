@@ -51,6 +51,12 @@ export const LeftNotificationDrawer: React.FC<LeftNotificationDrawerProps> = ({
       }, 5000);
     }
     lastEventCountRef.current = events.length;
+
+    return () => {
+      if (toastTimeoutRef.current) {
+        clearTimeout(toastTimeoutRef.current);
+      }
+    };
   }, [events]);
 
   const handleOpenDrawer = () => {
@@ -64,6 +70,7 @@ export const LeftNotificationDrawer: React.FC<LeftNotificationDrawerProps> = ({
   };
 
   const getEventIcon = (type: string) => {
+    if (type.includes('DISCHARGE') || type.includes('ENCOUNTER_CLOSED')) return <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />;
     if (type.includes('REPORT')) return <FileText className="w-3.5 h-3.5 text-emerald-600" />;
     if (type.includes('TRIAGE') || type.includes('VITALS')) return <Activity className="w-3.5 h-3.5 text-cyan-600" />;
     if (type.includes('DOCTOR') || type.includes('EXAM')) return <Stethoscope className="w-3.5 h-3.5 text-sky-600" />;
@@ -74,6 +81,7 @@ export const LeftNotificationDrawer: React.FC<LeftNotificationDrawerProps> = ({
   };
 
   const getCategoryColor = (type: string) => {
+    if (type.includes('DISCHARGE') || type.includes('ENCOUNTER_CLOSED')) return 'border-emerald-200 bg-emerald-50/70 text-emerald-900';
     if (type.includes('REPORT')) return 'border-emerald-200 bg-emerald-50/70 text-emerald-900';
     if (type.includes('TRIAGE') || type.includes('VITALS')) return 'border-cyan-200 bg-cyan-50/70 text-cyan-900';
     if (type.includes('DOCTOR') || type.includes('EXAM')) return 'border-sky-200 bg-sky-50/70 text-sky-900';
@@ -248,7 +256,7 @@ export const LeftNotificationDrawer: React.FC<LeftNotificationDrawerProps> = ({
           ) : (
             [...filteredEvents].reverse().map((evt, idx) => (
               <div
-                key={evt.id || `evt-${idx}-${evt.timestamp || Date.now()}`}
+                key={evt.id || `${evt.event_type}-${idx}-${evt.timestamp || 'ts'}`}
                 className={`p-3 rounded-xl border transition-all duration-200 bg-white shadow-2xs hover:shadow-xs ${getCategoryColor(
                   evt.event_type
                 )}`}

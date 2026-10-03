@@ -62,7 +62,7 @@ export const ActiveTrajectoryStepper: React.FC<ActiveTrajectoryStepperProps> = (
   const isWorkupComplete = normalizedProgress > 85;
   const isWorkupActive = isRunning && (activeDepartment === 'LABORATORY' || activeDepartment === 'RADIOLOGY' || activeDepartment === 'PHARMACY');
 
-  const isDischargeComplete = normalizedProgress >= 100;
+  const isDischargeComplete = normalizedProgress >= 100 || latestEvent?.event_type === 'CLINICAL_REPORT_GENERATED';
   const isDischargeActive = isRunning && (normalizedProgress >= 90 || activeDepartment === 'DISCHARGE');
 
   const stages: TrajectoryStageItem[] = [
@@ -250,7 +250,7 @@ export const ActiveTrajectoryStepper: React.FC<ActiveTrajectoryStepperProps> = (
                       <div className="absolute -top-7 left-1/2 -translate-x-1/2 whitespace-nowrap z-20 pointer-events-none animate-bounce">
                         <span className="px-2 py-0.5 rounded-full bg-slate-900 text-white text-[9px] font-mono font-semibold shadow-md flex items-center gap-1">
                           <User className="w-2.5 h-2.5 text-sky-400" />
-                          <span>{currentCase.name.split(' ')[0]}</span>
+                          <span>{(currentCase.name || 'Patient').split(' ')[0]}</span>
                         </span>
                       </div>
                     )}

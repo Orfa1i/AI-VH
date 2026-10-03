@@ -64,8 +64,8 @@ export const ReviewedReportsSection: React.FC<ReviewedReportsSectionProps> = ({
       if (res.ok) {
         const data = await res.json();
         setReviewedItems(data || []);
-        if (data && data.length > 0 && !selectedId) {
-          setSelectedId(data[0].id);
+        if (data && data.length > 0) {
+          setSelectedId((prev) => prev || (data[0]?.id ?? null));
         }
       }
     } catch (err) {
@@ -73,7 +73,7 @@ export const ReviewedReportsSection: React.FC<ReviewedReportsSectionProps> = ({
     } finally {
       setLoading(false);
     }
-  }, [selectedId]);
+  }, []);
 
   useEffect(() => {
     fetchReviewedReports();

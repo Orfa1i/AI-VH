@@ -171,7 +171,7 @@ interface Scene3DProps {
 
 export const Scene3D: React.FC<Scene3DProps> = memo(
   function Scene3D({ events, selectedRunId, onSelectRun, onReady }) {
-  const mountTime = useMemo(() => performance.now(), []);
+  const mountTimeRef = useRef<number>(performance.now());
   const snapshot = useMemo(() => sceneStateAt(events), [events]);
   const fpsRef = useRef(0);
   const readyRef = useRef(false);
@@ -212,7 +212,7 @@ export const Scene3D: React.FC<Scene3DProps> = memo(
       onCreated={() => {
         if (!readyRef.current) {
           readyRef.current = true;
-          const loadMs = performance.now() - mountTime;
+          const loadMs = performance.now() - mountTimeRef.current;
           fpsRef.current = 0;
           if (window.__board3d !== undefined) window.__board3d.loadMs = Math.round(loadMs);
           onReady(loadMs);

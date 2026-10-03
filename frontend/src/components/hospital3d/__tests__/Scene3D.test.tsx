@@ -2,9 +2,9 @@ import { describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 
 vi.mock('@react-three/fiber', () => ({
-  Canvas: ({ children, onCreated }: { children: React.ReactNode; onCreated?: (state: object) => void }) => {
+  Canvas: ({ onCreated }: { children?: React.ReactNode; onCreated?: (state: object) => void }) => {
     if (onCreated !== undefined) onCreated({});
-    return <div data-testid="mock-canvas">{children}</div>;
+    return <div data-testid="mock-canvas" />;
   },
   useFrame: () => {},
   useThree: () => ({

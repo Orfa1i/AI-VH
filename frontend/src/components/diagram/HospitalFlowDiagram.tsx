@@ -56,11 +56,23 @@ export const HospitalFlowDiagram: React.FC<HospitalFlowDiagramProps> = ({
   // Latest event summary
   const latestEvent = events.length > 0 ? events[events.length - 1] : null;
 
+  // Filter events scoped to the selected case if encounter_id or patient_id matches
+  const caseEvents = currentCase
+    ? events.filter(
+        (e) =>
+          e.patient_id === currentCase.id ||
+          (e.payload && (e.payload.patient_id === currentCase.id || e.payload.case_id === currentCase.id))
+      )
+    : events;
+
+  const isCaseDischarged = (currentCase as any)?.status === 'discharged' || (currentCase as any)?.admission_status === 'DISCHARGED';
+
   // Determine stage active states based on latest events / simulation state
   const isTriageActive = isRunning && (activeDepartment === 'RECEPTION' || activeDepartment === 'NURSE_STATION');
   const isDoctorActive = isRunning && (activeDepartment.includes('DOCTOR') || activeDepartment.includes('EXAMINATION'));
-  const isLabActive = isRunning && activeDepartment === 'LABORATORY';
-  const isDischargeActive = events.some((e) => e.event_type === 'CLINICAL_REPORT_GENERATED' || e.event_type === 'TREATMENT_ORDERED');
+  const isLabActive = isRunning && (activeDepartment === 'LABORATORY' || activeDepartment === 'RADIOLOGY' || activeDepartment === 'PHARMACY');
+  const isDischargeActive = isCaseDischarged || (isRunning && (activeDepartment === 'DISCHARGE' || caseEvents.some((e) => e.event_type === 'CLINICAL_REPORT_GENERATED')));
+  const isCasesActive = !isDischargeActive && !isDoctorActive && !isTriageActive && currentCase !== null;
 
   // Dynamic patient trajectory position percentage (0% to 100%)
   const getPatientProgress = () => {
@@ -70,9 +82,11 @@ export const HospitalFlowDiagram: React.FC<HospitalFlowDiagramProps> = ({
     if (isTriageActive) return 35;
     if (isRunning) {
       // Dynamic live event-driven progression so it never stalls at 16%
-      const eventProgress = Math.min(92, 20 + events.length * 8);
+      const eventProgress = Math.min(92, 25 + caseEvents.length * 8);
       return Math.max(25, eventProgress);
     }
+    // When patient is in Cases Area awaiting workup:
+    if (currentCase) return 75;
     return 0;
   };
 
@@ -459,7 +473,7 @@ export const HospitalFlowDiagram: React.FC<HospitalFlowDiagramProps> = ({
             onMouseEnter={() => setHoveredNode('CASES')}
             onMouseLeave={() => setHoveredNode(null)}
             className={`lg:col-span-3 flex flex-col rounded-xl bg-white border transition-all duration-200 shadow-xs hud-bracket overflow-hidden ${
-              hoveredNode === 'CASES'
+              hoveredNode === 'CASES' || isCasesActive
                 ? 'border-sky-500 ring-1 ring-sky-500/30'
                 : 'border-slate-200 hover:border-slate-300'
             }`}

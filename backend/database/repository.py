@@ -633,7 +633,11 @@ class DatabaseRepository:
         is_pg = self.manager.engine_type == "postgresql"
         with self.manager.get_connection() as conn:
             cur = conn.cursor()
-            query = "UPDATE patients SET admission_status = 'DISCHARGED' WHERE id = %s OR mrn = %s" if is_pg else "UPDATE patients SET admission_status = 'DISCHARGED' WHERE id = ? OR mrn = ?"
+            query = (
+                "UPDATE patients SET admission_status = 'DISCHARGED', bed_number = NULL WHERE (id = %s OR mrn = %s) AND admission_status != 'DISCHARGED'"
+                if is_pg
+                else "UPDATE patients SET admission_status = 'DISCHARGED', bed_number = NULL WHERE (id = ? OR mrn = ?) AND admission_status != 'DISCHARGED'"
+            )
             cur.execute(query, (patient_id, patient_id))
             return cur.rowcount > 0
 

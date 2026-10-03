@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { HospitalFlowDiagram } from './HospitalFlowDiagram';
 import { VitalsMonitorHUD } from '../dashboard/VitalsMonitorHUD';
 import { InternalMedicineConsultModal } from '../specialists/InternalMedicineConsultModal';
@@ -35,67 +35,10 @@ export const PatientJourneyFlowPage: React.FC<PatientJourneyFlowPageProps> = ({ 
   const [doctorAction, setDoctorAction] = useState<string>('Reviewing Inpatient Charts');
 
   const wsRef = useRef<WebSocket | null>(null);
+  const isMountedRef = useRef<boolean>(true);
+  const reconnectTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Fetch cases and recent events
-  useEffect(() => {
-    fetch('/api/cases')
-      .then((res) => res.json())
-      .then((data) => {
-        setCases(data);
-        if (data.length > 0) setSelectedCaseId(data[0].id);
-      })
-      .catch((err) => console.error('Failed to load cases:', err));
-
-    fetch('/api/simulation/events')
-      .then((res) => res.json())
-      .then((data) => setEvents(data))
-      .catch((err) => console.error('Failed to load events:', err));
-  }, []);
-
-  // Setup WebSocket connection
-  useEffect(() => {
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${window.location.hostname}:8000/ws/simulation`;
-
-    const connectWs = () => {
-      try {
-        const socket = new WebSocket(wsUrl);
-        wsRef.current = socket;
-
-        socket.onopen = () => {
-          setIsWsConnected(true);
-        };
-
-        socket.onmessage = (event) => {
-          try {
-            const parsedEvent: HospitalEvent = JSON.parse(event.data);
-            handleIncomingEvent(parsedEvent);
-          } catch (e) {
-            console.error('Error parsing event payload:', e);
-          }
-        };
-
-        socket.onclose = () => {
-          setIsWsConnected(false);
-          setTimeout(connectWs, 3000);
-        };
-
-        socket.onerror = () => {
-          socket.close();
-        };
-      } catch (err) {
-        console.warn('WebSocket connection error:', err);
-      }
-    };
-
-    connectWs();
-
-    return () => {
-      if (wsRef.current) wsRef.current.close();
-    };
-  }, []);
-
-  const handleIncomingEvent = (evt: HospitalEvent) => {
+  const handleIncomingEvent = useCallback((evt: HospitalEvent) => {
     setEvents((prev) => [...prev.slice(-100), evt]);
 
     switch (evt.event_type) {
@@ -140,8 +83,79 @@ export const PatientJourneyFlowPage: React.FC<PatientJourneyFlowPageProps> = ({ 
         setActiveDepartment('DOCTOR_STATION');
         setDoctorAction('Report Finalized & Queued');
         break;
+
+      case 'ENCOUNTER_CLOSED':
+        setActiveDepartment('DISCHARGE');
+        setDoctorAction('Patient Discharged & Route Closed');
+        break;
     }
-  };
+  }, []);
+
+  // Fetch cases and recent events
+  useEffect(() => {
+    fetch('/api/cases')
+      .then((res) => res.json())
+      .then((data) => {
+        setCases(data);
+        if (data.length > 0) setSelectedCaseId(data[0].id);
+      })
+      .catch((err) => console.error('Failed to load cases:', err));
+
+    fetch('/api/simulation/events')
+      .then((res) => res.json())
+      .then((data) => setEvents(data))
+      .catch((err) => console.error('Failed to load events:', err));
+  }, []);
+
+  // Setup WebSocket connection
+  useEffect(() => {
+    isMountedRef.current = true;
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${protocol}//${window.location.hostname}:8000/ws/simulation`;
+
+    const connectWs = () => {
+      if (!isMountedRef.current) return;
+      try {
+        const socket = new WebSocket(wsUrl);
+        wsRef.current = socket;
+
+        socket.onopen = () => {
+          if (isMountedRef.current) setIsWsConnected(true);
+        };
+
+        socket.onmessage = (event) => {
+          try {
+            const parsedEvent: HospitalEvent = JSON.parse(event.data);
+            handleIncomingEvent(parsedEvent);
+          } catch (e) {
+            console.error('Error parsing event payload:', e);
+          }
+        };
+
+        socket.onclose = () => {
+          if (isMountedRef.current) {
+            setIsWsConnected(false);
+            if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
+            reconnectTimerRef.current = setTimeout(connectWs, 3000);
+          }
+        };
+
+        socket.onerror = () => {
+          socket.close();
+        };
+      } catch (err) {
+        console.warn('WebSocket connection error:', err);
+      }
+    };
+
+    connectWs();
+
+    return () => {
+      isMountedRef.current = false;
+      if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
+      if (wsRef.current) wsRef.current.close();
+    };
+  }, [handleIncomingEvent]);
 
   const handleStationInteract = (stationId: string) => {
     switch (stationId) {

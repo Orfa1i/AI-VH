@@ -76,25 +76,35 @@ export const ActiveEncounterProgressBar: React.FC<ActiveEncounterProgressBarProp
     }
   }, [isRunning]);
 
-  // Smooth interpolation loop (60 FPS smooth easing towards target)
+  // Smooth interpolation loop (60 FPS smooth easing towards target; rests when target reached)
   useEffect(() => {
+    let active = true;
     const updateProgress = () => {
+      if (!active) return;
+      let shouldContinue = false;
       setProgress((prev) => {
         const diff = targetProgressRef.current - prev;
-        if (Math.abs(diff) < 0.5) return targetProgressRef.current;
+        if (Math.abs(diff) < 0.2) {
+          return targetProgressRef.current;
+        }
+        shouldContinue = true;
         return prev + diff * 0.12; // Easing speed
       });
-      animationFrameRef.current = requestAnimationFrame(updateProgress);
+
+      if (shouldContinue) {
+        animationFrameRef.current = requestAnimationFrame(updateProgress);
+      }
     };
 
     animationFrameRef.current = requestAnimationFrame(updateProgress);
 
     return () => {
+      active = false;
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, []);
+  }, [isRunning]);
 
   // Display only when running or recently completed
   if (!isRunning && !isCompleted && progress <= 0) {

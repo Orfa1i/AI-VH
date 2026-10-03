@@ -38,9 +38,11 @@ class MedicalKnowledgeIndex:
 
         self._build_index()
 
+    MEDICAL_ACRONYMS = {"mi", "pe", "ct", "bp", "iv", "im", "o2", "hb"}
+
     def _tokenize(self, text: str) -> List[str]:
         tokens = re.findall(r"[a-z0-9]+(?:-[a-z0-9]+)?", text.lower())
-        return [t for t in tokens if len(t) > 2]
+        return [t for t in tokens if len(t) > 2 or t in self.MEDICAL_ACRONYMS]
 
     def _build_index(self):
         total_len = 0
@@ -129,7 +131,7 @@ class MedicalKnowledgeIndex:
 
         for idx in top_indices:
             score = float(final_scores[idx])
-            if score > 0.0 or not top_results:
+            if score > 0.01:
                 chunk = self.chunks[idx].copy()
                 chunk["relevance_score"] = round(score * 10.0, 3)
                 top_results.append(chunk)

@@ -20,8 +20,12 @@ class MedicalVectorEmbedder:
 
         self.device = device or ("cuda" if torch.cuda.is_available() else "cpu")
         logger.info(f"Initializing MedicalVectorEmbedder ({model_name}) on device: {self.device}...")
-        self.tokenizer = AutoTokenizer.from_pretrained(model_name)
-        self.model = AutoModel.from_pretrained(model_name).to(self.device)
+        try:
+            self.tokenizer = AutoTokenizer.from_pretrained(model_name, local_files_only=True)
+            self.model = AutoModel.from_pretrained(model_name, local_files_only=True).to(self.device)
+        except Exception:
+            self.tokenizer = AutoTokenizer.from_pretrained(model_name)
+            self.model = AutoModel.from_pretrained(model_name).to(self.device)
         self.model.eval()
         self.embedding_dim = self.model.config.hidden_size
         logger.info(f"MedicalVectorEmbedder ready. Dimension: {self.embedding_dim}")
