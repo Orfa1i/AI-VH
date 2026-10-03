@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { HospitalFlowDiagram } from './HospitalFlowDiagram';
-import { EventStreamHUD } from '../dashboard/EventStreamHUD';
 import { VitalsMonitorHUD } from '../dashboard/VitalsMonitorHUD';
 import { InternalMedicineConsultModal } from '../specialists/InternalMedicineConsultModal';
 import { DepartmentStationModal } from '../specialists/DepartmentStationModal';
@@ -9,7 +8,6 @@ import type { HospitalEvent, BenchmarkCase, VitalSigns } from '../../types';
 import {
   Activity,
   ArrowLeft,
-  Stethoscope,
   Volume2,
   VolumeX,
 } from 'lucide-react';
@@ -209,21 +207,13 @@ export const PatientJourneyFlowPage: React.FC<PatientJourneyFlowPageProps> = ({ 
 
         {/* Center: Real-Time Department Tracker */}
         <div className="hidden md:flex items-center gap-2 bg-slate-100 px-3.5 py-1 rounded-full border border-slate-200 text-xs">
-          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+          <span className={`w-2 h-2 rounded-full ${isWsConnected ? 'bg-emerald-500 animate-pulse' : 'bg-amber-400'}`} />
           <span className="text-slate-500">Current Station:</span>
           <span className="text-slate-800 font-semibold font-mono">{activeDepartment.replace(/_/g, ' ')}</span>
         </div>
 
-        {/* Right: Specialist Consult & Audio Toggle */}
+        {/* Right: Audio Toggle */}
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => setIsConsultOpen(true)}
-            className="px-3 py-1.5 bg-sky-50 hover:bg-sky-100 text-sky-800 text-xs font-mono font-medium rounded-lg border border-sky-300 transition flex items-center gap-1.5 cursor-pointer shadow-xs"
-          >
-            <Stethoscope className="w-3.5 h-3.5 text-sky-600" />
-            <span>Dr. Vance RAG</span>
-          </button>
-
           <button
             onClick={() => setIsAudioMuted(toggleGlobalMute())}
             className={`p-1.5 rounded-lg border text-xs transition cursor-pointer ${
@@ -256,9 +246,6 @@ export const PatientJourneyFlowPage: React.FC<PatientJourneyFlowPageProps> = ({ 
 
         {/* Floating Glassmorphism Vitals Telemetry */}
         <VitalsMonitorHUD vitals={activeVitals} patientName={currentPatientName} />
-
-        {/* Floating Real-Time Event Feed */}
-        <EventStreamHUD events={events} isConnected={isWsConnected} />
       </main>
 
       {/* Modals */}

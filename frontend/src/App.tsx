@@ -13,8 +13,10 @@ import { PolicyBenchmarkModal } from './components/rl/PolicyBenchmarkModal';
 import { ReviewedReportsSection } from './components/reviewing/ReviewedReportsSection';
 import { LeftNotificationDrawer } from './components/notifications/LeftNotificationDrawer';
 import { ActiveEncounterProgressBar } from './components/simulation/ActiveEncounterProgressBar';
+import { PatientJourneyFlowPage } from './components/diagram/PatientJourneyFlowPage';
 import { toggleGlobalMute, isGlobalMuted } from './utils/speechSynthesis';
 import {
+  Activity,
   BedDouble,
   Box,
   Building2,
@@ -57,6 +59,7 @@ export const App: React.FC = () => {
   const [isConsultOpen, setIsConsultOpen] = useState<boolean>(false);
   const [isRLModalOpen, setIsRLModalOpen] = useState<boolean>(false);
   const [isBenchmarkOpen, setIsBenchmarkOpen] = useState<boolean>(false);
+  const [isJourneyOpen, setIsJourneyOpen] = useState<boolean>(false);
 
   // Telemetry & Simulation States
   const [events, setEvents] = useState<HospitalEvent[]>([]);
@@ -89,6 +92,9 @@ export const App: React.FC = () => {
       const hash = window.location.hash.toLowerCase();
       if (path === '/3d' || hash === '#3d') {
         setActiveTab('HOSPITAL3D');
+      }
+      if (path === '/journey' || hash === '#journey') {
+        setIsJourneyOpen(true);
       }
     };
     handleUrlRoute();
@@ -386,22 +392,16 @@ export const App: React.FC = () => {
           </button>
         </nav>
 
-        {/* Right: Hospital Census Quick Stats */}
-        <div className="hidden lg:flex items-center gap-3 font-mono text-[11px] text-slate-500 py-1">
-          <div className="flex items-center gap-1.5">
-            <span className="text-slate-500">Admitted Patients:</span>
-            <span className="font-semibold text-slate-900">{cases.length}</span>
-          </div>
-          <span className="text-slate-300">•</span>
-          <div className="flex items-center gap-1.5">
-            <span className="text-slate-500">Pending Reviews:</span>
-            <span className="font-semibold text-amber-700">{reports.length}</span>
-          </div>
-          <span className="text-slate-300">•</span>
-          <div className="flex items-center gap-1.5">
-            <span className="text-slate-500">Evaluated:</span>
-            <span className="font-semibold text-emerald-700">{reviewedCount}</span>
-          </div>
+        {/* Right: Relocated Patient Journey Graph Action */}
+        <div className="flex items-center gap-2 py-1">
+          <button
+            onClick={() => setIsJourneyOpen(true)}
+            className="px-3.5 py-1.5 rounded-lg text-xs font-mono font-bold flex items-center gap-2 bg-sky-50 hover:bg-sky-100 text-sky-800 border border-sky-300 shadow-2xs transition-all cursor-pointer active:scale-95 group"
+            title="Open Patient Journey Graph & Clinical Flow Architecture"
+          >
+            <Activity className="w-3.5 h-3.5 text-sky-600 group-hover:scale-110 transition-transform animate-pulse" />
+            <span>Patient Journey Graph</span>
+          </button>
         </div>
       </div>
 
@@ -509,6 +509,13 @@ export const App: React.FC = () => {
         isOpen={isRLModalOpen}
         onClose={() => setIsRLModalOpen(false)}
       />
+
+      {/* Relocated Patient Journey Graph & Clinical Flow Viewport */}
+      {isJourneyOpen && (
+        <div className="fixed inset-0 z-50 bg-white flex flex-col animate-in fade-in duration-200">
+          <PatientJourneyFlowPage onBackToPortal={() => setIsJourneyOpen(false)} />
+        </div>
+      )}
     </div>
   );
 };
