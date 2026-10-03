@@ -1,0 +1,37 @@
+{
+  "_meta": {
+    "fixture": "Charles Brown realistic CAP case (Phase 1 structured-case input)",
+    "is_synthetic": true,
+    "purpose": "Negative/positive fixture for Phase 1 extraction + Phase 6 acceptance. Synthetic only; never training data.",
+    "source_spec": "prompt FOR UPDATE/06_Phase6: fever, productive cough, tachypnoea, low SpO2, CXR consolidation; expected CAP J18.9"
+  },
+  "raw_case": {
+    "age": 68,
+    "sex": "male",
+    "presenting_symptoms": [
+      "fever for 3 days",
+      "productive cough with yellow sputum",
+      "shortness of breath on exertion",
+      "right-sided chest discomfort when breathing deeply"
+    ],
+    "symptom_duration": "3 days",
+    "vitals": {
+      "temp": 38.9,
+      "hr": 112,
+      "rr": 28,
+      "bp": "128/78",
+      "spo2": 89
+    },
+    "examination_findings": "Tachypnoeic, right basal crackles with bronchial breathing; increased tactile vocal fremitus on the right base.",
+    "comorbidities": ["hypertension"],
+    "current_medications": ["amlodipine 5mg daily"],
+    "allergies": ["no known drug allergies"],
+    "labs": {
+      "WBC": "16.2 x10^3/uL with neutrophilia",
+      "CRP": "elevated"
+    },
+    "imaging": {
+      "CXR": "right lower lobe consolidation with air bronchograms"
+    }
+  }
+}

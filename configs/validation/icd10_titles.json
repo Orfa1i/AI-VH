@@ -1,0 +1,13 @@
+{
+  "_meta": {
+    "source": "CMS ICD-10-CM FY2026 tabular + WHO ICD-10 2019 browser, via task prompt 06_Phase6",
+    "cms_url": "https://www.cms.gov/medicare/coding-billing/icd-10-codes",
+    "who_url": "https://icd.who.int/browse10/2019/en",
+    "note": "SEED SUBSET ONLY for Phase 1. Contains solely the code explicitly stated in the approved task prompt (06_Phase6: community-acquired pneumonia J18.9). Full tabular import is an owner-run step (see scripts/import_icd10.py, to be added in Phase 3 with V4). Titles below are NOT generated from model memory.",
+    "version": "seed-1",
+    "is_synthetic": false
+  },
+  "titles": {
+    "J18.9": "Pneumonia, unspecified organism"
+  }
+}

@@ -14,6 +14,8 @@ from pydantic import BaseModel, Field
 
 from vh.cases.schema import CaseView
 from vh.common.logging import get_logger
+from vh.cases.retrieval_log import RetrievalLog, assert_retrieval_log_present, MissingRetrievalLogError
+from vh.rag.retrieval import TwoPassRetrievalConfig
 from vh.rag.sources.base import SourceDocument
 from vh.rag.chunking import StructureAwareChunker, ChunkerConfig, Chunk
 from vh.rag.indexing import VersionedHybridIndex, get_embedding_model
@@ -44,6 +46,19 @@ from eval.harness.interfaces import Pipeline, PipelineResult
 
 logger = get_logger("vh.generation.pipeline")
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent.parent
+
+# Phase 1 mandatory-retrieval guard + grounding status.
+# Legacy run() is preserved for backward compatibility (existing tests/endpoints).
+# New code must use run_with_log() / require_retrieval_log(): no retrieval_log
+# means the generation call is refused. INSUFFICIENT_GROUNDING reports may be
+# shown to a physician but must never be exported as training data (Phase 5).
+# Owner: AI Engineer.
+INSUFFICIENT_GROUNDING = "insufficient_grounding"
+
+
+def require_retrieval_log(log: RetrievalLog | None) -> RetrievalLog:
+    """Hard guard: refuse generation when no (or empty) retrieval_log is given."""
+    return assert_retrieval_log_present(log)
 
 
 class QueryPlanner:
@@ -307,3 +322,40 @@ class GroundedGenerationPipeline(Pipeline):
                     "active_evidence_ids": active_evidence_ids,
                 },
             )
+
+    def run_with_log(self, case_view: CaseView, retrieval_log: RetrievalLog | None) -> PipelineResult:
+        """
+        Phase 1 guarded entry point: retrieval_log is mandatory.
+
+        Raises MissingRetrievalLogError when the log is missing/empty (the
+        generation call is refused). Returns an INSUFFICIENT_GROUNDING result
+        when the log carries no chunk above threshold: reviewable by a
+        physician but never exportable as training data.
+        """
+        require_retrieval_log(retrieval_log)
+        assert retrieval_log is not None
+        if not retrieval_log.chunks:
+            logger.warning(f"No grounding chunks for case {case_view.case_id}: INSUFFICIENT_GROUNDING")
+            return PipelineResult(
+                case_id=case_view.case_id,
+                diagnosis="Insufficient Grounding",
+                differential=[],
+                suggested_orders=[],
+                clinical_summary="Insufficient Harrison grounding: no chunk passed the retrieval threshold.",
+                metadata={
+                    "generation_status": INSUFFICIENT_GROUNDING,
+                    "active_evidence_ids": [],
+                    "retrieval_log": retrieval_log.model_dump(),
+                },
+            )
+        result = self.run(case_view)
+        metadata = dict(result.metadata or {})
+        metadata["retrieval_log"] = retrieval_log.model_dump()
+        return PipelineResult(
+            case_id=result.case_id,
+            diagnosis=result.diagnosis,
+            differential=list(result.differential or []),
+            suggested_orders=list(result.suggested_orders or []),
+            clinical_summary=result.clinical_summary,
+            metadata=metadata,
+        )

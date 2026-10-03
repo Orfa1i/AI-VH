@@ -87,6 +87,11 @@ export const RLDatasetModal: React.FC<RLDatasetModalProps> = ({ isOpen, onClose 
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({ detail: 'Training failed' }));
+        if (res.status === 503) {
+          throw new Error(
+            'Training temporarily disabled until Phase 5 data hygiene is complete (HTTP 503). Your reviews are saved — nothing is lost.'
+          );
+        }
         throw new Error(err.detail || 'Training failed');
       }
       const data = await res.json();
@@ -189,7 +194,7 @@ export const RLDatasetModal: React.FC<RLDatasetModalProps> = ({ isOpen, onClose 
         )}
 
         {trainError && (
-          <div className="px-6 py-2 bg-rose-50 border-b border-rose-200 text-rose-800 text-xs flex items-center gap-2 font-mono">
+          <div data-testid="train-blocked-503" className="px-6 py-2 bg-rose-50 border-b border-rose-200 text-rose-800 text-xs flex items-center gap-2 font-mono">
             <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
             <span>{trainError}</span>
           </div>

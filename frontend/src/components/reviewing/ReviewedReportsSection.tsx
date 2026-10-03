@@ -98,6 +98,11 @@ export const ReviewedReportsSection: React.FC<ReviewedReportsSectionProps> = ({
 
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({ detail: 'Training failed' }));
+        if (res.status === 503) {
+          throw new Error(
+            'Training temporarily disabled until Phase 5 data hygiene is complete (HTTP 503). Your reviews are saved — nothing is lost.'
+          );
+        }
         throw new Error(errorData.detail || 'Fine-tuning execution failed.');
       }
 
@@ -632,7 +637,7 @@ export const ReviewedReportsSection: React.FC<ReviewedReportsSectionProps> = ({
               )}
 
               {trainingError && (
-                <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-800 text-[11px] font-mono flex items-center gap-2">
+                <div data-testid="train-blocked-503" className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-800 text-[11px] font-mono flex items-center gap-2">
                   <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
                   <span>{trainingError}</span>
                 </div>

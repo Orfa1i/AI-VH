@@ -402,6 +402,19 @@ _training_state: Dict[str, Any] = {
 }
 
 
+def _is_rl_train_blocked() -> bool:
+    """
+    Phase 1 safety latch: RL training export stays blocked until Phase 5
+    (RL dataset export & data hygiene) is complete.
+
+    Unblock by setting VH_ALLOW_RL_TRAIN=true (owner decision in Phase 5).
+    Owner: Software Engineer.
+    """
+    import os
+
+    return os.environ.get("VH_ALLOW_RL_TRAIN", "").strip().lower() not in ("1", "true", "yes")
+
+
 @api_router.get("/rl/train/status")
 async def get_training_status():
     """Returns the current operational status of the manual model fine-tuning pipeline."""
@@ -415,6 +428,16 @@ async def trigger_manual_fine_tuning(req: Optional[ManualTrainingRequest] = None
     physician-reviewed evaluations and preference pairs. Fine-tuning is strictly manual.
     """
     global _training_state
+    if _is_rl_train_blocked():
+        raise HTTPException(
+            status_code=503,
+            detail=(
+                "RL training export is temporarily disabled until Phase 5 "
+                "(RL dataset export & data hygiene) is complete. Reviews remain "
+                "saved and nothing is lost. Owner may enable it later with "
+                "VH_ALLOW_RL_TRAIN=true."
+            ),
+        )
     if _training_state["status"] == "TRAINING":
         raise HTTPException(
             status_code=409,

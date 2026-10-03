@@ -45,6 +45,7 @@ data/feedback-e2e.db
 data/knowledge/*.npy
 data/knowledge/*_collection.json
 data/knowledge/*checkpoint*.json
+data/knowledge/backup_phase1_*/
 
 # Node / Frontend
 node_modules/
