@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import type { BenchmarkCase, HospitalEvent, VitalSigns } from '../../types';
 import drMarcusPhoto from '../../assets/dr_marcus_vance.jpg';
+import { ActiveTrajectoryStepper } from './ActiveTrajectoryStepper';
 import {
   Activity,
   ArrowRight,
@@ -16,7 +17,6 @@ import {
   Sparkles,
   Layers,
   Building2,
-  User
 } from 'lucide-react';
 
 interface HospitalFlowDiagramProps {
@@ -77,15 +77,6 @@ export const HospitalFlowDiagram: React.FC<HospitalFlowDiagramProps> = ({
   };
 
   const patientProgress = getPatientProgress();
-
-  const getStageDescription = () => {
-    if (isDischargeActive) return 'Discharge Gate Cleared & Disposition Finalized';
-    if (isLabActive) return 'Clinical Laboratory Biomarker Analysis';
-    if (isDoctorActive) return 'Attending Physician Examination (Dr. Marcus Vance)';
-    if (isTriageActive) return 'Nurse Triage & Objective Vital Telemetry Capture';
-    if (isRunning) return 'Routing to Assigned Clinical Station...';
-    return currentCase ? 'Patient Admitted & Queued in Clinical Pathway' : 'Clinical Trajectory Standby - Awaiting Patient Admission';
-  };
 
   // Safe fallback vital values
   const hr = activeVitals?.heart_rate ?? 78;
@@ -624,125 +615,17 @@ export const HospitalFlowDiagram: React.FC<HospitalFlowDiagramProps> = ({
         </div>
 
         {/* ═══════════════════════════════════════════════════════════════════
-            DYNAMIC PATIENT TRAJECTORY PROGRESS LINE (SVG PULSE FLOW)
+            DYNAMIC PATIENT TRAJECTORY STEPPER & STATE FLOW (AWWWARDS-TIER HUD)
             ═══════════════════════════════════════════════════════════════════ */}
-        <div className="w-full bg-white rounded-xl border border-slate-200 p-3.5 shadow-xs hud-bracket">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2">
-              <Activity className="w-3.5 h-3.5 text-sky-600" />
-              <span className="text-xs font-mono font-bold text-slate-900 uppercase tracking-wider">
-                ACTIVE TRAJECTORY SEQUENCE &amp; STATE FLOW
-              </span>
-            </div>
-            {latestEvent && (
-              <span className="text-[11px] text-slate-500 font-mono truncate max-w-md">
-                LATEST: <span className="text-sky-700 font-semibold">{latestEvent.summary || latestEvent.event_type}</span>
-              </span>
-            )}
-          </div>
-
-          {/* Connected Progress Line with Animated Patient Avatar */}
-          <div className="relative flex items-center justify-between w-full px-4 py-3 min-h-[64px]">
-            {/* Connecting Track Line */}
-            <div className="absolute left-8 right-8 top-1/2 -translate-y-1/2 h-1 bg-slate-200 rounded-full z-0 overflow-hidden">
-              <div
-                className="h-full bg-gradient-to-r from-sky-500 via-indigo-500 to-emerald-500 transition-all duration-1000 ease-out"
-                style={{ width: `${patientProgress}%` }}
-              />
-            </div>
-
-            {/* Dynamic Animated Patient Node */}
-            <div
-              className="absolute top-1/2 -translate-y-1/2 z-20 transition-all duration-1000 ease-out pointer-events-none"
-              style={{ left: `calc(${patientProgress}% - 14px)` }}
-            >
-              <div className="flex flex-col items-center">
-                {/* Floating Patient Chip */}
-                <div className="px-2 py-0.2 rounded bg-sky-600 text-white font-mono font-bold text-[9px] shadow-md shadow-sky-600/30 whitespace-nowrap mb-1 flex items-center gap-1 animate-bounce">
-                  <span>{currentCase?.name || 'Patient'}</span>
-                  <span className="opacity-90">({patientProgress}%)</span>
-                </div>
-                {/* Pin Head */}
-                <div className="relative">
-                  <div className="w-6 h-6 rounded-full bg-sky-600 border-2 border-white shadow-md shadow-sky-600/40 flex items-center justify-center text-white">
-                    <User className="w-3.5 h-3.5 fill-white" />
-                  </div>
-                  {isRunning && (
-                    <span className="absolute -inset-1 rounded-full border border-sky-500 animate-ping" />
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Step 1: Intake */}
-            <div className="relative z-10 flex flex-col items-center">
-              <div
-                className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-mono font-bold transition-all shadow-xs ${
-                  isTriageActive || isDoctorActive || isDischargeActive
-                    ? 'bg-sky-600 text-white ring-2 ring-sky-600/30'
-                    : 'bg-slate-100 text-slate-500 border border-slate-300'
-                }`}
-              >
-                1
-              </div>
-              <span className="text-[10px] font-mono font-semibold text-slate-700 mt-1">INTAKE</span>
-            </div>
-
-            {/* Step 2: Attending */}
-            <div className="relative z-10 flex flex-col items-center">
-              <div
-                className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-mono font-bold transition-all shadow-xs ${
-                  isDoctorActive || isDischargeActive
-                    ? 'bg-indigo-600 text-white ring-2 ring-indigo-600/30'
-                    : 'bg-slate-100 text-slate-500 border border-slate-300'
-                }`}
-              >
-                2
-              </div>
-              <span className="text-[10px] font-mono font-semibold text-slate-700 mt-1">DEPT &amp; DR. VANCE</span>
-            </div>
-
-            {/* Step 3: Cases Area */}
-            <div className="relative z-10 flex flex-col items-center">
-              <div
-                className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-mono font-bold transition-all shadow-xs ${
-                  isDoctorActive || isDischargeActive
-                    ? 'bg-sky-600 text-white ring-2 ring-sky-600/30'
-                    : 'bg-slate-100 text-slate-500 border border-slate-300'
-                }`}
-              >
-                3
-              </div>
-              <span className="text-[10px] font-mono font-semibold text-slate-700 mt-1">CASES AREA</span>
-            </div>
-
-            {/* Step 4: Exit Point */}
-            <div className="relative z-10 flex flex-col items-center">
-              <div
-                className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-mono font-bold transition-all shadow-xs ${
-                  isDischargeActive
-                    ? 'bg-emerald-600 text-white ring-2 ring-emerald-600/30'
-                    : 'bg-slate-100 text-slate-500 border border-slate-300'
-                }`}
-              >
-                4
-              </div>
-              <span className="text-[10px] font-mono font-semibold text-slate-700 mt-1">PATIENT EXIT</span>
-            </div>
-          </div>
-
-          {/* Real-Time Location Banner */}
-          <div className="mt-1 pt-2 border-t border-slate-200 flex flex-wrap items-center justify-between text-xs text-slate-500">
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-sky-500 animate-pulse" />
-              <span className="text-slate-500 font-mono text-[11px]">TRAJECTORY STATUS:</span>
-              <span className="text-sky-800 font-semibold">{getStageDescription()}</span>
-            </div>
-            <div className="font-mono text-[10px] text-slate-500">
-              ACUITY: <span className="text-slate-800">{currentCase?.acuity || 'Standard'}</span> | AGE: <span className="text-slate-800">{currentCase ? `${currentCase.age}yo ${currentCase.sex}` : 'N/A'}</span>
-            </div>
-          </div>
-        </div>
+        <ActiveTrajectoryStepper
+          progress={patientProgress}
+          isRunning={isRunning}
+          currentCase={currentCase}
+          latestEvent={latestEvent}
+          activeDepartment={activeDepartment}
+          doctorAction={doctorAction}
+          onOpenDepartmentStation={onOpenDepartmentStation}
+        />
 
       </div>
     </div>
