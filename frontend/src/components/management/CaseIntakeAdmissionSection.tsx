@@ -19,7 +19,7 @@ import { DemoPatientsSection } from '../synthea/DemoPatientsSection';
 interface CaseIntakeAdmissionSectionProps {
   cases: BenchmarkCase[];
   onPatientAdmitted: (patient: PatientRecord) => void;
-  onAdmitAndSimulate?: (caseId: string) => void;
+  onAdmitAndSimulate?: (caseId: string, patientName?: string) => void;
 }
 
 export const CaseIntakeAdmissionSection: React.FC<CaseIntakeAdmissionSectionProps> = ({
@@ -145,7 +145,7 @@ export const CaseIntakeAdmissionSection: React.FC<CaseIntakeAdmissionSectionProp
   const handleQuickEncounter = () => {
     if (!lastAdmitted) return;
     if (onAdmitAndSimulate) {
-      onAdmitAndSimulate(lastAdmitted.id);
+      onAdmitAndSimulate(lastAdmitted.id, lastAdmitted.name);
     }
   };
 

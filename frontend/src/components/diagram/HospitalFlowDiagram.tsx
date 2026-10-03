@@ -64,12 +64,16 @@ export const HospitalFlowDiagram: React.FC<HospitalFlowDiagramProps> = ({
 
   // Dynamic patient trajectory position percentage (0% to 100%)
   const getPatientProgress = () => {
-    if (isDischargeActive) return 96;
-    if (isLabActive) return 65;
-    if (isDoctorActive) return 40;
-    if (isTriageActive) return 14;
-    if (isRunning) return 28;
-    return 6;
+    if (isDischargeActive) return 100;
+    if (isLabActive) return 85;
+    if (isDoctorActive) return 60;
+    if (isTriageActive) return 35;
+    if (isRunning) {
+      // Dynamic live event-driven progression so it never stalls at 16%
+      const eventProgress = Math.min(92, 20 + events.length * 8);
+      return Math.max(25, eventProgress);
+    }
+    return 0;
   };
 
   const patientProgress = getPatientProgress();

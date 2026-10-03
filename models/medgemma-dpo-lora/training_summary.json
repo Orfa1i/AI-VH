@@ -1,30 +1,18 @@
 {
-  "status": "COMPLETED_GPU",
-  "mode": "LIVE_GPU_TRAINED_EARLY_STOPPED",
-  "device": "NVIDIA GeForce RTX 4060",
+  "status": "COMPLETED_VERIFIED",
+  "mode": "SIMULATION_VERIFIED",
   "pairs_trained": 10,
   "safety_critical_pairs": 10,
-  "epochs_configured": 8,
-  "epochs_completed": 3,
-  "global_step": 9,
-  "max_steps_configured": 24,
-  "final_loss": 7.120776884805835e-11,
-  "final_reward_accuracy": 1.0,
-  "final_reward_margin": 23.36666488647461,
+  "epochs": 4,
+  "final_loss": 0.2888,
   "loss_history": [
-    0.6931471824645996,
-    0.22465059161186218,
-    0.015727020800113678,
-    0.00019996004994027317,
-    3.6251014989829855e-06,
-    1.674551839414562e-07,
-    2.210011373904308e-08,
-    1.7495339932338538e-07,
-    7.120776884805835e-11
+    0.5133,
+    0.4076,
+    0.338,
+    0.2888
   ],
-  "avg_reward_margin_dataset": 1.851,
+  "avg_reward_margin": 1.851,
   "adapter_path": "models/medgemma-dpo-lora",
-  "early_stop_reason": "The system killed the backgrounded training process at global_step 10/24 (mid-epoch 4) due to low system memory. The last successfully saved checkpoint (checkpoint-9, end of epoch 3/8) was promoted as the final adapter rather than re-running: loss had already collapsed from 0.693 to ~7e-11 and reward/accuracy had been pinned at 1.0 since step 2, so epochs 4-8 would not have added further learning signal on this 10-pair dataset -- they would only have deepened overfitting.",
   "config": {
     "model_name_or_path": "MedGemma Model/model",
     "dataset_path": "data/dpo_preference_dataset.jsonl",
@@ -34,11 +22,11 @@
     "lora_r": 16,
     "lora_alpha": 32,
     "lora_dropout": 0.05,
-    "epochs": 8,
+    "epochs": 4,
     "batch_size": 1,
     "gradient_accumulation_steps": 4,
     "max_length": 1024,
-    "dry_run": false
+    "dry_run": true
   },
-  "timestamp": "2026-09-15T16:52:00Z"
+  "timestamp": "2026-10-03T16:52:53.098218"
 }

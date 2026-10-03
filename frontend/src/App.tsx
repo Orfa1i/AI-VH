@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { PatientJourneyFlowPage } from './components/diagram/PatientJourneyFlowPage';
 import { CaseIntakeAdmissionSection } from './components/management/CaseIntakeAdmissionSection';
 import { PatientDirectorySection } from './components/management/PatientDirectorySection';
 import { StaffManagementSection } from './components/management/StaffManagementSection';
@@ -12,14 +11,14 @@ import { InternalMedicineConsultModal } from './components/specialists/InternalM
 import { RLDatasetModal } from './components/rl/RLDatasetModal';
 import { PolicyBenchmarkModal } from './components/rl/PolicyBenchmarkModal';
 import { ReviewedReportsSection } from './components/reviewing/ReviewedReportsSection';
+import { LeftNotificationDrawer } from './components/notifications/LeftNotificationDrawer';
+import { ActiveEncounterProgressBar } from './components/simulation/ActiveEncounterProgressBar';
 import { toggleGlobalMute, isGlobalMuted } from './utils/speechSynthesis';
 import {
-  Activity,
   BedDouble,
   Box,
   Building2,
   Clock,
-  Cpu,
   FileText,
   FileCheck2,
   Radio,
@@ -36,9 +35,10 @@ import type {
   ClinicalReport,
   PhysicianReviewPayload,
   PatientRecord,
+  HospitalEvent,
 } from './types';
 
-type PortalTab = 'INTAKE' | 'PATIENTS' | 'STAFF' | 'REPORTS' | 'REVIEW' | 'REVIEWING' | 'WARDS' | 'HOSPITAL3D' | 'KNOWLEDGE' | 'BENCHMARK' | 'JOURNEY';
+type PortalTab = 'INTAKE' | 'PATIENTS' | 'STAFF' | 'REPORTS' | 'REVIEW' | 'REVIEWING' | 'WARDS' | 'HOSPITAL3D' | 'KNOWLEDGE' | 'BENCHMARK';
 
 export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<PortalTab>('INTAKE');
@@ -58,6 +58,12 @@ export const App: React.FC = () => {
   const [isRLModalOpen, setIsRLModalOpen] = useState<boolean>(false);
   const [isBenchmarkOpen, setIsBenchmarkOpen] = useState<boolean>(false);
 
+  // Telemetry & Simulation States
+  const [events, setEvents] = useState<HospitalEvent[]>([]);
+  const [isWsConnected, setIsWsConnected] = useState<boolean>(false);
+  const [isSimulating, setIsSimulating] = useState<boolean>(false);
+  const [simulatingPatientName, setSimulatingPatientName] = useState<string>('Active Encounter');
+
   // Live Clock Ticker
   useEffect(() => {
     const updateTime = () => {
@@ -76,20 +82,13 @@ export const App: React.FC = () => {
     return () => clearInterval(timer);
   }, []);
 
-  // URL / Hash Navigation listener for Clinical Flow & Patient Journey
+  // Hash Navigation listener
   useEffect(() => {
     const handleUrlRoute = () => {
       const path = window.location.pathname.toLowerCase();
       const hash = window.location.hash.toLowerCase();
-      if (
-        path === '/journey' ||
-        path === '/flow' ||
-        path === '/3d' ||
-        hash === '#journey' ||
-        hash === '#flow' ||
-        hash === '#3d'
-      ) {
-        setActiveTab('JOURNEY');
+      if (path === '/3d' || hash === '#3d') {
+        setActiveTab('HOSPITAL3D');
       }
     };
     handleUrlRoute();
@@ -98,6 +97,40 @@ export const App: React.FC = () => {
     return () => {
       window.removeEventListener('popstate', handleUrlRoute);
       window.removeEventListener('hashchange', handleUrlRoute);
+    };
+  }, []);
+
+  // Real-time Event Telemetry Listener for Left Notification Drawer
+  useEffect(() => {
+    fetch('/api/simulation/events')
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) setEvents(data);
+      })
+      .catch((err) => console.error('Failed to load initial events:', err));
+
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${protocol}//${window.location.hostname}:8000/ws/simulation`;
+    let ws: WebSocket | null = null;
+    try {
+      ws = new WebSocket(wsUrl);
+      ws.onopen = () => setIsWsConnected(true);
+      ws.onclose = () => setIsWsConnected(false);
+      ws.onerror = () => setIsWsConnected(false);
+      ws.onmessage = (event) => {
+        try {
+          const parsed: HospitalEvent = JSON.parse(event.data);
+          setEvents((prev) => [...prev.slice(-99), parsed]);
+        } catch (e) {
+          console.error('Failed to parse WS event:', e);
+        }
+      };
+    } catch (err) {
+      console.warn('WS connection error:', err);
+    }
+
+    return () => {
+      if (ws) ws.close();
     };
   }, []);
 
@@ -147,7 +180,10 @@ export const App: React.FC = () => {
     refreshData();
   };
 
-  const handleAdmitAndSimulate = async (caseId: string) => {
+  const handleAdmitAndSimulate = async (caseId: string, patientName?: string) => {
+    setIsSimulating(true);
+    const targetCase = cases.find((c) => c.id === caseId);
+    setSimulatingPatientName(patientName || targetCase?.name || 'Active Patient');
     try {
       await fetch('/api/simulation/run', {
         method: 'POST',
@@ -158,6 +194,8 @@ export const App: React.FC = () => {
       setActiveTab('REPORTS');
     } catch (err) {
       console.error('Error simulating encounter:', err);
+    } finally {
+      setIsSimulating(false);
     }
   };
 
@@ -188,31 +226,9 @@ export const App: React.FC = () => {
             </div>
           </div>
 
-          <div className="h-4 w-px bg-slate-200 hidden md:block" />
-
-          {/* Real-time Telemetry Sync Beacon */}
-          <div className="hidden lg:flex items-center gap-2 px-2.5 py-1 bg-slate-100/90 border border-slate-200 rounded font-mono text-[11px]">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
-            </span>
-            <span className="text-emerald-700 font-medium tracking-wide">
-              SYSTEM SYNC LIVE
-            </span>
-            <span className="text-slate-500 text-[10px]">99.98% SYNC</span>
-          </div>
-
-          {/* GPU Model Status */}
-          <div className="hidden xl:flex items-center gap-1.5 px-2.5 py-1 bg-slate-100/90 border border-slate-200 rounded font-mono text-[11px] text-slate-700">
-            <Cpu className="w-3.5 h-3.5 text-sky-600" />
-            <span>Clinical AI 4B</span>
-            <span className="text-[10px] px-1.5 py-0.2 rounded bg-sky-50 text-sky-700 border border-sky-200 font-medium">
-              NF4 LoRA Aligned
-            </span>
-          </div>
         </div>
 
-        {/* Right: Live Ticker, Quick Action Specialists Dock & Viewport Switcher */}
+        {/* Right: Live Ticker & Voice Toggle */}
         <div className="flex items-center gap-3">
           {/* Live UTC Clock */}
           <div className="hidden 2xl:flex items-center gap-1.5 font-mono text-xs text-slate-600 px-2.5 py-1 bg-slate-100/90 border border-slate-200 rounded">
@@ -221,50 +237,18 @@ export const App: React.FC = () => {
             <span className="text-[10px] text-slate-400">UTC</span>
           </div>
 
-          {/* Quick Action Specialist Dock */}
-          <div className="flex items-center gap-1.5 p-1 bg-slate-100 border border-slate-200 rounded-md">
-            {/* Dr. Marcus Vance Live Consult */}
-            <button
-              onClick={() => setIsConsultOpen(true)}
-              className="px-2.5 py-1 rounded text-xs font-mono font-medium flex items-center gap-1.5 transition text-sky-700 hover:text-sky-900 hover:bg-sky-50 border border-transparent hover:border-sky-200 cursor-pointer"
-              title="Consult Chief Attending Physician Dr. Marcus Vance, MD, FACP"
-            >
-              <Stethoscope className="w-3.5 h-3.5 text-sky-600" />
-              <span className="hidden sm:inline">Dr. Vance RAG</span>
-            </button>
-
-            {/* Audio Voice Synthesizer Toggle */}
-            <button
-              onClick={() => setIsAudioMuted(toggleGlobalMute())}
-              title={isAudioMuted ? 'Unmute Clinical Voice Audio' : 'Mute Clinical Voice Audio'}
-              className={`p-1.5 rounded transition cursor-pointer ${
-                isAudioMuted
-                  ? 'text-slate-400 hover:text-slate-600 hover:bg-slate-200/60'
-                  : 'text-sky-700 bg-sky-50 border border-sky-300 shadow-xs'
-              }`}
-            >
-              {isAudioMuted ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
-            </button>
-          </div>
-
-          <div className="h-5 w-px bg-slate-200" />
-
-          {/* Primary Viewport Launcher: Patient Journey & Clinical Flow Architecture */}
-          <div className="flex items-center gap-1">
-            <button
-              onClick={() => setActiveTab('JOURNEY')}
-              className={`px-3.5 py-1.5 rounded-md text-xs font-mono font-bold flex items-center gap-1.5 transition cursor-pointer ${
-                activeTab === 'JOURNEY'
-                  ? 'bg-sky-600 text-white shadow-xs'
-                  : 'bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 text-white shadow-xs'
-              }`}
-              title="Open Patient Journey Graph & Clinical Flow Architecture"
-            >
-              <Activity className="w-3.5 h-3.5" />
-              <span>Patient Journey Graph</span>
-            </button>
-          </div>
-
+          {/* Audio Voice Synthesizer Toggle */}
+          <button
+            onClick={() => setIsAudioMuted(toggleGlobalMute())}
+            title={isAudioMuted ? 'Unmute Clinical Voice Audio' : 'Mute Clinical Voice Audio'}
+            className={`p-1.5 rounded-lg border text-xs transition cursor-pointer ${
+              isAudioMuted
+                ? 'text-slate-400 hover:text-slate-600 bg-slate-100 border-slate-200'
+                : 'text-sky-700 bg-sky-50 border border-sky-300 shadow-xs'
+            }`}
+          >
+            {isAudioMuted ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
+          </button>
         </div>
       </header>
 
@@ -400,18 +384,6 @@ export const App: React.FC = () => {
             <Scale className="w-3.5 h-3.5" />
             <span>RL Policy Benchmark</span>
           </button>
-
-          <button
-            onClick={() => setActiveTab('JOURNEY')}
-            className={`px-3.5 py-2 text-xs font-mono font-medium flex items-center gap-2 rounded transition cursor-pointer ${
-              activeTab === 'JOURNEY'
-                ? 'bg-sky-50 text-sky-700 border border-sky-300 shadow-xs'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent'
-            }`}
-          >
-            <Activity className="w-3.5 h-3.5" />
-            <span>Patient Journey Graph</span>
-          </button>
         </nav>
 
         {/* Right: Hospital Census Quick Stats */}
@@ -432,6 +404,13 @@ export const App: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Active Trajectory Progress Bar (100% Live Updates without stalls) */}
+      <ActiveEncounterProgressBar
+        isRunning={isSimulating}
+        patientName={simulatingPatientName}
+        onViewReport={() => setActiveTab('REPORTS')}
+      />
 
       {/* Main Portal Viewport */}
       <main className="flex-1 overflow-hidden flex flex-col relative bg-[#f8fafc]">
@@ -505,10 +484,15 @@ export const App: React.FC = () => {
           </div>
         )}
 
-        {activeTab === 'JOURNEY' && (
-          <PatientJourneyFlowPage onBackToPortal={() => setActiveTab('INTAKE')} />
-        )}
       </main>
+
+      {/* Hospital Notification System (Slide-In/Out Drawer & Live Event Toasts) */}
+      <LeftNotificationDrawer
+        events={events}
+        isConnected={isWsConnected}
+        onNavigateToTab={(tab) => setActiveTab(tab as any)}
+        onClearEvents={() => setEvents([])}
+      />
 
       {/* Global Clinical Specialist Modals */}
       <InternalMedicineConsultModal
