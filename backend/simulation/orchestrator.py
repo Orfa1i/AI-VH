@@ -220,11 +220,12 @@ class HospitalOrchestrator:
         state.report = report
         self.reports[report.id] = report
 
-        # Persist report to database
+        # Persist report to database and update patient status to discharged
         try:
             self.db.save_report(report, case_id=case.id)
+            self.db.discharge_patient(case.id)
         except Exception as db_err:
-            logger.error(f"Failed to persist clinical report to database: {db_err}", exc_info=True)
+            logger.error(f"Failed to persist clinical report or discharge patient: {db_err}", exc_info=True)
 
         logger.info(f"Encounter {encounter_id} completed. Report ID: {report.id}")
 
@@ -333,12 +334,37 @@ class HospitalOrchestrator:
         return results
 
     def get_pending_reports(self) -> List[Dict[str, Any]]:
-        """Returns only unreviewed reports pending physician review."""
+        """Returns only unreviewed reports pending physician review, unifying memory and database."""
         reviewed_report_ids = {rev.report_id for rev in self.reviews.values()}
+        try:
+            db_reviews = self.db.list_reviews(limit=500)
+            for rev in db_reviews:
+                if rev.get("report_id"):
+                    reviewed_report_ids.add(rev.get("report_id"))
+        except Exception:
+            pass
+
+        all_reports_map: Dict[str, Any] = {r.id: r.model_dump() for r in self.reports.values()}
+        try:
+            db_reps = self.db.list_reports(limit=200)
+            for d in db_reps:
+                rep_id = d.get("id")
+                if rep_id and rep_id not in all_reports_map:
+                    raw = d.get("raw_json")
+                    if raw and isinstance(raw, str):
+                        try:
+                            import json
+                            rep_data = json.loads(raw)
+                            all_reports_map[rep_id] = rep_data
+                        except Exception:
+                            pass
+        except Exception:
+            pass
+
         return [
-            r.model_dump()
-            for r in self.reports.values()
-            if r.id not in reviewed_report_ids
+            rep
+            for rep_id, rep in all_reports_map.items()
+            if rep_id not in reviewed_report_ids
         ]
 
     def get_report(self, report_id: str) -> Optional[Dict[str, Any]]:
