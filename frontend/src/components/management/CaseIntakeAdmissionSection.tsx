@@ -12,7 +12,9 @@ import {
   Layers,
   FileSpreadsheet,
   Zap,
+  Sparkles,
 } from 'lucide-react';
+import { DemoPatientsSection } from '../synthea/DemoPatientsSection';
 
 interface CaseIntakeAdmissionSectionProps {
   cases: BenchmarkCase[];
@@ -24,6 +26,9 @@ export const CaseIntakeAdmissionSection: React.FC<CaseIntakeAdmissionSectionProp
   onPatientAdmitted,
   onAdmitAndSimulate,
 }) => {
+  // Mode switcher: Manual admission form vs. Synthetic Synthea patient library
+  const [intakeMode, setIntakeMode] = useState<'MANUAL' | 'SYNTHETIC'>('MANUAL');
+
   // Form fields (blank defaults for real-world admission testing)
   const [name, setName] = useState('');
   const [age, setAge] = useState<number | ''>('');
@@ -168,29 +173,73 @@ export const CaseIntakeAdmissionSection: React.FC<CaseIntakeAdmissionSectionProp
 
         {/* Quick Baseline Actions */}
         <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={handleApplyNormalVitals}
-            className="px-3 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-mono font-medium flex items-center gap-1.5 transition cursor-pointer shadow-xs"
-          >
-            <Zap className="w-3.5 h-3.5 text-emerald-600" />
-            <span>Normal Baseline Vitals</span>
-          </button>
-          <button
-            type="button"
-            onClick={handleResetForm}
-            className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 text-xs font-mono font-medium flex items-center gap-1.5 transition cursor-pointer shadow-xs"
-          >
-            <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
-            <span>Reset Form</span>
-          </button>
+          {intakeMode === 'MANUAL' && (
+            <>
+              <button
+                type="button"
+                onClick={handleApplyNormalVitals}
+                className="px-3 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-mono font-medium flex items-center gap-1.5 transition cursor-pointer shadow-xs"
+              >
+                <Zap className="w-3.5 h-3.5 text-emerald-600" />
+                <span>Normal Baseline Vitals</span>
+              </button>
+              <button
+                type="button"
+                onClick={handleResetForm}
+                className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 text-xs font-mono font-medium flex items-center gap-1.5 transition cursor-pointer shadow-xs"
+              >
+                <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
+                <span>Reset Form</span>
+              </button>
+            </>
+          )}
         </div>
       </div>
 
       {/* ═══════════════════════════════════════════════════════════════════
-          SUCCESS NOTIFICATION CARD (DOUBLE-BEZEL LIGHT)
+          CONSOLIDATED VIEW SWITCHER (MANUAL INTAKE vs. SYNTHETIC PATIENTS)
           ═══════════════════════════════════════════════════════════════════ */}
-      {successMessage && lastAdmitted && (
+      <div className="flex items-center p-1 bg-slate-200/80 rounded-xl font-mono text-xs mb-6 w-fit border border-slate-300/80 shadow-2xs">
+        <button
+          type="button"
+          onClick={() => setIntakeMode('MANUAL')}
+          className={`px-4 py-2 rounded-lg font-bold flex items-center gap-2 transition cursor-pointer ${
+            intakeMode === 'MANUAL'
+              ? 'bg-white text-sky-800 shadow-xs'
+              : 'text-slate-600 hover:text-slate-900'
+          }`}
+        >
+          <UserPlus className="w-3.5 h-3.5" />
+          <span>MANUAL CASE INTAKE &amp; BED ALLOCATION</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setIntakeMode('SYNTHETIC')}
+          className={`px-4 py-2 rounded-lg font-bold flex items-center gap-2 transition cursor-pointer ${
+            intakeMode === 'SYNTHETIC'
+              ? 'bg-white text-sky-800 shadow-xs'
+              : 'text-slate-600 hover:text-slate-900'
+          }`}
+        >
+          <Sparkles className="w-3.5 h-3.5 text-sky-600" />
+          <span>SYNTHETIC PATIENTS &amp; COHORT GENERATOR (FHIR R4)</span>
+        </button>
+      </div>
+
+      {intakeMode === 'SYNTHETIC' ? (
+        <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
+          <DemoPatientsSection
+            onAdmitSuccess={() => {
+              onPatientAdmitted({} as any);
+            }}
+          />
+        </div>
+      ) : (
+        <>
+          {/* ═══════════════════════════════════════════════════════════════════
+              SUCCESS NOTIFICATION CARD (DOUBLE-BEZEL LIGHT)
+              ═══════════════════════════════════════════════════════════════════ */}
+          {successMessage && lastAdmitted && (
         <div className="mb-6 relative rounded-2xl p-0.5 bg-gradient-to-r from-emerald-400 via-emerald-300 to-slate-200 shadow-sm animate-in fade-in duration-300">
           <div className="p-4 rounded-[calc(1rem-2px)] bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-start gap-3.5">
@@ -601,6 +650,8 @@ export const CaseIntakeAdmissionSection: React.FC<CaseIntakeAdmissionSectionProp
           </button>
         </div>
       </form>
+        </>
+      )}
     </div>
   );
 };

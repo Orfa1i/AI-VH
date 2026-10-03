@@ -11,6 +11,7 @@ import asyncio
 import json
 import logging
 import random
+from datetime import datetime
 
 from ..simulation.orchestrator import orchestrator
 from ..simulation.event_bus import event_bus
@@ -21,6 +22,15 @@ from .demo_patients import router as demo_patients_router
 logger = logging.getLogger("APIRouter")
 api_router = APIRouter(prefix="/api")
 api_router.include_router(demo_patients_router)
+
+
+class ManualTrainingRequest(BaseModel):
+    epochs: Optional[int] = 4
+    learning_rate: Optional[float] = 2e-4
+    dry_run: Optional[bool] = None
+    output_dir: Optional[str] = "models/medgemma-dpo-lora"
+    include_calibrations: Optional[bool] = True
+
 
 
 class SimulationRequest(BaseModel):
@@ -207,6 +217,19 @@ async def get_reports():
     return orchestrator.get_all_reports()
 
 
+@api_router.get("/reports/pending")
+async def get_pending_reports():
+    """Returns only clinical reports awaiting doctor review."""
+    return orchestrator.get_pending_reports()
+
+
+@api_router.get("/reports/reviewed")
+async def get_reviewed_reports():
+    """Returns all clinical reports that have been evaluated and reviewed by doctors."""
+    return orchestrator.get_reviewed_reports()
+
+
+
 @api_router.get("/reports/history")
 async def get_reports_history(case_id: Optional[str] = None, limit: int = 50, offset: int = 0):
     """Retrieves persistent clinical reports from the database with pagination and case filtering."""
@@ -363,6 +386,81 @@ async def export_rl_dpo_dataset(filepath: Optional[str] = "data/dpo_preference_d
     except Exception as e:
         logger.error(f"Error exporting DPO dataset: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
+
+
+_training_state: Dict[str, Any] = {
+    "status": "IDLE",
+    "last_run": None,
+    "last_result": None,
+    "last_error": None,
+}
+
+
+@api_router.get("/rl/train/status")
+async def get_training_status():
+    """Returns the current operational status of the manual model fine-tuning pipeline."""
+    return _training_state
+
+
+@api_router.post("/rl/train")
+async def trigger_manual_fine_tuning(req: Optional[ManualTrainingRequest] = None):
+    """
+    Manually triggers fine-tuning of the MedGemma Clinical AI LoRA adapter using
+    physician-reviewed evaluations and preference pairs. Fine-tuning is strictly manual.
+    """
+    global _training_state
+    if _training_state["status"] == "TRAINING":
+        raise HTTPException(
+            status_code=409,
+            detail="A fine-tuning run is already actively training. Please wait for completion."
+        )
+
+    req = req or ManualTrainingRequest()
+    try:
+        _training_state["status"] = "TRAINING"
+        _training_state["last_error"] = None
+
+        # 1. Compile and export the latest preference pairs to JSONL
+        export_res = orchestrator.export_dpo_dataset(output_path="data/dpo_preference_dataset.jsonl")
+        exported_count = export_res.get("exported_count", 0)
+        if exported_count == 0:
+            _training_state["status"] = "IDLE"
+            _training_state["last_error"] = "No preference pairs available for training. Please evaluate and review clinical cases first."
+            raise HTTPException(
+                status_code=400,
+                detail="No preference pairs found. Please review at least one clinical case first."
+            )
+
+        # 2. Run DPO training with config
+        from ..rl.train_dpo import DPOTrainingConfig, run_dpo_training
+        import torch
+
+        # Dry run logic: if explicitly passed use it; otherwise, if no cuda device, default to dry-run verification
+        is_dry_run = req.dry_run if req.dry_run is not None else (not torch.cuda.is_available())
+
+        config = DPOTrainingConfig(
+            model_name_or_path="MedGemma Model/model",
+            dataset_path=export_res.get("filepath", "data/dpo_preference_dataset.jsonl"),
+            output_dir=req.output_dir or "models/medgemma-dpo-lora",
+            learning_rate=req.learning_rate or 2e-4,
+            epochs=req.epochs or 4,
+            dry_run=is_dry_run,
+        )
+
+        result = run_dpo_training(config)
+        _training_state["status"] = "COMPLETED"
+        _training_state["last_run"] = datetime.utcnow().isoformat()
+        _training_state["last_result"] = result
+        logger.info(f"Manual fine-tuning finished successfully: status={result.get('status')}")
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Manual fine-tuning execution error: {e}", exc_info=True)
+        _training_state["status"] = "FAILED"
+        _training_state["last_error"] = str(e)
+        raise HTTPException(status_code=500, detail=f"Fine-tuning failed: {str(e)}")
+
 
 
 @api_router.get("/rl/benchmark")

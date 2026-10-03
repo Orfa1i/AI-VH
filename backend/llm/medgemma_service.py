@@ -64,6 +64,8 @@ class MedGemmaService:
                 str(self.model_dir),
                 quantization_config=bnb_config,
                 device_map="auto",
+                torch_dtype=torch.bfloat16,
+                low_cpu_mem_usage=True,
             )
             self._is_loaded = True
             logger.info("MedGemma base model successfully loaded onto GPU!")

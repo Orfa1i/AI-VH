@@ -305,6 +305,42 @@ class HospitalOrchestrator:
     def get_all_reports(self) -> List[Dict[str, Any]]:
         return [r.model_dump() for r in self.reports.values()]
 
+    def get_reviewed_reports(self) -> List[Dict[str, Any]]:
+        """Returns all reports that have been evaluated and reviewed by doctors."""
+        results = []
+        for rev_id, review in self.reviews.items():
+            report_dict = self.get_report(review.report_id)
+            if report_dict:
+                rev_dict = review.model_dump() if hasattr(review, "model_dump") else dict(review)
+                results.append({
+                    "id": rev_id,
+                    "report_id": review.report_id,
+                    "encounter_id": review.encounter_id,
+                    "physician_name": review.physician_name,
+                    "reviewed_at": rev_dict.get("reviewed_at", ""),
+                    "diagnosis_grade": getattr(review.diagnosis_grade, "value", str(review.diagnosis_grade)),
+                    "reasoning_grade": getattr(review.reasoning_grade, "value", str(review.reasoning_grade)),
+                    "tests_grade": getattr(review.tests_grade, "value", str(review.tests_grade)),
+                    "treatment_grade": getattr(review.treatment_grade, "value", str(review.treatment_grade)),
+                    "overall_score": review.overall_score,
+                    "approved": review.approved,
+                    "notes": review.physician_feedback_notes,
+                    "corrected_diagnosis": review.corrected_diagnosis,
+                    "corrected_treatment": review.corrected_treatment,
+                    "report": report_dict,
+                })
+        results.sort(key=lambda x: str(x.get("reviewed_at", "")), reverse=True)
+        return results
+
+    def get_pending_reports(self) -> List[Dict[str, Any]]:
+        """Returns only unreviewed reports pending physician review."""
+        reviewed_report_ids = {rev.report_id for rev in self.reviews.values()}
+        return [
+            r.model_dump()
+            for r in self.reports.values()
+            if r.id not in reviewed_report_ids
+        ]
+
     def get_report(self, report_id: str) -> Optional[Dict[str, Any]]:
         report = self.reports.get(report_id)
         if report:

@@ -12,6 +12,8 @@ import {
   Cpu,
   Loader2,
   FileCode2,
+  Play,
+  AlertTriangle,
 } from 'lucide-react';
 
 interface RLDatasetModalProps {
@@ -26,6 +28,10 @@ export const RLDatasetModal: React.FC<RLDatasetModalProps> = ({ isOpen, onClose 
   const [filter, setFilter] = useState<'ALL' | 'HUMAN' | 'BENCHMARK' | 'SAFETY'>('ALL');
   const [exporting, setExporting] = useState(false);
   const [exportMessage, setExportMessage] = useState<string | null>(null);
+  const [training, setTraining] = useState(false);
+  const [trainMessage, setTrainMessage] = useState<string | null>(null);
+  const [trainError, setTrainError] = useState<string | null>(null);
+
 
   const fetchDataset = async () => {
     setLoading(true);
@@ -66,6 +72,34 @@ export const RLDatasetModal: React.FC<RLDatasetModalProps> = ({ isOpen, onClose 
     }
   };
 
+  const handleManualTrain = async () => {
+    if (!window.confirm('Trigger manual DPO model fine-tuning with verified preference pairs?')) {
+      return;
+    }
+    setTraining(true);
+    setTrainMessage(null);
+    setTrainError(null);
+    try {
+      const res = await fetch('/api/rl/train', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ epochs: 4, dry_run: false }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ detail: 'Training failed' }));
+        throw new Error(err.detail || 'Training failed');
+      }
+      const data = await res.json();
+      setTrainMessage(`Model fine-tuning finished! Status: ${data.status}, Pairs: ${data.pairs_trained}, Output: ${data.adapter_path}`);
+      setTimeout(() => setTrainMessage(null), 8000);
+    } catch (err: any) {
+      setTrainError(err.message || 'Manual fine-tuning failed');
+      setTimeout(() => setTrainError(null), 8000);
+    } finally {
+      setTraining(false);
+    }
+  };
+
   if (!isOpen) return null;
 
   const filteredPairs = pairs.filter((p) => {
@@ -94,12 +128,31 @@ export const RLDatasetModal: React.FC<RLDatasetModalProps> = ({ isOpen, onClose 
                 </span>
               </div>
               <p className="text-xs text-slate-500">
-                Reward-calibrated preference pairs (Prompt, Chosen, Rejected) synthesized from physician reviews & Harrison's ground truth.
+                Reward-calibrated preference pairs (Prompt, Chosen, Rejected) synthesized from physician reviews &amp; Harrison's ground truth.
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
+            <button
+              onClick={handleManualTrain}
+              disabled={training}
+              className="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-md shadow-emerald-500/20 flex items-center gap-2 transition-all cursor-pointer disabled:opacity-50"
+              title="Manually trigger DPO model fine-tuning with verified dataset"
+            >
+              {training ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <span>Training Model...</span>
+                </>
+              ) : (
+                <>
+                  <Play className="w-3.5 h-3.5 fill-current" />
+                  <span>Send Data for Training</span>
+                </>
+              )}
+            </button>
+
             <button
               onClick={handleExportJSONL}
               disabled={exporting}
@@ -113,7 +166,7 @@ export const RLDatasetModal: React.FC<RLDatasetModalProps> = ({ isOpen, onClose 
               ) : (
                 <>
                   <Download className="w-3.5 h-3.5" />
-                  <span>Export JSONL Dataset</span>
+                  <span>Export JSONL</span>
                 </>
               )}
             </button>
@@ -127,7 +180,21 @@ export const RLDatasetModal: React.FC<RLDatasetModalProps> = ({ isOpen, onClose 
           </div>
         </div>
 
-        {/* Export Toast Notification */}
+        {/* Notifications */}
+        {trainMessage && (
+          <div className="px-6 py-2 bg-emerald-50 border-b border-emerald-200 text-emerald-800 text-xs flex items-center gap-2 font-mono">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+            <span>{trainMessage}</span>
+          </div>
+        )}
+
+        {trainError && (
+          <div className="px-6 py-2 bg-rose-50 border-b border-rose-200 text-rose-800 text-xs flex items-center gap-2 font-mono">
+            <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
+            <span>{trainError}</span>
+          </div>
+        )}
+
         {exportMessage && (
           <div className="px-6 py-2 bg-emerald-50 border-b border-emerald-200 text-emerald-800 text-xs flex items-center gap-2 font-mono">
             <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />

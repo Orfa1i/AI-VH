@@ -11,7 +11,7 @@ import { DepartmentBoard3DSection } from './components/hospital3d/DepartmentBoar
 import { InternalMedicineConsultModal } from './components/specialists/InternalMedicineConsultModal';
 import { RLDatasetModal } from './components/rl/RLDatasetModal';
 import { PolicyBenchmarkModal } from './components/rl/PolicyBenchmarkModal';
-import { DemoPatientsSection } from './components/synthea/DemoPatientsSection';
+import { ReviewedReportsSection } from './components/reviewing/ReviewedReportsSection';
 import { toggleGlobalMute, isGlobalMuted } from './utils/speechSynthesis';
 import {
   Activity,
@@ -21,10 +21,10 @@ import {
   Clock,
   Cpu,
   FileText,
+  FileCheck2,
   Radio,
   Scale,
   Search,
-  Sparkles,
   Stethoscope,
   Terminal,
   Users,
@@ -38,8 +38,7 @@ import type {
   PatientRecord,
 } from './types';
 
-type PortalTab = 'INTAKE' | 'PATIENTS' | 'STAFF' | 'REPORTS' | 'REVIEW' | 'WARDS' | 'HOSPITAL3D' | 'KNOWLEDGE' | 'BENCHMARK' | 
-'JOURNEY' | 'SYNTHEA';
+type PortalTab = 'INTAKE' | 'PATIENTS' | 'STAFF' | 'REPORTS' | 'REVIEW' | 'REVIEWING' | 'WARDS' | 'HOSPITAL3D' | 'KNOWLEDGE' | 'BENCHMARK' | 'JOURNEY';
 
 export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<PortalTab>('INTAKE');
@@ -47,10 +46,12 @@ export const App: React.FC = () => {
   // Shared Data State
   const [cases, setCases] = useState<BenchmarkCase[]>([]);
   const [reports, setReports] = useState<ClinicalReport[]>([]);
+  const [reviewedCount, setReviewedCount] = useState<number>(0);
   const [isSubmittingReview, setIsSubmittingReview] = useState<boolean>(false);
   const [patientRefreshCounter, setPatientRefreshCounter] = useState<number>(0);
   const [isAudioMuted, setIsAudioMuted] = useState<boolean>(isGlobalMuted());
   const [currentTime, setCurrentTime] = useState<string>('');
+
 
   // Quick Action Modals
   const [isConsultOpen, setIsConsultOpen] = useState<boolean>(false);
@@ -100,17 +101,27 @@ export const App: React.FC = () => {
     };
   }, []);
 
-  // Fetch initial cases and reports
-  useEffect(() => {
-    fetch('/api/cases')
-      .then((res) => res.json())
-      .then((data) => setCases(data))
-      .catch((err) => console.error('Failed to load cases:', err));
+  // Fetch initial cases, pending reports, and reviewed count
+  const refreshData = async () => {
+    try {
+      const [cRes, rRes, revRes] = await Promise.all([
+        fetch('/api/cases'),
+        fetch('/api/reports/pending'),
+        fetch('/api/reports/reviewed'),
+      ]);
+      if (cRes.ok) setCases(await cRes.json());
+      if (rRes.ok) setReports(await rRes.json());
+      if (revRes.ok) {
+        const revData = await revRes.json();
+        setReviewedCount(Array.isArray(revData) ? revData.length : 0);
+      }
+    } catch (err) {
+      console.error('Failed to load portal data:', err);
+    }
+  };
 
-    fetch('/api/reports')
-      .then((res) => res.json())
-      .then((data) => setReports(data))
-      .catch((err) => console.error('Failed to load reports:', err));
+  useEffect(() => {
+    refreshData();
   }, []);
 
   // Submit physician review
@@ -125,11 +136,7 @@ export const App: React.FC = () => {
       if (!res.ok) {
         throw new Error('Failed to submit physician review');
       }
-      const rRes = await fetch('/api/reports');
-      if (rRes.ok) {
-        const updated = await rRes.json();
-        setReports(updated);
-      }
+      await refreshData();
     } finally {
       setIsSubmittingReview(false);
     }
@@ -137,6 +144,7 @@ export const App: React.FC = () => {
 
   const handlePatientAdmitted = (_patient: PatientRecord) => {
     setPatientRefreshCounter((prev) => prev + 1);
+    refreshData();
   };
 
   const handleAdmitAndSimulate = async (caseId: string) => {
@@ -146,11 +154,7 @@ export const App: React.FC = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ case_id: caseId }),
       });
-      const rRes = await fetch('/api/reports');
-      if (rRes.ok) {
-        const updated = await rRes.json();
-        setReports(updated);
-      }
+      await refreshData();
       setActiveTab('REPORTS');
     } catch (err) {
       console.error('Error simulating encounter:', err);
@@ -333,6 +337,23 @@ export const App: React.FC = () => {
           </button>
 
           <button
+            onClick={() => setActiveTab('REVIEWING')}
+            className={`px-3.5 py-2 text-xs font-mono font-medium flex items-center gap-2 rounded transition cursor-pointer ${
+              activeTab === 'REVIEWING'
+                ? 'bg-sky-50 text-sky-700 border border-sky-300 shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent'
+            }`}
+          >
+            <FileCheck2 className="w-3.5 h-3.5 text-emerald-600" />
+            <span>Reviewing</span>
+            {reviewedCount > 0 && (
+              <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-emerald-100 text-emerald-800 border border-emerald-300">
+                {reviewedCount}
+              </span>
+            )}
+          </button>
+
+          <button
             onClick={() => setActiveTab('WARDS')}
             className={`px-3.5 py-2 text-xs font-mono font-medium flex items-center gap-2 rounded transition cursor-pointer ${
               activeTab === 'WARDS'
@@ -391,18 +412,6 @@ export const App: React.FC = () => {
             <Activity className="w-3.5 h-3.5" />
             <span>Patient Journey Graph</span>
           </button>
-
-          <button
-            onClick={() => setActiveTab('SYNTHEA')}
-            className={`px-3.5 py-2 text-xs font-mono font-medium flex items-center gap-2 rounded transition cursor-pointer ${
-              activeTab === 'SYNTHEA'
-                ? 'bg-sky-50 text-sky-700 border border-sky-300 shadow-xs'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent'
-            }`}
-          >
-            <Sparkles className="w-3.5 h-3.5 text-sky-600" />
-            <span>Synthetic Patients</span>
-          </button>
         </nav>
 
         {/* Right: Hospital Census Quick Stats */}
@@ -415,6 +424,11 @@ export const App: React.FC = () => {
           <div className="flex items-center gap-1.5">
             <span className="text-slate-500">Pending Reviews:</span>
             <span className="font-semibold text-amber-700">{reports.length}</span>
+          </div>
+          <span className="text-slate-300">•</span>
+          <div className="flex items-center gap-1.5">
+            <span className="text-slate-500">Evaluated:</span>
+            <span className="font-semibold text-emerald-700">{reviewedCount}</span>
           </div>
         </div>
       </div>
@@ -445,10 +459,15 @@ export const App: React.FC = () => {
             reports={reports}
             onSubmitReview={handleSubmitReview}
             isSubmitting={isSubmittingReview}
+            onResetData={refreshData}
           />
         )}
 
         {activeTab === 'REVIEW' && <DoctorReviewSection />}
+
+        {activeTab === 'REVIEWING' && (
+          <ReviewedReportsSection onTriggerTrainingSuccess={refreshData} />
+        )}
 
         {activeTab === 'WARDS' && <DepartmentBoardSection />}
 
@@ -488,12 +507,6 @@ export const App: React.FC = () => {
 
         {activeTab === 'JOURNEY' && (
           <PatientJourneyFlowPage onBackToPortal={() => setActiveTab('INTAKE')} />
-        )}
-
-        {activeTab === 'SYNTHEA' && (
-          <DemoPatientsSection
-            onAdmitSuccess={() => setPatientRefreshCounter((prev) => prev + 1)}
-          />
         )}
       </main>
 

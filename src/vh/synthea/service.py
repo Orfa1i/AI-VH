@@ -77,6 +77,20 @@ class DemoDataService:
 
         logger.info(f"SyntheaDemoService loaded {len(self._patients)} synthetic patients into index.")
 
+    def clear_generated(self) -> int:
+        """Deletes all generated synthetic cohorts from data/synthea/generated/ and reloads index."""
+        count = 0
+        if self.generated_data_dir.exists():
+            for item in list(self.generated_data_dir.iterdir()):
+                if item.is_dir():
+                    shutil.rmtree(item, ignore_errors=True)
+                    count += 1
+                elif item.is_file() and item.name not in (".gitkeep", "README.md"):
+                    item.unlink(missing_ok=True)
+                    count += 1
+        self.reload()
+        return count
+
     def _load_from_directory(self, dir_path: Path, source: str = "bundled") -> None:
         if not dir_path.exists():
             return

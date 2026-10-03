@@ -13,22 +13,40 @@ import {
   Activity,
   HeartPulse,
   Thermometer,
+  RotateCcw,
 } from 'lucide-react';
 
 interface PhysicianReviewDashboardProps {
   reports: ClinicalReport[];
   onSubmitReview: (review: PhysicianReviewPayload) => Promise<void>;
   isSubmitting?: boolean;
+  onResetData?: () => void;
 }
 
 export const PhysicianReviewDashboard: React.FC<PhysicianReviewDashboardProps> = ({
   reports,
   onSubmitReview,
   isSubmitting = false,
+  onResetData,
 }) => {
   const [selectedReportId, setSelectedReportId] = useState<string>(
     reports.length > 0 ? reports[0].id : ''
   );
+
+  const handleResetReports = async () => {
+    if (!window.confirm('Reset all test reports, reviews, and pending queue back to zero for a fresh start?')) {
+      return;
+    }
+    try {
+      const res = await fetch('/api/database/purge-mock-data', { method: 'POST' });
+      if (res.ok && onResetData) {
+        onResetData();
+      }
+    } catch (err) {
+      console.error('Failed to reset reports:', err);
+    }
+  };
+
 
   // Review Form State
   const [diagnosisGrade, setDiagnosisGrade] = useState('CORRECT');
@@ -95,6 +113,13 @@ export const PhysicianReviewDashboard: React.FC<PhysicianReviewDashboardProps> =
         <p className="text-xs max-w-md text-center mt-2 text-slate-500 font-sans leading-relaxed">
           Simulate an encounter or admit a patient to generate autonomous Clinical AI reports grounded with Harrison's 21st Edition evidence.
         </p>
+        <button
+          onClick={handleResetReports}
+          className="mt-4 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-mono font-semibold flex items-center gap-1.5 border border-slate-300 transition cursor-pointer"
+        >
+          <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
+          <span>Reset All Records to Zero</span>
+        </button>
       </div>
     );
   }
@@ -120,9 +145,18 @@ export const PhysicianReviewDashboard: React.FC<PhysicianReviewDashboardProps> =
               <span className="text-[10px] font-mono text-slate-500">Autonomous Encounters</span>
             </div>
           </div>
-          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono bg-sky-50 text-sky-700 border border-sky-300 font-semibold shadow-2xs">
-            {reports.length} READY
-          </span>
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={handleResetReports}
+              title="Reset all reports and pending reviews to zero"
+              className="p-1 rounded text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+            </button>
+            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono bg-sky-50 text-sky-700 border border-sky-300 font-semibold shadow-2xs">
+              {reports.length} READY
+            </span>
+          </div>
         </div>
 
         {/* Report Cards Scroll Area */}

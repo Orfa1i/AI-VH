@@ -103,15 +103,20 @@
   - Replaced ambiguous "Inspect Timeline" label with a prominent "View Case Details" button.
   - Stopped event propagation on the "Admit" action so admission can be triggered without opening the modal.
   - Verified end-to-end multi-agent clinical diagnostic simulation for synthetic patient Thomas Garcia (`pat-101-0001` admitted as `CASE-SYNTH-pat-101-0001`): completed encounter `ENC-5737E789`, generated clinical report `REP-37E789`, and submitted physician review `REV-0BF0DB` with 20 multi-agent event trace.
-- **Backend Service**: Running on `http://127.0.0.1:8000` with hot-reload enabled.
-- **Frontend Service**: Running on `http://localhost:5173`.
+- **Platform Updates (Navigation, Reset, Reviewing Archive, Manual Training)**: **100% COMPLETE & VERIFIED**
+  - **1. Navigation Consolidation**: Removed standalone `SYNTHEA` navigation tab from top-right navbar. Integrated full Synthea FHIR R4 synthetic patient generator and cohort explorer directly into `Case Intake & Triage` (`CaseIntakeAdmissionSection.tsx`) via an interactive mode toggle (`MANUAL CASE INTAKE` vs `SYNTHETIC PATIENTS & COHORT GENERATOR`).
+  - **2. Stale Count & Badge Reset**: Purged test/mock clinical reports, encounters, and reviews from database via `orchestrator.db.purge_mock_data()` and `POST /api/database/purge-mock-data`. All pending review badges and report notifications set to 0 for a clean start. Harrison's RAG knowledge base (47,806 chunks) and medical staff directory preserved.
+  - **3. New Doctor 'Reviewing' Archive**: Built `frontend/src/components/reviewing/ReviewedReportsSection.tsx` and registered `REVIEWING` navigation tab in `App.tsx`. Stores and displays all evaluated reports with physician evaluation rubrics, scores, diagnosis/treatment grades, and clinical notes.
+  - **4. Manual Fine-Tuning Enforcement**: Enforced strictly manual model training. Created `POST /api/rl/train` (`ManualTrainingRequest`) and `GET /api/rl/train/status` in `backend/api/router.py`. Added manual training console in both `ReviewedReportsSection` and `RLDatasetModal` with explicit confirmation buttons, configurable hyperparameters, and dry-run safety modes.
+  - **5. Full Verification Suite**: 27 of 27 frontend tests passing (`npm test`), 67 of 67 backend tests passing (`pytest backend/tests`), production build green (`tsc -b && vite build` in 930ms), linter 0 errors (`oxlint`).
+- **Backend Service**: Running live on `http://127.0.0.1:8000` (FastAPI + MedGemma NF4 on RTX 4060).
+- **Frontend Service**: Running live on `http://127.0.0.1:5173` (Vite + React + Tailwind + Lucide).
 
 ---
 
 ## 4. Concrete Next Steps
-1. **Explore Advanced Saudi Healthcare Custom Modules**:
-   Extend `synthea/modules/custom/` with native epidemiological transition graphs for Sickle Cell Vaso-Occlusive Crisis and MERS-CoV surveillance.
-2. **Batch Import & Simulation Harness**:
-   Provide automated CLI batch ingestion (`vh synthea import-population`) to run simulated multi-agent hospital encounters across large synthetic cohorts.
+1. **Clinical Case Simulation**: Run an encounter via Case Intake (manual or synthetic patient) to observe the live clinical diagnostic pipeline and verify that reports transition into Pending Review.
+2. **Physician Review & Archive Verification**: Submit a doctor evaluation from Clinical Review to confirm the report instantly archives into the new 'Reviewing' page.
+3. **Manual DPO Fine-Tuning Run**: Trigger a manual fine-tuning run from the Reviewing console with real physician preference pairs to verify adapter training.
 
 
