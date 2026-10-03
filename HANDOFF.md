@@ -114,16 +114,17 @@
   - **10. Patient Journey Graph Relocation**: Preserved and relocated the interactive 2D `PatientJourneyFlowPage` into the top-right header action slot. Clicking the badge opens the complete 2D clinical architecture flow diagram in a modal viewport with a "Back to Portal" dismissal button.
   - **11. Clinical Report Workflow Verified**: Executed full end-to-end simulation for patient Robert Miller (`REP-4901A1`, Acute NSTEMI). Confirmed arrival into Pending Reviews, submitted physician evaluation rubric (`REV-C98B2F`), verified pending count decremented to 0, and confirmed report automatically archived in the 'Reviewing' repository with 5.0/5.0 score.
   - **12. Header Cleanup & Relocation**: Preserved and relocated the interactive 2D `PatientJourneyFlowPage` into the top-right header action slot with "Back to Portal" dismissal. Removed legacy census counters. Commit `5ea4285`.
-  - **13. Trajectory Stepper & State Flow Enhanced (Awwwards-Tier UI)**: Refactored the inline progress tracker into a high-end, dedicated [`ActiveTrajectoryStepper.tsx`](frontend/src/components/diagram/ActiveTrajectoryStepper.tsx) component. Features distinct Completed/Active/Upcoming visual topologies, pulsing ambient halo glow physics, animated patient pin, interactive stage detail popover HUDs with station and evidence telemetry, and responsive label scaling. All 38 frontend unit tests passing, production build green. Commit `b437e34`.
+  - **14. Revert of Image-Inspired Redesign**: Per user instruction, the exploratory UI and structural modifications based on `screen (1).png` have been safely reverted. All working modifications were cleanly preserved on a dedicated backup branch (`backup/image-refactor` at commit `ce50dc5`). The active working tree on `master` is restored to commit `a865f56e9b` with complete test coverage (38/38 Vitest frontend tests green, 67/67 pytest backend tests green, 0 build/lint errors).
 - **Backend Service**: Running live on `http://127.0.0.1:8000` (FastAPI + MedGemma NF4 on RTX 4060).
 - **Frontend Service**: Running live on `http://127.0.0.1:5173` (Vite + React + Tailwind + Lucide).
 
 ---
 
 ## 4. Concrete Next Steps
-1. **Interactive Trajectory Stepper Exploration**: Open the Patient Journey Graph in the browser ([http://127.0.0.1:5173/#journey](http://127.0.0.1:5173/#journey)) and hover over the 4 trajectory stages (Gateway, Assessment, Diagnostics, Disposition) to view the rich clinical popover HUDs.
-2. **Live Encounter Simulation**: Open Case Intake & Triage in the browser ([http://127.0.0.1:5173](http://127.0.0.1:5173)) and admit a patient to observe the fluid SVG gradient progress rail and animated patient avatar in real time.
-3. **Reviewing Archive Verification**: Check the **Reviewing** tab to view the archived, clinically evaluated case for Robert Miller.
-4. **Manual DPO Fine-Tuning**: Trigger a manual fine-tuning run from the Reviewing console to incorporate the newly reviewed encounter into the MedGemma LoRA adapter.
+1. **Interactive Trajectory Stepper**: Verify the enhanced `ActiveTrajectoryStepper` within the Patient Journey Graph modal on `master` ([http://127.0.0.1:5173](http://127.0.0.1:5173)), including tooltips, animated progress, and stage details.
+2. **State Synchronization Bugs (Discrete Implementation)**: If desired, implement the 4 state synchronization fixes (dynamic stepper mapping, reports review transfer, census eviction post-discharge, completion toast) in isolation without visual layout refactoring.
+3. **Live Encounter Simulation**: Run a clinical encounter simulation via Case Intake to verify real-time event propagation and telemetry.
+4. **Physician Reviewing Workflow**: Verify doctor report reviews and manual DPO fine-tuning controls under the Reviewing tab.
+
 
 
