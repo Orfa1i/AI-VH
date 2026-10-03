@@ -359,3 +359,150 @@ class GroundedGenerationPipeline(Pipeline):
             clinical_summary=result.clinical_summary,
             metadata=metadata,
         )
+
+    def run_grounded_assessment(
+        self,
+        case_id: str,
+        specialty: str,
+        structured_case: Dict[str, Any],
+        candidate_differentials: Optional[List[str]] = None,
+        report_id: Optional[str] = None,
+        search_fn: Optional[Callable[..., Any]] = None,
+        phase2_config: Optional[Any] = None,
+    ) -> PipelineResult:
+        """
+        Phase 2 grounded path: structured case -> two-pass Harrison retrieval
+        (mandatory guard) -> v2 assessment -> raw outputs stored alongside.
+
+        Does not touch the legacy run() path. Legacy callers are unaffected.
+        """
+        import uuid
+
+        from vh.cases.retrieval_log import new_retrieval_log, record_query
+        from vh.rag.retrieval import (
+            TwoPassRetrievalConfig,
+            build_pass1_query,
+            format_harrison_context,
+            two_pass_retrieve,
+        )
+        from vh.generation.medgemma import (
+            GenerationFailed,
+            MedGemmaAdapter,
+            Phase2GenerationConfig,
+            heuristic_assessment,
+        )
+
+        cfg = phase2_config or Phase2GenerationConfig()
+        rid = report_id or f"REP-{uuid.uuid4().hex[:6].upper()}"
+        log = new_retrieval_log(case_id)
+
+        if search_fn is None:
+            from vh.rag.sources.harrison import HarrisonAdapter
+
+            _harrison = HarrisonAdapter()
+            search_fn = _harrison.search
+
+        # Wrap search to retain every fetched hit (full text) for the retrieval log,
+        # including chunks that later fall outside the context cap.
+        seen_hits: Dict[str, Any] = {}
+        _inner_search = search_fn
+
+        def _recording_search(query: str, top_k: int = 6) -> List[Any]:
+            fetched = _inner_search(query, top_k=top_k) or []
+            for hit in fetched:
+                cid = str(getattr(hit, "chunk_id", "") or "")
+                if cid and cid not in seen_hits:
+                    seen_hits[cid] = hit
+            return fetched
+
+        adapter = self.adapter if isinstance(self.adapter, MedGemmaAdapter) else MedGemmaAdapter()
+
+        # Pass 1: symptoms + findings query (recorded even when empty).
+        pass1_query = build_pass1_query(structured_case)
+        pass1_hits: List[Any] = []
+        if pass1_query:
+            pass1_hits = _recording_search(pass1_query, top_k=6) or []
+            record_query(log, pass1_query, 6, pass1_hits)
+
+        # Candidate differential (LLM micro-call, heuristic fallback inside).
+        candidates = list(candidate_differentials or [])
+        if not candidates:
+            pass1_context = format_harrison_context(pass1_hits[:3])
+            try:
+                candidates = adapter.generate_candidates(structured_case, pass1_context, cfg)
+            except GenerationFailed:
+                from vh.generation.medgemma import heuristic_candidates
+
+                candidates = heuristic_candidates(structured_case)
+
+        # Pass 2: targeted per-candidate queries with threshold, dedup and cap.
+        tp_config = TwoPassRetrievalConfig(top_k_per_query=6, max_total_chunks=24)
+        hits, records = two_pass_retrieve(_recording_search, structured_case, candidates, tp_config)
+        for record in records:
+            record_hits = [seen_hits[cid] for cid in record.returned_chunk_ids if cid in seen_hits]
+            record_query(log, record.query, record.top_k, record_hits)
+
+        active_ids = [str(getattr(h, "chunk_id", "")) for h in hits if getattr(h, "chunk_id", "")]
+        if not active_ids:
+            logger.warning(f"No grounding chunks for case {case_id}: INSUFFICIENT_GROUNDING")
+            return PipelineResult(
+                case_id=case_id,
+                diagnosis="Insufficient Grounding",
+                differential=[],
+                suggested_orders=[],
+                clinical_summary="Insufficient Harrison grounding: no chunk passed the retrieval threshold.",
+                metadata={
+                    "generation_status": INSUFFICIENT_GROUNDING,
+                    "active_evidence_ids": [],
+                    "retrieval_log": log.model_dump(),
+                    "prompt_version": cfg.prompt_version,
+                },
+            )
+
+        harrison_context = format_harrison_context(hits)
+        try:
+            assessment_result = adapter.generate_assessment(
+                structured_case=structured_case,
+                harrison_context=harrison_context,
+                retrieval_chunk_ids=active_ids,
+                report_id=rid,
+                case_id=case_id,
+                candidates=candidates,
+                config=cfg,
+            )
+            report = assessment_result.report
+            raw_attempts = list(assessment_result.raw_attempts)
+            parse_stats = assessment_result.parse_stats.model_dump()
+        except GenerationFailed as exc:
+            logger.error(f"Grounded assessment failed for case {case_id}: {exc}")
+            return PipelineResult(
+                case_id=case_id,
+                diagnosis="Generation Failed",
+                differential=[],
+                suggested_orders=[],
+                clinical_summary="Grounded assessment failed validation constraints after retry exhaustion.",
+                metadata={
+                    "generation_status": "generation_failed",
+                    "error": str(exc),
+                    "active_evidence_ids": active_ids,
+                    "retrieval_log": log.model_dump(),
+                    "prompt_version": cfg.prompt_version,
+                },
+            )
+
+        return PipelineResult(
+            case_id=case_id,
+            diagnosis=report.final_diagnosis.diagnosis,
+            differential=[d.diagnosis for d in report.differential_diagnosis],
+            suggested_orders=[w.test for w in report.workup] + [t.item for t in report.treatment],
+            clinical_summary=report.case_summary,
+            metadata={
+                "generation_status": "success",
+                "assessment_report": report.model_dump(),
+                "raw_model_output": raw_attempts,
+                "parse_stats": parse_stats,
+                "active_evidence_ids": active_ids,
+                "retrieval_log": log.model_dump(),
+                "prompt_version": cfg.prompt_version,
+            },
+        )

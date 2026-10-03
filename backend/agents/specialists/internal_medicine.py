@@ -246,16 +246,34 @@ class InternalMedicineSpecialistAgent(DoctorAgent):
 
             lab_results_payload.append(result.model_dump())
 
-        # 5. MedGemma Foundation Model Clinical Synthesis
+        # 5. MedGemma Foundation Model Clinical Synthesis (VH_PIPELINE-gated:
+        # grounded src/vh assessment when VH_PIPELINE=grounded, else legacy path).
         vitals = toolkit.get_vital_signs()
-        decision = self.llm.generate_clinical_decision(
-            chief_complaint=patient_info["chief_complaint"],
-            hpi=patient_info["history_of_present_illness"],
-            vitals_summary=vitals.summary(),
-            exam_findings=exam,
-            lab_results=lab_results_payload,
-            rag_context=evidence_brief.citations,
-        )
+        decision = None
+        report_citations = evidence_brief.citations
+        try:
+            from backend.simulation.grounded_shim import maybe_grounded_assessment
+            grounded = maybe_grounded_assessment(
+                patient_info=patient_info,
+                vital_signs=vitals,
+                exam_findings=exam,
+                lab_results=lab_results_payload,
+                case_id=patient_id,
+            )
+        except Exception as shim_exc:
+            logger.warning(f"Grounded shim bypassed ({shim_exc}); using legacy decision path.")
+            grounded = None
+        if grounded is not None:
+            decision, report_citations = grounded
+        if decision is None:
+            decision = self.llm.generate_clinical_decision(
+                chief_complaint=patient_info["chief_complaint"],
+                hpi=patient_info["history_of_present_illness"],
+                vitals_summary=vitals.summary(),
+                exam_findings=exam,
+                lab_results=lab_results_payload,
+                rag_context=evidence_brief.citations,
+            )
 
         diff_items = [
             DifferentialItem(
@@ -297,7 +315,7 @@ class InternalMedicineSpecialistAgent(DoctorAgent):
             differential=diff_items,
             clinical_reasoning=decision["clinical_reasoning"],
             treatment_plan=decision["treatment_plan"],
-            citations=evidence_brief.citations,
+            citations=report_citations,
         )
 
         await self.emit_event(
