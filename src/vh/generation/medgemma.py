@@ -30,6 +30,7 @@ from vh.generation.report import (
 )
 from vh.generation.v2_report import (
     AssessmentReport,
+    export_assessment_json_schema,
     validate_assessment,
 )
 
@@ -51,7 +52,12 @@ def guided_decoding_available() -> bool:
 
 class GenerationFailed(Exception):
     """Raised when generation fails to produce a valid schema-compliant report after all retries."""
-    pass
+
+    def __init__(self, message: str = "", raw_attempts: Optional[List[str]] = None, parse_stats: Optional[Any] = None):
+        super().__init__(message)
+        # Raw outputs are ALWAYS attached, even on failure (debugging + Phase 3 retries).
+        self.raw_attempts: List[str] = list(raw_attempts or [])
+        self.parse_stats: Optional[Any] = parse_stats
 
 
 class GenerationTimeoutError(GenerationFailed):
@@ -83,9 +89,15 @@ class Phase2GenerationConfig(BaseModel):
     model_id: str = "google/medgemma-4b"
     temperature: float = 0.2
     repetition_penalty: float = 1.1
-    max_new_tokens: int = 4096
+    # 8192: the live model emits a thinking preamble before the JSON object,
+    # so the budget must fit thinking + full assessment ("never truncated").
+    max_new_tokens: int = 8192
+    # Differential micro-call emits a tiny JSON list; bounded separately so a
+    # stuck candidate call cannot burn a full assessment budget.
+    differential_max_new_tokens: int = 1024
     max_retries: int = 2
-    timeout_s: float = 120.0
+    # Live assessment attempts take minutes (thinking + full JSON on 8GB GPU).
+    timeout_s: float = 900.0
     prompt_version: str = "internal_medicine_assessment@1.0.0"
     differential_prompt_version: str = "internal_medicine_differential@1.0.0"
 
@@ -135,10 +147,44 @@ def contains_forbidden_grounding(text: str) -> bool:
     return False
 
 
+def _balanced_object_spans(text: str) -> List[str]:
+    """Return balanced top-level {...} spans (string- and escape-aware)."""
+    spans: List[str] = []
+    depth = 0
+    start = -1
+    in_string = False
+    escape = False
+    for i, ch in enumerate(text):
+        if in_string:
+            if escape:
+                escape = False
+            elif ch == "\\":
+                escape = True
+            elif ch == '"':
+                in_string = False
+            continue
+        if ch == '"':
+            in_string = True
+        elif ch == "{":
+            if depth == 0:
+                start = i
+            depth += 1
+        elif ch == "}":
+            if depth > 0:
+                depth -= 1
+                if depth == 0 and start != -1:
+                    spans.append(text[start : i + 1])
+                    start = -1
+    return spans
+
+
 def extract_json_from_text(raw_text: str) -> str:
     """
     Extracts the primary JSON object substring from raw model output,
     stripping markdown fences, thinking tags, or conversational wrappers.
+
+    Prefers the LAST balanced {...} span that parses as a JSON object, so a
+    thinking preamble before the assessment does not break extraction.
     """
     cleaned = raw_text.strip()
 
@@ -162,7 +208,16 @@ def extract_json_from_text(raw_text: str) -> str:
         else:
             cleaned = cleaned[start_idx:].strip()
 
-    # Locate outermost braces { ... }
+    # Prefer the last balanced object span that parses (handles preamble text).
+    for span in reversed(_balanced_object_spans(cleaned)):
+        try:
+            parsed = json.loads(span)
+        except Exception:
+            continue
+        if isinstance(parsed, dict):
+            return span
+
+    # Legacy fallback: outermost braces { ... }
     first_brace = cleaned.find("{")
     last_brace = cleaned.rfind("}")
     if first_brace != -1 and last_brace != -1 and last_brace > first_brace:
@@ -267,12 +322,22 @@ class MedGemmaAdapter:
     def _default_runner(self, prompt: str, inputs: Dict[str, Any], **kwargs: Any) -> str:
         """
         Default runner interacting with local MedGemmaService or clinical fallback synthesis.
+        Forwards Phase 2 generation settings (temperature, repetition_penalty,
+        max_new_tokens) when present in inputs["generation_settings"].
         """
         # 1. Attempt live GPU inference if model is loaded
         if self.service and getattr(self.service, "model", None) is not None:
             try:
                 import torch
-                conv = [{"role": "user", "content": [{"type": "text", "text": prompt}]}]
+                system_prompt = inputs.get("system_prompt")
+                user_prompt = inputs.get("user_prompt")
+                if system_prompt and user_prompt:
+                    conv = [
+                        {"role": "system", "content": [{"type": "text", "text": system_prompt}]},
+                        {"role": "user", "content": [{"type": "text", "text": user_prompt}]},
+                    ]
+                else:
+                    conv = [{"role": "user", "content": [{"type": "text", "text": prompt}]}]
                 encoded_inputs = self.service.processor.apply_chat_template(
                     conv,
                     add_generation_prompt=True,
@@ -281,12 +346,25 @@ class MedGemmaAdapter:
                     return_tensors="pt",
                 ).to("cuda")
 
+                settings = inputs.get("generation_settings", {}) or {}
+                temperature = settings.get("temperature", None)
+                if temperature is None:
+                    temperature = self.config.temperature if self.config.temperature > 0.0 else None
+                repetition_penalty = settings.get("repetition_penalty", None)
+                max_new_tokens = int(settings.get("max_new_tokens", 0) or self.config.max_new_tokens)
+                generate_kwargs: Dict[str, Any] = {
+                    "max_new_tokens": max_new_tokens,
+                    "do_sample": (temperature is not None and temperature > 0.0),
+                }
+                if temperature is not None and temperature > 0.0:
+                    generate_kwargs["temperature"] = temperature
+                if repetition_penalty is not None:
+                    generate_kwargs["repetition_penalty"] = repetition_penalty
+
                 with torch.inference_mode():
                     output_tokens = self.service.model.generate(
                         **encoded_inputs,
-                        max_new_tokens=self.config.max_new_tokens,
-                        do_sample=(self.config.temperature > 0.0),
-                        temperature=(self.config.temperature if self.config.temperature > 0.0 else None),
+                        **generate_kwargs,
                     )
 
                 raw_output = self.service.processor.decode(
@@ -806,9 +884,14 @@ class MedGemmaAdapter:
         current_prompt = prompt
         for attempt in range(1, max_attempts + 1):
             stats.attempts += 1
-            raw_output = self._invoke_text_runner(
-                current_prompt, inputs, max_new_tokens, temperature, timeout_s
-            )
+            try:
+                raw_output = self._invoke_text_runner(
+                    current_prompt, inputs, max_new_tokens, temperature, timeout_s
+                )
+            except GenerationTimeoutError as exc:
+                last_error = f"Generation timed out on attempt {attempt}: {exc}"
+                current_prompt = f"{prompt}\n\nRETRY FEEDBACK: {last_error}"
+                continue
             raw_attempts.append(raw_output)
             if contains_forbidden_grounding(raw_output):
                 stats.grounding_failures += 1
@@ -826,6 +909,15 @@ class MedGemmaAdapter:
                 stats.json_failures += 1
                 last_error = f"JSON decode failed on attempt {attempt}: {exc}"
                 current_prompt = f"{prompt}\n\nRETRY FEEDBACK: {last_error} Return only the JSON object."
+                continue
+            if not isinstance(parsed, dict):
+                stats.schema_failures += 1
+                last_error = (
+                    f"Schema shape failed on attempt {attempt}: top-level JSON is "
+                    f"{type(parsed).__name__}, expected a single object. "
+                    "Return exactly one JSON object matching the schema."
+                )
+                current_prompt = f"{prompt}\n\nRETRY FEEDBACK: {last_error}"
                 continue
             return parsed, raw_attempts, stats, ""
         return None, raw_attempts, stats, last_error or "retry exhaustion"
@@ -865,7 +957,7 @@ class MedGemmaAdapter:
             {"structured_case": structured_case},
             1 + cfg.max_retries,
             cfg.timeout_s,
-            cfg.max_new_tokens,
+            cfg.differential_max_new_tokens,
             cfg.temperature,
         )
         if isinstance(parsed, dict) and isinstance(parsed.get("candidates"), list):
@@ -883,6 +975,7 @@ class MedGemmaAdapter:
         case_id: str,
         candidates: Optional[List[str]] = None,
         config: Optional[Phase2GenerationConfig] = None,
+        retry_feedback: Optional[str] = None,
     ) -> AssessmentResult:
         """
         Phase 2 grounded assessment: structured case + Harrison chunks -> AssessmentReport.
@@ -919,22 +1012,52 @@ class MedGemmaAdapter:
             f"{json.dumps(structured_case, indent=2)}\n\n"
             f"### HARRISON EXCERPTS\n{harrison_context}\n\n"
             f"### REPORT ID\n{report_id}\n\n"
-            "Return exactly one JSON object that matches the schema. "
-            "No markdown, no code fences, no text outside the JSON."
+            f"### REQUIRED JSON SCHEMA\n{json.dumps(export_assessment_json_schema(), indent=2)}\n\n"
+            "Return exactly one JSON object that matches the schema above. "
+            "No markdown, no code fences, no thinking trace, no text outside the JSON. "
+            "Do not repeat the input case; produce the assessment. "
+            f"Start your response with the exact characters: {{\"report_id\": \"{report_id}\""
         )
+        if retry_feedback:
+            prompt = (
+                f"{prompt}\n\nRETRY FEEDBACK (previous attempt failed validation):\n"
+                f"{retry_feedback}\n"
+                "Rewrite as patient-specific clinical synthesis in your own words; "
+                "keep verbatim text only in supporting_quote."
+            )
         inputs = {
             "case_id": case_id,
             "report_id": report_id,
             "structured_case": structured_case,
             "retrieval_chunk_ids": list(retrieval_chunk_ids),
             "candidates": list(candidates or []),
+            "generation_settings": {
+                "temperature": cfg.temperature,
+                "repetition_penalty": cfg.repetition_penalty,
+                "max_new_tokens": cfg.max_new_tokens,
+            },
+            # System/user turn split per the chat template's design (system
+            # instructions first). Template text itself is unchanged.
+            "system_prompt": template_text.strip(),
+            "user_prompt": (
+                f"### STRUCTURED CASE\n{json.dumps(structured_case, indent=2)}\n\n"
+                f"### HARRISON EXCERPTS\n{harrison_context}\n\n"
+                f"### REPORT ID\n{report_id}\n\n"
+                f"### REQUIRED JSON SCHEMA\n{json.dumps(export_assessment_json_schema(), indent=2)}\n\n"
+                "Return exactly one JSON object that matches the schema above. "
+                "No markdown, no code fences, no thinking trace, no text outside the JSON. "
+                "Do not repeat the input case; produce the assessment. "
+                f"Start your response with the exact characters: {{\"report_id\": \"{report_id}\""
+            ),
         }
         parsed, raw_attempts, stats, last_error = self._strict_json_attempts(
             prompt, inputs, 1 + cfg.max_retries, cfg.timeout_s, cfg.max_new_tokens, cfg.temperature
         )
         if isinstance(parsed, dict):
-            parsed.setdefault("report_id", report_id)
-            parsed.setdefault("prompt_version", cfg.prompt_version)
+            # Provenance is code-stamped, never model-trusted: the model must
+            # not set its own report_id or prompt_version.
+            parsed["report_id"] = report_id
+            parsed["prompt_version"] = cfg.prompt_version
             try:
                 report = AssessmentReport.model_validate(parsed)
                 validate_assessment(report)
@@ -942,7 +1065,11 @@ class MedGemmaAdapter:
             except Exception as exc:
                 stats.schema_failures += 1
                 last_error = f"Assessment schema validation failed: {exc}"
-        raise GenerationFailed(f"Assessment generation failed after {stats.attempts} attempts. {last_error}")
+        raise GenerationFailed(
+            f"Assessment generation failed after {stats.attempts} attempts. {last_error}",
+            raw_attempts=raw_attempts,
+            parse_stats=stats,
+        )
 
 
 def heuristic_candidates(structured_case: Dict[str, Any]) -> List[str]:

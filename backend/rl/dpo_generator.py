@@ -321,10 +321,13 @@ class DPOPreferenceGenerator:
         """
         dataset: List[DPOPreferencePair] = []
 
-        # 1. Compile all human physician reviews
+        # 1. Compile all human physician reviews, permanently excluding
+        # ungrounded reports (fail-safe fallback outputs must never train).
         for review in reviews.values():
             if review.report_id in reports:
                 report = reports[review.report_id]
+                if getattr(report, "ungrounded", False) is True:
+                    continue
                 case_id = getattr(report, "case_id", getattr(report, "encounter_id", ""))
                 case = cases_map.get(case_id)
                 pair = cls.generate_pair_from_review(report, review, case)

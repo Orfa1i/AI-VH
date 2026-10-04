@@ -98,6 +98,11 @@ class ClinicalReport(BaseModel):
     # Evidence & Citations
     medical_knowledge_citations: List[Dict[str, Any]] = Field(default_factory=list)
 
+    # Grounding provenance (Phase 2 fail-safe): True when this report fell back
+    # to a legacy/ungrounded path after a grounded attempt failed. Ungrounded
+    # reports are displayed as such and permanently excluded from RL export.
+    ungrounded: bool = False
+
     # Pharmacy & Medication Safety Review (Phase 7)
     pharmacist_review: Optional['MedicationSafetyReport'] = None
 

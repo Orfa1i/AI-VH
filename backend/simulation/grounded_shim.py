@@ -20,6 +20,14 @@ from typing import Any, Dict, List, Optional, Tuple
 logger = logging.getLogger("GroundedShim")
 
 
+class GroundedFailedError(RuntimeError):
+    """Raised when VH_PIPELINE=grounded but the grounded attempt failed.
+
+    The caller must fall back to legacy AND tag the report ungrounded=true.
+    Never a silent fallback.
+    """
+
+
 def maybe_grounded_assessment(
     patient_info: Dict[str, Any],
     vital_signs: Any,
@@ -41,10 +49,15 @@ def maybe_grounded_assessment(
         return None
 
     try:
-        return _run_grounded(patient_info, vital_signs, exam_findings, lab_results, case_id)
+        result = _run_grounded(patient_info, vital_signs, exam_findings, lab_results, case_id)
     except Exception as exc:
-        logger.warning(f"Grounded assessment unavailable ({exc}); falling back to legacy decision path.")
-        return None
+        logger.warning(f"Grounded assessment failed ({exc}); legacy fallback with ungrounded=true.")
+        raise GroundedFailedError(f"Grounded attempt failed: {exc}") from exc
+    if result is None:
+        # Grounded path declined (e.g. INSUFFICIENT_GROUNDING): explicit failure,
+        # never a silent legacy substitution.
+        raise GroundedFailedError("Grounded attempt declined (insufficient grounding or generation failure).")
+    return result
 
 
 def _pipeline_class() -> Any:
@@ -108,7 +121,11 @@ def _run_grounded(
         phase2_config=Phase2GenerationConfig(),
     )
     metadata = result.metadata or {}
-    if metadata.get("generation_status") != "success":
+    # Only VALID grounded reports flow through; FAILED and INSUFFICIENT_GROUNDING
+    # decline explicitly (the caller tags the legacy fallback ungrounded=true).
+    from vh.verification.phase3 import VALID
+
+    if metadata.get("generation_status") != VALID:
         return None
 
     assessment = metadata["assessment_report"]

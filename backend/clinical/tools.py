@@ -96,7 +96,8 @@ class ClinicalToolkit:
         differential: List[DifferentialItem],
         clinical_reasoning: str,
         treatment_plan: List[str],
-        citations: List[Dict[str, Any]]
+        citations: List[Dict[str, Any]],
+        ungrounded: bool = False,
     ) -> ClinicalReport:
         """Doctor generates the structured clinical report for human physician review."""
         logger.info(f"Tool called: write_clinical_report for encounter {encounter_id}")
@@ -122,5 +123,6 @@ class ClinicalToolkit:
             clinical_reasoning=clinical_reasoning,
             treatment_plan=treatment_plan,
             medical_knowledge_citations=citations,
+            ungrounded=ungrounded,
         )
         return report

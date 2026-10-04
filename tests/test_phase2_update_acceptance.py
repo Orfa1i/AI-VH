@@ -62,8 +62,8 @@ def _valid_v2_dict(report_id: str = "REP-TEST01") -> dict:
         "clinical_reasoning": "A 68-year-old man with hypertension presents with a 3-day syndrome of fever and productive cough [H:HARRISON_P1060_C07]. Right basal crackles with consolidation on CXR favour community-acquired pneumonia over bronchitis [H:HARRISON_P1060_C07]. CURB-65 of 1 supports ward admission with oxygen and empiric antibiotics [MG].",
         "workup": [{"test": "Chest radiography", "priority": "urgent",
                    "rationale": "Confirm consolidation extent.", "evidence": [_ev()]}],
-        "treatment": [{"item": "Empiric amoxicillin-clavulanate", "dose_route_frequency_duration": "1g PO q12h for 5 days",
-                       "rationale": "Covers likely CAP pathogens.", "evidence": [_ev()]}],
+        "treatment": [{"item": "Empiric amoxicillin-clavulanate", "dose_route_frequency_duration": "1g PO q12h for 5 days with oxygen target 94-98%",
+                       "rationale": "Covers likely CAP pathogens with oxygen support.", "evidence": [_ev()]}],
         "disposition": {"setting": "ward", "rationale": "CURB-65 = 1 with hypoxaemia risk.", "evidence": [_ev()]},
         "red_flags": ["Worsening dyspnoea"],
         "follow_up": "Reassess within 24 hours.",
@@ -73,11 +73,11 @@ def _valid_v2_dict(report_id: str = "REP-TEST01") -> dict:
     }
 
 
-def _hit(cid: str, score: float = 0.5) -> SourceSearchHit:
+def _hit(cid: str, score: float = 0.5, text: str = "lobar consolidation with air bronchograms") -> SourceSearchHit:
     return SourceSearchHit(
         source_name="harrison", chunk_id=cid,
         metadata={"chunk_id": cid, "chapter_title": "126 Pneumonia", "page": 1060},
-        text="lobar consolidation with air bronchograms", score=score,
+        text=text, score=score,
     )
 
 
@@ -147,6 +147,8 @@ def test_phase2_generation_settings() -> None:
     assert cfg.repetition_penalty == pytest.approx(1.1)
     assert cfg.max_new_tokens >= 4096, "max_tokens must be large enough that output is never truncated"
     assert cfg.max_retries == 2
+    assert cfg.differential_max_new_tokens <= 1024, "candidate micro-call must be bounded"
+    assert cfg.timeout_s >= 900, "live attempts take minutes; timeout must cover them"
     assert cfg.prompt_version == "internal_medicine_assessment@1.0.0"
 
 
@@ -231,20 +233,30 @@ def test_parse_failure_rate_reported() -> None:
 # --- Grounded pipeline path ---------------------------------------------------
 
 @pytest.mark.unit
-def test_grounded_path_stores_raw_and_log() -> None:
-    runner = _stub_runner_factory([json.dumps(_valid_v2_dict("REP-G1"))])
-    adapter = MedGemmaAdapter(runner=runner)  # type: ignore[arg-type]
-    pipeline = GroundedGenerationPipeline(adapter=adapter)
-    payload = json.loads(FIXTURE_PATH.read_text(encoding="utf-8"))
-    from vh.cases.structured_case import extract_structured_case, structured_case_to_agentview_dict
+def test_grounded_path_stores_raw_and_log(tmp_path: Path) -> None:
+    from vh.verification import phase3 as _phase3
 
-    structured = structured_case_to_agentview_dict(extract_structured_case(payload["raw_case"]))
-    result = pipeline.run_grounded_assessment(
-        case_id="CASE-BROWN1", specialty="Pulmonology", structured_case=structured,
-        candidate_differentials=["Community-acquired pneumonia"],
-        search_fn=lambda q, top_k=6: [_hit("HARRISON_P1060_C07", 0.55), _hit("HARRISON_P1058_C08", 0.4)],
-    )
-    assert result.metadata["generation_status"] == "success"
+    _phase3.FAILED_LOG_PATH, _saved_failed_log = tmp_path / "failed.jsonl", _phase3.FAILED_LOG_PATH
+    try:
+        runner = _stub_runner_factory([json.dumps(_valid_v2_dict("REP-G1"))])
+        adapter = MedGemmaAdapter(runner=runner)  # type: ignore[arg-type]
+        pipeline = GroundedGenerationPipeline(adapter=adapter)
+        payload = json.loads(FIXTURE_PATH.read_text(encoding="utf-8"))
+        from vh.cases.structured_case import extract_structured_case, structured_case_to_agentview_dict
+
+        structured = structured_case_to_agentview_dict(extract_structured_case(payload["raw_case"]))
+        chunk_text = ("lobar consolidation with air bronchograms suggests bacterial infection "
+                      "and curb sixty five score guides admission decisions for ward care")
+        result = pipeline.run_grounded_assessment(
+            case_id="CASE-BROWN1", specialty="Pulmonology", structured_case=structured,
+            candidate_differentials=["Community-acquired pneumonia"],
+            report_id="REP-G1",
+            search_fn=lambda q, top_k=6: [_hit("HARRISON_P1060_C07", 0.55, chunk_text),
+                                          _hit("HARRISON_P1058_C08", 0.4, chunk_text)],
+        )
+    finally:
+        _phase3.FAILED_LOG_PATH = _saved_failed_log
+    assert result.metadata["generation_status"] == "VALID"
     assert result.metadata["prompt_version"] == "internal_medicine_assessment@1.0.0"
     assert isinstance(result.metadata["raw_model_output"], list) and result.metadata["raw_model_output"]
     assert all(isinstance(raw, str) for raw in result.metadata["raw_model_output"])
@@ -304,6 +316,56 @@ def test_compat_adapter_covers_frontend_fields() -> None:
     # NOTE: investigations_ordered stays free-text until Phase 4 (backend enum
     # LabTestType cannot be coerced without inventing mappings); the unchanged
     # orchestrator write path still supplies enums, so stored reports validate.
+
+
+@pytest.mark.unit
+def test_live_settings_forwarded_and_schema_in_prompt() -> None:
+    """Phase 2 settings reach live generate(); the prompt carries the JSON schema."""
+    import numpy as np
+
+    seen: dict = {}
+
+    class FakeEncoding(dict):
+        def to(self, *args: object, **kwargs: object) -> "FakeEncoding":
+            return self
+
+    class FakeProcessor:
+        def apply_chat_template(self, *args: object, **kwargs: object) -> FakeEncoding:
+            return FakeEncoding({"input_ids": np.zeros((1, 5), dtype=int)})
+
+        def decode(self, tokens: object, skip_special_tokens: bool = True) -> str:
+            return json.dumps(_valid_v2_dict("REP-LIVE-SETTINGS"))
+
+    class FakeModel:
+        def generate(self, **kwargs: object) -> list:
+            seen.update(kwargs)
+            return [np.array([1, 2, 3, 4, 5, 6, 7])]
+
+    class FakeService:
+        model = FakeModel()
+        processor = FakeProcessor()
+
+    adapter = MedGemmaAdapter(service=FakeService())  # type: ignore[arg-type]
+    result = adapter.generate_assessment(
+        structured_case={"presenting_symptoms": ["fever"]}, harrison_context="<harrison_chunk>x</harrison_chunk>",
+        retrieval_chunk_ids=["H-1"], report_id="REP-LIVE-SETTINGS", case_id="C-LS",
+        candidates=["Community-acquired pneumonia"],
+    )
+    assert result.report.report_id == "REP-LIVE-SETTINGS"
+    assert seen["temperature"] == pytest.approx(0.2)
+    assert seen["repetition_penalty"] == pytest.approx(1.1)
+    assert seen["max_new_tokens"] >= 4096
+    assert seen["do_sample"] is True
+
+
+@pytest.mark.unit
+def test_extract_json_prefers_last_balanced_object() -> None:
+    """Live-model preamble (thinking + markdown) must not break extraction."""
+    from vh.generation.medgemma import extract_json_from_text
+
+    body = json.dumps(_valid_v2_dict("REP-EXT"))
+    raw = "<unused94>thought\nSome thinking with { braces } inside.\nAnalysis text.\n" + body + "\nTrailing note."
+    assert json.loads(extract_json_from_text(raw))["report_id"] == "REP-EXT"
 
 
 @pytest.mark.unit
@@ -384,7 +446,7 @@ def test_grounded_shim_grounded_path_uses_stub(monkeypatch: pytest.MonkeyPatch) 
 
     class FakeResult:
         metadata = {
-            "generation_status": "success",
+            "generation_status": "VALID",
             "assessment_report": _valid_v2_dict("REP-SHIM"),
             "retrieval_log": {"chunks": {}},
         }

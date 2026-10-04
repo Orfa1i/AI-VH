@@ -460,33 +460,86 @@ class GroundedGenerationPipeline(Pipeline):
             )
 
         harrison_context = format_harrison_context(hits)
-        try:
-            assessment_result = adapter.generate_assessment(
-                structured_case=structured_case,
-                harrison_context=harrison_context,
-                retrieval_chunk_ids=active_ids,
-                report_id=rid,
-                case_id=case_id,
-                candidates=candidates,
-                config=cfg,
-            )
+        # Phase 3 validation loop: the validator (not the model) decides VALID.
+        # Any failing check regenerates with the error list fed back (max 2
+        # retries); exhaustion yields FAILED with all results stored.
+        from vh.verification.phase3 import (
+            FAILED,
+            VALID,
+            append_failed_generation,
+            build_retry_feedback,
+            validate_assessment_report,
+        )
+
+        max_retries = 2
+        all_raw_attempts: List[str] = []
+        combined_stats = {"attempts": 0, "json_failures": 0, "schema_failures": 0, "grounding_failures": 0}
+        retry_feedback: Optional[str] = None
+        validation = None
+        report = None
+        for _ in range(1 + max_retries):
+            try:
+                assessment_result = adapter.generate_assessment(
+                    structured_case=structured_case,
+                    harrison_context=harrison_context,
+                    retrieval_chunk_ids=active_ids,
+                    report_id=rid,
+                    case_id=case_id,
+                    candidates=candidates,
+                    config=cfg,
+                    retry_feedback=retry_feedback,
+                )
+            except GenerationFailed as exc:
+                all_raw_attempts.extend(getattr(exc, "raw_attempts", []) or [])
+                stats = getattr(exc, "parse_stats", None)
+                if stats is not None:
+                    for key in combined_stats:
+                        combined_stats[key] += int(getattr(stats, key, 0) or 0)
+                retry_feedback = f"Generation failed: {exc}. {self._phase3_retry_sentence()}"
+                continue
+            all_raw_attempts.extend(list(assessment_result.raw_attempts))
+            for key in combined_stats:
+                combined_stats[key] += int(getattr(assessment_result.parse_stats, key, 0) or 0)
             report = assessment_result.report
-            raw_attempts = list(assessment_result.raw_attempts)
-            parse_stats = assessment_result.parse_stats.model_dump()
-        except GenerationFailed as exc:
-            logger.error(f"Grounded assessment failed for case {case_id}: {exc}")
+            validation = validate_assessment_report(report, log, structured_case)
+            if validation.passed:
+                break
+            retry_feedback = build_retry_feedback(validation)
+            report = None
+
+        if report is None or validation is None or not validation.passed:
+            failed_validation = validation
+            failure_stage = "validation"
+            if failed_validation is None:
+                from vh.verification.phase3 import CheckResult as _CheckResult, ValidationReport as _VR
+
+                failure_stage = "generation"
+                failed_validation = _VR(
+                    report_id=rid, passed=False,
+                    checks=[_CheckResult(check_id="GEN", passed=False, message="generation exhausted without a validatable report")],
+                )
+            failed_path = append_failed_generation(
+                rid, case_id,
+                report.model_dump() if report is not None else None,
+                failed_validation, all_raw_attempts,
+            )
+            logger.error(f"Grounded assessment FAILED validation for case {case_id}; logged to {failed_path}")
             return PipelineResult(
                 case_id=case_id,
-                diagnosis="Generation Failed",
+                diagnosis="Validation Failed",
                 differential=[],
                 suggested_orders=[],
-                clinical_summary="Grounded assessment failed validation constraints after retry exhaustion.",
+                clinical_summary="Grounded assessment failed automated validation after retry exhaustion.",
                 metadata={
-                    "generation_status": "generation_failed",
-                    "error": str(exc),
+                    "generation_status": FAILED,
+                    "failure_stage": failure_stage,
                     "active_evidence_ids": active_ids,
                     "retrieval_log": log.model_dump(),
                     "prompt_version": cfg.prompt_version,
+                    "raw_model_output": all_raw_attempts,
+                    "parse_stats": combined_stats,
+                    "validation": failed_validation.model_dump(),
+                    "failed_log": failed_path,
                 },
             )
 
@@ -497,12 +550,20 @@ class GroundedGenerationPipeline(Pipeline):
             suggested_orders=[w.test for w in report.workup] + [t.item for t in report.treatment],
             clinical_summary=report.case_summary,
             metadata={
-                "generation_status": "success",
+                "generation_status": VALID,
                 "assessment_report": report.model_dump(),
-                "raw_model_output": raw_attempts,
-                "parse_stats": parse_stats,
+                "raw_model_output": all_raw_attempts,
+                "parse_stats": combined_stats,
                 "active_evidence_ids": active_ids,
                 "retrieval_log": log.model_dump(),
                 "prompt_version": cfg.prompt_version,
+                "validation": validation.model_dump(),
             },
         )
+
+    @staticmethod
+    def _phase3_retry_sentence() -> str:
+        """Retry sentence appended to generation feedback (Phase 3 failure handling)."""
+        from vh.verification.phase3 import RETRY_MESSAGE
+
+        return RETRY_MESSAGE

@@ -248,9 +248,11 @@ class InternalMedicineSpecialistAgent(DoctorAgent):
 
         # 5. MedGemma Foundation Model Clinical Synthesis (VH_PIPELINE-gated:
         # grounded src/vh assessment when VH_PIPELINE=grounded, else legacy path).
+        # A failed grounded attempt falls back to legacy AND tags ungrounded=true.
         vitals = toolkit.get_vital_signs()
         decision = None
         report_citations = evidence_brief.citations
+        report_ungrounded = False
         try:
             from backend.simulation.grounded_shim import maybe_grounded_assessment
             grounded = maybe_grounded_assessment(
@@ -261,8 +263,9 @@ class InternalMedicineSpecialistAgent(DoctorAgent):
                 case_id=patient_id,
             )
         except Exception as shim_exc:
-            logger.warning(f"Grounded shim bypassed ({shim_exc}); using legacy decision path.")
+            logger.warning(f"Grounded attempt failed ({shim_exc}); legacy fallback tagged ungrounded=true.")
             grounded = None
+            report_ungrounded = True
         if grounded is not None:
             decision, report_citations = grounded
         if decision is None:
@@ -316,6 +319,7 @@ class InternalMedicineSpecialistAgent(DoctorAgent):
             clinical_reasoning=decision["clinical_reasoning"],
             treatment_plan=decision["treatment_plan"],
             citations=report_citations,
+            ungrounded=report_ungrounded,
         )
 
         await self.emit_event(
