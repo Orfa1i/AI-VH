@@ -124,17 +124,25 @@
     - **SQLite Concurrency & Resource Cleanup**: Enabled WAL mode (`PRAGMA journal_mode = WAL;`, `busy_timeout = 30000;`, `synchronous = NORMAL;`) in `connection.py`; cleared `bed_number = NULL` on discharge in `repository.py`; cleared `event_bus.events` in `purge_mock_data()`.
     - **RAG Acronym Preservation & False Positive Prevention**: Preserved 2-letter clinical acronyms (`MI`, `PE`, `CT`, `BP`, `O2`) in `vector_index.py`; set minimum score threshold `> 0.01` to eliminate zero-score false-positive matches.
     - **Three.js JSDOM Test Warning Cleanup**: In `Scene3D.test.tsx`, eliminated 54 JSDOM unrecognized element warnings.
-    - **Complete Verification**: 38/38 Vitest frontend tests green (0 warnings), 67/67 pytest backend tests green, frontend production build green with 0 errors. Commit `ee33fba`.
+	    - **Complete Verification**: 38/38 Vitest frontend tests green (0 warnings), 67/67 pytest backend tests green, frontend production build green with 0 errors. Commit `ee33fba`.
+	  - **16. Comprehensive Functional Architecture & Publication-Grade PDF Report**:
+	    - Performed an exhaustive architectural and functional audit of the entire AI Virtual Hospital platform.
+	    - Authored comprehensive technical report `docs/AI-VH-FUNCTIONAL-REPORT.md` detailing the multi-agent clinical simulation framework, separation of concerns, 6 specialized agent personas, dual-layer RAG (47,806 Harrison chunks + live biomedical APIs), on-device MedGemma 4-bit NF4 inference on RTX 4060 GPU, deterministic safety gates, SQLite WAL persistence, DPO fine-tuning loop (+107.6% decision gain), React 19/Tailwind 4 frontend, and 6-phase operational patient lifecycles.
+	    - Created print-ready HTML template `docs/report_template.html` conforming to `pdf-design` standards (letter size, cover page, running headers/footers, high-contrast tables, callouts, and SVG architecture diagrams).
+	    - Built automated generator `scripts/generate_pdf_report.py` compiling the document via Headless Chrome (`--headless=new --disable-gpu --no-sandbox --no-pdf-header-footer`).
+	    - Successfully generated and certified `AI-VH_Functional_Architecture_Report.pdf` (865 KB, 8 pages) in the project root folder.
+	    - Verified 100% test baseline: 39/39 Vitest tests passed, Vite build 0 errors, Oxlint 0 errors, 67/67 Pytest tests passed. Commit `bcf92d3`.
 - **Backend Service**: Running live on `http://127.0.0.1:8000` (FastAPI + MedGemma NF4 on RTX 4060).
 - **Frontend Service**: Running live on `http://127.0.0.1:5173` (Vite + React + Tailwind + Lucide).
 
 ---
 
 ## 4. Concrete Next Steps
-1. **Interactive Trajectory Stepper & HUD Verification**: Open the Patient Journey Graph in the browser ([http://127.0.0.1:5173](http://127.0.0.1:5173)), select patient Charles Brown in Cases Area, and verify Node 3 active highlight and 75% progress.
-2. **Discharge & Toast Notification Verification**: Complete an encounter simulation and observe the emerald discharge toast alert in the Left Notification Drawer.
-3. **Doctor Reviewing & Fine-Tuning Console**: Inspect the 'Reviewing' tab and verify that selecting reviewed reports is instantaneous without network storms.
-4. **Live Encounter Simulation**: Admit a new synthetic patient from Case Intake and verify end-to-end multi-agent clinical flow.
+1. **Inspect Generated Functional Report PDF**: Open and review [AI-VH_Functional_Architecture_Report.pdf](file:///C:/Users/PCD/Desktop/AI-VH/AI-VH_Functional_Architecture_Report.pdf) in the project root.
+2. **Interactive Trajectory Stepper & HUD Verification**: Open the Patient Journey Graph in the browser ([http://127.0.0.1:5173](http://127.0.0.1:5173)), select active patient Charles Brown in Cases Area, and verify Node 3 active highlight and 75% dynamic progress.
+3. **Discharge & Toast Notification Verification**: Complete an encounter simulation and observe the emerald discharge toast alert in the Left Notification Drawer.
+4. **Doctor Reviewing & Fine-Tuning Console**: Inspect the 'Reviewing' tab and verify that selecting reviewed reports is instantaneous without network storms.
+5. **Live Encounter Simulation**: Admit a new synthetic patient from Case Intake and verify end-to-end multi-agent clinical flow.
 
 
 
