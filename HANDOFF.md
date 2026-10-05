@@ -1,64 +1,68 @@
 # AI Virtual Hospital (AI-VH) : Session Handoff
 
-## 0. Latest Session (2026-10-05) — Independent 6-Dimension Evaluation Pipeline (Commit `619a5ae`)
-- **Independent Evaluation Engine (`backend/evaluation/`)**:
-  - Implemented `DiagnosisReportEvaluationPipeline` running 6 clinically meaningful, independent evaluation dimensions before reports enter the human review page:
-    1. **Clinical Context Relevance (`ClinicalContextRelevanceEvaluator`)**: Validates demographic alignment (age/sex), chief complaint correspondence, semantic presentation token overlap, and cardinal clinical syndrome alignment (cardiac, metabolic, respiratory, renal).
-    2. **Hallucination / Unsupported Claims (`HallucinationDetectionEvaluator`)**: Scans for unperformed diagnostic imaging or lab citations, biomarker contradictions (asserting normal biomarkers for necrotic diseases), fabricated vital signs, and phantom medical history.
-    3. **Structural / Format Compliance (`StructuralComplianceEvaluator`)**: Validates required clinical report schema fields (summary, primary diagnosis, differential, treatment plan, findings, disposition, citations), bounds on differential candidates (2-7), and diagnostic confidence range (0.0-1.0).
-    4. **Clinical Reasoning Consistency (`ClinicalReasoningConsistencyEvaluator`)**: Checks alignment between primary diagnosis and top differential candidate (with disease-specific stopword filtering and medical acronym equivalence), presence of supporting points, candidate likelihood rankings, and detects internal logical contradictions in reasoning text.
-    5. **Recommendation Validity (`RecommendationValidityEvaluator`)**: Actionability check, universal safety contraindication rules (e.g. beta-blockers in cardiogenic shock/bradycardia, metformin in DKA/severe acidosis, anticoagulants in acute hemorrhage/dissection, NSAIDs in AKI), and strict ground-truth contraindication enforcement with drug class expansion (`nsaid`, `beta_blocker`, `acei`, `arb`, `anticoagulant`, `antiplatelet`).
-    6. **Evidence / Grounding Quality (`EvidenceGroundingEvaluator`)**: Verifies that report is substantiated by citations from authorized medical sources (Harrison's, Braunwald's, RxNorm, NABD, DailyMed, OpenFDA, PubMed), checks citation structure, and enforces fail status if `ungrounded=True`.
-- **Fail-Closed & Ground-Truth Isolation**:
-  - All evaluators wrap execution in fail-closed safety (`BaseDimensionEvaluator`), catching unexpected exceptions and returning `passed=False` with `CRITICAL` severity.
-  - Generating model has zero access to ground truth; evaluation pipeline accesses case ground truth strictly for independent verification.
-- **Persistence & API Integration**:
-  - Added `report_evaluations` table to `SQLITE_SCHEMA` and `POSTGRES_SCHEMA` with auto-migration in `repository.init_schema()`.
-  - Added `GET /api/reports/{report_id}/evaluation` and `POST /api/reports/{report_id}/evaluate` endpoints in `backend/api/router.py`.
-  - Added `REPORT_EVALUATION_STARTED` and `REPORT_EVALUATION_COMPLETED` events dispatched over WebSocket event bus.
-  - Integrated into `HospitalOrchestrator.run_encounter_simulation()` immediately preceding `REPORT_READY`.
-- **Frontend Quality Assurance**:
-  - Added `AutomatedEvaluationCard` to `PhysicianReviewDashboard.tsx` displaying composite score, evaluation status badge (`PASSED`, `FLAGGED`, `REJECTED`), detailed 6-dimension breakdown, detected issues, and on-demand re-evaluation button.
+## 0. Latest Session (2026-10-05) — Review → Feedback → Training Dataset Pipeline (Commit `8a7f291`)
+- **Review & Feedback Architecture (`backend/clinical/models.py`, `backend/rl/dataset_curator.py`, `backend/simulation/orchestrator.py`)**:
+  - Implemented the complete human review, structured error taxonomy, and curated training dataset pipeline:
+    1. **Immutable Original Reports**: The original AI report in `clinical_reports` is treated as strictly read-only and immutable. Feedback submissions never overwrite or mutate original model outputs.
+    2. **Separate Storage for Reviews & Corrections**: Reviewer feedback is persisted in `physician_reviews`, while model corrections and training artifacts are stored in `training_dataset_records`.
+    3. **Structured Review Taxonomy**:
+       - Assessments: `CORRECT`, `PARTIALLY_CORRECT`, `INCORRECT`.
+       - Error Taxonomy: `MISSING_INFORMATION`, `HALLUCINATION`, `INCORRECT_DIAGNOSIS`, `INCORRECT_REASONING`, `UNSUPPORTED_RECOMMENDATION`, `INCORRECT_MEDICAL_FACT`, `POOR_EVIDENCE_USE`, `OTHER`.
+       - Reviewer Metadata: `physician_name`, `reviewer_role` (`ATTENDING_PHYSICIAN`, `RESIDENT`, `STUDENT`), `specialty`.
+       - Structured Corrections: `corrected_diagnosis`, `corrected_reasoning`, `corrected_recommendations`, `corrected_treatment`, and clinical notes.
+    4. **13-Field Training Dataset Records (`TrainingDatasetRecord`)**:
+       - Preserves all 13 canonical fields: `case_id`, `patient_id`, `report_id`, `model_version`, `specialty`, `original_input`, `original_ai_output`, `reviewer_feedback`, `corrected_output` / `preferred_output`, `provenance`, `review_status`, `dataset_eligibility`, `timestamp`.
+    5. **Patient/Case Deduplication**:
+       - Prevents duplicate patient cases from artificially inflating training counts. When multiple reviews exist for the same patient/case, subsequent records are flagged with `INELIGIBLE_DUPLICATE` so only unique clinical cases are exported for fine-tuning.
+    6. **Ground-Truth Isolation**:
+       - Reviewers and students identify errors without seeing hidden Ground Truth, gold standards, or future clinical outcomes. Reports exposed via API strip hidden evaluator keys.
+    7. **Strictly Manual Training Enforcement**:
+       - Review submission does NOT trigger model training. Model fine-tuning remains strictly manual through authorized operator triggers with guardrails.
+- **Persistence & API Integration (`backend/database/` & `backend/api/router.py`)**:
+  - Added `training_dataset_records` table to SQLite (`SQLITE_SCHEMA`) and PostgreSQL (`POSTGRES_SCHEMA`) with indexes on `(patient_id, case_id)` and `dataset_eligibility`.
+  - Added `save_training_dataset_record()`, `get_training_dataset_records()`, and `is_patient_case_reviewed()` to `HospitalRepository`.
+  - Updated `POST /api/reviews` endpoint to accept the rich feedback taxonomy and return the curated training eligibility status.
+  - Added `GET /api/rl/dataset/curated` endpoint supporting filtering by `eligibility` (`ELIGIBLE`, `INELIGIBLE_INCOMPLETE`, `INELIGIBLE_DUPLICATE`, `INELIGIBLE_UNGROUNDED`).
+- **Frontend Review Dashboard (`frontend/src/`)**:
+  - Updated `PhysicianReviewDashboard.tsx`:
+    - Assessment selector buttons with color coding (`Correct`, `Partially Correct`, `Incorrect`).
+    - Multi-select structured error taxonomy chips with instant descriptions.
+    - Reviewer role dropdown (`Attending Physician`, `Resident`, `Medical Student`).
+    - Structured correction inputs for primary diagnosis, clinical reasoning, and clinical recommendations.
+    - Live dataset eligibility indicator badge reflecting whether the submission meets training eligibility criteria in real time.
+  - Added `frontend/src/components/review/taxonomy.ts` and updated `types.ts` with all enums and schemas.
 - **Verification Results**:
-  - `backend/tests/test_evaluation_pipeline.py`: **23 of 23 tests passing (100% green)**.
-  - Full backend test suite (`backend/tests/`): **115 of 115 tests passing (100% green)** in 282s.
+  - `backend/tests/test_review_dataset_pipeline.py`: **8 of 8 tests passing (100% green)** in 10.86s.
+  - Full backend test suite (`backend/tests/`): **123 of 123 tests passing (100% green)** in 293.92s.
   - Frontend test suite (`frontend/`): **10 test files passed (39 tests green)**.
-  - Frontend production build: compiled cleanly in 1.24s (`tsc -b && vite build`).
+  - Frontend production build (`npm run build`): compiled cleanly in 1.23s with zero errors.
+  - Frontend lint (`npm run lint`): 0 errors across all 54 files.
 
-## 1. What Was Accomplished in Previous Sessions
+---
 
-### End-to-End Clinical AI Pipeline Implementation (Phases 1 - 4)
-Completed the implementation and verification of the full clinical AI pipeline:
+## 1. Complete End-to-End Clinical AI Pipeline Status
+The full clinical AI pipeline is now fully implemented, integrated, and verified:
 $$\text{Synthea} \rightarrow \text{Synthetic Case Builder} \rightarrow \text{Case Pool} \rightarrow \text{Admit Patient} \rightarrow \text{Start Diagnosis} \rightarrow \text{Router} \rightarrow \text{Specialty Agent} \rightarrow \text{MedGemma (4B)} + \text{Specialty Book RAG} + \text{Shared Knowledge Sources} \rightarrow \text{Diagnosis Report} \rightarrow \text{Multi-Stage Evaluation} \rightarrow \text{Review Page} \rightarrow \text{Student/Reviewer Feedback} \rightarrow \text{Model Training Dataset} \rightarrow \text{Training} \rightarrow \text{Improved Model}$$
 
-1. **Phase 1: Foundation & Data Pipelines (Commit `e3e4c0d`)**
-   - Added `case_pool` persistence schema to SQLite and PostgreSQL (`backend/database/schema.py`).
-   - Implemented `save_case_to_pool`, `list_pool_cases`, `get_pool_case`, `update_pool_case_status` in `backend/database/repository.py`.
-   - Built `SyntheticClinicalCaseBuilder` (`backend/clinical/case_builder.py`) converting Synthea FHIR records into high-fidelity simulated lab banks (`simulated_labs`), physical exams, and vitals.
-   - Built deterministic patient-level deduplication via SHA-256 MRN hashing.
-   - Added `/api/cases/pool`, `/api/cases/pool/seed`, and `/api/cases/pool/{pool_case_id}/admit` endpoints (`backend/api/router.py`).
-   - Updated `get_benchmark_case` to seamlessly resolve cases from admitted patients and the case pool.
-
-2. **Phase 2: Routing & Specialty Agents (Commit `ecc1451`)**
-   - Created `MedicalSpecialtyRouter` (`backend/agents/router.py`) to classify cases into `CARDIOLOGY` vs `INTERNAL_MEDICINE` (strictly decoupled from model training).
-   - Created `CardiologyRAGAgent` (`backend/rag/specialists/cardiology_rag.py`) indexing *Braunwald's Heart Disease* (16,359 chunks with precomputed dense vectors).
-   - Created `CardiologySpecialistAgent` (`backend/agents/specialists/cardiology.py`) (Dr. Rachel Vance, MD, FACC) powered by the platform-wide shared MedGemma 4B base model.
-   - Integrated dynamic specialty routing into `run_encounter_simulation()` with `SPECIALTY_ROUTED` hospital events.
-   - Added `/specialists/cardiology/consult`, `/specialists/cardiology/chat`, and `/specialists/cardiology/chat/stream` endpoints.
-
-3. **Phase 3: Ground Truth Isolation & Shared Knowledge Sources (Commit `57b12ec`)**
-   - Created `SharedKnowledgeService` (`backend/rag/shared_sources.py`) providing unified RxNorm, NABD, and clinical pharmacology evidence across all specialty agents.
-   - **Ground Truth Isolation**: Removed `recommended_tests = toolkit.ground_truth.recommended_labs` from `internal_medicine.py`. Implemented `determine_diagnostic_workup()` for autonomous clinical lab/imaging selection without ground truth access.
-   - Added `determine_diagnostic_workup()` to `CardiologySpecialistAgent`.
-   - Wired `SharedKnowledgeService` into both Internal Medicine and Cardiology agents, combining specialty medical book citations (Harrison's / Braunwald's) with shared pharmacology citations.
-   - Created `backend/llm/model_config.py` as unified single source of truth for model configuration (`get_model_id()` -> `google/medgemma-4b`).
-
-4. **Phase 4: Generalized Multi-Source Verification & Review Flow (Commit `9df15ce`)**
-   - Extended `EvidenceSource` in `src/vh/generation/v2_report.py` to support `harrison`, `braunwald`, `nabd_rxnorm`, `dailymed`, `openfda`, `pubmed`, and `model_knowledge`.
-   - Fixed confirmed certainty lower bound validator in `v2_report.py`.
-   - Generalized `_quote_verified`, `check_v6`, `check_v7`, and `check_v8` in `src/vh/verification/phase3.py` to verify citations from all authorized medical books and shared knowledge sources.
-   - Updated `submit_physician_review` in `backend/simulation/orchestrator.py` to resolve case data via `get_benchmark_case(report.patient_id)` so admitted cases and pool cases generate DPO preference pairs for training.
-   - Verified strict isolation between automated evaluations and human physician/student reviews.
+1. **Synthetic Case Intake & Case Pool (Commit `e3e4c0d`)**:
+   - Synthea FHIR ingestion to high-fidelity simulated lab banks and cases.
+   - Deterministic patient deduplication via SHA-256 MRN hashing.
+2. **Specialty Routing & Multi-Specialist RAG (Commit `ecc1451`)**:
+   - `MedicalSpecialtyRouter` assigns cases to `INTERNAL_MEDICINE` vs `CARDIOLOGY`.
+   - Dedicated medical books: Harrison's for Internal Medicine, Braunwald's (16,359 chunks) for Cardiology.
+   - Decoupled router from model training.
+3. **Ground Truth Isolation & Shared Knowledge Sources (Commit `57b12ec`)**:
+   - Autonomous `determine_diagnostic_workup()` without ground-truth leakage.
+   - Unified RxNorm and NABD shared pharmacology sources across all agents.
+4. **Generalized Multi-Source Verification (Commit `9df15ce`)**:
+   - Cross-source citation verifier validating evidence against authorized texts.
+5. **Specialist Diagnostic Workflow (Commit `4b702ec`)**:
+   - 11-step diagnostic synthesis workflow combining clinical presentation, book RAG, and pharmacology evidence without verbatim source copying.
+6. **Independent 6-Dimension Evaluation Pipeline (Commit `619a5ae`)**:
+   - Independent automated evaluation covering clinical context relevance, hallucination detection, structural compliance, reasoning consistency, recommendation validity, and evidence grounding quality.
+   - Fail-closed execution and separate schema storage.
+7. **Review → Feedback → Training Dataset Pipeline (Commit `8a7f291`)**:
+   - Immutable original AI reports, separate review and correction storage, 8-code structured error taxonomy, 13-field training dataset record preservation, patient deduplication, and manual-only training enforcement.
 
 ---
 
@@ -68,20 +72,22 @@ $$\text{Synthea} \rightarrow \text{Synthetic Case Builder} \rightarrow \text{Cas
 - **Specialty Book RAG + Shared Knowledge**: Each specialty agent has its own dedicated Medical Book (Harrison's for Internal Medicine, Braunwald's for Cardiology), while all agents share unified clinical pharmacology sources (RxNorm, NABD).
 - **Ground Truth Isolation**: Specialty agents never access ground truth data or recommended labs during encounter simulation. All laboratory and imaging orders are selected autonomously via `determine_diagnostic_workup()`.
 - **Review & Dataset Separation**: Human/student reviews and automated evaluations are stored in separate schemas (`physician_reviews` vs `report_evaluations`), and training is strictly manual.
+- **Immutability of AI Generations**: AI reports are permanent historical artifacts; corrections are stored as distinct preferred outputs for DPO/training pairs.
 
 ---
 
 ## 3. Current Verification State
-- **Backend Test Suite (`backend/tests/`)**: **115 of 115 tests passing (100% green)** in 282s.
+- **Backend Test Suite (`backend/tests/`)**: **123 of 123 tests passing (100% green)** in 293.92s.
+- **Review Dataset Pipeline Suite (`backend/tests/test_review_dataset_pipeline.py`)**: **8 of 8 tests passing (100% green)**.
 - **Evaluation Pipeline Suite (`backend/tests/test_evaluation_pipeline.py`)**: **23 of 23 tests passing (100% green)**.
-- **Phase 4 Verification Suite (`backend/tests/test_phase4_verification_flow.py`)**: **3 of 3 tests passing (100% green)**.
-- **Acceptance Tests (`tests/test_step_21_acceptance.py`, `tests/test_step_28_acceptance.py`, `tests/test_step_36_acceptance.py`, `tests/test_synthea_integration.py`)**: **29 of 29 tests passing (100% green)**.
+- **Acceptance Tests (`tests/`)**: **29 of 29 tests passing (100% green)**.
 - **Frontend Test Suite (`frontend/`)**: **10 test files passed (39 tests green)**.
-- **Frontend Production Build (`npm run build`)**: Built in 1.24s with zero TypeScript or bundling errors.
+- **Frontend Production Build (`npm run build`)**: Built in 1.23s with zero TypeScript or bundling errors.
+- **Frontend Linter (`npm run lint`)**: 0 errors across 54 files.
 
 ---
 
 ## 4. Next Steps
-1. Perform an end-to-end clinical simulation walk-through from UI (Admit -> Run Simulation -> Specialty Routing -> Diagnostic Synthesis -> Independent Evaluation -> Physician Review -> DPO Dataset Export).
+1. Perform an end-to-end clinical simulation walk-through from UI (Admit -> Run Simulation -> Specialty Routing -> Diagnostic Synthesis -> Independent Evaluation -> Physician Review -> Curated Training Dataset Export).
 2. Expand specialty roster (e.g., Neurology with Adams & Victor's RAG, Pulmonology with Murray & Nadel's RAG) using the established modular architecture.
-3. Fine-tuning dataset evaluation: run benchmark comparison against baseline MedGemma 4B once sufficient DPO preference pairs have been collected from human reviews.
+3. Fine-tuning dataset evaluation: execute manual fine-tuning run against baseline MedGemma 4B once sufficient curated preference pairs have been collected from physician reviews.
