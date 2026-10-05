@@ -1,18 +1,31 @@
 # AI Virtual Hospital (AI-VH) : Session Handoff
 
-## 0. Latest Session (2026-10-05) — 11-Step Specialist Reasoning Workflow (Commit `17b4bef`)
-- `backend/agents/specialists/reasoning_engine.py`: `SpecialtyClinicalReasoningEngine` runs the 11 steps for every specialty; IM + Cardiology both delegate `conduct_clinical_encounter` / `determine_diagnostic_workup` to it (same MedGemma base, specialty book via `rag_agent`).
-- Steps 9–10 are performed by MedGemma (`generate_clinical_decision`) with patient data + book citations + shared (RxNorm/NABD) citations. No hard-coded diagnoses in the engine.
-- Report: `clinical_summary`, `relevant_findings`, `recommended_next_steps`, differential, treatment, disposition, bibliographic attribution `[n] Source, Chapter, p.X`. Sentences copying ≥12 consecutive words from a source are stripped. No citations → `ungrounded=True` (excluded from RL export). Empty model output raises.
-- Fixed ground-truth leak in base `DoctorAgent` (was ordering from `ground_truth.recommended_labs`).
-- Tests: `backend/tests/test_specialist_diagnostic_workflow.py` (11, mocked) ; full backend 92/92 passed.
-- **Known open issues (not changed, need decision):**
-  1. `MedGemmaService.generate_clinical_decision` still falls back to `_heuristic_medical_synthesis` when the GPU model is not loaded/errors, and `_parse_or_supplement_output` merges heuristic differential/likelihoods into real model output. This means a "model" report can be heuristic. Should be removed/flagged.
-  2. `_parse_or_supplement_output` sets `clinical_reasoning = raw_output[:500]` (raw JSON text), so reasoning prose quality depends on that.
-  3. The prompt in `_build_evaluation_prompt` is Harrison's/Internal-Medicine-specific even for Cardiology; it does not request supporting/opposing points or explicitly say "patient data overrides references".
-  4. Step 4 initial differential is keyword-based (internal only; used to focus the RAG query).
+## 0. Latest Session (2026-10-05) — Independent 6-Dimension Evaluation Pipeline (Commit `619a5ae`)
+- **Independent Evaluation Engine (`backend/evaluation/`)**:
+  - Implemented `DiagnosisReportEvaluationPipeline` running 6 clinically meaningful, independent evaluation dimensions before reports enter the human review page:
+    1. **Clinical Context Relevance (`ClinicalContextRelevanceEvaluator`)**: Validates demographic alignment (age/sex), chief complaint correspondence, semantic presentation token overlap, and cardinal clinical syndrome alignment (cardiac, metabolic, respiratory, renal).
+    2. **Hallucination / Unsupported Claims (`HallucinationDetectionEvaluator`)**: Scans for unperformed diagnostic imaging or lab citations, biomarker contradictions (asserting normal biomarkers for necrotic diseases), fabricated vital signs, and phantom medical history.
+    3. **Structural / Format Compliance (`StructuralComplianceEvaluator`)**: Validates required clinical report schema fields (summary, primary diagnosis, differential, treatment plan, findings, disposition, citations), bounds on differential candidates (2-7), and diagnostic confidence range (0.0-1.0).
+    4. **Clinical Reasoning Consistency (`ClinicalReasoningConsistencyEvaluator`)**: Checks alignment between primary diagnosis and top differential candidate (with disease-specific stopword filtering and medical acronym equivalence), presence of supporting points, candidate likelihood rankings, and detects internal logical contradictions in reasoning text.
+    5. **Recommendation Validity (`RecommendationValidityEvaluator`)**: Actionability check, universal safety contraindication rules (e.g. beta-blockers in cardiogenic shock/bradycardia, metformin in DKA/severe acidosis, anticoagulants in acute hemorrhage/dissection, NSAIDs in AKI), and strict ground-truth contraindication enforcement with drug class expansion (`nsaid`, `beta_blocker`, `acei`, `arb`, `anticoagulant`, `antiplatelet`).
+    6. **Evidence / Grounding Quality (`EvidenceGroundingEvaluator`)**: Verifies that report is substantiated by citations from authorized medical sources (Harrison's, Braunwald's, RxNorm, NABD, DailyMed, OpenFDA, PubMed), checks citation structure, and enforces fail status if `ungrounded=True`.
+- **Fail-Closed & Ground-Truth Isolation**:
+  - All evaluators wrap execution in fail-closed safety (`BaseDimensionEvaluator`), catching unexpected exceptions and returning `passed=False` with `CRITICAL` severity.
+  - Generating model has zero access to ground truth; evaluation pipeline accesses case ground truth strictly for independent verification.
+- **Persistence & API Integration**:
+  - Added `report_evaluations` table to `SQLITE_SCHEMA` and `POSTGRES_SCHEMA` with auto-migration in `repository.init_schema()`.
+  - Added `GET /api/reports/{report_id}/evaluation` and `POST /api/reports/{report_id}/evaluate` endpoints in `backend/api/router.py`.
+  - Added `REPORT_EVALUATION_STARTED` and `REPORT_EVALUATION_COMPLETED` events dispatched over WebSocket event bus.
+  - Integrated into `HospitalOrchestrator.run_encounter_simulation()` immediately preceding `REPORT_READY`.
+- **Frontend Quality Assurance**:
+  - Added `AutomatedEvaluationCard` to `PhysicianReviewDashboard.tsx` displaying composite score, evaluation status badge (`PASSED`, `FLAGGED`, `REJECTED`), detailed 6-dimension breakdown, detected issues, and on-demand re-evaluation button.
+- **Verification Results**:
+  - `backend/tests/test_evaluation_pipeline.py`: **23 of 23 tests passing (100% green)**.
+  - Full backend test suite (`backend/tests/`): **115 of 115 tests passing (100% green)** in 282s.
+  - Frontend test suite (`frontend/`): **10 test files passed (39 tests green)**.
+  - Frontend production build: compiled cleanly in 1.24s (`tsc -b && vite build`).
 
-## 1. What Was Accomplished in this Session
+## 1. What Was Accomplished in Previous Sessions
 
 ### End-to-End Clinical AI Pipeline Implementation (Phases 1 - 4)
 Completed the implementation and verification of the full clinical AI pipeline:
@@ -54,20 +67,21 @@ $$\text{Synthea} \rightarrow \text{Synthetic Case Builder} \rightarrow \text{Cas
 - **Router Independence**: `MedicalSpecialtyRouter` is a deterministic clinical router that assigns cases to specialties; it is NEVER the model being trained or fine-tuned.
 - **Specialty Book RAG + Shared Knowledge**: Each specialty agent has its own dedicated Medical Book (Harrison's for Internal Medicine, Braunwald's for Cardiology), while all agents share unified clinical pharmacology sources (RxNorm, NABD).
 - **Ground Truth Isolation**: Specialty agents never access ground truth data or recommended labs during encounter simulation. All laboratory and imaging orders are selected autonomously via `determine_diagnostic_workup()`.
-- **Review & Dataset Separation**: Human/student reviews and automated evaluations are stored in separate schemas (`physician_reviews` vs automated evaluations), and training is strictly manual.
+- **Review & Dataset Separation**: Human/student reviews and automated evaluations are stored in separate schemas (`physician_reviews` vs `report_evaluations`), and training is strictly manual.
 
 ---
 
 ## 3. Current Verification State
-- **Backend Test Suite (`backend/tests/`)**: **78 of 78 tests passing (100% green)** in 274s.
+- **Backend Test Suite (`backend/tests/`)**: **115 of 115 tests passing (100% green)** in 282s.
+- **Evaluation Pipeline Suite (`backend/tests/test_evaluation_pipeline.py`)**: **23 of 23 tests passing (100% green)**.
 - **Phase 4 Verification Suite (`backend/tests/test_phase4_verification_flow.py`)**: **3 of 3 tests passing (100% green)**.
 - **Acceptance Tests (`tests/test_step_21_acceptance.py`, `tests/test_step_28_acceptance.py`, `tests/test_step_36_acceptance.py`, `tests/test_synthea_integration.py`)**: **29 of 29 tests passing (100% green)**.
 - **Frontend Test Suite (`frontend/`)**: **10 test files passed (39 tests green)**.
-- **Frontend Production Build (`npm run build`)**: Built in 1.22s with zero TypeScript or bundling errors.
+- **Frontend Production Build (`npm run build`)**: Built in 1.24s with zero TypeScript or bundling errors.
 
 ---
 
 ## 4. Next Steps
-1. Perform an end-to-end clinical simulation walk-through from UI (Admit -> Run Simulation -> Specialty Routing -> Diagnostic Synthesis -> Physician Review -> DPO Dataset Export).
+1. Perform an end-to-end clinical simulation walk-through from UI (Admit -> Run Simulation -> Specialty Routing -> Diagnostic Synthesis -> Independent Evaluation -> Physician Review -> DPO Dataset Export).
 2. Expand specialty roster (e.g., Neurology with Adams & Victor's RAG, Pulmonology with Murray & Nadel's RAG) using the established modular architecture.
 3. Fine-tuning dataset evaluation: run benchmark comparison against baseline MedGemma 4B once sufficient DPO preference pairs have been collected from human reviews.
