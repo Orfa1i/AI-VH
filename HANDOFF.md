@@ -132,17 +132,22 @@
 	    - Built automated generator `scripts/generate_pdf_report.py` compiling the document via Headless Chrome (`--headless=new --disable-gpu --no-sandbox --no-pdf-header-footer`).
 	    - Successfully generated and certified `AI-VH_Functional_Architecture_Report.pdf` (865 KB, 8 pages) in the project root folder.
 	    - Verified 100% test baseline: 39/39 Vitest tests passed, Vite build 0 errors, Oxlint 0 errors, 67/67 Pytest tests passed. Commit `bcf92d3`.
-- **Backend Service**: Running live on `http://127.0.0.1:8000` (FastAPI + MedGemma NF4 on RTX 4060).
+	  - **17. Reversion to MedGemma 4B & Total Removal of Colab / 27B**:
+	    - Completely eliminated all Colab tunnel configurations, remote endpoints, and MedGemma 27B dependencies.
+	    - Restored local MedGemma 4B foundation model weights (`./MedGemma Model/model`) with 4-bit BitsAndBytes NF4 GPU quantization on NVIDIA RTX 4060.
+	    - Restored trained DPO LoRA adapter in `models/medgemma-dpo-lora/` (`adapter_model.safetensors`, `adapter_config.json`, `training_summary.json`).
+	    - Purged `VH_MODEL_ENDPOINT`, `VH_MODEL_ID`, `VH_MODEL_API_KEY`, and remote runner adapters from codebase and `.env`.
+	    - Hard-reset git tree to clean 4B baseline (`e35c62b`) and renamed active branch to `medgemma-4b`.
+	    - Verified end-to-end local inference: 67/67 Pytest tests passed (100% green), 39/39 Vitest frontend tests passed, 23/23 acceptance tests passed.
+- **Backend Service**: Running live on `http://127.0.0.1:8000` (FastAPI + local MedGemma 4B NF4 on RTX 4060 with DPO LoRA).
 - **Frontend Service**: Running live on `http://127.0.0.1:5173` (Vite + React + Tailwind + Lucide).
 
 ---
 
 ## 4. Concrete Next Steps
-1. **Inspect Generated Functional Report PDF**: Open and review [AI-VH_Functional_Architecture_Report.pdf](file:///C:/Users/PCD/Desktop/AI-VH/AI-VH_Functional_Architecture_Report.pdf) in the project root.
-2. **Interactive Trajectory Stepper & HUD Verification**: Open the Patient Journey Graph in the browser ([http://127.0.0.1:5173](http://127.0.0.1:5173)), select active patient Charles Brown in Cases Area, and verify Node 3 active highlight and 75% dynamic progress.
-3. **Discharge & Toast Notification Verification**: Complete an encounter simulation and observe the emerald discharge toast alert in the Left Notification Drawer.
-4. **Doctor Reviewing & Fine-Tuning Console**: Inspect the 'Reviewing' tab and verify that selecting reviewed reports is instantaneous without network storms.
-5. **Live Encounter Simulation**: Admit a new synthetic patient from Case Intake and verify end-to-end multi-agent clinical flow.
+1. **Explore Local 4B Hospital Simulation**: Open [http://127.0.0.1:5173](http://127.0.0.1:5173) and admit a clinical case to observe local on-device 4B reasoning on RTX 4060.
+2. **Review Functional Architecture Report**: Inspect [AI-VH_Functional_Architecture_Report.pdf](file:///C:/Users/PCD/Desktop/AI-VH/AI-VH_Functional_Architecture_Report.pdf).
+3. **Internal Medicine Chat & Telemetry**: Interact with Dr. Marcus Vance in the diagnostic chat console powered by local MedGemma 4B.
 
 
 
