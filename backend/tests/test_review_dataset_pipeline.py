@@ -32,12 +32,20 @@ from backend.simulation.orchestrator import orchestrator
 @pytest.fixture(autouse=True)
 def clean_database():
     """Ensure clean database baseline before and after each test."""
+    from backend.api.router import _training_state
+    _training_state["status"] = "IDLE"
+    _training_state["last_run"] = None
+    _training_state["last_error"] = None
+    _training_state["failed_gates"] = []
+    _training_state["blockers"] = []
+
     db_repo.purge_mock_data()
     orchestrator.reports.clear()
     orchestrator.reviews.clear()
     orchestrator.encounters.clear()
     yield
     db_repo.purge_mock_data()
+    _training_state["status"] = "IDLE"
 
 
 def _create_sample_report(report_id: str = "RPT-REV-TEST-001", patient_id: str = "CASE-101") -> ClinicalReport:

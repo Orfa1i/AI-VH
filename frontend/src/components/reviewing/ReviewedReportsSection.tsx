@@ -103,7 +103,15 @@ export const ReviewedReportsSection: React.FC<ReviewedReportsSectionProps> = ({
             'Training temporarily disabled until Phase 5 data hygiene is complete (HTTP 503). Your reviews are saved — nothing is lost.'
           );
         }
-        throw new Error(errorData.detail || 'Fine-tuning execution failed.');
+        if (res.status === 422) {
+          const detail = errorData.detail || {};
+          const failedGates = detail.validation?.failed_gates || [];
+          const blockers = detail.blockers || [];
+          throw new Error(
+            `Training Blocked: ${failedGates.length} pre-training validation gates failed (${failedGates.join(', ')}). ${blockers.slice(0, 1).join(' ')}`
+          );
+        }
+        throw new Error(typeof errorData.detail === 'string' ? errorData.detail : 'Fine-tuning execution failed.');
       }
 
       const result = await res.json();

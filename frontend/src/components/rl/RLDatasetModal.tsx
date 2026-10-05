@@ -31,7 +31,25 @@ export const RLDatasetModal: React.FC<RLDatasetModalProps> = ({ isOpen, onClose 
   const [training, setTraining] = useState(false);
   const [trainMessage, setTrainMessage] = useState<string | null>(null);
   const [trainError, setTrainError] = useState<string | null>(null);
+  const [validationResult, setValidationResult] = useState<any | null>(null);
+  const [isValidating, setIsValidating] = useState(false);
+  const [showValidation, setShowValidation] = useState(false);
 
+  const handleValidateGates = async () => {
+    setIsValidating(true);
+    try {
+      const res = await fetch('/api/rl/train/validate');
+      if (res.ok) {
+        const data = await res.json();
+        setValidationResult(data);
+        setShowValidation(true);
+      }
+    } catch (err) {
+      console.error('Validation fetch error:', err);
+    } finally {
+      setIsValidating(false);
+    }
+  };
 
   const fetchDataset = async () => {
     setLoading(true);
@@ -92,10 +110,19 @@ export const RLDatasetModal: React.FC<RLDatasetModalProps> = ({ isOpen, onClose 
             'Training temporarily disabled until Phase 5 data hygiene is complete (HTTP 503). Your reviews are saved — nothing is lost.'
           );
         }
-        throw new Error(err.detail || 'Training failed');
+        if (res.status === 422) {
+          const detail = err.detail || {};
+          setValidationResult(detail.validation || detail);
+          setShowValidation(true);
+          const failedGates = detail.validation?.failed_gates || [];
+          throw new Error(
+            `Training blocked by pre-training safety gates (${failedGates.join(', ') || 'Validation gates failed'}). Dataset remains unchanged.`
+          );
+        }
+        throw new Error(typeof err.detail === 'string' ? err.detail : 'Training failed');
       }
       const data = await res.json();
-      setTrainMessage(`Model fine-tuning finished! Status: ${data.status}, Pairs: ${data.pairs_trained}, Output: ${data.adapter_path}`);
+      setTrainMessage(`Model fine-tuning finished! Status: ${data.status}, Pairs: ${data.training_summary?.pairs_trained || data.pairs_trained || 0}, Output: ${data.manifest?.manifest_id || 'models/medgemma-dpo-lora'}`);
       setTimeout(() => setTrainMessage(null), 8000);
     } catch (err: any) {
       setTrainError(err.message || 'Manual fine-tuning failed');
@@ -159,6 +186,25 @@ export const RLDatasetModal: React.FC<RLDatasetModalProps> = ({ isOpen, onClose 
             </button>
 
             <button
+              onClick={handleValidateGates}
+              disabled={isValidating}
+              className="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold shadow-md shadow-slate-900/10 flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
+              title="Run 14-point pre-training validation checklist without starting training"
+            >
+              {isValidating ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-400" />
+                  <span>Auditing...</span>
+                </>
+              ) : (
+                <>
+                  <ShieldAlert className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Audit Gates</span>
+                </>
+              )}
+            </button>
+
+            <button
               onClick={handleExportJSONL}
               disabled={exporting}
               className="px-3.5 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold shadow-md shadow-purple-500/20 flex items-center gap-2 transition-all cursor-pointer disabled:opacity-50"
@@ -197,6 +243,56 @@ export const RLDatasetModal: React.FC<RLDatasetModalProps> = ({ isOpen, onClose 
           <div data-testid="train-blocked-503" className="px-6 py-2 bg-rose-50 border-b border-rose-200 text-rose-800 text-xs flex items-center gap-2 font-mono">
             <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
             <span>{trainError}</span>
+          </div>
+        )}
+
+        {/* Pre-Training 14-Gate Validation Result Panel */}
+        {validationResult && showValidation && (
+          <div className="px-6 py-3 bg-slate-900 border-b border-slate-700 text-white font-mono text-xs animate-in slide-in-from-top-2">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-800 mb-2">
+              <div className="flex items-center gap-2">
+                <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${validationResult.passed ? 'bg-emerald-950 text-emerald-300 border border-emerald-700' : 'bg-rose-950 text-rose-300 border border-rose-700'}`}>
+                  {validationResult.passed ? 'ALL 14 GATES PASSED' : `${validationResult.gates_failed} OF 14 GATES BLOCKED`}
+                </span>
+                <span className="text-slate-400 text-[11px]">
+                  Evaluated {validationResult.eligible_records_count} eligible records
+                </span>
+              </div>
+              <button
+                onClick={() => setShowValidation(false)}
+                className="text-slate-400 hover:text-slate-200 text-[11px] underline cursor-pointer"
+              >
+                Dismiss
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto pr-1">
+              {validationResult.gate_results?.map((g: any) => (
+                <div
+                  key={g.gate_id}
+                  className={`p-2 rounded-lg border flex items-start gap-2 ${g.passed ? 'bg-slate-800/60 border-slate-700 text-slate-300' : 'bg-rose-950/40 border-rose-800/80 text-rose-200'}`}
+                >
+                  {g.passed ? (
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                  ) : (
+                    <XCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[11px] font-bold leading-tight flex items-center justify-between">
+                      <span>Gate {g.gate_id}: {g.name}</span>
+                      <span className={`text-[9px] px-1 rounded ${g.passed ? 'text-emerald-400' : 'bg-rose-900/60 text-rose-300'}`}>
+                        {g.passed ? 'PASS' : 'FAIL'}
+                      </span>
+                    </p>
+                    {g.failure_reason && (
+                      <p className="text-[10px] text-rose-300/90 mt-1 leading-normal">
+                        {g.failure_reason}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
