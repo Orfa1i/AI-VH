@@ -119,6 +119,10 @@ class ClinicalToolkit:
         treatment_plan: List[str],
         citations: List[Dict[str, Any]],
         ungrounded: bool = False,
+        clinical_summary: str = "",
+        relevant_findings: Optional[List[str]] = None,
+        recommended_next_steps: Optional[List[str]] = None,
+        recommended_disposition: str = "Admit to Internal Medicine / Observation",
     ) -> ClinicalReport:
         """Doctor generates the structured clinical report for human physician review."""
         logger.info(f"Tool called: write_clinical_report for encounter {encounter_id}")
@@ -138,11 +142,15 @@ class ClinicalToolkit:
             physical_exam_findings=self.ground_truth.physical_exam,
             investigations_ordered=self.ordered_labs,
             investigation_results=self.lab_results,
+            clinical_summary=clinical_summary,
+            relevant_findings=relevant_findings or [],
             differential_diagnosis=differential,
             primary_diagnosis=primary_diagnosis,
             diagnostic_confidence=diagnostic_confidence,
             clinical_reasoning=clinical_reasoning,
             treatment_plan=treatment_plan,
+            recommended_disposition=recommended_disposition,
+            recommended_next_steps=recommended_next_steps or [recommended_disposition],
             medical_knowledge_citations=citations,
             ungrounded=ungrounded,
         )

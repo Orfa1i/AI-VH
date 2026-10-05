@@ -17,6 +17,7 @@ from ...llm.model_config import get_model_id
 from ...rag.specialists.internal_medicine_rag import InternalMedicineRAGAgent, EvidenceBrief
 from ...rag.shared_sources import shared_knowledge_service
 from ...clinical.intent import is_clinical_query
+from .reasoning_engine import SpecialtyClinicalReasoningEngine
 
 logger = logging.getLogger("InternalMedicineSpecialist")
 
@@ -42,6 +43,16 @@ class InternalMedicineSpecialistAgent(DoctorAgent):
         self.rag_agent = rag_agent or InternalMedicineRAGAgent()
         self.active_evidence_brief: Optional[EvidenceBrief] = None
         self.consultation_history: List[Dict[str, Any]] = []
+        self.reasoning_engine = SpecialtyClinicalReasoningEngine(
+            specialist_name=self.name,
+            specialty=self.specialty,
+            rag_agent=self.rag_agent,
+            medgemma_service=self.llm,
+            shared_sources=shared_knowledge_service,
+            lab_agent=self.lab_agent,
+            radiology_agent=self.radiology_agent,
+            emit_event_fn=self.emit_event,
+        )
 
     async def conduct_specialist_consultation(
         self,
@@ -169,241 +180,18 @@ class InternalMedicineSpecialistAgent(DoctorAgent):
         based strictly on clinical presentation, vital signs, and examination findings.
         GROUND TRUTH ISOLATION RULE: Ground truth is never accessed during diagnostic workup.
         """
-        tests: List[LabTestType] = []
-        text = f"{chief_complaint} {hpi}".lower()
-
-        # Core baseline for any admitted internal medicine patient
-        tests.append(LabTestType.CBC)
-        tests.append(LabTestType.BMP)
-
-        # Cardiovascular & Thoracic symptoms
-        if any(k in text for k in ["chest pain", "angina", "pressure", "palpitation", "sob", "dyspnea", "shortness of breath", "radiation"]):
-            tests.append(LabTestType.ECG_12_LEAD)
-            tests.append(LabTestType.TROPONIN_I)
-            tests.append(LabTestType.CXR)
-
-        # Respiratory / Pulmonary symptoms
-        elif any(k in text for k in ["cough", "wheezing", "sputum", "pneumonia", "hypoxia"]):
-            tests.append(LabTestType.CXR)
-            if vitals and vitals.spo2_percent < 92:
-                tests.append(LabTestType.ABG)
-
-        # Endocrine / Metabolic / DKA symptoms
-        if any(k in text for k in ["glucose", "sugar", "dka", "ketoacidosis", "polyuria", "polydipsia", "kussmaul", "vomiting", "dehydration"]):
-            if LabTestType.URINALYSIS not in tests:
-                tests.append(LabTestType.URINALYSIS)
-            if LabTestType.ABG not in tests:
-                tests.append(LabTestType.ABG)
-            if LabTestType.LACTATE not in tests:
-                tests.append(LabTestType.LACTATE)
-
-        # Gastrointestinal / Abdominal / Hepatic symptoms
-        if any(k in text for k in ["abdominal pain", "nausea", "vomiting", "jaundice", "epigastric"]):
-            tests.append(LabTestType.LFT)
-            if LabTestType.URINALYSIS not in tests:
-                tests.append(LabTestType.URINALYSIS)
-
-        # Systemic infection / Sepsis signs
-        if any(k in text for k in ["fever", "chills", "septic", "sepsis", "infection"]) or (vitals and (vitals.temperature_c > 38.3 or vitals.heart_rate > 100)):
-            if LabTestType.LACTATE not in tests:
-                tests.append(LabTestType.LACTATE)
-            if LabTestType.URINALYSIS not in tests:
-                tests.append(LabTestType.URINALYSIS)
-
-        # Ensure uniqueness while preserving order
-        seen = set()
-        ordered_unique_tests = []
-        for t in tests:
-            if t not in seen:
-                seen.add(t)
-                ordered_unique_tests.append(t)
-
-        return ordered_unique_tests
-
-    async def conduct_clinical_encounter(self, encounter_id: str, toolkit: ClinicalToolkit) -> ClinicalReport:
-        """Enhanced encounter runner integrating the dedicated Harrison's RAG Agent and Shared Knowledge Sources."""
-        patient_info = toolkit.get_patient_history()
-        patient_id = toolkit.ground_truth.id
-
-        # 1. Doctor Assigned & Starts Examination
-        await self.emit_event(
-            event_type=EventType.DOCTOR_ASSIGNED,
-            encounter_id=encounter_id,
-            patient_id=patient_id,
-            summary=f"{self.name} ({self.specialty}) entered Examination Room 1 for patient {patient_info['name']}",
-            payload={"doctor": self.name, "specialty": self.specialty}
-        )
-
-        # 2. Targeted Physical Examination
-        exam = toolkit.perform_physical_exam()
-        await self.emit_event(
-            event_type=EventType.EXAMINATION_STARTED,
-            encounter_id=encounter_id,
-            patient_id=patient_id,
-            summary=f"{self.name} completed internal medicine physical examination.",
-            payload={"exam_summary": f"General: {exam.get('General', '')}; CV: {exam.get('Cardiovascular', '')}"}
-        )
-
-        # 3. Query Harrison's Specialist RAG Agent + Shared Knowledge Sources (RxNorm/NABD)
-        evidence_brief = self.rag_agent.generate_evidence_brief(
-            chief_complaint=patient_info["chief_complaint"],
-            hpi=patient_info["history_of_present_illness"],
-        )
-        shared_citations = shared_knowledge_service.retrieve_shared_evidence(
-            query=f"{patient_info['chief_complaint']} {patient_info['history_of_present_illness']}"
-        )
-        if shared_citations:
-            evidence_brief.citations.extend(shared_citations)
-        self.active_evidence_brief = evidence_brief
-
-        await self.emit_event(
-            event_type=EventType.RAG_QUERY_INITIATED,
-            encounter_id=encounter_id,
-            patient_id=patient_id,
-            summary=f"{self.name} queried Harrison's Internal Medicine Knowledge Engine: '{evidence_brief.domain}'",
-            payload={"domain": evidence_brief.domain}
-        )
-
-        await self.emit_event(
-            event_type=EventType.RAG_KNOWLEDGE_RETRIEVED,
-            encounter_id=encounter_id,
-            patient_id=patient_id,
-            summary=f"{self.name} retrieved {len(evidence_brief.citations)} citations from Harrison's and Shared Knowledge Sources (Top: {evidence_brief.citations[0]['chapter'] if evidence_brief.citations else 'N/A'})",
-            payload={"citations_count": len(evidence_brief.citations), "top_citation": evidence_brief.citations[0] if evidence_brief.citations else None}
-        )
-
-        # 4. Diagnostic Investigations Ordering (Autonomously determined, ground-truth isolated)
-        vitals = toolkit.get_vital_signs()
-        recommended_tests = self.determine_diagnostic_workup(
-            chief_complaint=patient_info["chief_complaint"],
-            hpi=patient_info["history_of_present_illness"],
+        return self.reasoning_engine.determine_diagnostic_workup(
+            chief_complaint=chief_complaint,
+            hpi=hpi,
             vitals=vitals,
             exam=exam,
         )
-        lab_results_payload = []
 
-        for test in recommended_tests:
-            is_imaging = test in [LabTestType.ECG_12_LEAD, LabTestType.CXR, LabTestType.CT_CHEST]
-            
-            if is_imaging and self.radiology_agent is not None:
-                await self.emit_event(
-                    event_type=EventType.IMAGING_ORDERED,
-                    encounter_id=encounter_id,
-                    patient_id=patient_id,
-                    summary=f"{self.name} ordered STAT imaging: {test.value}",
-                    payload={"study_type": test.value}
-                )
-                result = await self.radiology_agent.read_imaging_study(encounter_id, test, toolkit)
-            elif self.lab_agent is not None:
-                await self.emit_event(
-                    event_type=EventType.LAB_ORDERED,
-                    encounter_id=encounter_id,
-                    patient_id=patient_id,
-                    summary=f"{self.name} ordered STAT laboratory test: {test.value}",
-                    payload={"test_type": test.value}
-                )
-                result = await self.lab_agent.process_lab_order(encounter_id, test, toolkit)
-            else:
-                await self.emit_event(
-                    event_type=EventType.LAB_ORDERED,
-                    encounter_id=encounter_id,
-                    patient_id=patient_id,
-                    summary=f"{self.name} ordered STAT: {test.value}",
-                    payload={"test_type": test.value}
-                )
-                result = toolkit.order_lab_test(test)
-                await self.emit_event(
-                    event_type=EventType.LAB_RESULT_READY,
-                    encounter_id=encounter_id,
-                    patient_id=patient_id,
-                    summary=f"Laboratory returned results for {test.value}: {result.interpretation}",
-                    payload={"test_type": test.value, "values": result.values, "interpretation": result.interpretation}
-                )
-
-            lab_results_payload.append(result.model_dump())
-
-        # 5. MedGemma Foundation Model Clinical Synthesis (VH_PIPELINE-gated:
-        # grounded src/vh assessment when VH_PIPELINE=grounded, else legacy path).
-        # A failed grounded attempt falls back to legacy AND tags ungrounded=true.
-        vitals = toolkit.get_vital_signs()
-        decision = None
-        report_citations = evidence_brief.citations
-        report_ungrounded = False
-        try:
-            from backend.simulation.grounded_shim import maybe_grounded_assessment
-            grounded = maybe_grounded_assessment(
-                patient_info=patient_info,
-                vital_signs=vitals,
-                exam_findings=exam,
-                lab_results=lab_results_payload,
-                case_id=patient_id,
-            )
-        except Exception as shim_exc:
-            logger.warning(f"Grounded attempt failed ({shim_exc}); legacy fallback tagged ungrounded=true.")
-            grounded = None
-            report_ungrounded = True
-        if grounded is not None:
-            decision, report_citations = grounded
-        if decision is None:
-            decision = self.llm.generate_clinical_decision(
-                chief_complaint=patient_info["chief_complaint"],
-                hpi=patient_info["history_of_present_illness"],
-                vitals_summary=vitals.summary(),
-                exam_findings=exam,
-                lab_results=lab_results_payload,
-                rag_context=evidence_brief.citations,
-            )
-
-        diff_items = [
-            DifferentialItem(
-                condition=d["condition"],
-                likelihood=d["likelihood"],
-                supporting_points=d.get("supporting_points", []),
-                opposing_points=d.get("opposing_points", []),
-            )
-            for d in decision.get("differential", [])
-        ]
-
-        # 6. Diagnosis Made Event
-        await self.emit_event(
-            event_type=EventType.DIAGNOSIS_MADE,
+    async def conduct_clinical_encounter(self, encounter_id: str, toolkit: ClinicalToolkit) -> ClinicalReport:
+        """Enhanced encounter runner executing the unified 11-step clinical reasoning workflow."""
+        report = await self.reasoning_engine.execute_diagnostic_workflow(
             encounter_id=encounter_id,
-            patient_id=patient_id,
-            summary=f"{self.name} established primary diagnosis: {decision['primary_diagnosis']} (Confidence: {decision['confidence'] * 100:.1f}%)",
-            payload={
-                "primary_diagnosis": decision["primary_diagnosis"],
-                "confidence": decision["confidence"],
-                "differential_count": len(diff_items),
-            }
+            toolkit=toolkit,
         )
-
-        # 7. Treatment Ordered Event
-        await self.emit_event(
-            event_type=EventType.TREATMENT_ORDERED,
-            encounter_id=encounter_id,
-            patient_id=patient_id,
-            summary=f"{self.name} ordered guideline-directed treatment regimen ({len(decision['treatment_plan'])} interventions)",
-            payload={"treatment_plan": decision["treatment_plan"], "disposition": decision.get("recommended_disposition", "")}
-        )
-
-        # 8. Clinical Report Generation with Rich Harrison's Provenance
-        report = toolkit.write_clinical_report(
-            encounter_id=encounter_id,
-            primary_diagnosis=decision["primary_diagnosis"],
-            diagnostic_confidence=decision["confidence"],
-            differential=diff_items,
-            clinical_reasoning=decision["clinical_reasoning"],
-            treatment_plan=decision["treatment_plan"],
-            citations=report_citations,
-            ungrounded=report_ungrounded,
-        )
-
-        await self.emit_event(
-            event_type=EventType.CLINICAL_REPORT_GENERATED,
-            encounter_id=encounter_id,
-            patient_id=patient_id,
-            summary=f"Clinical Report #{report.id} finalized with Harrison's 21st Ed evidence citations and queued for Physician review",
-            payload={"report_id": report.id, "primary_diagnosis": report.primary_diagnosis}
-        )
-
+        self.active_evidence_brief = getattr(self.reasoning_engine, "active_evidence_brief", None)
         return report

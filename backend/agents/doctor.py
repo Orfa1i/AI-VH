@@ -78,7 +78,18 @@ class DoctorAgent(BaseAgent):
         )
 
         # 4. Diagnostic Investigations Ordering (Delegated to Lab & Radiology agents)
-        recommended_tests = toolkit.ground_truth.recommended_labs
+        # GROUND TRUTH ISOLATION: workup is derived from the presentation, never from
+        # toolkit.ground_truth.recommended_labs.
+        from .specialists.reasoning_engine import SpecialtyClinicalReasoningEngine
+
+        recommended_tests = SpecialtyClinicalReasoningEngine(
+            specialist_name=self.name, specialty=self.specialty, rag_agent=None, medgemma_service=self.llm
+        ).determine_diagnostic_workup(
+            chief_complaint=patient_info["chief_complaint"],
+            hpi=patient_info["history_of_present_illness"],
+            vitals=toolkit.get_vital_signs(),
+            exam=exam,
+        )
         lab_results_payload = []
 
         for test in recommended_tests:

@@ -88,12 +88,15 @@ class ClinicalReport(BaseModel):
     investigation_results: List[LabResult] = Field(default_factory=list)
     
     # Assessment & Plan
+    clinical_summary: str = Field(default="", description="Synthesized clinical presentation and history summary")
+    relevant_findings: List[str] = Field(default_factory=list, description="Key physical exam and investigation findings")
     differential_diagnosis: List[DifferentialItem] = Field(default_factory=list)
     primary_diagnosis: str
     diagnostic_confidence: float = Field(..., ge=0.0, le=1.0)
     clinical_reasoning: str
     treatment_plan: List[str] = Field(default_factory=list)
     recommended_disposition: str = "Admit to Internal Medicine / Observation"
+    recommended_next_steps: List[str] = Field(default_factory=list, description="Follow-up monitoring and disposition steps")
     
     # Evidence & Citations
     medical_knowledge_citations: List[Dict[str, Any]] = Field(default_factory=list)
