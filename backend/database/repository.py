@@ -31,6 +31,14 @@ class DatabaseRepository:
             cur = conn.cursor()
             if self.manager.engine_type == "sqlite":
                 cur.executescript(ddl)
+                # Ensure raw_json column exists in clinical_reports for existing sqlite DBs
+                cur.execute("PRAGMA table_info(clinical_reports);")
+                cols = [row[1] for row in cur.fetchall()]
+                if "raw_json" not in cols:
+                    try:
+                        cur.execute("ALTER TABLE clinical_reports ADD COLUMN raw_json TEXT DEFAULT '{}';")
+                    except Exception as e:
+                        logger.warning(f"Could not add raw_json column to clinical_reports: {e}")
             else:
                 cur.execute(ddl)
             logger.info(f"Database schema initialized successfully on {self.manager.engine_type}.")
@@ -142,6 +150,69 @@ class DatabaseRepository:
             cur.execute("SELECT COUNT(*) FROM clinical_reports;")
             res = cur.fetchone()
             return res[0] if res else 0
+
+    # =========================================================================
+    # Report Evaluations (Independent 6-Dimension Pipeline)
+    # =========================================================================
+
+    def save_evaluation(self, eval_result: Any) -> str:
+        """Persists automated multi-stage evaluation result."""
+        is_pg = self.manager.engine_type == "postgresql"
+        data = eval_result.model_dump() if hasattr(eval_result, "model_dump") else dict(eval_result)
+        raw_json_str = json.dumps(data, default=str)
+        eval_id = data.get("evaluation_id", str(uuid.uuid4()))
+        report_id = data.get("report_id", "")
+        encounter_id = data.get("encounter_id", "")
+        score = float(data.get("overall_score", 0.0))
+        severity = str(data.get("severity", "INFO"))
+        status = str(data.get("final_status", "PASSED"))
+        passed = bool(data.get("passed", False))
+        evaluated_at = data.get("evaluated_at", datetime.now(timezone.utc).isoformat())
+        if isinstance(evaluated_at, datetime):
+            evaluated_at = evaluated_at.isoformat()
+
+        with self.manager.get_connection() as conn:
+            cur = conn.cursor()
+            if is_pg:
+                cur.execute(
+                    """
+                    INSERT INTO report_evaluations (
+                        id, report_id, encounter_id, overall_score, severity,
+                        final_status, passed, evaluated_at, raw_json
+                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    ON CONFLICT (id) DO UPDATE SET
+                        overall_score = EXCLUDED.overall_score,
+                        severity = EXCLUDED.severity,
+                        final_status = EXCLUDED.final_status,
+                        passed = EXCLUDED.passed,
+                        raw_json = EXCLUDED.raw_json;
+                    """,
+                    (eval_id, report_id, encounter_id, score, severity, status, passed, evaluated_at, raw_json_str)
+                )
+            else:
+                cur.execute(
+                    """
+                    INSERT OR REPLACE INTO report_evaluations (
+                        id, report_id, encounter_id, overall_score, severity,
+                        final_status, passed, evaluated_at, raw_json
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
+                    """,
+                    (eval_id, report_id, encounter_id, score, severity, status, passed, evaluated_at, raw_json_str)
+                )
+        return eval_id
+
+    def get_evaluation_for_report(self, report_id: str) -> Optional[Dict[str, Any]]:
+        """Retrieves evaluation result for a report ID."""
+        is_pg = self.manager.engine_type == "postgresql"
+        with self.manager.get_connection() as conn:
+            cur = conn.cursor()
+            query = "SELECT raw_json FROM report_evaluations WHERE report_id = %s ORDER BY evaluated_at DESC LIMIT 1" if is_pg else "SELECT raw_json FROM report_evaluations WHERE report_id = ? ORDER BY evaluated_at DESC LIMIT 1"
+            cur.execute(query, (report_id,))
+            row = cur.fetchone()
+            if not row:
+                return None
+            val = row["raw_json"] if isinstance(row, dict) or hasattr(row, "keys") else row[0]
+            return json.loads(val) if isinstance(val, str) else val
 
     # =========================================================================
     # Physician Reviews
@@ -948,13 +1019,14 @@ class DatabaseRepository:
         deleted = {
             "patients": 0,
             "physician_reviews": 0,
+            "report_evaluations": 0,
             "clinical_reports": 0,
             "encounters": 0,
             "dpo_feedback_pairs": 0,
         }
         with self.manager.get_connection() as conn:
             cur = conn.cursor()
-            for tbl in ["physician_reviews", "clinical_reports", "encounters", "patients", "dpo_feedback_pairs"]:
+            for tbl in ["physician_reviews", "report_evaluations", "clinical_reports", "encounters", "patients", "dpo_feedback_pairs"]:
                 cur.execute(f"DELETE FROM {tbl};")
                 deleted[tbl] = cur.rowcount
             logger.info(f"Purged mock data: {deleted}")

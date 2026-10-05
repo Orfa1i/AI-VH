@@ -109,6 +109,9 @@ class ClinicalReport(BaseModel):
     # Pharmacy & Medication Safety Review (Phase 7)
     pharmacist_review: Optional['MedicationSafetyReport'] = None
 
+    # Automated Multi-Stage Evaluation (Independent 6-Dimension Pipeline)
+    automated_evaluation: Optional[Dict[str, Any]] = None
+
 
 class MedicationSafetyReport(BaseModel):
     id: str

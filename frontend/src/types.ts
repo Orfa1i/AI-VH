@@ -59,6 +59,34 @@ export interface ClinicalReport {
   recommended_disposition: string;
   medical_knowledge_citations: MedicalCitation[];
   pharmacist_review?: MedicationSafetyReport;
+  automated_evaluation?: AggregateEvaluationResult;
+}
+
+export interface DimensionEvaluationResult {
+  dimension: string;
+  display_name: string;
+  passed: boolean;
+  score: number;
+  explanation: string;
+  detected_issues: string[];
+  severity: 'INFO' | 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  evidence: Array<Record<string, any>>;
+}
+
+export interface AggregateEvaluationResult {
+  evaluation_id: string;
+  report_id: string;
+  encounter_id: string;
+  patient_id: string;
+  overall_score: number;
+  dimension_scores: Record<string, number>;
+  dimensions: Record<string, DimensionEvaluationResult>;
+  failed_checks: string[];
+  severity: 'INFO' | 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  final_status: 'PASSED' | 'FLAGGED' | 'REJECTED';
+  passed: boolean;
+  fail_reasons: string[];
+  evaluated_at: string;
 }
 
 export interface MedicationSafetyReport {

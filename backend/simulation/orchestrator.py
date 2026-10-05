@@ -31,6 +31,7 @@ from ..rag.specialists.cardiology_rag import CardiologyRAGAgent
 from ..agents.router import MedicalSpecialtyRouter
 from ..rl.dpo_generator import DPOPreferenceGenerator, DPOPreferencePair
 from ..database.repository import db_repo
+from ..evaluation import evaluation_pipeline
 
 logger = logging.getLogger("SimulationOrchestrator")
 
@@ -104,6 +105,7 @@ class HospitalOrchestrator:
             rag_agent=self.cardio_rag_agent
         )
         self.pharmacist = PharmacistAgent()
+        self.evaluation_pipeline = evaluation_pipeline
 
     async def conduct_specialist_consult(
         self,
@@ -292,7 +294,35 @@ class HospitalOrchestrator:
             report.pharmacist_review = pharm_report
             await asyncio.sleep(0.05)
 
-        # 6. Finalize Encounter
+        # 6. Independent Multi-Stage Evaluation Pipeline
+        # Every generated diagnosis report must pass through independent evaluation before entering the human Review Page.
+        state.status = "EVALUATION"
+        state.current_department = "AUDIT_AND_SAFETY"
+        eval_result = await self.evaluation_pipeline.evaluate_report(
+            report=report,
+            patient_presentation={
+                "age": case.age,
+                "sex": case.sex,
+                "chief_complaint": case.chief_complaint,
+                "history_of_present_illness": getattr(case, "history_of_present_illness", case.chief_complaint),
+                "past_medical_history": getattr(case, "past_medical_history", getattr(case, "medical_history", [])),
+                "medications": getattr(case, "medications", getattr(case, "current_medications", [])),
+                "allergies": getattr(case, "allergies", []),
+                "vital_signs": toolkit.get_vital_signs(),
+            },
+            ground_truth={
+                "true_diagnosis": getattr(case, "true_diagnosis", ""),
+                "contraindications": getattr(case, "contraindicated_treatments", getattr(case, "contraindications", [])),
+                "optimal_treatment": getattr(case, "optimal_treatment", []),
+            },
+        )
+        report.automated_evaluation = eval_result.model_dump()
+        try:
+            self.db.save_evaluation(eval_result)
+        except Exception as eval_err:
+            logger.error(f"Failed to persist report evaluation to database: {eval_err}", exc_info=True)
+
+        # 7. Finalize Encounter
         state.status = "REPORT_READY"
         state.report = report
         self.reports[report.id] = report
@@ -303,7 +333,7 @@ class HospitalOrchestrator:
         except Exception as db_err:
             logger.error(f"Failed to persist clinical report to database: {db_err}", exc_info=True)
 
-        logger.info(f"Encounter {encounter_id} completed. Report ID: {report.id}")
+        logger.info(f"Encounter {encounter_id} completed. Report ID: {report.id}. Evaluation Status: {eval_result.final_status.value}")
 
         return {
             "encounter_id": encounter_id,

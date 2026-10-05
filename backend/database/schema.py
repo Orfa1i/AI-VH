@@ -29,6 +29,19 @@ CREATE TABLE IF NOT EXISTS clinical_reports (
     FOREIGN KEY (encounter_id) REFERENCES encounters(encounter_id)
 );
 
+CREATE TABLE IF NOT EXISTS report_evaluations (
+    id TEXT PRIMARY KEY,
+    report_id TEXT NOT NULL,
+    encounter_id TEXT NOT NULL,
+    overall_score REAL NOT NULL,
+    severity TEXT NOT NULL,
+    final_status TEXT NOT NULL,
+    passed BOOLEAN NOT NULL,
+    evaluated_at TIMESTAMP NOT NULL,
+    raw_json TEXT NOT NULL,
+    FOREIGN KEY (report_id) REFERENCES clinical_reports(id)
+);
+
 CREATE TABLE IF NOT EXISTS physician_reviews (
     id TEXT PRIMARY KEY,
     report_id TEXT NOT NULL,
@@ -144,6 +157,18 @@ CREATE TABLE IF NOT EXISTS clinical_reports (
     primary_diagnosis TEXT NOT NULL,
     confidence_score DOUBLE PRECISION NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    raw_json JSONB NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS report_evaluations (
+    id VARCHAR(64) PRIMARY KEY,
+    report_id VARCHAR(64) NOT NULL,
+    encounter_id VARCHAR(64) NOT NULL,
+    overall_score DOUBLE PRECISION NOT NULL,
+    severity VARCHAR(32) NOT NULL,
+    final_status VARCHAR(32) NOT NULL,
+    passed BOOLEAN NOT NULL,
+    evaluated_at TIMESTAMP WITH TIME ZONE NOT NULL,
     raw_json JSONB NOT NULL
 );
 

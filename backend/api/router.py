@@ -291,6 +291,49 @@ async def get_reviewed_reports():
     return orchestrator.get_reviewed_reports()
 
 
+@api_router.get("/reports/{report_id}/evaluation")
+async def get_report_evaluation(report_id: str):
+    """Retrieves the automated multi-stage evaluation result for a clinical report."""
+    report = orchestrator.reports.get(report_id)
+    if report and getattr(report, "automated_evaluation", None):
+        return report.automated_evaluation
+
+    eval_dict = orchestrator.db.get_evaluation_for_report(report_id)
+    if eval_dict:
+        return eval_dict
+
+    report_dict = orchestrator.get_report(report_id)
+    if not report_dict:
+        raise HTTPException(status_code=404, detail=f"Clinical report '{report_id}' not found.")
+
+    eval_result = await orchestrator.evaluation_pipeline.evaluate_report(report_dict)
+    try:
+        orchestrator.db.save_evaluation(eval_result)
+    except Exception as e:
+        logger.warning(f"Could not persist on-demand evaluation: {e}")
+
+    return eval_result.model_dump()
+
+
+@api_router.post("/reports/{report_id}/evaluate")
+async def evaluate_report_on_demand(report_id: str):
+    """Manually triggers independent 6-dimension evaluation for a clinical report."""
+    report_dict = orchestrator.get_report(report_id)
+    if not report_dict:
+        raise HTTPException(status_code=404, detail=f"Clinical report '{report_id}' not found.")
+
+    eval_result = await orchestrator.evaluation_pipeline.evaluate_report(report_dict)
+    try:
+        orchestrator.db.save_evaluation(eval_result)
+    except Exception as e:
+        logger.warning(f"Could not persist on-demand evaluation: {e}")
+
+    if report_id in orchestrator.reports:
+        orchestrator.reports[report_id].automated_evaluation = eval_result.model_dump()
+
+    return eval_result.model_dump()
+
+
 
 @api_router.get("/reports/history")
 async def get_reports_history(case_id: Optional[str] = None, limit: int = 50, offset: int = 0):

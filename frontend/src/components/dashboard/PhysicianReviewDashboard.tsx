@@ -14,6 +14,9 @@ import {
   HeartPulse,
   Thermometer,
   RotateCcw,
+  ShieldCheck,
+  ShieldAlert,
+  AlertTriangle,
 } from 'lucide-react';
 
 interface PhysicianReviewDashboardProps {
@@ -57,6 +60,26 @@ export const PhysicianReviewDashboard: React.FC<PhysicianReviewDashboardProps> =
   const [notes, setNotes] = useState('');
   const [correctedDiagnosis, setCorrectedDiagnosis] = useState('');
   const [submittedReviewSuccess, setSubmittedReviewSuccess] = useState(false);
+  const [evaluatingReport, setEvaluatingReport] = useState(false);
+
+  const handleTriggerEvaluation = async (reportId: string) => {
+    setEvaluatingReport(true);
+    try {
+      const res = await fetch(`/api/reports/${reportId}/evaluate`, { method: 'POST' });
+      if (res.ok) {
+        const evalData = await res.json();
+        const target = reports.find((r) => r.id === reportId);
+        if (target) {
+          target.automated_evaluation = evalData;
+          setSelectedReportId(reportId);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to run on-demand evaluation:', err);
+    } finally {
+      setEvaluatingReport(false);
+    }
+  };
 
   const activeReport = reports.find((r) => r.id === selectedReportId) || reports[0];
 
@@ -276,6 +299,115 @@ export const PhysicianReviewDashboard: React.FC<PhysicianReviewDashboardProps> =
                 </div>
               </div>
             </div>
+
+            {/* Automated Independent Multi-Stage Evaluation Card */}
+            {activeReport.automated_evaluation ? (
+              <div className="p-5 rounded-xl bg-white border border-slate-200 shadow-xs space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+                  <div className="flex items-center gap-2.5">
+                    {activeReport.automated_evaluation.passed ? (
+                      <div className="w-8 h-8 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-700">
+                        <ShieldCheck className="w-5 h-5" />
+                      </div>
+                    ) : (
+                      <div className="w-8 h-8 rounded-lg bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-700">
+                        <ShieldAlert className="w-5 h-5" />
+                      </div>
+                    )}
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[11px] font-mono font-bold text-slate-900 uppercase tracking-wider">
+                          INDEPENDENT AUTOMATED EVALUATION
+                        </span>
+                        <span
+                          className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold border ${
+                            activeReport.automated_evaluation.final_status === 'PASSED'
+                              ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                              : activeReport.automated_evaluation.final_status === 'FLAGGED'
+                              ? 'bg-amber-50 text-amber-800 border-amber-200'
+                              : 'bg-rose-50 text-rose-800 border-rose-200'
+                          }`}
+                        >
+                          {activeReport.automated_evaluation.final_status}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-500 font-sans mt-0.5">
+                        Multi-Stage Audit (6 Focused Dimensions) • Pre-Review Verification
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="sm:text-right shrink-0">
+                    <div className="text-xl font-bold font-mono text-slate-900 tabular-nums">
+                      {Math.round(activeReport.automated_evaluation.overall_score * 100)}%
+                    </div>
+                    <div className="text-[9px] font-mono text-slate-500 uppercase tracking-wider">
+                      OVERALL AUDIT SCORE
+                    </div>
+                  </div>
+                </div>
+
+                {/* 6 Dimension Score Matrix */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                  {Object.entries(activeReport.automated_evaluation.dimensions).map(([key, dim]) => (
+                    <div
+                      key={key}
+                      className={`p-2.5 rounded-lg border text-xs ${
+                        dim.passed
+                          ? 'bg-slate-50/70 border-slate-200'
+                          : 'bg-rose-50/50 border-rose-200'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-[10px] font-mono font-semibold text-slate-700 truncate pr-1">
+                          {dim.display_name}
+                        </span>
+                        <span
+                          className={`font-mono text-[10px] font-bold ${
+                            dim.passed ? 'text-emerald-700' : 'text-rose-700'
+                          }`}
+                        >
+                          {Math.round(dim.score * 100)}%
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-slate-500 line-clamp-2 leading-tight">
+                        {dim.explanation}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Detected Issues Alert if any */}
+                {activeReport.automated_evaluation.failed_checks.length > 0 && (
+                  <div className="p-3 bg-amber-50/70 border border-amber-200 rounded-lg text-xs space-y-1">
+                    <div className="flex items-center gap-1.5 text-amber-800 font-mono font-bold text-[10px]">
+                      <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
+                      <span>FLAGGED CLINICAL ITEMS FOR PHYSICIAN ATTENTION:</span>
+                    </div>
+                    <ul className="list-disc list-inside text-slate-700 text-[11px] space-y-0.5">
+                      {activeReport.automated_evaluation.fail_reasons.map((reason, idx) => (
+                        <li key={idx}>{reason}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between">
+                <div className="flex items-center gap-2.5 text-xs text-slate-600 font-sans">
+                  <ShieldAlert className="w-4 h-4 text-slate-400" />
+                  <span>Independent multi-stage audit pending for this report.</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleTriggerEvaluation(activeReport.id)}
+                  disabled={evaluatingReport}
+                  className="px-3 py-1.5 bg-sky-600 hover:bg-sky-700 text-white rounded-lg text-xs font-mono font-semibold transition-colors disabled:opacity-50"
+                >
+                  {evaluatingReport ? 'Evaluating...' : 'Run Automated Audit'}
+                </button>
+              </div>
+            )}
 
             {/* Differential Diagnosis Ranking */}
             <div className="p-5 rounded-xl bg-white border border-slate-200 shadow-xs">
