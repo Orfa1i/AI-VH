@@ -11,10 +11,12 @@ from typing import Dict, List, Any, Optional
 from ..base import BaseAgent
 from ..doctor import DoctorAgent
 from ...simulation.events import HospitalEvent, EventType
-from ...clinical.models import LabTestType, DifferentialItem, ClinicalReport
+from ...clinical.models import LabTestType, DifferentialItem, ClinicalReport, VitalSigns
 from ...clinical.tools import ClinicalToolkit
 from ...llm.medgemma_service import MedGemmaService
+from ...llm.model_config import get_model_id
 from ...rag.specialists.cardiology_rag import CardiologyRAGAgent, EvidenceBrief
+from ...rag.shared_sources import shared_knowledge_service
 from ...clinical.intent import is_clinical_query
 
 logger = logging.getLogger("CardiologyAgent")
@@ -101,7 +103,7 @@ class CardiologySpecialistAgent(DoctorAgent):
                 "cardiac_recommendations": medgemma_decision["treatment_plan"],
             },
             "citations": brief.citations,
-            "model_provenance": "google/medgemma-4b + Braunwald's Heart Disease (12th Ed)",
+            "model_provenance": f"{get_model_id()} + Braunwald's Heart Disease (12th Ed)",
         }
 
         self.consultation_history.append(consult_result)
@@ -155,8 +157,41 @@ class CardiologySpecialistAgent(DoctorAgent):
         ):
             yield chunk
 
+    def determine_diagnostic_workup(
+        self,
+        chief_complaint: str,
+        hpi: str,
+        vitals: Optional[VitalSigns] = None,
+        exam: Optional[Dict[str, str]] = None,
+    ) -> List[LabTestType]:
+        """
+        Autonomously determines cardiology-directed diagnostic laboratory and imaging workup
+        based strictly on clinical presentation, hemodynamics, and cardiovascular findings.
+        GROUND TRUTH ISOLATION RULE: Ground truth is never accessed during diagnostic workup.
+        """
+        tests = [
+            LabTestType.ECG_12_LEAD,
+            LabTestType.TROPONIN_I,
+            LabTestType.BMP,
+            LabTestType.CBC,
+            LabTestType.CXR,
+        ]
+        text = f"{chief_complaint} {hpi}".lower()
+        if any(k in text for k in ["heart failure", "edema", "dyspnea", "bnp", "chf", "orthopnea", "rales"]):
+            tests.append(LabTestType.BNP)
+        if any(k in text for k in ["syncope", "shock", "hypotension", "dizziness"]) or (vitals and vitals.systolic_bp < 90):
+            tests.append(LabTestType.LACTATE)
+
+        seen = set()
+        ordered = []
+        for t in tests:
+            if t not in seen:
+                seen.add(t)
+                ordered.append(t)
+        return ordered
+
     async def conduct_clinical_encounter(self, encounter_id: str, toolkit: ClinicalToolkit) -> ClinicalReport:
-        """Cardiology encounter runner integrating Braunwald's RAG and MedGemma synthesis."""
+        """Cardiology encounter runner integrating Braunwald's RAG, Shared Knowledge Sources, and MedGemma synthesis."""
         patient_info = toolkit.get_patient_history()
         patient_id = toolkit.ground_truth.id
 
@@ -179,11 +214,16 @@ class CardiologySpecialistAgent(DoctorAgent):
             payload={"exam_summary": f"CV: {exam.get('Cardiovascular', 'Normal S1/S2')}; Resp: {exam.get('Respiratory', 'Clear')}"},
         )
 
-        # 3. Query Braunwald's Specialist RAG Agent
+        # 3. Query Braunwald's Specialist RAG Agent + Shared Knowledge Sources (RxNorm/NABD)
         evidence_brief = self.rag_agent.generate_evidence_brief(
             chief_complaint=patient_info["chief_complaint"],
             hpi=patient_info["history_of_present_illness"],
         )
+        shared_citations = shared_knowledge_service.retrieve_shared_evidence(
+            query=f"{patient_info['chief_complaint']} {patient_info['history_of_present_illness']}"
+        )
+        if shared_citations:
+            evidence_brief.citations.extend(shared_citations)
         self.active_evidence_brief = evidence_brief
 
         await self.emit_event(
@@ -198,13 +238,18 @@ class CardiologySpecialistAgent(DoctorAgent):
             event_type=EventType.RAG_KNOWLEDGE_RETRIEVED,
             encounter_id=encounter_id,
             patient_id=patient_id,
-            summary=f"{self.name} retrieved {len(evidence_brief.citations)} citations from Braunwald's Heart Disease",
+            summary=f"{self.name} retrieved {len(evidence_brief.citations)} citations from Braunwald's and Shared Knowledge Sources (Top: {evidence_brief.citations[0]['chapter'] if evidence_brief.citations else 'N/A'})",
             payload={"citations_count": len(evidence_brief.citations), "top_citation": evidence_brief.citations[0] if evidence_brief.citations else None},
         )
 
-        # 4. Diagnostic Investigations Ordering (Agent-directed based on clinical presentation)
-        # Note: We will complete full ground truth isolation in Phase 3
-        cardiac_workup = [LabTestType.ECG_12_LEAD, LabTestType.TROPONIN_I, LabTestType.BMP, LabTestType.CBC, LabTestType.CXR]
+        # 4. Diagnostic Investigations Ordering (Autonomously determined, ground-truth isolated)
+        vitals = toolkit.get_vital_signs()
+        cardiac_workup = self.determine_diagnostic_workup(
+            chief_complaint=patient_info["chief_complaint"],
+            hpi=patient_info["history_of_present_illness"],
+            vitals=vitals,
+            exam=exam,
+        )
         lab_results_payload = []
 
         for test in cardiac_workup:

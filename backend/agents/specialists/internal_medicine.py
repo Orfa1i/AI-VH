@@ -11,9 +11,11 @@ from ..base import BaseAgent
 from ..doctor import DoctorAgent
 from ...simulation.events import HospitalEvent, EventType
 from ...clinical.tools import ClinicalToolkit
-from ...clinical.models import ClinicalReport, LabTestType, DifferentialItem
+from ...clinical.models import ClinicalReport, LabTestType, DifferentialItem, VitalSigns
 from ...llm.medgemma_service import MedGemmaService
+from ...llm.model_config import get_model_id
 from ...rag.specialists.internal_medicine_rag import InternalMedicineRAGAgent, EvidenceBrief
+from ...rag.shared_sources import shared_knowledge_service
 from ...clinical.intent import is_clinical_query
 
 logger = logging.getLogger("InternalMedicineSpecialist")
@@ -99,7 +101,7 @@ class InternalMedicineSpecialistAgent(DoctorAgent):
                 "contraindications": brief.contraindications,
             },
             "citations": brief.citations,
-            "model_provenance": "google/medgemma-4b + Harrison's Principles of Internal Medicine (21st Ed)",
+            "model_provenance": f"{get_model_id()} + Harrison's Principles of Internal Medicine (21st Ed)",
         }
 
         self.consultation_history.append(consult_result)
@@ -155,8 +157,71 @@ class InternalMedicineSpecialistAgent(DoctorAgent):
         ):
             yield chunk
 
+    def determine_diagnostic_workup(
+        self,
+        chief_complaint: str,
+        hpi: str,
+        vitals: Optional[VitalSigns] = None,
+        exam: Optional[Dict[str, str]] = None,
+    ) -> List[LabTestType]:
+        """
+        Autonomously determines the appropriate diagnostic laboratory and imaging workup
+        based strictly on clinical presentation, vital signs, and examination findings.
+        GROUND TRUTH ISOLATION RULE: Ground truth is never accessed during diagnostic workup.
+        """
+        tests: List[LabTestType] = []
+        text = f"{chief_complaint} {hpi}".lower()
+
+        # Core baseline for any admitted internal medicine patient
+        tests.append(LabTestType.CBC)
+        tests.append(LabTestType.BMP)
+
+        # Cardiovascular & Thoracic symptoms
+        if any(k in text for k in ["chest pain", "angina", "pressure", "palpitation", "sob", "dyspnea", "shortness of breath", "radiation"]):
+            tests.append(LabTestType.ECG_12_LEAD)
+            tests.append(LabTestType.TROPONIN_I)
+            tests.append(LabTestType.CXR)
+
+        # Respiratory / Pulmonary symptoms
+        elif any(k in text for k in ["cough", "wheezing", "sputum", "pneumonia", "hypoxia"]):
+            tests.append(LabTestType.CXR)
+            if vitals and vitals.spo2_percent < 92:
+                tests.append(LabTestType.ABG)
+
+        # Endocrine / Metabolic / DKA symptoms
+        if any(k in text for k in ["glucose", "sugar", "dka", "ketoacidosis", "polyuria", "polydipsia", "kussmaul", "vomiting", "dehydration"]):
+            if LabTestType.URINALYSIS not in tests:
+                tests.append(LabTestType.URINALYSIS)
+            if LabTestType.ABG not in tests:
+                tests.append(LabTestType.ABG)
+            if LabTestType.LACTATE not in tests:
+                tests.append(LabTestType.LACTATE)
+
+        # Gastrointestinal / Abdominal / Hepatic symptoms
+        if any(k in text for k in ["abdominal pain", "nausea", "vomiting", "jaundice", "epigastric"]):
+            tests.append(LabTestType.LFT)
+            if LabTestType.URINALYSIS not in tests:
+                tests.append(LabTestType.URINALYSIS)
+
+        # Systemic infection / Sepsis signs
+        if any(k in text for k in ["fever", "chills", "septic", "sepsis", "infection"]) or (vitals and (vitals.temperature_c > 38.3 or vitals.heart_rate > 100)):
+            if LabTestType.LACTATE not in tests:
+                tests.append(LabTestType.LACTATE)
+            if LabTestType.URINALYSIS not in tests:
+                tests.append(LabTestType.URINALYSIS)
+
+        # Ensure uniqueness while preserving order
+        seen = set()
+        ordered_unique_tests = []
+        for t in tests:
+            if t not in seen:
+                seen.add(t)
+                ordered_unique_tests.append(t)
+
+        return ordered_unique_tests
+
     async def conduct_clinical_encounter(self, encounter_id: str, toolkit: ClinicalToolkit) -> ClinicalReport:
-        """Enhanced encounter runner integrating the dedicated Harrison's RAG Agent."""
+        """Enhanced encounter runner integrating the dedicated Harrison's RAG Agent and Shared Knowledge Sources."""
         patient_info = toolkit.get_patient_history()
         patient_id = toolkit.ground_truth.id
 
@@ -179,11 +244,16 @@ class InternalMedicineSpecialistAgent(DoctorAgent):
             payload={"exam_summary": f"General: {exam.get('General', '')}; CV: {exam.get('Cardiovascular', '')}"}
         )
 
-        # 3. Query Harrison's Specialist RAG Agent
+        # 3. Query Harrison's Specialist RAG Agent + Shared Knowledge Sources (RxNorm/NABD)
         evidence_brief = self.rag_agent.generate_evidence_brief(
             chief_complaint=patient_info["chief_complaint"],
             hpi=patient_info["history_of_present_illness"],
         )
+        shared_citations = shared_knowledge_service.retrieve_shared_evidence(
+            query=f"{patient_info['chief_complaint']} {patient_info['history_of_present_illness']}"
+        )
+        if shared_citations:
+            evidence_brief.citations.extend(shared_citations)
         self.active_evidence_brief = evidence_brief
 
         await self.emit_event(
@@ -198,12 +268,18 @@ class InternalMedicineSpecialistAgent(DoctorAgent):
             event_type=EventType.RAG_KNOWLEDGE_RETRIEVED,
             encounter_id=encounter_id,
             patient_id=patient_id,
-            summary=f"{self.name} retrieved {len(evidence_brief.citations)} citations from Harrison's (Top: {evidence_brief.citations[0]['chapter'] if evidence_brief.citations else 'N/A'}, p.{evidence_brief.citations[0]['page'] if evidence_brief.citations else ''})",
+            summary=f"{self.name} retrieved {len(evidence_brief.citations)} citations from Harrison's and Shared Knowledge Sources (Top: {evidence_brief.citations[0]['chapter'] if evidence_brief.citations else 'N/A'})",
             payload={"citations_count": len(evidence_brief.citations), "top_citation": evidence_brief.citations[0] if evidence_brief.citations else None}
         )
 
-        # 4. Diagnostic Investigations Ordering (Delegated to Lab & Radiology agents)
-        recommended_tests = toolkit.ground_truth.recommended_labs
+        # 4. Diagnostic Investigations Ordering (Autonomously determined, ground-truth isolated)
+        vitals = toolkit.get_vital_signs()
+        recommended_tests = self.determine_diagnostic_workup(
+            chief_complaint=patient_info["chief_complaint"],
+            hpi=patient_info["history_of_present_illness"],
+            vitals=vitals,
+            exam=exam,
+        )
         lab_results_payload = []
 
         for test in recommended_tests:

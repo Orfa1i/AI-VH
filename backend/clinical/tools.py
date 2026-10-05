@@ -62,10 +62,31 @@ class ClinicalToolkit:
         self.ordered_labs.append(test_type)
 
         test_key = test_type.value
-        values = self.ground_truth.simulated_labs.get(test_key, {
-            "result": "Normal / Non-diagnostic",
-            "interpretation": "Within standard clinical parameters"
-        })
+        values = self.ground_truth.simulated_labs.get(test_key)
+        if not values:
+            test_lower = test_key.lower()
+            for k, v in self.ground_truth.simulated_labs.items():
+                k_lower = k.lower()
+                if (
+                    ("troponin" in test_lower and "troponin" in k_lower) or
+                    ("cbc" in test_lower and "cbc" in k_lower) or
+                    ("bmp" in test_lower and "bmp" in k_lower) or
+                    ("cmp" in test_lower and "cmp" in k_lower) or
+                    ("ecg" in test_lower and "ecg" in k_lower) or
+                    ("x-ray" in test_lower and "x-ray" in k_lower) or
+                    ("cxr" in test_lower and "cxr" in k_lower) or
+                    ("bnp" in test_lower and "bnp" in k_lower) or
+                    ("abg" in test_lower and "abg" in k_lower) or
+                    ("urinalysis" in test_lower and "urinalysis" in k_lower) or
+                    ("lactate" in test_lower and "lactate" in k_lower)
+                ):
+                    values = v
+                    break
+        if not values:
+            values = {
+                "result": "Normal / Non-diagnostic",
+                "interpretation": "Within standard clinical parameters"
+            }
 
         # Calculate abnormal flags
         flags = {}
