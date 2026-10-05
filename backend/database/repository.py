@@ -8,6 +8,7 @@ import json
 import logging
 import uuid
 import random
+import hashlib
 from typing import Dict, List, Optional, Any
 from datetime import datetime, timezone
 
@@ -525,13 +526,29 @@ class DatabaseRepository:
     def admit_patient(self, case_data: Dict[str, Any]) -> Dict[str, Any]:
         """
         Converts an incoming clinical case or manual intake form into an admitted
-        patient record with MRN, department assignment, and bed allocation.
+        patient record with deterministic MRN, department assignment, and bed allocation.
+        Enforces patient-level deduplication to prevent duplicate admissions.
         """
-        patient_id = case_data.get("id") or f"PAT-{uuid.uuid4().hex[:8].upper()}"
-        mrn = case_data.get("mrn") or f"MRN-{random.randint(100000, 999999)}"
-        name = case_data.get("name", "Unknown Patient")
+        name = case_data.get("name", "Unknown Patient").strip()
         age = int(case_data.get("age", 50))
-        sex = case_data.get("sex", "Unknown")
+        sex = case_data.get("sex", "Unknown").strip()
+
+        # Deterministic MRN generation if not explicitly provided
+        if not case_data.get("mrn"):
+            identity_key = f"{name.lower()}|{age}|{sex.lower()}"
+            hash_digest = hashlib.sha256(identity_key.encode("utf-8")).hexdigest()[:6].upper()
+            mrn = f"MRN-{hash_digest}"
+        else:
+            mrn = case_data["mrn"]
+
+        patient_id = case_data.get("id") or f"PAT-{mrn.replace('MRN-', '')}"
+
+        # Deduplication check: if patient already admitted and active, return existing record
+        existing = self.get_patient(mrn)
+        if existing and existing.get("admission_status") != "DISCHARGED":
+            logger.info(f"Patient {name} (MRN: {mrn}) is already active in census. Returning existing record.")
+            return existing
+
         acuity = case_data.get("triage_acuity", "URGENT")
         complaint = case_data.get("chief_complaint", "Undifferentiated clinical presentation")
         department = case_data.get("assigned_department", "EMERGENCY")
@@ -589,6 +606,136 @@ class DatabaseRepository:
             "admitted_at": admitted_at.isoformat(),
             "case_data": case_data,
         }
+
+    # =========================================================================
+    # Case Pool Repository
+    # =========================================================================
+
+    def save_case_to_pool(self, case_item: Dict[str, Any]) -> str:
+        """Stores a structured clinical case into the unadmitted Case Pool."""
+        case_id = case_item.get("id") or f"POOL-{uuid.uuid4().hex[:8].upper()}"
+        name = case_item.get("name", "Unknown Case")
+        age = int(case_item.get("age", 50))
+        sex = case_item.get("sex", "Unknown")
+        acuity = str(case_item.get("triage_acuity", "URGENT"))
+        complaint = case_item.get("chief_complaint", "Undifferentiated clinical presentation")
+        specialty = case_item.get("specialty_category", "INTERNAL_MEDICINE")
+        source = case_item.get("source", "SYNTHEA")
+        diff_level = int(case_item.get("difficulty_level", 1))
+        status = case_item.get("status", "UNADMITTED")
+        raw_json_str = json.dumps(case_item)
+
+        is_pg = self.manager.engine_type == "postgresql"
+        with self.manager.get_connection() as conn:
+            cur = conn.cursor()
+            if is_pg:
+                cur.execute(
+                    """
+                    INSERT INTO case_pool (
+                        id, name, age, sex, triage_acuity, chief_complaint,
+                        specialty_category, source, difficulty_level, status, raw_json
+                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    ON CONFLICT (id) DO UPDATE SET
+                        triage_acuity = EXCLUDED.triage_acuity,
+                        chief_complaint = EXCLUDED.chief_complaint,
+                        specialty_category = EXCLUDED.specialty_category,
+                        difficulty_level = EXCLUDED.difficulty_level,
+                        status = EXCLUDED.status,
+                        raw_json = EXCLUDED.raw_json;
+                    """,
+                    (case_id, name, age, sex, acuity, complaint, specialty, source, diff_level, status, raw_json_str)
+                )
+            else:
+                cur.execute(
+                    """
+                    INSERT OR REPLACE INTO case_pool (
+                        id, name, age, sex, triage_acuity, chief_complaint,
+                        specialty_category, source, difficulty_level, status, raw_json
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+                    """,
+                    (case_id, name, age, sex, acuity, complaint, specialty, source, diff_level, status, raw_json_str)
+                )
+        return case_id
+
+    def list_pool_cases(
+        self,
+        status: Optional[str] = "UNADMITTED",
+        specialty: Optional[str] = None,
+        limit: int = 50,
+        offset: int = 0,
+    ) -> List[Dict[str, Any]]:
+        """Lists cases in the Case Pool, filterable by status and specialty."""
+        is_pg = self.manager.engine_type == "postgresql"
+        with self.manager.get_connection() as conn:
+            cur = conn.cursor()
+            query = "SELECT * FROM case_pool"
+            params: List[Any] = []
+            conditions: List[str] = []
+            if status:
+                conditions.append("status = %s" if is_pg else "status = ?")
+                params.append(status)
+            if specialty:
+                conditions.append("specialty_category = %s" if is_pg else "specialty_category = ?")
+                params.append(specialty)
+            if conditions:
+                query += " WHERE " + " AND ".join(conditions)
+            query += " ORDER BY created_at DESC"
+            query += " LIMIT %s OFFSET %s" if is_pg else " LIMIT ? OFFSET ?"
+            params.extend([limit, offset])
+
+            cur.execute(query, tuple(params))
+            rows = cur.fetchall()
+            results = []
+            for r in rows:
+                d = dict(r)
+                if "raw_json" in d and isinstance(d["raw_json"], str):
+                    try:
+                        d["case_details"] = json.loads(d.pop("raw_json"))
+                    except Exception:
+                        pass
+                results.append(d)
+            return results
+
+    def get_pool_case(self, case_id: str) -> Optional[Dict[str, Any]]:
+        """Retrieves a single case from the Case Pool by ID."""
+        is_pg = self.manager.engine_type == "postgresql"
+        with self.manager.get_connection() as conn:
+            cur = conn.cursor()
+            query = "SELECT * FROM case_pool WHERE id = %s" if is_pg else "SELECT * FROM case_pool WHERE id = ?"
+            cur.execute(query, (case_id,))
+            row = cur.fetchone()
+            if not row:
+                return None
+            d = dict(row)
+            if "raw_json" in d and isinstance(d["raw_json"], str):
+                try:
+                    d["case_details"] = json.loads(d.pop("raw_json"))
+                except Exception:
+                    pass
+            return d
+
+    def update_pool_case_status(self, case_id: str, status: str) -> bool:
+        """Updates case status in the pool (e.g. UNADMITTED -> ADMITTED)."""
+        is_pg = self.manager.engine_type == "postgresql"
+        with self.manager.get_connection() as conn:
+            cur = conn.cursor()
+            query = "UPDATE case_pool SET status = %s WHERE id = %s" if is_pg else "UPDATE case_pool SET status = ? WHERE id = ?"
+            cur.execute(query, (status, case_id))
+            return cur.rowcount > 0
+
+    def count_pool_cases(self, status: Optional[str] = None) -> int:
+        """Counts cases in the Case Pool."""
+        is_pg = self.manager.engine_type == "postgresql"
+        with self.manager.get_connection() as conn:
+            cur = conn.cursor()
+            query = "SELECT COUNT(*) FROM case_pool"
+            params: List[Any] = []
+            if status:
+                query += " WHERE status = %s" if is_pg else " WHERE status = ?"
+                params.append(status)
+            cur.execute(query, tuple(params))
+            res = cur.fetchone()
+            return res[0] if res else 0
 
     def get_patient(self, patient_id: str) -> Optional[Dict[str, Any]]:
         is_pg = self.manager.engine_type == "postgresql"

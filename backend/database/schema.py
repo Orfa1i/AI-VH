@@ -95,6 +95,21 @@ CREATE TABLE IF NOT EXISTS hospital_staff (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS case_pool (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    age INTEGER NOT NULL,
+    sex TEXT NOT NULL,
+    triage_acuity TEXT NOT NULL,
+    chief_complaint TEXT NOT NULL,
+    specialty_category TEXT NOT NULL DEFAULT 'INTERNAL_MEDICINE',
+    source TEXT NOT NULL DEFAULT 'SYNTHEA',
+    difficulty_level INTEGER DEFAULT 1,
+    status TEXT NOT NULL DEFAULT 'UNADMITTED',
+    raw_json TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE INDEX IF NOT EXISTS idx_reports_case ON clinical_reports(case_id);
 CREATE INDEX IF NOT EXISTS idx_reports_encounter ON clinical_reports(encounter_id);
 CREATE INDEX IF NOT EXISTS idx_reviews_report ON physician_reviews(report_id);
@@ -105,6 +120,8 @@ CREATE INDEX IF NOT EXISTS idx_patients_status ON patients(admission_status);
 CREATE INDEX IF NOT EXISTS idx_patients_mrn ON patients(mrn);
 CREATE INDEX IF NOT EXISTS idx_staff_role ON hospital_staff(role);
 CREATE INDEX IF NOT EXISTS idx_staff_dept ON hospital_staff(department);
+CREATE INDEX IF NOT EXISTS idx_pool_status ON case_pool(status);
+CREATE INDEX IF NOT EXISTS idx_pool_specialty ON case_pool(specialty_category);
 """
 
 POSTGRES_SCHEMA = """
@@ -195,6 +212,21 @@ CREATE TABLE IF NOT EXISTS hospital_staff (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS case_pool (
+    id VARCHAR(64) PRIMARY KEY,
+    name VARCHAR(128) NOT NULL,
+    age INTEGER NOT NULL,
+    sex VARCHAR(16) NOT NULL,
+    triage_acuity VARCHAR(32) NOT NULL,
+    chief_complaint TEXT NOT NULL,
+    specialty_category VARCHAR(64) NOT NULL DEFAULT 'INTERNAL_MEDICINE',
+    source VARCHAR(64) NOT NULL DEFAULT 'SYNTHEA',
+    difficulty_level INTEGER DEFAULT 1,
+    status VARCHAR(32) NOT NULL DEFAULT 'UNADMITTED',
+    raw_json JSONB NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE INDEX IF NOT EXISTS idx_reports_case ON clinical_reports(case_id);
 CREATE INDEX IF NOT EXISTS idx_reports_encounter ON clinical_reports(encounter_id);
 CREATE INDEX IF NOT EXISTS idx_reviews_report ON physician_reviews(report_id);
@@ -205,4 +237,6 @@ CREATE INDEX IF NOT EXISTS idx_patients_status ON patients(admission_status);
 CREATE INDEX IF NOT EXISTS idx_patients_mrn ON patients(mrn);
 CREATE INDEX IF NOT EXISTS idx_staff_role ON hospital_staff(role);
 CREATE INDEX IF NOT EXISTS idx_staff_dept ON hospital_staff(department);
+CREATE INDEX IF NOT EXISTS idx_pool_status ON case_pool(status);
+CREATE INDEX IF NOT EXISTS idx_pool_specialty ON case_pool(specialty_category);
 """

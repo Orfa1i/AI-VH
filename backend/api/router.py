@@ -544,6 +544,77 @@ async def run_comparative_model_inference(req: ComparativeInferenceRequest):
 
 
 # =============================================================================
+# Case Pool & Ingestion Endpoints
+# =============================================================================
+
+@api_router.get("/cases/pool")
+async def list_case_pool(
+    status: Optional[str] = "UNADMITTED",
+    specialty: Optional[str] = None,
+    limit: int = 50,
+    offset: int = 0
+):
+    """Lists synthetic cases currently available in the unadmitted Case Pool."""
+    try:
+        cases = orchestrator.db.list_pool_cases(status=status, specialty=specialty, limit=limit, offset=offset)
+        total = orchestrator.db.count_pool_cases(status=status)
+        return {"total": total, "cases": cases}
+    except Exception as e:
+        logger.error(f"Error listing pool cases: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.post("/cases/pool/seed")
+async def seed_case_pool_endpoint():
+    """Seeds the Case Pool with all cached/generated synthetic patients."""
+    try:
+        from src.vh.synthea.service import demo_data_service
+        result = demo_data_service.seed_case_pool(orchestrator.db)
+        return result
+    except Exception as e:
+        logger.error(f"Error seeding case pool: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.post("/cases/pool/{pool_case_id}/admit")
+async def admit_from_pool_endpoint(pool_case_id: str):
+    """Admits a specific clinical case from the Case Pool into the active hospital census."""
+    pool_case = orchestrator.db.get_pool_case(pool_case_id)
+    if not pool_case:
+        raise HTTPException(status_code=404, detail=f"Case '{pool_case_id}' not found in Case Pool")
+
+    case_details = pool_case.get("case_details", {})
+    department = "CARDIOLOGY" if pool_case.get("specialty_category") == "CARDIOLOGY" else "INTERNAL_MEDICINE"
+    bed_num = f"{department[:4]}-BED-{pool_case['id'][-4:].upper()}"
+
+    intake_data = {
+        "id": f"CASE-{pool_case['id']}",
+        "mrn": pool_case.get("mrn") or case_details.get("mrn"),
+        "name": pool_case["name"],
+        "age": pool_case["age"],
+        "sex": pool_case["sex"],
+        "chief_complaint": pool_case["chief_complaint"],
+        "history_of_present_illness": case_details.get("history_of_present_illness", f"Presentation for {pool_case['chief_complaint']}"),
+        "past_medical_history": case_details.get("past_medical_history", []),
+        "medications": case_details.get("medications", []),
+        "allergies": case_details.get("allergies", []),
+        "baseline_vitals": case_details.get("baseline_vitals", {"heart_rate": 80, "systolic_bp": 120, "diastolic_bp": 80, "respiratory_rate": 18, "temperature_c": 37.0, "spo2_percent": 98.0, "pain_score": 2}),
+        "triage_acuity": pool_case["triage_acuity"],
+        "assigned_department": department,
+        "bed_number": bed_num,
+        "case_id": f"CASE-{pool_case['id']}",
+    }
+
+    try:
+        admitted = orchestrator.db.admit_patient(intake_data)
+        orchestrator.db.update_pool_case_status(pool_case_id, "ADMITTED")
+        return {"status": "ADMITTED", "patient": admitted}
+    except Exception as e:
+        logger.error(f"Error admitting case from pool: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# =============================================================================
 # Patient Admission & EHR Storage Endpoints
 # =============================================================================
 

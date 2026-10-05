@@ -319,7 +319,92 @@ class DemoDataService:
         }
 
         admitted = db_repo.admit_patient(intake_case)
+        # Update case pool status if present in pool
+        try:
+            db_repo.update_pool_case_status(f"POOL-SYNTH-{profile.id}", "ADMITTED")
+        except Exception:
+            pass
         return admitted
+
+    def seed_case_pool(self, db_repo: Any) -> Dict[str, Any]:
+        """
+        Seeds all cached synthetic patients into the unadmitted Case Pool so users
+        can inspect, filter, and selectively admit cases.
+        """
+        seeded_count = 0
+        pool_ids = []
+        for pid, profile in self._patients.items():
+            complaint = "Synthetic clinical intake"
+            if profile.active_conditions:
+                complaint = profile.active_conditions[0].get("name", complaint)
+            elif profile.recent_encounters:
+                complaint = profile.recent_encounters[0].get("reason", complaint)
+
+            complaint_lower = complaint.lower()
+            if any(w in complaint_lower for w in ["chest", "infarction", "angina", "stemi", "heart", "coronary"]):
+                specialty = "CARDIOLOGY"
+                acuity = "EMERGENT"
+                difficulty = 2
+            elif any(w in complaint_lower for w in ["ketoacidosis", "pneumonia", "kidney", "shock", "asthma"]):
+                specialty = "INTERNAL_MEDICINE"
+                acuity = "EMERGENT" if "shock" in complaint_lower or "ketoacidosis" in complaint_lower else "URGENT"
+                difficulty = 2
+            else:
+                specialty = "INTERNAL_MEDICINE"
+                acuity = "URGENT"
+                difficulty = 1
+
+            vitals_dict = {
+                "heart_rate": 80,
+                "systolic_bp": 120,
+                "diastolic_bp": 80,
+                "respiratory_rate": 18,
+                "temperature_c": 37.0,
+                "spo2_percent": 98.0,
+                "pain_score": 2,
+            }
+            for k, v in profile.latest_vitals.items():
+                if "heart_rate" in k:
+                    try:
+                        vitals_dict["heart_rate"] = int(float(str(v).split()[0]))
+                    except Exception:
+                        pass
+                elif "systolic" in k:
+                    try:
+                        vitals_dict["systolic_bp"] = int(float(str(v).split()[0]))
+                    except Exception:
+                        pass
+
+            case_item = {
+                "id": f"POOL-SYNTH-{profile.id}",
+                "patient_id": profile.id,
+                "mrn": profile.mrn,
+                "name": profile.name,
+                "age": profile.age,
+                "sex": profile.gender.upper() if profile.gender else "MALE",
+                "chief_complaint": complaint,
+                "specialty_category": specialty,
+                "triage_acuity": acuity,
+                "difficulty_level": difficulty,
+                "source": "SYNTHEA",
+                "status": "UNADMITTED",
+                "history_of_present_illness": f"Synthetic patient record generated via Synthea FHIR R4. Initial presentation for {complaint}.",
+                "past_medical_history": [c["name"] for c in profile.active_conditions + profile.past_conditions],
+                "medications": [m["name"] for m in profile.current_medications],
+                "allergies": [a["substance"] for a in profile.allergies],
+                "baseline_vitals": vitals_dict,
+            }
+
+            try:
+                db_repo.save_case_to_pool(case_item)
+                seeded_count += 1
+                pool_ids.append(case_item["id"])
+            except Exception as e:
+                logger.warning(f"Could not seed case {profile.id} to pool: {e}")
+
+        logger.info(f"Seeded {seeded_count} synthetic cases into Case Pool.")
+        return {"status": "success", "seeded_count": seeded_count, "case_ids": pool_ids}
 
 
 demo_data_service = DemoDataService()
+
