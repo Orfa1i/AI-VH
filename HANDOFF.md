@@ -1,5 +1,17 @@
 # AI Virtual Hospital (AI-VH) : Session Handoff
 
+## 0. Latest Session (2026-10-05) — 11-Step Specialist Reasoning Workflow (Commit `17b4bef`)
+- `backend/agents/specialists/reasoning_engine.py`: `SpecialtyClinicalReasoningEngine` runs the 11 steps for every specialty; IM + Cardiology both delegate `conduct_clinical_encounter` / `determine_diagnostic_workup` to it (same MedGemma base, specialty book via `rag_agent`).
+- Steps 9–10 are performed by MedGemma (`generate_clinical_decision`) with patient data + book citations + shared (RxNorm/NABD) citations. No hard-coded diagnoses in the engine.
+- Report: `clinical_summary`, `relevant_findings`, `recommended_next_steps`, differential, treatment, disposition, bibliographic attribution `[n] Source, Chapter, p.X`. Sentences copying ≥12 consecutive words from a source are stripped. No citations → `ungrounded=True` (excluded from RL export). Empty model output raises.
+- Fixed ground-truth leak in base `DoctorAgent` (was ordering from `ground_truth.recommended_labs`).
+- Tests: `backend/tests/test_specialist_diagnostic_workflow.py` (11, mocked) ; full backend 92/92 passed.
+- **Known open issues (not changed, need decision):**
+  1. `MedGemmaService.generate_clinical_decision` still falls back to `_heuristic_medical_synthesis` when the GPU model is not loaded/errors, and `_parse_or_supplement_output` merges heuristic differential/likelihoods into real model output. This means a "model" report can be heuristic. Should be removed/flagged.
+  2. `_parse_or_supplement_output` sets `clinical_reasoning = raw_output[:500]` (raw JSON text), so reasoning prose quality depends on that.
+  3. The prompt in `_build_evaluation_prompt` is Harrison's/Internal-Medicine-specific even for Cardiology; it does not request supporting/opposing points or explicitly say "patient data overrides references".
+  4. Step 4 initial differential is keyword-based (internal only; used to focus the RAG query).
+
 ## 1. What Was Accomplished in this Session
 
 ### End-to-End Clinical AI Pipeline Implementation (Phases 1 - 4)
