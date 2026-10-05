@@ -14,7 +14,7 @@ from datetime import datetime, timezone
 
 from .connection import db_manager, DatabaseConnectionManager
 from .schema import SQLITE_SCHEMA, POSTGRES_SCHEMA
-from ..clinical.models import ClinicalReport, PhysicianReview
+from ..clinical.models import ClinicalReport, PhysicianReview, TrainingDatasetRecord
 
 logger = logging.getLogger("DatabaseRepository")
 
@@ -316,6 +316,118 @@ class DatabaseRepository:
             cur.execute("SELECT COUNT(*) FROM physician_reviews;")
             res = cur.fetchone()
             return res[0] if res else 0
+
+    # =========================================================================
+    # Training Dataset Records (Provenance & Deduplication Linked)
+    # =========================================================================
+
+    def save_training_dataset_record(self, record: TrainingDatasetRecord) -> str:
+        """
+        Persists an immutable, provenance-linked training dataset record holding all 13
+        lifecycle fields for model training dataset compilation.
+        """
+        is_pg = self.manager.engine_type == "postgresql"
+        data = record.model_dump() if hasattr(record, "model_dump") else dict(record)
+        raw_json_str = json.dumps(data, default=str)
+        orig_input_str = json.dumps(data.get("original_input", {}), default=str)
+        orig_output_str = json.dumps(data.get("original_ai_output", {}), default=str)
+        reviewer_fb_str = json.dumps(data.get("reviewer_feedback", {}), default=str)
+        corrected_out_str = json.dumps(data.get("corrected_output", {}), default=str)
+        provenance_str = json.dumps(data.get("provenance", {}), default=str)
+        ts_str = data.get("timestamp")
+        if isinstance(ts_str, datetime):
+            ts_str = ts_str.isoformat()
+        elif not ts_str:
+            ts_str = datetime.now(timezone.utc).isoformat()
+
+        eligibility_val = (
+            record.dataset_eligibility.value
+            if hasattr(record.dataset_eligibility, "value")
+            else str(record.dataset_eligibility)
+        )
+
+        with self.manager.get_connection() as conn:
+            cur = conn.cursor()
+            if is_pg:
+                cur.execute(
+                    """
+                    INSERT INTO training_dataset_records (
+                        id, case_id, patient_id, report_id, model_version, specialty,
+                        review_status, dataset_eligibility, original_input,
+                        original_ai_output, reviewer_feedback, corrected_output,
+                        provenance, timestamp, raw_json
+                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    ON CONFLICT (id) DO UPDATE SET
+                        review_status = EXCLUDED.review_status,
+                        dataset_eligibility = EXCLUDED.dataset_eligibility,
+                        reviewer_feedback = EXCLUDED.reviewer_feedback,
+                        corrected_output = EXCLUDED.corrected_output,
+                        provenance = EXCLUDED.provenance,
+                        raw_json = EXCLUDED.raw_json;
+                    """,
+                    (
+                        record.id, record.case_id, record.patient_id, record.report_id,
+                        record.model_version, record.specialty, record.review_status,
+                        eligibility_val, orig_input_str, orig_output_str, reviewer_fb_str,
+                        corrected_out_str, provenance_str, ts_str, raw_json_str
+                    )
+                )
+            else:
+                cur.execute(
+                    """
+                    INSERT OR REPLACE INTO training_dataset_records (
+                        id, case_id, patient_id, report_id, model_version, specialty,
+                        review_status, dataset_eligibility, original_input,
+                        original_ai_output, reviewer_feedback, corrected_output,
+                        provenance, timestamp, raw_json
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+                    """,
+                    (
+                        record.id, record.case_id, record.patient_id, record.report_id,
+                        record.model_version, record.specialty, record.review_status,
+                        eligibility_val, orig_input_str, orig_output_str, reviewer_fb_str,
+                        corrected_out_str, provenance_str, ts_str, raw_json_str
+                    )
+                )
+        logger.info(f"Training dataset record {record.id} saved (Eligibility: {eligibility_val}).")
+        return record.id
+
+    def get_training_dataset_records(self, eligibility: Optional[str] = None) -> List[Dict[str, Any]]:
+        """Retrieves training dataset records with optional eligibility filter."""
+        is_pg = self.manager.engine_type == "postgresql"
+        with self.manager.get_connection() as conn:
+            cur = conn.cursor()
+            if eligibility:
+                query = (
+                    "SELECT raw_json FROM training_dataset_records WHERE dataset_eligibility = %s ORDER BY timestamp DESC"
+                    if is_pg
+                    else "SELECT raw_json FROM training_dataset_records WHERE dataset_eligibility = ? ORDER BY timestamp DESC"
+                )
+                cur.execute(query, (eligibility,))
+            else:
+                query = "SELECT raw_json FROM training_dataset_records ORDER BY timestamp DESC"
+                cur.execute(query)
+            rows = cur.fetchall()
+            results = []
+            for row in rows:
+                val = row["raw_json"] if isinstance(row, dict) or hasattr(row, "keys") else row[0]
+                results.append(json.loads(val) if isinstance(val, str) else val)
+            return results
+
+    def is_patient_case_reviewed(self, patient_id: str, case_id: str) -> bool:
+        """Checks if a given patient/case has already been processed into the training dataset."""
+        is_pg = self.manager.engine_type == "postgresql"
+        with self.manager.get_connection() as conn:
+            cur = conn.cursor()
+            query = (
+                "SELECT COUNT(*) FROM training_dataset_records WHERE patient_id = %s AND case_id = %s AND dataset_eligibility = 'ELIGIBLE'"
+                if is_pg
+                else "SELECT COUNT(*) FROM training_dataset_records WHERE patient_id = ? AND case_id = ? AND dataset_eligibility = 'ELIGIBLE'"
+            )
+            cur.execute(query, (patient_id, case_id))
+            res = cur.fetchone()
+            count = res[0] if res else 0
+            return count > 0
 
     # =========================================================================
     # DPO / Preference Learning Pairs
@@ -1020,13 +1132,14 @@ class DatabaseRepository:
             "patients": 0,
             "physician_reviews": 0,
             "report_evaluations": 0,
+            "training_dataset_records": 0,
             "clinical_reports": 0,
             "encounters": 0,
             "dpo_feedback_pairs": 0,
         }
         with self.manager.get_connection() as conn:
             cur = conn.cursor()
-            for tbl in ["physician_reviews", "report_evaluations", "clinical_reports", "encounters", "patients", "dpo_feedback_pairs"]:
+            for tbl in ["training_dataset_records", "physician_reviews", "report_evaluations", "clinical_reports", "encounters", "patients", "dpo_feedback_pairs"]:
                 cur.execute(f"DELETE FROM {tbl};")
                 deleted[tbl] = cur.rowcount
             logger.info(f"Purged mock data: {deleted}")

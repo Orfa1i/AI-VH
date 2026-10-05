@@ -123,6 +123,25 @@ CREATE TABLE IF NOT EXISTS case_pool (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS training_dataset_records (
+    id TEXT PRIMARY KEY,
+    case_id TEXT NOT NULL,
+    patient_id TEXT NOT NULL,
+    report_id TEXT NOT NULL,
+    model_version TEXT NOT NULL,
+    specialty TEXT NOT NULL,
+    review_status TEXT NOT NULL,
+    dataset_eligibility TEXT NOT NULL,
+    original_input TEXT NOT NULL,
+    original_ai_output TEXT NOT NULL,
+    reviewer_feedback TEXT NOT NULL,
+    corrected_output TEXT NOT NULL,
+    provenance TEXT NOT NULL,
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    raw_json TEXT NOT NULL,
+    FOREIGN KEY (report_id) REFERENCES clinical_reports(id)
+);
+
 CREATE INDEX IF NOT EXISTS idx_reports_case ON clinical_reports(case_id);
 CREATE INDEX IF NOT EXISTS idx_reports_encounter ON clinical_reports(encounter_id);
 CREATE INDEX IF NOT EXISTS idx_reviews_report ON physician_reviews(report_id);
@@ -135,6 +154,8 @@ CREATE INDEX IF NOT EXISTS idx_staff_role ON hospital_staff(role);
 CREATE INDEX IF NOT EXISTS idx_staff_dept ON hospital_staff(department);
 CREATE INDEX IF NOT EXISTS idx_pool_status ON case_pool(status);
 CREATE INDEX IF NOT EXISTS idx_pool_specialty ON case_pool(specialty_category);
+CREATE INDEX IF NOT EXISTS idx_tdr_patient_case ON training_dataset_records(patient_id, case_id);
+CREATE INDEX IF NOT EXISTS idx_tdr_eligibility ON training_dataset_records(dataset_eligibility);
 """
 
 POSTGRES_SCHEMA = """
@@ -252,6 +273,25 @@ CREATE TABLE IF NOT EXISTS case_pool (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS training_dataset_records (
+    id VARCHAR(64) PRIMARY KEY,
+    case_id VARCHAR(64) NOT NULL,
+    patient_id VARCHAR(64) NOT NULL,
+    report_id VARCHAR(64) NOT NULL,
+    model_version VARCHAR(64) NOT NULL,
+    specialty VARCHAR(64) NOT NULL,
+    review_status VARCHAR(32) NOT NULL,
+    dataset_eligibility VARCHAR(32) NOT NULL,
+    original_input JSONB NOT NULL,
+    original_ai_output JSONB NOT NULL,
+    reviewer_feedback JSONB NOT NULL,
+    corrected_output JSONB NOT NULL,
+    provenance JSONB NOT NULL,
+    timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    raw_json JSONB NOT NULL,
+    FOREIGN KEY (report_id) REFERENCES clinical_reports(id)
+);
+
 CREATE INDEX IF NOT EXISTS idx_reports_case ON clinical_reports(case_id);
 CREATE INDEX IF NOT EXISTS idx_reports_encounter ON clinical_reports(encounter_id);
 CREATE INDEX IF NOT EXISTS idx_reviews_report ON physician_reviews(report_id);
@@ -264,4 +304,6 @@ CREATE INDEX IF NOT EXISTS idx_staff_role ON hospital_staff(role);
 CREATE INDEX IF NOT EXISTS idx_staff_dept ON hospital_staff(department);
 CREATE INDEX IF NOT EXISTS idx_pool_status ON case_pool(status);
 CREATE INDEX IF NOT EXISTS idx_pool_specialty ON case_pool(specialty_category);
+CREATE INDEX IF NOT EXISTS idx_tdr_patient_case ON training_dataset_records(patient_id, case_id);
+CREATE INDEX IF NOT EXISTS idx_tdr_eligibility ON training_dataset_records(dataset_eligibility);
 """

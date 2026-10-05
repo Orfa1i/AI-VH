@@ -205,17 +205,59 @@ export interface DoctorChatResponse {
   };
 }
 
+export type ReviewAssessment = 'CORRECT' | 'PARTIALLY_CORRECT' | 'INCORRECT';
+
+export type ReviewErrorTaxonomy =
+  | 'MISSING_INFORMATION'
+  | 'HALLUCINATION'
+  | 'INCORRECT_DIAGNOSIS'
+  | 'INCORRECT_REASONING'
+  | 'UNSUPPORTED_RECOMMENDATION'
+  | 'INCORRECT_MEDICAL_FACT'
+  | 'POOR_EVIDENCE_USE'
+  | 'OTHER';
+
+export type DatasetEligibilityStatus =
+  | 'ELIGIBLE'
+  | 'INELIGIBLE_INCOMPLETE'
+  | 'INELIGIBLE_DUPLICATE'
+  | 'INELIGIBLE_UNGROUNDED';
+
+export interface TrainingDatasetRecord {
+  id: string;
+  case_id: string;
+  patient_id: string;
+  report_id: string;
+  model_version: string;
+  specialty: string;
+  original_input: Record<string, any>;
+  original_ai_output: Record<string, any>;
+  reviewer_feedback: Record<string, any>;
+  corrected_output: Record<string, any>;
+  provenance: Record<string, any>;
+  review_status: string;
+  dataset_eligibility: DatasetEligibilityStatus;
+  timestamp: string;
+}
+
 export interface PhysicianReviewPayload {
   report_id: string;
   physician_name: string;
-  diagnosis_grade: string;
-  reasoning_grade: string;
-  tests_grade: string;
-  treatment_grade: string;
+  diagnosis_grade?: string;
+  reasoning_grade?: string;
+  tests_grade?: string;
+  treatment_grade?: string;
   overall_score: number;
   approved: boolean;
   notes: string;
   corrected_diagnosis?: string;
+  corrected_reasoning?: string;
+  corrected_treatment?: string[];
+  corrected_recommendations?: string[];
+  assessment?: ReviewAssessment;
+  identified_errors?: ReviewErrorTaxonomy[];
+  reviewer_role?: string;
+  specialty?: string;
 }
 
 export interface DPOPreferencePair {

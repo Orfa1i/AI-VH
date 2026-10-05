@@ -59,15 +59,21 @@ class PharmacyReviewRequest(BaseModel):
 class PhysicianReviewRequest(BaseModel):
     report_id: str
     physician_name: str = "Dr. Attending Physician, MD"
-    diagnosis_grade: str
-    reasoning_grade: str
-    tests_grade: str
-    treatment_grade: str
+    diagnosis_grade: str = "CORRECT"
+    reasoning_grade: str = "SOUND"
+    tests_grade: str = "APPROPRIATE"
+    treatment_grade: str = "SAFE_AND_OPTIMAL"
     overall_score: int
     approved: bool
-    notes: str
+    notes: str = ""
     corrected_diagnosis: Optional[str] = None
     corrected_treatment: Optional[List[str]] = None
+    assessment: Optional[str] = None
+    identified_errors: Optional[List[str]] = None
+    corrected_reasoning: Optional[str] = None
+    corrected_recommendations: Optional[List[str]] = None
+    reviewer_role: Optional[str] = "ATTENDING_PHYSICIAN"
+    specialty: Optional[str] = "INTERNAL_MEDICINE"
 
 
 class ComparativeInferenceRequest(BaseModel):
@@ -459,6 +465,12 @@ async def submit_review(req: PhysicianReviewRequest):
             notes=req.notes,
             corrected_diagnosis=req.corrected_diagnosis,
             corrected_treatment=req.corrected_treatment,
+            assessment=req.assessment,
+            identified_errors=req.identified_errors,
+            corrected_reasoning=req.corrected_reasoning,
+            corrected_recommendations=req.corrected_recommendations,
+            reviewer_role=req.reviewer_role,
+            specialty=req.specialty,
         )
         return review.model_dump()
     except ValueError as ve:
@@ -468,6 +480,25 @@ async def submit_review(req: PhysicianReviewRequest):
         raise HTTPException(status_code=422, detail=err_msg)
     except Exception as e:
         logger.error(f"Review submission error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/rl/dataset/curated")
+async def get_curated_training_dataset(eligibility: Optional[str] = None):
+    """
+    Returns curated training dataset records preserving all 13 fields,
+    with optional eligibility filtering (ELIGIBLE, INELIGIBLE_DUPLICATE, etc.).
+    """
+    try:
+        from ..database.repository import db_repo
+        records = db_repo.get_training_dataset_records(eligibility=eligibility)
+        return {
+            "total_count": len(records),
+            "filter": eligibility,
+            "records": records,
+        }
+    except Exception as e:
+        logger.error(f"Error fetching curated dataset: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 

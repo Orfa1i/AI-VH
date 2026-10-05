@@ -12,7 +12,16 @@ from datetime import datetime
 
 from .events import HospitalEvent, EventType
 from .event_bus import event_bus
-from ..clinical.models import ClinicalReport, PhysicianReview, DiagnosisFeedback, ReasoningFeedback, TestAppropriatenessFeedback, TreatmentSafetyFeedback
+from ..clinical.models import (
+    ClinicalReport,
+    PhysicianReview,
+    DiagnosisFeedback,
+    ReasoningFeedback,
+    TestAppropriatenessFeedback,
+    TreatmentSafetyFeedback,
+    ReviewAssessment,
+    ReviewErrorTaxonomy,
+)
 from ..clinical.cases import PatientGroundTruth, get_benchmark_case, BENCHMARK_CASES
 from ..clinical.tools import ClinicalToolkit
 from ..rag.book_parser import HarrisonParser
@@ -30,6 +39,7 @@ from ..agents.specialists.cardiology import CardiologySpecialistAgent
 from ..rag.specialists.cardiology_rag import CardiologyRAGAgent
 from ..agents.router import MedicalSpecialtyRouter
 from ..rl.dpo_generator import DPOPreferenceGenerator, DPOPreferencePair
+from ..rl.dataset_curator import dataset_curator
 from ..database.repository import db_repo
 from ..evaluation import evaluation_pipeline
 
@@ -359,6 +369,12 @@ class HospitalOrchestrator:
         notes: str,
         corrected_diagnosis: Optional[str] = None,
         corrected_treatment: Optional[List[str]] = None,
+        assessment: Optional[str] = None,
+        identified_errors: Optional[List[str]] = None,
+        corrected_reasoning: Optional[str] = None,
+        corrected_recommendations: Optional[List[str]] = None,
+        reviewer_role: Optional[str] = "ATTENDING_PHYSICIAN",
+        specialty: Optional[str] = "INTERNAL_MEDICINE",
     ) -> PhysicianReview:
         """Records structured expert physician evaluation and creates dataset entry."""
         if report_id not in self.reports:
@@ -373,12 +389,36 @@ class HospitalOrchestrator:
                 raise ValueError(f"Report {report_id} not found")
 
         report = self.reports[report_id]
+
+        parsed_assessment = ReviewAssessment.CORRECT
+        if assessment:
+            try:
+                parsed_assessment = ReviewAssessment(assessment)
+            except Exception:
+                parsed_assessment = ReviewAssessment.CORRECT
+        elif not approved or overall_score <= 2:
+            parsed_assessment = ReviewAssessment.INCORRECT
+        elif overall_score == 3 or corrected_diagnosis or corrected_treatment:
+            parsed_assessment = ReviewAssessment.PARTIALLY_CORRECT
+
+        parsed_errors: List[ReviewErrorTaxonomy] = []
+        if identified_errors:
+            for err in identified_errors:
+                try:
+                    parsed_errors.append(ReviewErrorTaxonomy(err))
+                except Exception:
+                    parsed_errors.append(ReviewErrorTaxonomy.OTHER)
+
         review = PhysicianReview(
             id=f"REV-{uuid.uuid4().hex[:6].upper()}",
             report_id=report_id,
             encounter_id=report.encounter_id,
             physician_name=physician_name,
+            reviewer_role=reviewer_role or "ATTENDING_PHYSICIAN",
+            specialty=specialty or getattr(report, "specialty", "INTERNAL_MEDICINE"),
             reviewed_at=datetime.utcnow(),
+            assessment=parsed_assessment,
+            identified_errors=parsed_errors,
             diagnosis_grade=DiagnosisFeedback(diagnosis_grade),
             reasoning_grade=ReasoningFeedback(reasoning_grade),
             tests_grade=TestAppropriatenessFeedback(tests_grade),
@@ -386,25 +426,41 @@ class HospitalOrchestrator:
             overall_score=overall_score,
             approved=approved,
             corrected_diagnosis=corrected_diagnosis,
+            corrected_reasoning=corrected_reasoning,
             corrected_treatment=corrected_treatment,
+            corrected_recommendations=corrected_recommendations,
             physician_feedback_notes=notes,
+            provenance={
+                "source": "HUMAN_PHYSICIAN_REVIEW",
+                "model_version": getattr(report, "model_provenance", "google/medgemma-4b"),
+                "submitted_at": datetime.utcnow().isoformat(),
+            },
         )
 
         self.reviews[review.id] = review
         if report.encounter_id in self.encounters:
             self.encounters[report.encounter_id].review = review
 
-        # Persist review and DPO pair to database
+        # Persist review separately (original clinical_reports is NEVER overwritten)
         try:
             self.db.save_review(review)
             case = get_benchmark_case(report.patient_id)
             if not case:
                 case = next((c for c in BENCHMARK_CASES if c.name == report.patient_name), None)
+
+            # Curate and persist TrainingDatasetRecord (immutable 13 fields, deduplicated)
+            dataset_curator.process_review_submission(
+                report=report,
+                review=review,
+                case=case,
+            )
+
+            # Backward-compatible DPO preference pair generation (strictly manual training)
             if case:
                 dpo_pair = DPOPreferenceGenerator.build_preference_pair(report, review, case)
                 self.db.save_dpo_pair(dpo_pair)
         except Exception as db_err:
-            logger.error(f"Failed to persist physician review/DPO pair to database: {db_err}", exc_info=True)
+            logger.error(f"Failed to persist physician review/training dataset record: {db_err}", exc_info=True)
 
         logger.info(f"Physician review recorded for {report_id}. Approved: {approved}, Score: {overall_score}/5")
         return review

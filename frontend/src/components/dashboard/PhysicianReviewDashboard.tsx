@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import type { ClinicalReport, PhysicianReviewPayload } from '../../types';
+import type { ClinicalReport, PhysicianReviewPayload, ReviewAssessment, ReviewErrorTaxonomy } from '../../types';
+import { REVIEW_ASSESSMENTS, STRUCTURED_ERROR_TAXONOMY } from '../review/taxonomy';
 import {
   FileText,
   CheckCircle2,
@@ -17,6 +18,7 @@ import {
   ShieldCheck,
   ShieldAlert,
   AlertTriangle,
+  Database,
 } from 'lucide-react';
 
 interface PhysicianReviewDashboardProps {
@@ -51,7 +53,9 @@ export const PhysicianReviewDashboard: React.FC<PhysicianReviewDashboardProps> =
   };
 
 
-  // Review Form State
+  // Structured Review Form State
+  const [assessment, setAssessment] = useState<ReviewAssessment>('CORRECT');
+  const [identifiedErrors, setIdentifiedErrors] = useState<ReviewErrorTaxonomy[]>([]);
   const [diagnosisGrade, setDiagnosisGrade] = useState('CORRECT');
   const [reasoningGrade, setReasoningGrade] = useState('SOUND');
   const [testsGrade, setTestsGrade] = useState('APPROPRIATE');
@@ -59,8 +63,17 @@ export const PhysicianReviewDashboard: React.FC<PhysicianReviewDashboardProps> =
   const [overallScore, setOverallScore] = useState<number>(5);
   const [notes, setNotes] = useState('');
   const [correctedDiagnosis, setCorrectedDiagnosis] = useState('');
+  const [correctedReasoning, setCorrectedReasoning] = useState('');
+  const [correctedRecommendations, setCorrectedRecommendations] = useState('');
+  const [reviewerRole, setReviewerRole] = useState('ATTENDING_PHYSICIAN');
   const [submittedReviewSuccess, setSubmittedReviewSuccess] = useState(false);
   const [evaluatingReport, setEvaluatingReport] = useState(false);
+
+  const toggleErrorTag = (tag: ReviewErrorTaxonomy) => {
+    setIdentifiedErrors((prev) =>
+      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
+    );
+  };
 
   const handleTriggerEvaluation = async (reportId: string) => {
     setEvaluatingReport(true);
@@ -106,6 +119,10 @@ export const PhysicianReviewDashboard: React.FC<PhysicianReviewDashboardProps> =
       await onSubmitReview({
         report_id: activeReport.id,
         physician_name: 'Dr. Marcus Vance, MD, FACP',
+        reviewer_role: reviewerRole,
+        specialty: (activeReport as any).specialty || 'INTERNAL_MEDICINE',
+        assessment,
+        identified_errors: identifiedErrors,
         diagnosis_grade: diagnosisGrade,
         reasoning_grade: reasoningGrade,
         tests_grade: testsGrade,
@@ -113,7 +130,11 @@ export const PhysicianReviewDashboard: React.FC<PhysicianReviewDashboardProps> =
         overall_score: overallScore,
         approved,
         notes: notes || (approved ? 'Diagnosis and guideline-directed treatment regimen approved by Attending.' : 'Revision required: clinical refinement needed.'),
-        corrected_diagnosis: correctedDiagnosis || undefined,
+        corrected_diagnosis: correctedDiagnosis.trim() || undefined,
+        corrected_reasoning: correctedReasoning.trim() || undefined,
+        corrected_recommendations: correctedRecommendations.trim()
+          ? correctedRecommendations.split('\n').map((s) => s.trim()).filter(Boolean)
+          : undefined,
       });
       setSubmittedReviewSuccess(true);
       setTimeout(() => setSubmittedReviewSuccess(false), 3500);
@@ -587,8 +608,90 @@ export const PhysicianReviewDashboard: React.FC<PhysicianReviewDashboardProps> =
                 </div>
               </div>
 
-              {/* Rubric Selectors */}
-              <div className="space-y-3 mb-4 text-xs">
+              {/* Overall Assessment Selectors */}
+              <div className="mb-4">
+                <label className="block text-[10px] font-mono text-slate-600 mb-1.5 uppercase tracking-wider">
+                  OVERALL CLINICAL ASSESSMENT
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  {REVIEW_ASSESSMENTS.map((item) => {
+                    const isSelected = assessment === item.value;
+                    const colorStyles =
+                      item.value === 'CORRECT'
+                        ? isSelected
+                          ? 'bg-emerald-600 text-white border-emerald-600'
+                          : 'bg-emerald-50/50 text-emerald-800 border-emerald-200 hover:bg-emerald-100/60'
+                        : item.value === 'PARTIALLY_CORRECT'
+                        ? isSelected
+                          ? 'bg-amber-600 text-white border-amber-600'
+                          : 'bg-amber-50/50 text-amber-800 border-amber-200 hover:bg-amber-100/60'
+                        : isSelected
+                        ? 'bg-rose-600 text-white border-rose-600'
+                        : 'bg-rose-50/50 text-rose-800 border-rose-200 hover:bg-rose-100/60';
+
+                    return (
+                      <button
+                        key={item.value}
+                        type="button"
+                        onClick={() => setAssessment(item.value)}
+                        className={`py-2 px-3 rounded-xl border text-xs font-mono font-bold transition-all text-center cursor-pointer ${colorStyles}`}
+                      >
+                        {item.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Identified Clinical Error Categories (Taxonomy) */}
+              <div className="mb-4">
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-[10px] font-mono text-slate-600 uppercase tracking-wider">
+                    IDENTIFIED CLINICAL DEFECTS &amp; ERRORS (OPTIONAL)
+                  </label>
+                  <span className="text-[10px] font-mono text-slate-400">
+                    {identifiedErrors.length} selected
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {STRUCTURED_ERROR_TAXONOMY.map((err) => {
+                    const isSelected = identifiedErrors.includes(err.code);
+                    return (
+                      <button
+                        key={err.code}
+                        type="button"
+                        onClick={() => toggleErrorTag(err.code)}
+                        title={err.description}
+                        className={`px-2.5 py-1 rounded-lg text-[11px] font-mono transition-all border cursor-pointer ${
+                          isSelected
+                            ? 'bg-rose-100 text-rose-800 border-rose-300 font-bold shadow-xs'
+                            : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                        }`}
+                      >
+                        {isSelected ? '✓ ' : '+ '}
+                        {err.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Reviewer Role & Specialty Selection */}
+              <div className="grid grid-cols-2 gap-2.5 mb-4">
+                <div>
+                  <label className="block text-[10px] font-mono text-slate-600 mb-1">
+                    REVIEWER ROLE
+                  </label>
+                  <select
+                    value={reviewerRole}
+                    onChange={(e) => setReviewerRole(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-2.5 py-1.5 text-xs text-slate-900 font-mono focus:bg-white focus:outline-none focus:border-sky-500 transition cursor-pointer"
+                  >
+                    <option value="ATTENDING_PHYSICIAN">Attending Physician (MD/DO)</option>
+                    <option value="CLINICAL_RESIDENT">Clinical Resident</option>
+                    <option value="MEDICAL_STUDENT">Medical Student</option>
+                  </select>
+                </div>
                 <div>
                   <label className="block text-[10px] font-mono text-slate-600 mb-1">
                     DIAGNOSIS ACCURACY
@@ -596,14 +699,17 @@ export const PhysicianReviewDashboard: React.FC<PhysicianReviewDashboardProps> =
                   <select
                     value={diagnosisGrade}
                     onChange={(e) => setDiagnosisGrade(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 font-mono focus:bg-white focus:outline-none focus:border-sky-500 transition cursor-pointer"
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-2.5 py-1.5 text-xs text-slate-900 font-mono focus:bg-white focus:outline-none focus:border-sky-500 transition cursor-pointer"
                   >
                     <option value="CORRECT">Correct (High Concordance)</option>
                     <option value="PARTIALLY_CORRECT">Partially Correct</option>
                     <option value="INCORRECT">Incorrect (Missed Diagnosis)</option>
                   </select>
                 </div>
+              </div>
 
+              {/* Rubric Selectors */}
+              <div className="space-y-3 mb-4 text-xs">
                 <div>
                   <label className="block text-[10px] font-mono text-slate-600 mb-1">
                     CLINICAL REASONING
@@ -651,17 +757,51 @@ export const PhysicianReviewDashboard: React.FC<PhysicianReviewDashboardProps> =
                   </select>
                 </div>
 
-                <div>
-                  <label className="block text-[10px] font-mono text-slate-600 mb-1">
-                    CORRECTED DIAGNOSIS (IF REVISED)
-                  </label>
-                  <input
-                    type="text"
-                    value={correctedDiagnosis}
-                    onChange={(e) => setCorrectedDiagnosis(e.target.value)}
-                    placeholder="Refined clinical diagnosis (optional)..."
-                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 font-mono focus:bg-white focus:outline-none focus:border-sky-500 transition"
-                  />
+                {/* Structured Corrections Section */}
+                <div className="p-3.5 bg-sky-50/50 rounded-xl border border-sky-100 space-y-2.5">
+                  <div className="text-[10px] font-mono font-bold text-sky-900 uppercase tracking-wider flex items-center gap-1.5">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-sky-600" />
+                    <span>STRUCTURED CLINICAL CORRECTIONS (OPTIONAL)</span>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-mono text-slate-600 mb-1">
+                      CORRECTED PRIMARY DIAGNOSIS
+                    </label>
+                    <input
+                      type="text"
+                      value={correctedDiagnosis}
+                      onChange={(e) => setCorrectedDiagnosis(e.target.value)}
+                      placeholder="e.g. Acute Non-ST-Elevation Myocardial Infarction"
+                      className="w-full bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-xs text-slate-900 font-mono focus:outline-none focus:border-sky-500 transition"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-mono text-slate-600 mb-1">
+                      CORRECTED CLINICAL REASONING
+                    </label>
+                    <textarea
+                      rows={2}
+                      value={correctedReasoning}
+                      onChange={(e) => setCorrectedReasoning(e.target.value)}
+                      placeholder="Sound physiological reasoning that supports the diagnosis..."
+                      className="w-full bg-white border border-slate-300 rounded-xl p-2 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-sky-500 resize-none font-sans"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-mono text-slate-600 mb-1">
+                      CORRECTED RECOMMENDATIONS &amp; TREATMENT (ONE PER LINE)
+                    </label>
+                    <textarea
+                      rows={2}
+                      value={correctedRecommendations}
+                      onChange={(e) => setCorrectedRecommendations(e.target.value)}
+                      placeholder="Aspirin 325 mg PO chewable immediately&#10;Ticagrelor 180 mg PO loading dose"
+                      className="w-full bg-white border border-slate-300 rounded-xl p-2 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-sky-500 resize-none font-sans"
+                    />
+                  </div>
                 </div>
 
                 <div>
@@ -675,6 +815,27 @@ export const PhysicianReviewDashboard: React.FC<PhysicianReviewDashboardProps> =
                     placeholder="Attending feedback or training preference..."
                     className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:border-sky-500 resize-none font-sans"
                   />
+                </div>
+
+                {/* Training Dataset Eligibility Live Status */}
+                <div className={`p-2.5 rounded-xl border flex items-center justify-between text-xs font-mono ${
+                  assessment === 'CORRECT' || correctedDiagnosis.trim() || correctedReasoning.trim() || correctedRecommendations.trim() || notes.trim().length >= 15
+                    ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                    : 'bg-amber-50 border-amber-200 text-amber-800'
+                }`}>
+                  <div className="flex items-center gap-1.5">
+                    <Database className="w-3.5 h-3.5" />
+                    <span className="font-bold text-[10px]">
+                      DATASET STATUS: {
+                        assessment === 'CORRECT' || correctedDiagnosis.trim() || correctedReasoning.trim() || correctedRecommendations.trim() || notes.trim().length >= 15
+                          ? 'ELIGIBLE FOR TRAINING RECORD'
+                          : 'INCOMPLETE (CORRECTION NEEDED)'
+                      }
+                    </span>
+                  </div>
+                  <span className="text-[9px] opacity-80">
+                    {assessment === 'CORRECT' ? 'Approved Gold Standard' : 'Requires correction to enter dataset'}
+                  </span>
                 </div>
               </div>
 
