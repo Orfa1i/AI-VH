@@ -26,6 +26,9 @@ from ..agents.radiology import RadiologyAgent
 from ..agents.pharmacist import PharmacistAgent
 from ..agents.specialists.internal_medicine import InternalMedicineSpecialistAgent
 from ..rag.specialists.internal_medicine_rag import InternalMedicineRAGAgent
+from ..agents.specialists.cardiology import CardiologySpecialistAgent
+from ..rag.specialists.cardiology_rag import CardiologyRAGAgent
+from ..agents.router import MedicalSpecialtyRouter
 from ..rl.dpo_generator import DPOPreferenceGenerator, DPOPreferencePair
 from ..database.repository import db_repo
 
@@ -95,6 +98,11 @@ class HospitalOrchestrator:
             medgemma_service=self.medgemma,
             rag_agent=self.im_rag_agent
         )
+        self.cardio_rag_agent = CardiologyRAGAgent()
+        self.cardio_specialist = CardiologySpecialistAgent(
+            medgemma_service=self.medgemma,
+            rag_agent=self.cardio_rag_agent
+        )
         self.pharmacist = PharmacistAgent()
 
     async def conduct_specialist_consult(
@@ -139,6 +147,48 @@ class HospitalOrchestrator:
         ):
             yield chunk
 
+    async def conduct_cardiology_consult(
+        self,
+        clinical_scenario: str,
+        abnormal_labs: Optional[List[str]] = None,
+        patient_id: str = "PAT-CARDIO-CONSULT",
+    ) -> Dict[str, Any]:
+        """Provides an on-demand clinical consultation with Dr. Rachel Vance, MD, FACC (Cardiology)."""
+        encounter_id = f"CON-CARDIO-{uuid.uuid4().hex[:6].upper()}"
+        return await self.cardio_specialist.conduct_specialist_consultation(
+            encounter_id=encounter_id,
+            patient_id=patient_id,
+            clinical_scenario=clinical_scenario,
+            abnormal_labs=abnormal_labs,
+        )
+
+    async def chat_with_dr_rachel_vance(
+        self,
+        user_message: str,
+        conversation_history: Optional[List[Dict[str, str]]] = None,
+        patient_context: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
+        """Provides direct conversational communication with Dr. Rachel Vance, MD, FACC (Cardiology)."""
+        return await self.cardio_specialist.chat_with_specialist(
+            user_message=user_message,
+            conversation_history=conversation_history,
+            patient_context=patient_context,
+        )
+
+    async def stream_chat_with_dr_rachel_vance(
+        self,
+        user_message: str,
+        conversation_history: Optional[List[Dict[str, str]]] = None,
+        patient_context: Optional[Dict[str, Any]] = None,
+    ):
+        """Streams real-time clinical consultation tokens from Dr. Rachel Vance (Cardiology)."""
+        async for chunk in self.cardio_specialist.stream_chat_with_specialist(
+            user_message=user_message,
+            conversation_history=conversation_history,
+            patient_context=patient_context,
+        ):
+            yield chunk
+
     async def review_medication_orders(
         self,
         prescriptions: List[str],
@@ -172,18 +222,31 @@ class HospitalOrchestrator:
 
         logger.info(f"Starting simulated encounter {encounter_id} for {case.name} ({case.true_diagnosis})")
 
-        # 1. Setup Agents and Toolkit
+        # 1. Setup Agents, Router, and Toolkit
         toolkit = ClinicalToolkit(ground_truth=case, rag_index=self.rag_index)
         patient_agent = PatientAgent(ground_truth=case)
         nurse_agent = NurseAgent()
         lab_agent = LaboratoryAgent()
         radiology_agent = RadiologyAgent()
-        doctor_agent = InternalMedicineSpecialistAgent(
-            medgemma_service=self.medgemma,
-            rag_agent=self.im_rag_agent,
-            lab_agent=lab_agent,
-            radiology_agent=radiology_agent,
-        )
+
+        # Specialty Routing (determines specialty only; not the model being trained)
+        routing = MedicalSpecialtyRouter.route_case(case)
+        logger.info(f"Encounter {encounter_id} routed to {routing.specialty} ({routing.suggested_specialist_name}): {routing.primary_rationale}")
+
+        if routing.specialty == "CARDIOLOGY":
+            doctor_agent = CardiologySpecialistAgent(
+                medgemma_service=self.medgemma,
+                rag_agent=self.cardio_rag_agent,
+                lab_agent=lab_agent,
+                radiology_agent=radiology_agent,
+            )
+        else:
+            doctor_agent = InternalMedicineSpecialistAgent(
+                medgemma_service=self.medgemma,
+                rag_agent=self.im_rag_agent,
+                lab_agent=lab_agent,
+                radiology_agent=radiology_agent,
+            )
 
         # 2. Patient Arrival at Reception & Waiting Area
         state.status = "ARRIVED"
@@ -197,9 +260,23 @@ class HospitalOrchestrator:
         await nurse_agent.triage_patient(encounter_id, toolkit)
         await asyncio.sleep(0.05)
 
-        # 4. Doctor Encounter in Examination Room
+        # 4. Specialty Routing Notification
+        await event_bus.publish(
+            HospitalEvent(
+                id=f"EVT-{uuid.uuid4().hex[:8]}",
+                event_type=EventType.SPECIALTY_ROUTED,
+                encounter_id=encounter_id,
+                patient_id=case.id,
+                sender_agent_id="specialty_router",
+                department="NURSE_STATION",
+                payload=routing.model_dump(),
+                summary=f"Specialty Router assigned case to {routing.specialty} ({routing.suggested_specialist_name}): {routing.primary_rationale}",
+            )
+        )
+
+        # 5. Specialist Doctor Encounter in Examination Room
         state.status = "EXAMINATION"
-        state.current_department = "EXAMINATION_ROOM_1"
+        state.current_department = "CARDIOLOGY_SUITE" if routing.specialty == "CARDIOLOGY" else "EXAMINATION_ROOM_1"
         report = await doctor_agent.conduct_clinical_encounter(encounter_id, toolkit)
         
         # 5. Pharmacist Medication Safety Review & Dispensing in Pharmacy

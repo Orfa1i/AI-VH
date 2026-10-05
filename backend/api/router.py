@@ -159,6 +159,66 @@ async def chat_internal_medicine_stream(req: DoctorChatRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@api_router.post("/specialists/cardiology/consult")
+async def consult_cardiology(req: SpecialistConsultRequest):
+    """Consult Dr. Rachel Vance, MD, FACC (Cardiology) powered by Braunwald's RAG."""
+    try:
+        result = await orchestrator.conduct_cardiology_consult(
+            clinical_scenario=req.clinical_scenario,
+            abnormal_labs=req.abnormal_labs,
+            patient_id=req.patient_id or "PAT-CARDIO-CONSULT",
+        )
+        return result
+    except Exception as e:
+        logger.error(f"Cardiology consult error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.post("/specialists/cardiology/chat")
+async def chat_cardiology(req: DoctorChatRequest):
+    """Direct conversational clinical consultation with Dr. Rachel Vance, MD, FACC (Cardiology)."""
+    try:
+        result = await orchestrator.chat_with_dr_rachel_vance(
+            user_message=req.message,
+            conversation_history=req.conversation_history,
+            patient_context=req.patient_context,
+        )
+        return result
+    except Exception as e:
+        logger.error(f"Doctor Rachel Vance chat error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.post("/specialists/cardiology/chat/stream")
+async def chat_cardiology_stream(req: DoctorChatRequest):
+    """Streams real-time clinical diagnostic consultation tokens with Dr. Rachel Vance, MD, FACC."""
+    try:
+        generator = orchestrator.stream_chat_with_dr_rachel_vance(
+            user_message=req.message,
+            conversation_history=req.conversation_history,
+            patient_context=req.patient_context,
+        )
+        return StreamingResponse(generator, media_type="text/event-stream")
+    except Exception as e:
+        logger.error(f"Doctor Rachel Vance streaming error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.post("/router/route")
+async def route_clinical_case(req: SpecialistConsultRequest):
+    """Evaluates clinical presentation through MedicalSpecialtyRouter without altering models."""
+    try:
+        from ..agents.router import MedicalSpecialtyRouter
+        decision = MedicalSpecialtyRouter.route_case({
+            "chief_complaint": req.clinical_scenario,
+            "abnormal_labs": req.abnormal_labs or []
+        })
+        return decision.model_dump()
+    except Exception as e:
+        logger.error(f"Specialty routing error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @api_router.post("/pharmacy/review")
 async def review_medications_pharmacy(req: PharmacyReviewRequest):
     """Reconciles medication orders with Dr. Elena Rostova, PharmD."""
