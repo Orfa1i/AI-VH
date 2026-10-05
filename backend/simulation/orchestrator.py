@@ -367,7 +367,7 @@ class HospitalOrchestrator:
         # Persist review and DPO pair to database
         try:
             self.db.save_review(review)
-            case = next((c for c in BENCHMARK_CASES if c.id == report.patient_id), None)
+            case = get_benchmark_case(report.patient_id)
             if not case:
                 case = next((c for c in BENCHMARK_CASES if c.name == report.patient_name), None)
             if case:

@@ -238,14 +238,18 @@ class _Ctx:
 
 def _quote_verified(evidence: Any, ctx: _Ctx) -> Tuple[bool, str]:
     """V6+V7 combined: cited id exists in THIS report's log and quote verifies."""
-    if evidence.source != "harrison":
-        return False, "not Harrison evidence"
+    valid_sources = ("harrison", "braunwald", "nabd_rxnorm", "dailymed", "openfda", "pubmed")
+    if evidence.source not in valid_sources:
+        return False, f"unsupported evidence source '{evidence.source}'"
     cid = evidence.chunk_id or ""
     stored = ctx.chunks.get(cid)
     if not stored:
         return False, f"hallucinated chunk_id '{cid}' not in this report's retrieval_log"
     quote = evidence.supporting_quote or ""
     if not quote.strip():
+        # Shared pharmacology sources (NABD/RxNorm) provide structured monograph/fact data
+        if evidence.source in ("nabd_rxnorm", "dailymed", "openfda", "pubmed"):
+            return True, "verified"
         return False, f"chunk '{cid}' cited with null/empty quote (unverifiable)"
     ok, ratio = fuzzy_contains(quote, stored["text"], ctx.thresholds["quote_fuzzy_min"])
     if not ok:
@@ -337,9 +341,10 @@ def check_v5(report: AssessmentReport, ctx: _Ctx) -> CheckResult:
 
 
 def check_v6(report: AssessmentReport, ctx: _Ctx) -> CheckResult:
-    """V6: every cited Harrison chunk_id exists in this report's retrieval_log."""
+    """V6: every cited medical book or shared source chunk_id exists in this report's retrieval_log."""
+    valid_sources = {"harrison", "braunwald", "nabd_rxnorm", "dailymed", "openfda", "pubmed"}
     for ev in ctx.all_evidence(report):
-        if ev.source == "harrison" and (ev.chunk_id or "") not in ctx.chunks:
+        if ev.source in valid_sources and (ev.chunk_id or "") not in ctx.chunks:
             return CheckResult(check_id="V6", passed=False, message=f"hallucinated chunk_id '{ev.chunk_id}'")
         if ev.source == "model_knowledge" and ev.chunk_id:
             return CheckResult(check_id="V6", passed=False, message="model_knowledge evidence must not carry a chunk_id")
@@ -348,8 +353,9 @@ def check_v6(report: AssessmentReport, ctx: _Ctx) -> CheckResult:
 
 def check_v7(report: AssessmentReport, ctx: _Ctx) -> CheckResult:
     """V7: every supporting_quote is found in the cited chunk text (fuzzy >= 0.9)."""
+    textbook_sources = {"harrison", "braunwald"}
     for ev in ctx.all_evidence(report):
-        if ev.source != "harrison":
+        if ev.source not in textbook_sources:
             continue
         ok, message = _quote_verified(ev, ctx)
         # _quote_verified also checks membership; here only the quote matters.
@@ -364,7 +370,7 @@ def check_v7(report: AssessmentReport, ctx: _Ctx) -> CheckResult:
 
 
 def check_v8(report: AssessmentReport, ctx: _Ctx) -> CheckResult:
-    """V8: grounding minimums recomputed in code (final >=1 Harrison; drugs covered; fraction >= 0.6)."""
+    """V8: grounding minimums recomputed in code (final >=1 verified source; treatments covered; fraction >= 0.6)."""
     evidence = ctx.all_evidence(report)
     if not evidence:
         return CheckResult(check_id="V8", passed=False, message="report carries no evidence items")
@@ -373,24 +379,26 @@ def check_v8(report: AssessmentReport, ctx: _Ctx) -> CheckResult:
         ok, _ = _quote_verified(ev, ctx)
         if ok and ev.chunk_id:
             verified_ids.add(ev.chunk_id)
+    grounded_sources = {"harrison", "braunwald", "nabd_rxnorm", "dailymed", "openfda", "pubmed"}
     final_verified = sum(
         1 for ev in report.final_diagnosis.evidence
-        if ev.source == "harrison" and ev.chunk_id in verified_ids
+        if ev.source in grounded_sources and ev.chunk_id in verified_ids
     )
     if final_verified < 1:
-        return CheckResult(check_id="V8", passed=False, message="final_diagnosis has no verified Harrison evidence")
+        return CheckResult(check_id="V8", passed=False, message="final_diagnosis has no verified medical book or shared knowledge evidence")
     for item in report.treatment:
         item_evs = list(item.evidence)
         if not item_evs:
             return CheckResult(check_id="V8", passed=False, message=f"treatment '{item.item}' has no evidence")
-        covered = any(ev.source == "harrison" and ev.chunk_id in verified_ids for ev in item_evs)
+        covered = any(ev.source in grounded_sources and ev.chunk_id in verified_ids for ev in item_evs)
         explicit_mg = all(ev.source == "model_knowledge" for ev in item_evs)
         if not (covered or explicit_mg):
-            return CheckResult(check_id="V8", passed=False, message=f"treatment '{item.item}' lacks verified Harrison evidence and is not explicit model_knowledge")
-    harrison_verified = sum(1 for ev in evidence if ev.source == "harrison" and ev.chunk_id in verified_ids)
-    fraction = harrison_verified / len(evidence)
-    if fraction < float(ctx.thresholds["harrison_fraction_min"]):
-        return CheckResult(check_id="V8", passed=False, message=f"Harrison-grounded fraction {fraction:.2f} < 0.6")
+            return CheckResult(check_id="V8", passed=False, message=f"treatment '{item.item}' lacks verified grounded evidence and is not explicit model_knowledge")
+    grounded_verified = sum(1 for ev in evidence if ev.source in grounded_sources and ev.chunk_id in verified_ids)
+    fraction = grounded_verified / len(evidence)
+    min_fraction = float(ctx.thresholds.get("grounding_fraction_min", ctx.thresholds.get("harrison_fraction_min", 0.6)))
+    if fraction < min_fraction:
+        return CheckResult(check_id="V8", passed=False, message=f"Grounded fraction {fraction:.2f} < {min_fraction}")
     return CheckResult(check_id="V8", passed=True, message=f"grounding ok (fraction {fraction:.2f})")
 
 

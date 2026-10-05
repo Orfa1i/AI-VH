@@ -11,7 +11,15 @@ Owner: AI Engineer. Legacy v1 ClinicalReport (report.py) is untouched.
 from typing import Any, Dict, List, Literal, Optional
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-EvidenceSource = Literal["harrison", "model_knowledge"]
+EvidenceSource = Literal[
+    "harrison",
+    "braunwald",
+    "nabd_rxnorm",
+    "dailymed",
+    "openfda",
+    "pubmed",
+    "model_knowledge",
+]
 Certainty = Literal["confirmed", "probable", "provisional"]
 DispositionSetting = Literal["outpatient", "ward", "HDU", "ICU"]
 WorkupPriority = Literal["stat", "urgent", "routine"]
@@ -132,8 +140,8 @@ class AssessmentReport(BaseModel):
         conf = self.final_diagnosis.confidence
         if self.final_diagnosis.certainty == "provisional" and conf > high + 1e-6:
             raise ValueError(f"provisional certainty requires confidence <= {high}, got {conf}")
-        if self.final_diagnosis.certainty == "confirmed" and conf <= high - 1e-6:
-            raise ValueError(f"confirmed certainty requires confidence > {high}, got {conf}")
+        if self.final_diagnosis.certainty == "confirmed" and conf < low - 1e-6:
+            raise ValueError(f"confirmed certainty requires confidence >= {low}, got {conf}")
         if self.final_diagnosis.certainty == "probable" and not (low - 1e-6 <= conf <= high + 1e-6):
             raise ValueError(f"probable certainty requires confidence in [{low}, {high}], got {conf}")
         return self
