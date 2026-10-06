@@ -14,6 +14,7 @@ import { ReviewedReportsSection } from './components/reviewing/ReviewedReportsSe
 import { LeftNotificationDrawer } from './components/notifications/LeftNotificationDrawer';
 import { ActiveEncounterProgressBar } from './components/simulation/ActiveEncounterProgressBar';
 import { PatientJourneyFlowPage } from './components/diagram/PatientJourneyFlowPage';
+import { DesignSystemShowcase } from './pages/DesignSystemShowcase';
 import { toggleGlobalMute, isGlobalMuted } from './utils/speechSynthesis';
 import {
   Activity,
@@ -26,6 +27,7 @@ import {
   Radio,
   Scale,
   Search,
+  Sparkles,
   Stethoscope,
   Terminal,
   Users,
@@ -40,7 +42,7 @@ import type {
   HospitalEvent,
 } from './types';
 
-type PortalTab = 'INTAKE' | 'PATIENTS' | 'STAFF' | 'REPORTS' | 'REVIEW' | 'REVIEWING' | 'WARDS' | 'HOSPITAL3D' | 'KNOWLEDGE' | 'BENCHMARK';
+type PortalTab = 'INTAKE' | 'PATIENTS' | 'STAFF' | 'REPORTS' | 'REVIEW' | 'REVIEWING' | 'WARDS' | 'HOSPITAL3D' | 'KNOWLEDGE' | 'BENCHMARK' | 'DESIGN_SYSTEM';
 
 export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<PortalTab>('INTAKE');
@@ -390,6 +392,18 @@ export const App: React.FC = () => {
             <Scale className="w-3.5 h-3.5" />
             <span>RL Policy Benchmark</span>
           </button>
+
+          <button
+            onClick={() => setActiveTab('DESIGN_SYSTEM')}
+            className={`px-3.5 py-2 text-xs font-mono font-medium flex items-center gap-2 rounded transition cursor-pointer ${
+              activeTab === 'DESIGN_SYSTEM'
+                ? 'bg-sky-50 text-sky-700 border border-sky-300 shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent'
+            }`}
+          >
+            <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
+            <span>Design System</span>
+          </button>
         </nav>
 
         {/* Right: Relocated Patient Journey Graph Action */}
@@ -453,6 +467,7 @@ export const App: React.FC = () => {
         {activeTab === 'HOSPITAL3D' && <DepartmentBoard3DSection />}
 
         {activeTab === 'KNOWLEDGE' && <KnowledgeSearchSection />}
+        {activeTab === 'DESIGN_SYSTEM' && <DesignSystemShowcase />}
 
         {activeTab === 'BENCHMARK' && (
           <div className="flex-1 p-6 overflow-y-auto max-w-5xl mx-auto flex flex-col justify-center items-center text-center">
