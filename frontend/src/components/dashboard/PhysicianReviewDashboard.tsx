@@ -774,8 +774,8 @@ export const PhysicianReviewDashboard: React.FC<PhysicianReviewDashboardProps> =
                         <Star
                           className="w-6 h-6"
                           style={{
-                            fill: star <= overallScore ? '#EAB308' : 'none',
-                            color: star <= overallScore ? '#EAB308' : 'var(--border-subtle)',
+                            fill: star <= overallScore ? 'var(--ak-color-warning)' : 'none',
+                            color: star <= overallScore ? 'var(--ak-color-warning)' : 'var(--border-subtle)',
                             transition: 'color 0.15s ease',
                           }}
                         />

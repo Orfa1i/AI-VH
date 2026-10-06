@@ -16,15 +16,15 @@ declare global {
   }
 }
 
-const ROOM_COLORS: Record<Department, string> = {
-  ER: '#e0f2fe',
-  Reception: '#f1f5f8',
-  Lab: '#ede9fe',
-  Radiology: '#e0e7ff',
-  Pharmacy: '#dcfce7',
-  Wards: '#fef9c3',
-  ICU: '#ffe4e6',
-  Clinics: '#ffedd5',
+const ROOM_COLORS: Record<Department, string | number> = {
+  ER: 0xe0f2fe,
+  Reception: 0xf1f5f8,
+  Lab: 0xede9fe,
+  Radiology: 0xe0e7ff,
+  Pharmacy: 0xdcfce7,
+  Wards: 0xfef9c3,
+  ICU: 0xffe4e6,
+  Clinics: 0xffedd5,
 };
 
 interface Registry {
@@ -77,11 +77,11 @@ function Room({ room, x, z }: { room: Department; x: number; z: number }) {
       </mesh>
       <mesh position={[0, 0.6, -4]}>
         <boxGeometry args={[10, 1.2, 0.3]} />
-        <meshLambertMaterial color="#cbd5e1" />
+        <meshLambertMaterial color="var(--ak-color-border-subtle)" />
       </mesh>
       <mesh position={[-5, 0.6, 0]}>
         <boxGeometry args={[0.3, 1.2, 8]} />
-        <meshLambertMaterial color="#cbd5e1" />
+        <meshLambertMaterial color="var(--ak-color-border-subtle)" />
       </mesh>
     </group>
   );
@@ -114,7 +114,7 @@ function PatientAvatar({
     if (mesh === null) return;
     mesh.position.lerp(target, 1 - Math.exp(-6 * delta));
   });
-  const color = avatar.status === 'Report filed' ? '#16a34a' : '#0284c7';
+  const color = avatar.status === 'Report filed' ? 0x16a34a : 'var(--ak-color-primary)';
   return (
     <group>
       <mesh
@@ -126,12 +126,12 @@ function PatientAvatar({
         }}
       >
         <sphereGeometry args={[0.55, 20, 14]} />
-        <meshLambertMaterial color={selected ? '#ffffff' : color} />
+        <meshLambertMaterial color={selected ? 'var(--ak-color-bg-surface)' : color} />
       </mesh>
       {selected && (
         <mesh position={[x, 0.06, z]} rotation={[-Math.PI / 2, 0, 0]}>
           <ringGeometry args={[0.8, 1.0, 32]} />
-          <meshBasicMaterial color="#0284c7" side={THREE.DoubleSide} />
+          <meshBasicMaterial color="var(--ak-color-primary)" side={THREE.DoubleSide} />
         </mesh>
       )}
     </group>
@@ -157,7 +157,7 @@ function AgentAvatar({ avatar, x, z }: { avatar: AvatarState; x: number; z: numb
   return (
     <mesh ref={ref} position={[x, 0.4, z]}>
       <octahedronGeometry args={[0.4]} />
-      <meshLambertMaterial color="#d97706" />
+      <meshLambertMaterial color="d97706" />
     </mesh>
   );
 }
@@ -219,7 +219,7 @@ export const Scene3D: React.FC<Scene3DProps> = memo(
         }
       }}
     >
-      <color attach="background" args={['#f8fafc']} />
+      <color attach="background" args={['var(--ak-color-bg-app)']} />
       <ambientLight intensity={0.9} />
       <directionalLight position={[8, 14, 6]} intensity={0.9} />
       <SceneRig

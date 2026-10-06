@@ -307,7 +307,7 @@ export const ActiveTrajectoryStepper: React.FC<ActiveTrajectoryStepperProps> = (
                           : isActive
                           ? 'var(--color-primary)'
                           : 'var(--bg-surface)',
-                        color: isCompleted || isActive ? '#FFFFFF' : 'var(--text-tertiary)',
+                        color: isCompleted || isActive ? 'var(--ak-color-bg-surface)' : 'var(--text-tertiary)',
                         border: isCompleted
                           ? '2px solid var(--color-success)'
                           : isActive
@@ -317,7 +317,7 @@ export const ActiveTrajectoryStepper: React.FC<ActiveTrajectoryStepperProps> = (
                       }}
                     >
                       {isCompleted ? (
-                        <CheckCircle2 className="w-5 h-5" style={{ color: '#FFFFFF' }} />
+                        <CheckCircle2 className="w-5 h-5" style={{ color: 'var(--ak-color-bg-surface)' }} />
                       ) : (
                         <span className="ak-num">{stage.stepNumber}</span>
                       )}
@@ -341,7 +341,7 @@ export const ActiveTrajectoryStepper: React.FC<ActiveTrajectoryStepperProps> = (
                             padding: '2px 8px',
                             borderRadius: 'var(--radius-pill)',
                             backgroundColor: 'var(--text-primary)',
-                            color: '#FFFFFF',
+                            color: 'var(--ak-color-bg-surface)',
                             fontSize: '0.625rem',
                             fontWeight: 600,
                             display: 'flex',
@@ -404,7 +404,7 @@ export const ActiveTrajectoryStepper: React.FC<ActiveTrajectoryStepperProps> = (
                         transform: 'translateX(-50%)',
                         width: 250,
                         backgroundColor: 'var(--text-primary)',
-                        color: '#FFFFFF',
+                        color: 'var(--ak-color-bg-surface)',
                         borderRadius: 'var(--radius-md)',
                         padding: 'var(--space-3)',
                         boxShadow: 'var(--shadow-lg)',
@@ -419,7 +419,7 @@ export const ActiveTrajectoryStepper: React.FC<ActiveTrajectoryStepperProps> = (
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'space-between',
-                          borderBottom: '1px solid rgba(255, 255, 255, 0.15)',
+                          borderBottom: '1px solid var(--ak-color-border-subtle)',
                           paddingBottom: 4,
                           marginBottom: 6,
                         }}
@@ -432,21 +432,21 @@ export const ActiveTrajectoryStepper: React.FC<ActiveTrajectoryStepperProps> = (
                         </span>
                       </div>
 
-                      <h5 style={{ fontSize: '0.8125rem', fontWeight: 700, margin: '0 0 4px', color: '#FFFFFF' }}>
+                      <h5 style={{ fontSize: '0.8125rem', fontWeight: 700, margin: '0 0 4px', color: 'var(--ak-color-bg-surface)' }}>
                         {stage.title}
                       </h5>
-                      <p style={{ fontSize: '0.6875rem', lineHeight: 1.4, margin: '0 0 8px', color: '#CBD5E1' }}>
+                      <p style={{ fontSize: '0.6875rem', lineHeight: 1.4, margin: '0 0 8px', color: 'var(--ak-color-border-subtle)' }}>
                         {stage.description}
                       </p>
 
                       <div
                         style={{
-                          backgroundColor: 'rgba(255, 255, 255, 0.08)',
+                          backgroundColor: 'var(--ak-color-border-subtle)',
                           borderRadius: 'var(--radius-sm)',
                           padding: 'var(--space-2)',
                           fontSize: '0.625rem',
                           marginBottom: 'var(--space-2)',
-                          color: '#E2E8F0',
+                          color: 'var(--ak-color-border-subtle)',
                         }}
                       >
                         <span style={{ color: 'var(--indigo-300)', fontWeight: 700, textTransform: 'uppercase', display: 'block', marginBottom: 2 }}>
@@ -458,7 +458,7 @@ export const ActiveTrajectoryStepper: React.FC<ActiveTrajectoryStepperProps> = (
 
                       <div
                         style={{
-                          backgroundColor: 'rgba(255, 255, 255, 0.08)',
+                          backgroundColor: 'var(--ak-color-border-subtle)',
                           borderRadius: 'var(--radius-sm)',
                           padding: 'var(--space-2)',
                           fontSize: '0.625rem',
@@ -468,13 +468,13 @@ export const ActiveTrajectoryStepper: React.FC<ActiveTrajectoryStepperProps> = (
                         }}
                       >
                         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                          <span style={{ color: '#94A3B8', display: 'flex', alignItems: 'center', gap: 4 }}>
+                          <span style={{ color: 'var(--ak-color-text-muted)', display: 'flex', alignItems: 'center', gap: 4 }}>
                             <MapPin className="w-2.5 h-2.5" /> Station:
                           </span>
                           <span style={{ fontWeight: 600 }}>{stage.department}</span>
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                          <span style={{ color: '#94A3B8', display: 'flex', alignItems: 'center', gap: 4 }}>
+                          <span style={{ color: 'var(--ak-color-text-muted)', display: 'flex', alignItems: 'center', gap: 4 }}>
                             <ShieldCheck className="w-2.5 h-2.5" /> Evidence:
                           </span>
                           <span style={{ fontWeight: 600, maxWidth: 130, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -487,12 +487,12 @@ export const ActiveTrajectoryStepper: React.FC<ActiveTrajectoryStepperProps> = (
                         style={{
                           marginTop: 6,
                           paddingTop: 4,
-                          borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+                          borderTop: '1px solid var(--ak-color-border-subtle)',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'space-between',
                           fontSize: '0.5625rem',
-                          color: '#94A3B8',
+                          color: 'var(--ak-color-text-muted)',
                         }}
                       >
                         <span>CLICK TO INSPECT STATION</span>

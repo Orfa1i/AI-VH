@@ -425,7 +425,7 @@ export const App: React.FC = () => {
       />
 
       {/* Main Portal Viewport */}
-      <main className="flex-1 overflow-hidden flex flex-col relative bg-[#f8fafc]">
+      <main className="flex-1 overflow-hidden flex flex-col relative bg-[var(--ak-color-bg-app)]">
         {activeTab === 'INTAKE' && (
           <CaseIntakeAdmissionSection
             cases={cases}
@@ -469,26 +469,26 @@ export const App: React.FC = () => {
 
         {activeTab === 'BENCHMARK' && (
           <div className="flex-1 p-6 overflow-y-auto max-w-5xl mx-auto flex flex-col justify-center items-center text-center">
-            <div className="max-w-xl p-8 bg-white border border-slate-200 rounded-xl shadow-md hud-bracket">
-              <div className="w-12 h-12 rounded-lg bg-sky-50 border border-sky-200 flex items-center justify-center text-sky-600 mx-auto mb-4 shadow-xs">
-                <Scale className="w-6 h-6 text-sky-600" />
+            <div className="max-w-xl p-8 bg-white border border-[var(--ak-color-border-subtle)] rounded-xl shadow-md hud-bracket">
+              <div className="w-12 h-12 rounded-lg bg-[var(--ak-color-primary-soft)] border border-[var(--ak-color-border-subtle)] flex items-center justify-center text-[var(--ak-color-primary)] mx-auto mb-4 shadow-xs">
+                <Scale className="w-6 h-6 text-[var(--ak-color-primary)]" />
               </div>
-              <h3 className="text-lg font-bold text-slate-900 font-mono tracking-wide mb-2 uppercase">
+              <h3 className="text-lg font-bold text-[var(--ak-color-text-primary)] font-mono tracking-wide mb-2 uppercase">
                 Reinforcement Learning Policy Benchmark
               </h3>
-              <p className="text-xs text-slate-600 mb-6 leading-relaxed font-sans">
+              <p className="text-xs text-[var(--ak-color-text-secondary)] mb-6 leading-relaxed font-sans">
                 Evaluate unaligned Base Foundation Model (v0.1) against Physician-Guided RL DPO (v0.3) across multi-case diagnostic accuracy, test appropriateness, and contraindication avoidance.
               </p>
               <div className="flex flex-wrap items-center justify-center gap-3 font-mono">
                 <button
                   onClick={() => setIsBenchmarkOpen(true)}
-                  className="px-4 py-2.5 bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs rounded-md shadow-xs transition cursor-pointer"
+                  className="px-4 py-2.5 bg-[var(--ak-color-primary)] hover:bg-[var(--ak-color-primary)] text-white font-bold text-xs rounded-md shadow-xs transition cursor-pointer"
                 >
                   Launch Policy Benchmark Console
                 </button>
                 <button
                   onClick={() => setIsRLModalOpen(true)}
-                  className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold text-xs rounded-md border border-slate-300 transition cursor-pointer"
+                  className="px-4 py-2.5 bg-[var(--ak-color-bg-subtle)] hover:border-[var(--ak-color-border-subtle)] text-[var(--ak-color-text-primary)] font-semibold text-xs rounded-md border border-[var(--ak-color-border-subtle)] transition cursor-pointer"
                 >
                   Inspect DPO Preference Dataset
                 </button>

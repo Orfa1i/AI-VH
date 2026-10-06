@@ -276,7 +276,7 @@ export const DoctorChatModal: React.FC<DoctorChatModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-900/40 backdrop-blur-xs animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-[var(--ak-color-text-primary)]/40 backdrop-blur-xs animate-in fade-in duration-200">
       <div className="bg-[var(--ak-color-bg-surface)] border border-[var(--ak-color-border-subtle)] w-full max-w-4xl h-[90vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden text-[var(--ak-color-text-primary)]">
         {/* Header */}
         <div className="p-4 sm:p-5 border-b border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-subtle)] flex items-center justify-between shrink-0">

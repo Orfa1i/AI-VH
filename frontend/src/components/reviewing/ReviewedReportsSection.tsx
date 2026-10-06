@@ -344,7 +344,7 @@ export const ReviewedReportsSection: React.FC<ReviewedReportsSectionProps> = ({
                       <span className="caption" style={{ color: 'var(--text-tertiary)' }}>
                         {item.physician_name || 'Attending Physician'}
                       </span>
-                      <span className="ak-num" style={{ fontWeight: 700, color: '#EAB308' }}>
+                      <span className="ak-num" style={{ fontWeight: 700, color: 'var(--ak-color-warning)' }}>
                         {item.overall_score}/5 ★
                       </span>
                     </div>
@@ -394,7 +394,7 @@ export const ReviewedReportsSection: React.FC<ReviewedReportsSectionProps> = ({
                   </div>
 
                   <Badge variant="warning">
-                    <Star className="w-3.5 h-3.5" style={{ marginRight: 4, fill: '#EAB308', display: 'inline-block' }} />
+                    <Star className="w-3.5 h-3.5" style={{ marginRight: 4, fill: 'var(--ak-color-warning)', display: 'inline-block' }} />
                     {activeItem.overall_score}.0 / 5.0 Rating
                   </Badge>
                 </div>

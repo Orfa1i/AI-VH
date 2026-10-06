@@ -44,7 +44,7 @@ export const CaseSelector: React.FC<CaseSelectorProps> = ({
   onToggleAudio,
 }) => {
   return (
-    <header className="h-16 px-6 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 flex items-center justify-between z-30 shrink-0">
+    <header className="h-16 px-6 bg-[var(--ak-color-text-primary)]/90 backdrop-blur-md border-b text-[var(--ak-color-text-primary)] flex items-center justify-between z-30 shrink-0">
       {/* Brand & System Title */}
       <div className="flex items-center gap-3">
         <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-sky-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-sky-500/20 text-white font-bold">
@@ -52,10 +52,10 @@ export const CaseSelector: React.FC<CaseSelectorProps> = ({
         </div>
         <div>
           <div className="flex items-center gap-2">
-            <span className="text-sm font-black tracking-wider text-slate-100 uppercase">
+            <span className="text-sm font-black tracking-wider text-[var(--ak-color-text-muted)] uppercase">
               AI Virtual Hospital
             </span>
-            <span className="px-2 py-0.5 rounded-full bg-[var(--ak-color-primary-soft)]0/10 text-sky-400 border border-sky-500/30 text-[10px] font-mono font-semibold">
+            <span className="px-2 py-0.5 rounded-full bg-[var(--ak-color-primary-soft)]0/10 text-[var(--ak-color-primary)] border bg-[var(--ak-color-primary)]/30 text-[10px] font-mono font-semibold">
               CLINICAL AI 4-BIT • RTX 4060
             </span>
           </div>
@@ -67,16 +67,16 @@ export const CaseSelector: React.FC<CaseSelectorProps> = ({
 
       {/* Case Selector & Encounter Launcher */}
       <div className="flex items-center gap-2.5">
-        <div className="flex items-center gap-2 bg-slate-800/80 px-3 py-1.5 rounded-xl border border-slate-700 text-xs">
+        <div className="flex items-center gap-2 bg-[var(--ak-color-text-primary)]/80 px-3 py-1.5 rounded-xl border text-[var(--ak-color-text-secondary)] text-xs">
           <span className="text-[var(--ak-color-text-muted)] font-semibold">Case:</span>
           <select
             value={selectedCaseId}
             onChange={(e) => onSelectCase(e.target.value)}
             disabled={isRunning}
-            className="bg-transparent text-slate-200 font-medium focus:outline-none cursor-pointer"
+            className="bg-transparent text-[var(--ak-color-text-muted)] font-medium focus:outline-none cursor-pointer"
           >
             {cases.map((c) => (
-              <option key={c.id} value={c.id} className="bg-slate-900 text-slate-200">
+              <option key={c.id} value={c.id} className="bg-[var(--ak-color-text-primary)] text-[var(--ak-color-text-muted)]">
                 {c.id}: {c.name} ({c.chief_complaint.slice(0, 30)}...)
               </option>
             ))}
@@ -104,7 +104,7 @@ export const CaseSelector: React.FC<CaseSelectorProps> = ({
         {onOpenConsult && (
           <button
             onClick={onOpenConsult}
-            className="px-3 py-2 rounded-xl bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-700/70 text-emerald-300 text-xs font-bold shadow-lg shadow-emerald-900/30 flex items-center gap-1 cursor-pointer transition-all"
+            className="px-3 py-2 rounded-xl bg-[var(--ak-color-text-primary)]/80 hover:text-[var(--ak-color-success)] border text-[var(--ak-color-success)]/70 border-[var(--ak-color-border-subtle)] text-xs font-bold shadow-lg shadow-emerald-900/30 flex items-center gap-1 cursor-pointer transition-all"
           >
             <span>🩺</span>
             <span>IM Consult</span>
@@ -114,9 +114,9 @@ export const CaseSelector: React.FC<CaseSelectorProps> = ({
         {onOpenBenchmark && (
           <button
             onClick={onOpenBenchmark}
-            className="px-3 py-2 rounded-xl bg-purple-950/80 hover:bg-purple-900 border border-purple-700/70 text-purple-300 text-xs font-bold shadow-lg shadow-purple-900/30 flex items-center gap-1 cursor-pointer transition-all"
+            className="px-3 py-2 rounded-xl bg-[var(--ak-color-text-primary)]/80 hover:text-[var(--ak-color-primary)] border text-[var(--ak-color-primary)]/70 border-[var(--ak-color-border-subtle)] text-xs font-bold shadow-lg shadow-purple-900/30 flex items-center gap-1 cursor-pointer transition-all"
           >
-            <Award className="w-3.5 h-3.5 text-purple-400" />
+            <Award className="w-3.5 h-3.5 text-[var(--ak-color-primary)]" />
             <span>Policy Benchmark</span>
           </button>
         )}
@@ -124,9 +124,9 @@ export const CaseSelector: React.FC<CaseSelectorProps> = ({
         {onOpenRLDataset && (
           <button
             onClick={onOpenRLDataset}
-            className="px-3 py-2 rounded-xl bg-indigo-950/80 hover:bg-indigo-900 border border-indigo-700/70 text-indigo-300 text-xs font-bold shadow-lg shadow-indigo-900/30 flex items-center gap-1 cursor-pointer transition-all"
+            className="px-3 py-2 rounded-xl bg-[var(--ak-color-text-primary)]/80 hover:text-[var(--ak-color-primary)] border text-[var(--ak-color-primary)]/70 border-[var(--ak-color-border-subtle)] text-xs font-bold shadow-lg shadow-indigo-900/30 flex items-center gap-1 cursor-pointer transition-all"
           >
-            <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+            <Sparkles className="w-3.5 h-3.5 text-[var(--ak-color-primary)]" />
             <span>RL Corpus</span>
           </button>
         )}
@@ -137,8 +137,8 @@ export const CaseSelector: React.FC<CaseSelectorProps> = ({
             title={isAudioMuted ? 'Unmute Agent Voices' : 'Mute Agent Voices'}
             className={`p-2 rounded-xl border text-xs font-semibold cursor-pointer transition-all ${
               isAudioMuted
-                ? 'bg-slate-800 text-[var(--ak-color-text-muted)] border-slate-700 hover:text-slate-200'
-                : 'bg-emerald-950/80 text-emerald-300 border-emerald-700/70 shadow-lg shadow-emerald-900/30'
+                ? 'bg-[var(--ak-color-text-primary)] text-[var(--ak-color-text-muted)] text-[var(--ak-color-text-secondary)] hover:text-[var(--ak-color-text-muted)]'
+                : 'bg-[var(--ak-color-text-primary)]/80 border-[var(--ak-color-border-subtle)] text-[var(--ak-color-success)]/70 shadow-lg shadow-emerald-900/30'
             }`}
           >
             {isAudioMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
@@ -148,13 +148,13 @@ export const CaseSelector: React.FC<CaseSelectorProps> = ({
 
 
       {/* View Switcher Tabs */}
-      <div className="flex items-center bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs font-semibold">
+      <div className="flex items-center bg-[var(--ak-color-text-primary)] p-1 rounded-xl border text-[var(--ak-color-text-primary)] text-xs font-semibold">
         <button
           onClick={() => onChangeView('HOSPITAL_3D')}
           className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg transition-all cursor-pointer ${
             activeView === 'HOSPITAL_3D'
               ? 'bg-[var(--ak-color-primary-soft)]0 text-white shadow-md shadow-sky-500/20'
-              : 'text-[var(--ak-color-text-muted)] hover:text-slate-200'
+              : 'text-[var(--ak-color-text-muted)] hover:text-[var(--ak-color-text-muted)]'
           }`}
         >
           <Hospital className="w-3.5 h-3.5" />
@@ -166,7 +166,7 @@ export const CaseSelector: React.FC<CaseSelectorProps> = ({
           className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg transition-all cursor-pointer ${
             activeView === 'PHYSICIAN_REVIEW'
               ? 'bg-[var(--ak-color-primary-soft)]0 text-white shadow-md shadow-sky-500/20'
-              : 'text-[var(--ak-color-text-muted)] hover:text-slate-200'
+              : 'text-[var(--ak-color-text-muted)] hover:text-[var(--ak-color-text-muted)]'
           }`}
         >
           <ClipboardCheck className="w-3.5 h-3.5" />
@@ -176,7 +176,7 @@ export const CaseSelector: React.FC<CaseSelectorProps> = ({
               className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
                 activeView === 'PHYSICIAN_REVIEW'
                   ? 'bg-white/20 text-white'
-                  : 'bg-[var(--ak-color-primary-soft)]0/20 text-sky-400 border border-sky-500/40'
+                  : 'bg-[var(--ak-color-primary-soft)]0/20 text-[var(--ak-color-primary)] border bg-[var(--ak-color-primary)]/40'
               }`}
             >
               {reportsCount}

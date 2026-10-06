@@ -22,8 +22,8 @@ export const DepartmentBoard: React.FC<DepartmentBoardProps> = ({ runs, selected
 
   return (
     <div className="space-y-3">
-      <p className="text-[11px] font-mono text-slate-600">
-        Mode: <span className="font-bold text-sky-700">{mode === 'live' ? 'Live' : 'Replay'}</span>
+      <p className="text-[11px] font-mono text-[var(--ak-color-text-secondary)]">
+        Mode: <span className="font-bold text-[var(--ak-color-primary)]">{mode === 'live' ? 'Live' : 'Replay'}</span>
       </p>
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
         {DEPARTMENTS.map((department) => {
@@ -32,17 +32,17 @@ export const DepartmentBoard: React.FC<DepartmentBoardProps> = ({ runs, selected
             <section
               key={department}
               data-testid={`department-${department}`}
-              className="bg-white border border-slate-200 rounded-xl shadow-md overflow-hidden"
+              className="bg-white border border-[var(--ak-color-border-subtle)] rounded-xl shadow-md overflow-hidden"
             >
-              <header className="px-3 py-2 border-b border-slate-200 flex items-center gap-2">
-                <h3 className="text-xs font-mono font-bold uppercase tracking-wide text-slate-900">
+              <header className="px-3 py-2 border-b border-[var(--ak-color-border-subtle)] flex items-center gap-2">
+                <h3 className="text-xs font-mono font-bold uppercase tracking-wide text-[var(--ak-color-text-primary)]">
                   {department}
                 </h3>
-                <span className="ml-auto text-[11px] font-mono text-slate-600">{placed.length}</span>
+                <span className="ml-auto text-[11px] font-mono text-[var(--ak-color-text-secondary)]">{placed.length}</span>
               </header>
               <div className="p-2 space-y-2">
                 {placed.length === 0 && (
-                  <p className="px-1 py-2 text-[11px] font-sans text-slate-500">No active encounters.</p>
+                  <p className="px-1 py-2 text-[11px] font-sans text-[var(--ak-color-text-muted)]">No active encounters.</p>
                 )}
                 {placed.map((run) => (
                   <div key={run.run_id}>

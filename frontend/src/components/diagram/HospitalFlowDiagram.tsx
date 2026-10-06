@@ -197,7 +197,7 @@ export const HospitalFlowDiagram: React.FC<HospitalFlowDiagramProps> = ({
           <div className="flex-1 min-w-[220px] max-w-lg h-14 bg-[var(--ak-color-text-primary)] rounded-lg relative overflow-hidden flex items-center px-3">
             <div className="absolute top-1 left-2 font-mono text-[9px] text-[var(--ak-color-primary-soft)] tracking-wider flex items-center gap-2 z-10">
               <span className="font-medium text-white/90">Lead II • ECG 25mm/s</span>
-              <span className="text-emerald-300 font-medium">NSR Conduction</span>
+              <span className="border-[var(--ak-color-border-subtle)] font-medium">NSR Conduction</span>
             </div>
             <svg className="w-full h-8 stroke-white/80" fill="none" preserveAspectRatio="none" viewBox="0 0 500 40">
               <path

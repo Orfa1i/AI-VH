@@ -37,7 +37,7 @@ export const DepartmentStationModal: React.FC<DepartmentStationModalProps> = ({
   const currentCase = cases.find((c) => c.id === selectedCaseId) || (cases.length > 0 ? cases[0] : null);
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+    <div className="fixed inset-0 z-50 bg-[var(--ak-color-text-primary)]/40 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
       <div className="bg-[var(--ak-color-bg-surface)] border border-[var(--ak-color-border-subtle)] rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 text-[var(--ak-color-text-primary)]">
         {/* Header */}
         <div className="px-6 py-4 border-b border-[var(--ak-color-border-subtle)] flex items-center justify-between bg-[var(--ak-color-bg-subtle)]">

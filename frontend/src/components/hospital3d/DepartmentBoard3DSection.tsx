@@ -45,10 +45,10 @@ export const DepartmentBoard3DSection: React.FC = () => {
   return (
     <div className="flex-1 p-6 overflow-y-auto">
       <div className="max-w-6xl mx-auto space-y-4">
-        <div className="p-4 bg-white border border-slate-200 rounded-xl shadow-md hud-bracket">
+        <div className="p-4 bg-white border border-[var(--ak-color-border-subtle)] rounded-xl shadow-md hud-bracket">
           <div className="flex items-center gap-2 mb-3">
-            <Box className="w-4 h-4 text-sky-700" aria-hidden="true" />
-            <h1 className="text-sm font-mono font-bold uppercase tracking-wide text-slate-900">
+            <Box className="w-4 h-4 text-[var(--ak-color-primary)]" aria-hidden="true" />
+            <h1 className="text-sm font-mono font-bold uppercase tracking-wide text-[var(--ak-color-text-primary)]">
               3D hospital
             </h1>
           </div>
@@ -56,20 +56,20 @@ export const DepartmentBoard3DSection: React.FC = () => {
             <button
               type="button"
               onClick={loadScene}
-              className="px-4 py-1.5 text-xs font-mono font-bold bg-sky-700 hover:bg-sky-600 text-white rounded-md transition cursor-pointer"
+              className="px-4 py-1.5 text-xs font-mono font-bold text-[var(--ak-color-primary)] hover:bg-[var(--ak-color-primary)] text-white rounded-md transition cursor-pointer"
             >
               Load 3D scene
             </button>
           </div>
           {error !== null && (
-            <p role="alert" className="mt-2 text-xs font-sans text-red-800">
+            <p role="alert" className="mt-2 text-xs font-sans text-[var(--ak-color-danger)]">
               {error}
             </p>
           )}
         </div>
 
         {loaded && (
-          <div className="relative bg-white border border-slate-200 rounded-xl shadow-md overflow-hidden">
+          <div className="relative bg-white border border-[var(--ak-color-border-subtle)] rounded-xl shadow-md overflow-hidden">
             <div className="h-[420px]">
               <Scene3D
                 events={events}
@@ -83,15 +83,15 @@ export const DepartmentBoard3DSection: React.FC = () => {
                 data-testid="scene-loading"
                 className="absolute inset-0 flex items-center justify-center bg-white/80"
               >
-                <p className="text-sm font-mono text-slate-600">Loading 3D hospital…</p>
+                <p className="text-sm font-mono text-[var(--ak-color-text-secondary)]">Loading 3D hospital…</p>
               </div>
             )}
-            <div className="px-4 py-2 border-t border-slate-200 flex flex-wrap gap-1.5">
+            <div className="px-4 py-2 border-t border-[var(--ak-color-border-subtle)] flex flex-wrap gap-1.5">
               {DEPARTMENTS.map((department) => (
                 <span
                   key={department}
                   data-testid={`room-chip-${department}`}
-                  className="px-2 py-0.5 text-[11px] font-mono text-slate-600 border border-slate-200 rounded-full"
+                  className="px-2 py-0.5 text-[11px] font-mono text-[var(--ak-color-text-secondary)] border border-[var(--ak-color-border-subtle)] rounded-full"
                 >
                   {department}
                 </span>

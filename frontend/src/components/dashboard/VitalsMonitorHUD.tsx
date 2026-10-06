@@ -44,7 +44,7 @@ export const VitalsMonitorHUD: React.FC<VitalsMonitorHUDProps> = ({
 
       {/* Simulated ECG Sweep Line */}
       <div className="h-9 w-full bg-[var(--ak-color-text-primary)] rounded-lg mb-3 flex items-center justify-center overflow-hidden relative">
-        <svg className="w-full h-full text-emerald-300" viewBox="0 0 200 40" preserveAspectRatio="none">
+        <svg className="w-full h-full border-[var(--ak-color-border-subtle)]" viewBox="0 0 200 40" preserveAspectRatio="none">
           <path
             d="M 0 20 L 30 20 L 35 12 L 40 28 L 45 4 L 50 36 L 55 20 L 70 20 L 80 15 L 90 20 L 130 20 L 135 12 L 140 28 L 145 4 L 150 36 L 155 20 L 170 20 L 180 15 L 200 20"
             fill="none"

@@ -173,7 +173,7 @@ export const DemoPatientsSection: React.FC<DemoPatientsSectionProps> = ({
   return (
     <div className="flex-1 flex flex-col h-full bg-[var(--ak-color-bg-app)] overflow-hidden font-sans">
       {/* Disclaimer Banner */}
-      <div className="px-6 py-2.5 bg-[var(--ak-color-warning-soft)] border-b border-[var(--ak-color-border-subtle)] text-amber-900 text-xs font-mono flex items-center justify-between shrink-0 shadow-2xs">
+      <div className="px-6 py-2.5 bg-[var(--ak-color-warning-soft)] border-b border-[var(--ak-color-border-subtle)] text-[var(--ak-color-warning)] text-xs font-mono flex items-center justify-between shrink-0 shadow-2xs">
         <div className="flex items-center gap-2.5">
           <AlertTriangle className="w-4 h-4 text-[var(--ak-color-warning)] shrink-0" />
           <span>
@@ -182,10 +182,10 @@ export const DemoPatientsSection: React.FC<DemoPatientsSectionProps> = ({
           </span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-[10px] px-2 py-0.5 rounded bg-amber-200/60 font-semibold border border-[var(--ak-color-border-subtle)]">
+          <span className="text-[10px] px-2 py-0.5 rounded border-[var(--ak-color-border-subtle)]/60 font-semibold border border-[var(--ak-color-border-subtle)]">
             FHIR R4 SPEC
           </span>
-          <span className="text-[10px] px-2 py-0.5 rounded bg-amber-200/60 font-semibold border border-[var(--ak-color-border-subtle)]">
+          <span className="text-[10px] px-2 py-0.5 rounded border-[var(--ak-color-border-subtle)]/60 font-semibold border border-[var(--ak-color-border-subtle)]">
             OFFLINE CAPABLE
           </span>
         </div>
@@ -200,7 +200,7 @@ export const DemoPatientsSection: React.FC<DemoPatientsSectionProps> = ({
           <div>
             <h1 className="text-base font-bold text-[var(--ak-color-text-primary)] font-mono tracking-tight flex items-center gap-2">
               <span>SYNTHEA SYNTHETIC PATIENT REPOSITORY</span>
-              <span className="text-xs px-2 py-0.5 rounded-full bg-sky-100 text-[var(--ak-color-primary)] font-semibold border border-[var(--ak-color-border-subtle)]">
+              <span className="text-xs px-2 py-0.5 rounded-full bg-[var(--ak-color-primary-soft)] text-[var(--ak-color-primary)] font-semibold border border-[var(--ak-color-border-subtle)]">
                 {patients.length} Loaded
               </span>
             </h1>
@@ -219,7 +219,7 @@ export const DemoPatientsSection: React.FC<DemoPatientsSectionProps> = ({
               placeholder="Search name, diagnosis, MRN..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9 pr-3 py-1.5 text-xs font-mono rounded-md border border-[var(--ak-color-border-subtle)] focus:outline-none focus:ring-1 focus:ring-sky-500 bg-[var(--ak-color-bg-subtle)] w-64 text-[var(--ak-color-text-primary)]"
+              className="pl-9 pr-3 py-1.5 text-xs font-mono rounded-md border border-[var(--ak-color-border-subtle)] focus:outline-none focus:ring-1 focus:ring-[var(--ak-color-primary)] bg-[var(--ak-color-bg-subtle)] w-64 text-[var(--ak-color-text-primary)]"
             />
           </div>
 
@@ -257,7 +257,7 @@ export const DemoPatientsSection: React.FC<DemoPatientsSectionProps> = ({
               setGenError(null);
               setIsGenModalOpen(true);
             }}
-            className="px-3.5 py-2 rounded-md bg-sky-600 hover:bg-[var(--ak-color-primary-soft)]0 text-white font-mono font-bold text-xs flex items-center gap-1.5 shadow-xs transition cursor-pointer"
+            className="px-3.5 py-2 rounded-md bg-[var(--ak-color-primary)] hover:bg-[var(--ak-color-primary-soft)]0 text-white font-mono font-bold text-xs flex items-center gap-1.5 shadow-xs transition cursor-pointer"
           >
             <PlusCircle className="w-4 h-4" />
             <span>Generate Patients</span>
@@ -274,7 +274,7 @@ export const DemoPatientsSection: React.FC<DemoPatientsSectionProps> = ({
           </div>
           <button
             onClick={() => setToastMessage(null)}
-            className="text-[var(--ak-color-success)] hover:text-emerald-900"
+            className="text-[var(--ak-color-success)] hover:text-[var(--ak-color-success)]"
           >
             <X className="w-4 h-4" />
           </button>
@@ -298,7 +298,7 @@ export const DemoPatientsSection: React.FC<DemoPatientsSectionProps> = ({
               <div
                 key={patient.id}
                 onClick={() => setSelectedPatientId(patient.id)}
-                className="group bg-white border border-[var(--ak-color-border-subtle)] rounded-xl p-5 shadow-xs hover:border-sky-400 hover:shadow-md transition flex flex-col justify-between cursor-pointer"
+                className="group bg-white border border-[var(--ak-color-border-subtle)] rounded-xl p-5 shadow-xs hover:bg-[var(--ak-color-primary)] hover:shadow-md transition flex flex-col justify-between cursor-pointer"
               >
                 <div>
                   {/* Top Demographics Bar */}
@@ -344,7 +344,7 @@ export const DemoPatientsSection: React.FC<DemoPatientsSectionProps> = ({
                   </div>
 
                   {/* Resource Counters Grid */}
-                  <div className="grid grid-cols-4 gap-2 py-3 px-3 bg-[var(--ak-color-bg-subtle)] rounded-lg border border-slate-100 font-mono text-center mb-4">
+                  <div className="grid grid-cols-4 gap-2 py-3 px-3 bg-[var(--ak-color-bg-subtle)] rounded-lg border border-[var(--ak-color-border-subtle)] font-mono text-center mb-4">
                     <div>
                       <span className="text-[10px] text-[var(--ak-color-text-muted)] block">Encounters</span>
                       <span className="text-xs font-bold text-[var(--ak-color-text-primary)]">
@@ -373,13 +373,13 @@ export const DemoPatientsSection: React.FC<DemoPatientsSectionProps> = ({
                 </div>
 
                 {/* Bottom Actions */}
-                <div className="flex items-center gap-2 pt-3 border-t border-slate-100 font-mono">
+                <div className="flex items-center gap-2 pt-3 border-t border-[var(--ak-color-border-subtle)] font-mono">
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       setSelectedPatientId(patient.id);
                     }}
-                    className="flex-1 py-1.5 px-3 bg-[var(--ak-color-primary-soft)] hover:bg-sky-100 text-[var(--ak-color-primary)] text-xs font-bold rounded-md transition cursor-pointer flex items-center justify-center gap-1.5 border border-[var(--ak-color-border-subtle)]"
+                    className="flex-1 py-1.5 px-3 bg-[var(--ak-color-primary-soft)] hover:bg-[var(--ak-color-primary-soft)] text-[var(--ak-color-primary)] text-xs font-bold rounded-md transition cursor-pointer flex items-center justify-center gap-1.5 border border-[var(--ak-color-border-subtle)]"
                   >
                     <Clock className="w-3.5 h-3.5 text-[var(--ak-color-primary)]" />
                     <span>View Case Details</span>
@@ -390,7 +390,7 @@ export const DemoPatientsSection: React.FC<DemoPatientsSectionProps> = ({
                       e.stopPropagation();
                       handleAdmit(patient.id, patient.name);
                     }}
-                    className="py-1.5 px-3 bg-sky-600 hover:bg-[var(--ak-color-primary-soft)]0 text-white text-xs font-bold rounded-md transition cursor-pointer flex items-center justify-center gap-1 shadow-2xs"
+                    className="py-1.5 px-3 bg-[var(--ak-color-primary)] hover:bg-[var(--ak-color-primary-soft)]0 text-white text-xs font-bold rounded-md transition cursor-pointer flex items-center justify-center gap-1 shadow-2xs"
                     title="Admit directly into hospital wards"
                   >
                     <BedDouble className="w-3.5 h-3.5" />
@@ -405,7 +405,7 @@ export const DemoPatientsSection: React.FC<DemoPatientsSectionProps> = ({
 
       {/* Generation Modal */}
       {isGenModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--ak-color-text-primary)]/60 backdrop-blur-xs p-4 overflow-y-auto">
           <div className="relative w-full max-w-lg bg-white border border-[var(--ak-color-border-subtle)] rounded-xl shadow-2xl overflow-hidden font-sans p-6">
             <div className="flex items-center justify-between pb-3 border-b border-[var(--ak-color-border-subtle)] mb-4">
               <div className="flex items-center gap-2.5">
@@ -531,7 +531,7 @@ export const DemoPatientsSection: React.FC<DemoPatientsSectionProps> = ({
                 <button
                   type="submit"
                   disabled={isGenerating}
-                  className="px-4 py-2 rounded bg-sky-600 hover:bg-[var(--ak-color-primary-soft)]0 text-white font-bold transition cursor-pointer flex items-center gap-1.5 shadow-xs disabled:opacity-50"
+                  className="px-4 py-2 rounded bg-[var(--ak-color-primary)] hover:bg-[var(--ak-color-primary-soft)]0 text-white font-bold transition cursor-pointer flex items-center gap-1.5 shadow-xs disabled:opacity-50"
                 >
                   <Sparkles className="w-3.5 h-3.5" />
                   <span>{isGenerating ? 'Generating...' : 'Run Generator'}</span>

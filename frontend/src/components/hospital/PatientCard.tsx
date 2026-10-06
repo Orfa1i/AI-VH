@@ -25,41 +25,41 @@ export const PatientCard: React.FC<PatientCardProps> = ({ runId, caseId, events,
   const status = encounterStatus(events);
   const summary = reportSummary(events);
   return (
-    <div className="border border-slate-200 rounded-md overflow-hidden">
+    <div className="border border-[var(--ak-color-border-subtle)] rounded-md overflow-hidden">
       <button
         type="button"
         onClick={onToggle}
         aria-expanded={expanded ? 'true' : 'false'}
-        className="w-full px-3 py-2 text-left cursor-pointer hover:bg-slate-100"
+        className="w-full px-3 py-2 text-left cursor-pointer hover:bg-[var(--ak-color-bg-subtle)]"
       >
-        <span className="block text-xs font-mono font-semibold text-slate-900">{runId}</span>
-        <span className="block text-[11px] font-mono text-slate-600">
+        <span className="block text-xs font-mono font-semibold text-[var(--ak-color-text-primary)]">{runId}</span>
+        <span className="block text-[11px] font-mono text-[var(--ak-color-text-secondary)]">
           {caseId} • {status}
         </span>
       </button>
       {expanded && (
         <div className="px-3 pb-3 space-y-3">
           <section>
-            <h4 className="text-[11px] font-mono font-bold uppercase tracking-wide text-slate-900">
+            <h4 className="text-[11px] font-mono font-bold uppercase tracking-wide text-[var(--ak-color-text-primary)]">
               Encounter timeline
             </h4>
             <ol data-testid={`timeline-${runId}`} className="mt-1 space-y-1">
               {events.map((event) => (
-                <li key={event.event_id} className="text-xs font-sans text-slate-600">
-                  <span className="font-mono text-slate-500">t+{event.sim_time}m</span>{' '}
+                <li key={event.event_id} className="text-xs font-sans text-[var(--ak-color-text-secondary)]">
+                  <span className="font-mono text-[var(--ak-color-text-muted)]">t+{event.sim_time}m</span>{' '}
                   <span data-testid="timeline-action">{event.action}</span>
                 </li>
               ))}
             </ol>
           </section>
           <section>
-            <h4 className="text-[11px] font-mono font-bold uppercase tracking-wide text-slate-900">
+            <h4 className="text-[11px] font-mono font-bold uppercase tracking-wide text-[var(--ak-color-text-primary)]">
               Agent activity
             </h4>
             <ul data-testid={`activity-${runId}`} className="mt-1 space-y-1">
               {events.map((event) => (
-                <li key={event.event_id} className="text-xs font-sans text-slate-600">
-                  <span data-testid="activity-actor" className="font-mono text-slate-500">
+                <li key={event.event_id} className="text-xs font-sans text-[var(--ak-color-text-secondary)]">
+                  <span data-testid="activity-actor" className="font-mono text-[var(--ak-color-text-muted)]">
                     {event.actor}
                   </span>{' '}
                   → {event.action}
@@ -69,10 +69,10 @@ export const PatientCard: React.FC<PatientCardProps> = ({ runId, caseId, events,
           </section>
           {summary !== null && (
             <section>
-              <h4 className="text-[11px] font-mono font-bold uppercase tracking-wide text-slate-900">
+              <h4 className="text-[11px] font-mono font-bold uppercase tracking-wide text-[var(--ak-color-text-primary)]">
                 Filed report
               </h4>
-              <p className="text-xs text-slate-600 font-sans">{summary}</p>
+              <p className="text-xs text-[var(--ak-color-text-secondary)] font-sans">{summary}</p>
             </section>
           )}
         </div>

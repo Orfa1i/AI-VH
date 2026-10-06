@@ -114,7 +114,7 @@ export const InternalMedicineConsultModal: React.FC<InternalMedicineConsultProps
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-4 overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--ak-color-text-primary)]/40 backdrop-blur-xs p-4 overflow-y-auto">
       <div className="bg-[var(--ak-color-bg-surface)] border border-[var(--ak-color-border-subtle)] w-full max-w-4xl rounded-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden text-[var(--ak-color-text-primary)] animate-in fade-in zoom-in-95 duration-200">
         {/* Modal Header */}
         <div className="p-5 border-b border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-subtle)] flex items-center justify-between shrink-0">

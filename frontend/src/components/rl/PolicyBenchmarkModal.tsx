@@ -349,12 +349,12 @@ export const PolicyBenchmarkModal: React.FC<PolicyBenchmarkModalProps> = ({
   const currentCase = report.case_comparisons[selectedCaseIdx] || report.case_comparisons[0];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[var(--ak-color-text-primary)]/40 backdrop-blur-xs animate-in fade-in duration-200">
       <div className="relative w-full max-w-5xl bg-white border border-[var(--ak-color-border-subtle)] rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] text-[var(--ak-color-text-primary)]">
         {/* Header */}
         <div className="px-6 py-4 border-b border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-subtle)] flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-purple-50 border border-[var(--ak-color-border-subtle)] flex items-center justify-center text-[var(--ak-color-primary)] font-bold shadow-xs">
+            <div className="w-10 h-10 rounded-xl bg-[var(--ak-color-primary-soft)] border border-[var(--ak-color-border-subtle)] flex items-center justify-center text-[var(--ak-color-primary)] font-bold shadow-xs">
               <Award className="w-5 h-5" />
             </div>
             <div>
@@ -362,7 +362,7 @@ export const PolicyBenchmarkModal: React.FC<PolicyBenchmarkModalProps> = ({
                 <h2 className="text-base font-bold text-[var(--ak-color-text-primary)]">
                   Comparative Policy Benchmark: Base vs RL DPO Agent
                 </h2>
-                <span className="px-2 py-0.5 rounded-full bg-purple-50 text-[var(--ak-color-primary)] border border-purple-300 text-[10px] font-mono font-semibold">
+                <span className="px-2 py-0.5 rounded-full bg-[var(--ak-color-primary-soft)] text-[var(--ak-color-primary)] border border-[var(--ak-color-border-subtle)] text-[10px] font-mono font-semibold">
                   EMPIRICAL EVALUATION
                 </span>
               </div>
@@ -442,7 +442,7 @@ export const PolicyBenchmarkModal: React.FC<PolicyBenchmarkModalProps> = ({
             }}
             className={`pb-2 pt-1 border-b-2 transition-all cursor-pointer flex items-center gap-1.5 ${
               activeTab === 'LIVE_INFERENCE'
-                ? 'border-emerald-600 text-[var(--ak-color-success)] font-bold'
+                ? 'bg-[var(--ak-color-success)] text-[var(--ak-color-success)] font-bold'
                 : 'border-transparent text-[var(--ak-color-text-muted)] hover:text-[var(--ak-color-text-primary)]'
             }`}
           >
@@ -530,7 +530,7 @@ export const PolicyBenchmarkModal: React.FC<PolicyBenchmarkModalProps> = ({
                   </div>
                   <div className="flex items-baseline gap-2">
                     <span className="text-2xl font-black text-[var(--ak-color-success)]">0 Missed</span>
-                    <span className="text-xs text-rose-500 line-through font-mono">3 Missed</span>
+                    <span className="text-xs text-[var(--ak-color-danger)] line-through font-mono">3 Missed</span>
                   </div>
                   <div className="mt-2 text-[11px] font-semibold text-[var(--ak-color-success)] flex items-center gap-1">
                     <span>100% Elimination</span>
@@ -634,11 +634,11 @@ export const PolicyBenchmarkModal: React.FC<PolicyBenchmarkModalProps> = ({
                     <span className="px-2 py-0.5 rounded bg-[var(--ak-color-primary-soft)] text-[var(--ak-color-primary)] border border-[var(--ak-color-border-subtle)] text-[10px] font-mono font-semibold">
                       {currentCase.case_id}
                     </span>
-                    <span className="px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-mono font-semibold">
+                    <span className="px-2 py-0.5 rounded bg-[var(--ak-color-warning-soft)] text-[var(--ak-color-warning)] border border-[var(--ak-color-border-subtle)] text-[10px] font-mono font-semibold">
                       {currentCase.acuity}
                     </span>
                   </div>
-                  <p className="text-xs text-slate-600 mt-1">
+                  <p className="text-xs text-[var(--ak-color-text-secondary)] mt-1">
                     <span className="font-semibold text-[var(--ak-color-text-primary)]">True Diagnosis:</span>{' '}
                     {currentCase.true_diagnosis}
                   </p>
@@ -656,7 +656,7 @@ export const PolicyBenchmarkModal: React.FC<PolicyBenchmarkModalProps> = ({
                 <div className="p-4 rounded-xl bg-[var(--ak-color-warning-soft)]/60 border border-[var(--ak-color-border-subtle)] space-y-3">
                   <div className="flex items-center justify-between border-b border-[var(--ak-color-border-subtle)] pb-2">
                     <div>
-                      <div className="text-xs font-bold text-rose-900">Base Foundation Model (v0.1)</div>
+                      <div className="text-xs font-bold text-[var(--ak-color-danger)]">Base Foundation Model (v0.1)</div>
                       <div className="text-[10px] text-[var(--ak-color-text-muted)]">Zero-Shot Baseline</div>
                     </div>
                     <div className="text-right">
@@ -671,7 +671,7 @@ export const PolicyBenchmarkModal: React.FC<PolicyBenchmarkModalProps> = ({
 
                   <div>
                     <div className="text-[11px] font-semibold text-[var(--ak-color-text-muted)]">Diagnosis Formulated:</div>
-                    <div className="text-xs font-bold text-rose-900 mt-0.5">
+                    <div className="text-xs font-bold text-[var(--ak-color-danger)] mt-0.5">
                       {currentCase.base_agent_metrics.primary_diagnosis}
                     </div>
                   </div>
@@ -686,7 +686,7 @@ export const PolicyBenchmarkModal: React.FC<PolicyBenchmarkModalProps> = ({
                   </div>
 
                   {currentCase.base_agent_metrics.contraindications_missed > 0 && (
-                    <div className="p-2 rounded-lg bg-[var(--ak-color-warning-soft)] border border-[var(--ak-color-border-subtle)] text-[11px] text-rose-900 flex items-center gap-1.5 font-medium">
+                    <div className="p-2 rounded-lg bg-[var(--ak-color-warning-soft)] border border-[var(--ak-color-border-subtle)] text-[11px] text-[var(--ak-color-danger)] flex items-center gap-1.5 font-medium">
                       <AlertTriangle className="w-3.5 h-3.5 text-[var(--ak-color-danger)] shrink-0" />
                       <span>
                         Missed {currentCase.base_agent_metrics.contraindications_missed} high-risk clinical
@@ -700,7 +700,7 @@ export const PolicyBenchmarkModal: React.FC<PolicyBenchmarkModalProps> = ({
                 <div className="p-4 rounded-xl bg-[var(--ak-color-success-soft)]/60 border border-[var(--ak-color-border-subtle)] space-y-3">
                   <div className="flex items-center justify-between border-b border-[var(--ak-color-border-subtle)] pb-2">
                     <div>
-                      <div className="text-xs font-bold text-emerald-900">RL DPO Aligned Model (v0.3)</div>
+                      <div className="text-xs font-bold text-[var(--ak-color-success)]">RL DPO Aligned Model (v0.3)</div>
                       <div className="text-[10px] text-[var(--ak-color-text-muted)]">Physician-Aligned Model</div>
                     </div>
                     <div className="text-right">
@@ -715,7 +715,7 @@ export const PolicyBenchmarkModal: React.FC<PolicyBenchmarkModalProps> = ({
 
                   <div>
                     <div className="text-[11px] font-semibold text-[var(--ak-color-text-muted)]">Diagnosis Formulated:</div>
-                    <div className="text-xs font-bold text-emerald-900 mt-0.5">
+                    <div className="text-xs font-bold text-[var(--ak-color-success)] mt-0.5">
                       {currentCase.rl_agent_metrics.primary_diagnosis}
                     </div>
                   </div>
@@ -729,7 +729,7 @@ export const PolicyBenchmarkModal: React.FC<PolicyBenchmarkModalProps> = ({
                     </ul>
                   </div>
 
-                  <div className="p-2 rounded-lg bg-[var(--ak-color-success-soft)] border border-[var(--ak-color-border-subtle)] text-[11px] text-emerald-900 flex items-center gap-1.5 font-medium">
+                  <div className="p-2 rounded-lg bg-[var(--ak-color-success-soft)] border border-[var(--ak-color-border-subtle)] text-[11px] text-[var(--ak-color-success)] flex items-center gap-1.5 font-medium">
                     <CheckCircle2 className="w-3.5 h-3.5 text-[var(--ak-color-success)] shrink-0" />
                     <span>
                       100% Guideline compliant with {currentCase.rl_agent_metrics.citations_count} Harrison's
@@ -772,7 +772,7 @@ export const PolicyBenchmarkModal: React.FC<PolicyBenchmarkModalProps> = ({
 
                   <div className="flex items-center gap-2">
                     <div className="px-3 py-1 rounded-lg bg-white border border-[var(--ak-color-border-subtle)] text-[11px] text-[var(--ak-color-text-secondary)] flex items-center gap-1.5 font-mono">
-                      <Zap className="w-3 h-3 text-amber-500" />
+                      <Zap className="w-3 h-3 text-[var(--ak-color-warning)]" />
                       <span>VRAM: ~4.15 GB / 8.00 GB</span>
                     </div>
                     {inferenceResult && (
@@ -846,7 +846,7 @@ export const PolicyBenchmarkModal: React.FC<PolicyBenchmarkModalProps> = ({
                     value={inferencePrompt}
                     onChange={(e) => setInferencePrompt(e.target.value)}
                     rows={3}
-                    className="w-full rounded-xl bg-white border border-[var(--ak-color-border-subtle)] p-3 text-xs text-[var(--ak-color-text-primary)] focus:outline-none focus:border-purple-500 font-mono resize-none leading-relaxed"
+                    className="w-full rounded-xl bg-white border border-[var(--ak-color-border-subtle)] p-3 text-xs text-[var(--ak-color-text-primary)] focus:outline-none focus:bg-[var(--ak-color-primary)] font-mono resize-none leading-relaxed"
                     placeholder="Enter clinical vignette, patient presentation, past medical history, and vital signs..."
                   />
                   <button
@@ -897,7 +897,7 @@ export const PolicyBenchmarkModal: React.FC<PolicyBenchmarkModalProps> = ({
                       <div className="space-y-3">
                         <div className="flex items-center justify-between border-b border-[var(--ak-color-border-subtle)] pb-2">
                           <div>
-                            <div className="text-xs font-bold text-rose-900 flex items-center gap-1.5">
+                            <div className="text-xs font-bold text-[var(--ak-color-danger)] flex items-center gap-1.5">
                               <span>{inferenceResult.base_model_output.model_version}</span>
                             </div>
                             <div className="text-[10px] text-[var(--ak-color-text-muted)]">Zero-Shot Foundation Weights (4-bit NF4)</div>
@@ -914,7 +914,7 @@ export const PolicyBenchmarkModal: React.FC<PolicyBenchmarkModalProps> = ({
 
                         <div>
                           <div className="text-[11px] font-semibold text-[var(--ak-color-text-muted)]">Formulated Diagnosis:</div>
-                          <div className="text-xs font-bold text-rose-900 mt-0.5">
+                          <div className="text-xs font-bold text-[var(--ak-color-danger)] mt-0.5">
                             {inferenceResult.base_model_output.primary_diagnosis}
                             <span className="ml-2 text-[10px] text-[var(--ak-color-text-muted)]">
                               (Confidence: {(inferenceResult.base_model_output.confidence * 100).toFixed(0)}%)
@@ -939,7 +939,7 @@ export const PolicyBenchmarkModal: React.FC<PolicyBenchmarkModalProps> = ({
                                   key={i}
                                   className={`p-1.5 rounded text-[11px] flex items-start gap-1.5 ${
                                     isDangerous
-                                      ? 'bg-[var(--ak-color-warning-soft)] border border-[var(--ak-color-border-subtle)] text-rose-900 font-medium'
+                                      ? 'bg-[var(--ak-color-warning-soft)] border border-[var(--ak-color-border-subtle)] text-[var(--ak-color-danger)] font-medium'
                                       : 'bg-white border border-[var(--ak-color-border-subtle)] text-[var(--ak-color-text-secondary)]'
                                   }`}
                                 >
@@ -954,7 +954,7 @@ export const PolicyBenchmarkModal: React.FC<PolicyBenchmarkModalProps> = ({
 
                       {/* Flagged Contraindications */}
                       {inferenceResult.base_model_output.contraindications_flagged.length > 0 && (
-                        <div className="p-2.5 rounded-lg bg-[var(--ak-color-warning-soft)] border border-[var(--ak-color-border-subtle)] text-[11px] text-rose-900 space-y-1">
+                        <div className="p-2.5 rounded-lg bg-[var(--ak-color-warning-soft)] border border-[var(--ak-color-border-subtle)] text-[11px] text-[var(--ak-color-danger)] space-y-1">
                           <div className="flex items-center gap-1.5 font-bold text-[var(--ak-color-danger)]">
                             <AlertTriangle className="w-3.5 h-3.5 text-[var(--ak-color-danger)] shrink-0" />
                             <span>Adverse Safety Contraindication Detected:</span>
@@ -973,7 +973,7 @@ export const PolicyBenchmarkModal: React.FC<PolicyBenchmarkModalProps> = ({
                       <div className="space-y-3">
                         <div className="flex items-center justify-between border-b border-[var(--ak-color-border-subtle)] pb-2">
                           <div>
-                            <div className="text-xs font-bold text-emerald-900 flex items-center gap-1.5">
+                            <div className="text-xs font-bold text-[var(--ak-color-success)] flex items-center gap-1.5">
                               <span>{inferenceResult.dpo_model_output.model_version}</span>
                             </div>
                             <div className="text-[10px] text-[var(--ak-color-text-muted)]">Trained with DPO LoRA + Harrison's RAG</div>
@@ -990,7 +990,7 @@ export const PolicyBenchmarkModal: React.FC<PolicyBenchmarkModalProps> = ({
 
                         <div>
                           <div className="text-[11px] font-semibold text-[var(--ak-color-text-muted)]">Formulated Diagnosis:</div>
-                          <div className="text-xs font-bold text-emerald-900 mt-0.5">
+                          <div className="text-xs font-bold text-[var(--ak-color-success)] mt-0.5">
                             {inferenceResult.dpo_model_output.primary_diagnosis}
                             <span className="ml-2 text-[10px] text-[var(--ak-color-success)] font-semibold font-mono">
                               (Confidence: {(inferenceResult.dpo_model_output.confidence * 100).toFixed(0)}%)
@@ -1011,7 +1011,7 @@ export const PolicyBenchmarkModal: React.FC<PolicyBenchmarkModalProps> = ({
                             {inferenceResult.dpo_model_output.treatment_plan.map((t, i) => (
                               <li
                                 key={i}
-                                className="p-1.5 rounded text-[11px] flex items-start gap-1.5 bg-[var(--ak-color-success-soft)]/50 border border-[var(--ak-color-border-subtle)] text-emerald-900"
+                                className="p-1.5 rounded text-[11px] flex items-start gap-1.5 bg-[var(--ak-color-success-soft)]/50 border border-[var(--ak-color-border-subtle)] text-[var(--ak-color-success)]"
                               >
                                 <CheckCircle2 className="w-3 h-3 text-[var(--ak-color-success)] shrink-0 mt-0.5" />
                                 <span>{t}</span>

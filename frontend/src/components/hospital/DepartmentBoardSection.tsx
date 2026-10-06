@@ -88,23 +88,23 @@ export const DepartmentBoardSection: React.FC = () => {
   return (
     <div className="flex-1 p-6 overflow-y-auto">
       <div className="max-w-6xl mx-auto space-y-4">
-        <div className="p-4 bg-white border border-slate-200 rounded-xl shadow-md hud-bracket">
+        <div className="p-4 bg-white border border-[var(--ak-color-border-subtle)] rounded-xl shadow-md hud-bracket">
           <div className="flex items-center gap-2 mb-3">
-            <Building2 className="w-4 h-4 text-sky-700" aria-hidden="true" />
-            <h1 className="text-sm font-mono font-bold uppercase tracking-wide text-slate-900">
+            <Building2 className="w-4 h-4 text-[var(--ak-color-primary)]" aria-hidden="true" />
+            <h1 className="text-sm font-mono font-bold uppercase tracking-wide text-[var(--ak-color-text-primary)]">
               Department board
             </h1>
           </div>
           <div className="flex flex-wrap items-end gap-2">
             <div>
-              <label htmlFor="stream-mode" className="block text-[11px] font-mono text-slate-500 mb-1">
+              <label htmlFor="stream-mode" className="block text-[11px] font-mono text-[var(--ak-color-text-muted)] mb-1">
                 Stream mode
               </label>
               <select
                 id="stream-mode"
                 value={mode}
                 onChange={(event) => setMode(event.target.value as StreamMode)}
-                className="text-xs border border-slate-300 rounded-md px-2 py-1.5 bg-white text-slate-900"
+                className="text-xs border border-[var(--ak-color-border-subtle)] rounded-md px-2 py-1.5 bg-white text-[var(--ak-color-text-primary)]"
               >
                 <option value="replay">Replay</option>
                 <option value="live">Live</option>
@@ -113,13 +113,13 @@ export const DepartmentBoardSection: React.FC = () => {
             <button
               type="button"
               onClick={loadStream}
-              className="px-4 py-1.5 text-xs font-mono font-bold bg-sky-700 hover:bg-sky-600 text-white rounded-md transition cursor-pointer"
+              className="px-4 py-1.5 text-xs font-mono font-bold text-[var(--ak-color-primary)] hover:bg-[var(--ak-color-primary)] text-white rounded-md transition cursor-pointer"
             >
               Load stream
             </button>
           </div>
           {error !== null && (
-            <p role="alert" className="mt-2 text-xs font-sans text-red-800">
+            <p role="alert" className="mt-2 text-xs font-sans text-[var(--ak-color-danger)]">
               {error}
             </p>
           )}

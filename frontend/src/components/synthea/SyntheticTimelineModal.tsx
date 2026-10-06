@@ -156,17 +156,17 @@ export const SyntheticTimelineModal: React.FC<SyntheticTimelineModalProps> = ({
   const getEventBadgeStyle = (category: string) => {
     switch (category) {
       case 'encounter':
-        return 'bg-blue-50 text-blue-800 border-blue-200';
+        return 'bg-[var(--ak-color-primary-soft)] text-[var(--ak-color-primary)] border-[var(--ak-color-border-subtle)]';
       case 'condition':
         return 'bg-[var(--ak-color-warning-soft)] text-[var(--ak-color-warning)] border-[var(--ak-color-border-subtle)]';
       case 'observation':
         return 'bg-[var(--ak-color-success-soft)] text-[var(--ak-color-success)] border-[var(--ak-color-border-subtle)]';
       case 'medication':
-        return 'bg-purple-50 text-[var(--ak-color-primary)] border-[var(--ak-color-border-subtle)]';
+        return 'bg-[var(--ak-color-primary-soft)] text-[var(--ak-color-primary)] border-[var(--ak-color-border-subtle)]';
       case 'allergy':
         return 'bg-[var(--ak-color-warning-soft)] text-[var(--ak-color-danger)] border-[var(--ak-color-border-subtle)]';
       case 'procedure':
-        return 'bg-teal-50 text-teal-800 border-teal-200';
+        return 'bg-[var(--ak-color-primary-soft)] text-[var(--ak-color-primary)] border-[var(--ak-color-border-subtle)]';
       case 'immunization':
         return 'bg-[var(--ak-color-primary-soft)] text-[var(--ak-color-primary)] border-[var(--ak-color-border-subtle)]';
       case 'careplan':
@@ -179,7 +179,7 @@ export const SyntheticTimelineModal: React.FC<SyntheticTimelineModalProps> = ({
   const getEventIcon = (category: string) => {
     switch (category) {
       case 'encounter':
-        return <Building2 className="w-4 h-4 text-blue-600" />;
+        return <Building2 className="w-4 h-4 text-[var(--ak-color-primary)]" />;
       case 'condition':
         return <AlertTriangle className="w-4 h-4 text-[var(--ak-color-warning)]" />;
       case 'observation':
@@ -189,7 +189,7 @@ export const SyntheticTimelineModal: React.FC<SyntheticTimelineModalProps> = ({
       case 'allergy':
         return <ShieldAlert className="w-4 h-4 text-[var(--ak-color-danger)]" />;
       case 'procedure':
-        return <FileSpreadsheet className="w-4 h-4 text-teal-600" />;
+        return <FileSpreadsheet className="w-4 h-4 text-[var(--ak-color-primary)]" />;
       case 'immunization':
         return <Syringe className="w-4 h-4 text-[var(--ak-color-primary)]" />;
       case 'careplan':
@@ -200,12 +200,12 @@ export const SyntheticTimelineModal: React.FC<SyntheticTimelineModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--ak-color-text-primary)]/60 backdrop-blur-xs p-4 overflow-y-auto">
       <div className="relative w-full max-w-4xl max-h-[92vh] flex flex-col bg-white border border-[var(--ak-color-border-subtle)] rounded-xl shadow-2xl overflow-hidden font-sans">
         {/* Header */}
         <div className="px-6 py-4 bg-[var(--ak-color-bg-subtle)] border-b border-[var(--ak-color-border-subtle)] flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-sky-100 border border-[var(--ak-color-border-subtle)] flex items-center justify-center text-[var(--ak-color-primary)]">
+            <div className="w-10 h-10 rounded-lg bg-[var(--ak-color-primary-soft)] border border-[var(--ak-color-border-subtle)] flex items-center justify-center text-[var(--ak-color-primary)]">
               <Clock className="w-5 h-5 text-[var(--ak-color-primary)]" />
             </div>
             <div>
@@ -214,7 +214,7 @@ export const SyntheticTimelineModal: React.FC<SyntheticTimelineModalProps> = ({
                   {profile ? profile.name : 'Loading Patient Profile...'}
                 </h2>
                 {profile && (
-                  <span className="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-sky-100 text-[var(--ak-color-primary)] border border-[var(--ak-color-border-subtle)]">
+                  <span className="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-[var(--ak-color-primary-soft)] text-[var(--ak-color-primary)] border border-[var(--ak-color-border-subtle)]">
                     {profile.mrn}
                   </span>
                 )}
@@ -239,7 +239,7 @@ export const SyntheticTimelineModal: React.FC<SyntheticTimelineModalProps> = ({
             <button
               onClick={handleAdmitToHospital}
               disabled={isAdmitting}
-              className="px-3.5 py-1.5 text-xs font-mono font-bold rounded-md bg-sky-600 hover:bg-[var(--ak-color-primary-soft)]0 text-white transition shadow-xs cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+              className="px-3.5 py-1.5 text-xs font-mono font-bold rounded-md bg-[var(--ak-color-primary)] hover:bg-[var(--ak-color-primary-soft)]0 text-white transition shadow-xs cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
             >
               <BedDouble className="w-3.5 h-3.5" />
               <span>{isAdmitting ? 'Admitting...' : 'Admit to Hospital'}</span>
@@ -302,7 +302,7 @@ export const SyntheticTimelineModal: React.FC<SyntheticTimelineModalProps> = ({
                   profile.current_medications.map((m, i) => (
                     <span
                       key={i}
-                      className="px-1.5 py-0.5 rounded bg-purple-50 text-[var(--ak-color-primary)] border border-[var(--ak-color-border-subtle)] text-[10px] font-medium"
+                      className="px-1.5 py-0.5 rounded bg-[var(--ak-color-primary-soft)] text-[var(--ak-color-primary)] border border-[var(--ak-color-border-subtle)] text-[10px] font-medium"
                     >
                       {m.name}
                     </span>
@@ -378,14 +378,14 @@ export const SyntheticTimelineModal: React.FC<SyntheticTimelineModalProps> = ({
               onClick={() => setActiveFilter(key as EventFilter)}
               className={`px-2.5 py-1 rounded text-xs font-mono font-medium flex items-center gap-1.5 transition cursor-pointer whitespace-nowrap ${
                 activeFilter === key
-                  ? 'bg-slate-900 text-white shadow-xs'
+                  ? 'bg-[var(--ak-color-text-primary)] text-white shadow-xs'
                   : 'bg-white border border-[var(--ak-color-border-subtle)] text-[var(--ak-color-text-secondary)] hover:bg-[var(--ak-color-bg-subtle)]'
               }`}
             >
               <span>{label}</span>
               <span
                 className={`px-1 rounded-full text-[10px] ${
-                  activeFilter === key ? 'bg-slate-800 text-slate-200' : 'bg-[var(--ak-color-bg-subtle)] text-[var(--ak-color-text-muted)]'
+                  activeFilter === key ? 'bg-[var(--ak-color-text-primary)] text-[var(--ak-color-text-muted)]' : 'bg-[var(--ak-color-bg-subtle)] text-[var(--ak-color-text-muted)]'
                 }`}
               >
                 {count}
@@ -402,7 +402,7 @@ export const SyntheticTimelineModal: React.FC<SyntheticTimelineModalProps> = ({
               Loading FHIR R4 clinical timeline...
             </div>
           ) : showRawJson ? (
-            <div className="bg-slate-900 text-slate-100 p-4 rounded-lg font-mono text-xs overflow-x-auto max-h-[60vh]">
+            <div className="bg-[var(--ak-color-text-primary)] text-[var(--ak-color-text-muted)] p-4 rounded-lg font-mono text-xs overflow-x-auto max-h-[60vh]">
               <pre>{JSON.stringify(rawJson, null, 2)}</pre>
             </div>
           ) : filteredEvents.length === 0 ? (
@@ -410,7 +410,7 @@ export const SyntheticTimelineModal: React.FC<SyntheticTimelineModalProps> = ({
               No clinical events found for this filter category.
             </div>
           ) : (
-            <div className="relative pl-6 space-y-6 before:absolute before:left-3 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-200">
+            <div className="relative pl-6 space-y-6 before:absolute before:left-3 before:top-2 before:bottom-2 before:w-0.5 before:border-[var(--ak-color-border-subtle)]">
               {filteredEvents.map((event) => (
                 <div key={event.id} className="relative flex items-start gap-4 group">
                   {/* Timeline dot with icon */}
@@ -447,7 +447,7 @@ export const SyntheticTimelineModal: React.FC<SyntheticTimelineModalProps> = ({
                     )}
 
                     {/* Metadata & Details */}
-                    <div className="flex flex-wrap items-center gap-3 text-[11px] font-mono text-[var(--ak-color-text-muted)] pt-2 border-t border-slate-100">
+                    <div className="flex flex-wrap items-center gap-3 text-[11px] font-mono text-[var(--ak-color-text-muted)] pt-2 border-t border-[var(--ak-color-border-subtle)]">
                       {event.code && (
                         <div className="flex items-center gap-1">
                           <Tag className="w-3 h-3 text-[var(--ak-color-text-muted)]" />
@@ -497,7 +497,7 @@ export const SyntheticTimelineModal: React.FC<SyntheticTimelineModalProps> = ({
           </span>
           <button
             onClick={onClose}
-            className="px-4 py-1.5 bg-slate-200 hover:bg-slate-300 text-[var(--ak-color-text-primary)] rounded font-medium transition cursor-pointer"
+            className="px-4 py-1.5 border-[var(--ak-color-border-subtle)] hover:border-[var(--ak-color-border-subtle)] text-[var(--ak-color-text-primary)] rounded font-medium transition cursor-pointer"
           >
             Close Timeline
           </button>
