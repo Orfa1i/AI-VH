@@ -7,7 +7,7 @@ Tracking implementation of the Asklevia Design System and UI Kit across all 7 ph
 | **Phase 1: Audit** | Full codebase & design system audit, baseline counts, component mapping | **Completed** | `redesign/phase-1` | `AUDIT.md` produced. Exact baseline color count: 2,971. Zero code changes made. |
 | **Phase 2: Foundations** | Fonts, logos, tokens, base styles, CSS variables, `lint:brand` script | **Completed** | `redesign/phase-2` | Tokens & Asklevia CSS configured. Preloaded fonts, new favicon/OG metadata, global focus ring, lint:brand active (2,951 tracked). Build & Vitest pass (39/39). |
 | **Phase 3: Primitives** | Core UI primitives (Button, TextField, Select, Badge, Card, Dialog, Table) | **Completed** | `redesign/phase-3` | Built Button, Badge, Chip, TextField, TextArea, Select, Checkbox, Card, Dialog, ProgressBar, Alert, Table, Tabs, Stat, EmptyState, Divider. Added DesignSystemShowcase & unit tests (45/45 pass). |
-| **Phase 4: Shell & Nav** | App Bar, Header, Main Navigation, Drawer, Footer | Pending | `redesign/phase-4` | Restyle `App.tsx` navigation and docked notifications drawer. |
+| **Phase 4: Shell & Nav** | App Bar, Header, Main Navigation, Drawer, Footer | **Completed** | `redesign/phase-4` | Restyled `App.tsx` with official horizontal Asklevia logo and `.ak-appbar`. Replaced sub-nav with `.ak-nav`. Redesigned `LeftNotificationDrawer` and `ActiveEncounterProgressBar` with tokens. Debt dropped to 2,721. Build & tests pass (45/45). |
 | **Phase 5: Main Views** | Clinical workstations (Intake, Directory, Review, Reviewing, Knowledge) | Pending | `redesign/phase-5` | Eliminate arbitrary colors from primary clinical dashboards. |
 | **Phase 6: Visual & Special**| 3D Ward scene, Telemetry Stepper, Benchmark Modal, Modals | Pending | `redesign/phase-6` | Adapt 3D overlay cards and trajectory steppers to Asklevia clean light theme. |
 | **Phase 7: Review & Polish** | Verify zero brand violations, accessibility audit, final build gate | Pending | `redesign/phase-7` | Confirm brand linter passes with 0 violations. |
@@ -55,3 +55,21 @@ Tracking implementation of the Asklevia Design System and UI Kit across all 7 ph
   - Created interactive living design system showcase at `frontend/src/pages/DesignSystemShowcase.tsx` accessible via the `DESIGN_SYSTEM` navigation tab.
   - Authored comprehensive test suite in `frontend/src/components/ui/__tests__/Primitives.test.tsx`.
   - Verified tests and build: **45 / 45 Vitest tests pass**; `npm run build` succeeds cleanly in **1.10s**.
+
+### Phase 4: App Shell & Navigation (October 6, 2026)
+- **Branch:** `redesign/phase-4`
+- **Actions:**
+  - Created layout primitives and template containers in `frontend/src/components/layout/Templates.tsx` (`Container`, `PageHeader`, `AppPage`, `DetailPage`, `FlowPage`, `AuthPage`).
+  - Restyled global header in `frontend/src/App.tsx`:
+    - Converted to `.ak-appbar` (64px height, crisp white surface, hairline border).
+    - Integrated official Asklevia horizontal logo (`/logos/asklevia-logo-horizontal.svg`) with clear space.
+    - Updated right controls: live UTC clock in Geist Mono tabular numbers, clinical voice toggle in `.ak-btn--ghost`.
+  - Redesigned sub-header navigation:
+    - Converted raw custom buttons into `.ak-nav` and `.ak-nav__item` with pill active states and counts.
+    - Added Trajectory graph trigger button styled with `.ak-btn--secondary`.
+  - Upgraded docked notifications drawer (`LeftNotificationDrawer.tsx`):
+    - Converted to Asklevia tokens, `--bg-surface`, hairline borders, Geist Mono timestamps, and `.ak-toast` floating specifications.
+  - Upgraded simulation progress bar (`ActiveEncounterProgressBar.tsx`):
+    - Implemented `.ak-progress--spectrum` for active encounter synthesis, clean status badges, and collapsible milestones.
+  - Lint Brand Metric: Style debt dropped from **2,958 to 2,721** (-237 debt items eliminated).
+  - Verification: `npm run build` succeeds (978ms); all 45 Vitest tests pass across 11 test suites.

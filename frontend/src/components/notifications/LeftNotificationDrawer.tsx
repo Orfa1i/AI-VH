@@ -42,8 +42,7 @@ export const LeftNotificationDrawer: React.FC<LeftNotificationDrawerProps> = ({
     if (events.length > lastEventCountRef.current) {
       const newEvent = events[events.length - 1];
       setUnreadCount((prev) => prev + (events.length - lastEventCountRef.current));
-      
-      // Trigger toast slide-in from left
+
       setActiveToast(newEvent);
       if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
       toastTimeoutRef.current = setTimeout(() => {
@@ -70,243 +69,333 @@ export const LeftNotificationDrawer: React.FC<LeftNotificationDrawerProps> = ({
   };
 
   const getEventIcon = (type: string) => {
-    if (type.includes('DISCHARGE') || type.includes('ENCOUNTER_CLOSED')) return <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />;
-    if (type.includes('REPORT')) return <FileText className="w-3.5 h-3.5 text-emerald-600" />;
-    if (type.includes('TRIAGE') || type.includes('VITALS')) return <Activity className="w-3.5 h-3.5 text-cyan-600" />;
-    if (type.includes('DOCTOR') || type.includes('EXAM')) return <Stethoscope className="w-3.5 h-3.5 text-sky-600" />;
-    if (type.includes('LAB')) return <FlaskConical className="w-3.5 h-3.5 text-blue-600" />;
-    if (type.includes('PHARMACY') || type.includes('TREATMENT')) return <Pill className="w-3.5 h-3.5 text-amber-600" />;
-    if (type.includes('ARRIVED')) return <User className="w-3.5 h-3.5 text-indigo-600" />;
-    return <AlertTriangle className="w-3.5 h-3.5 text-slate-500" />;
-  };
-
-  const getCategoryColor = (type: string) => {
-    if (type.includes('DISCHARGE') || type.includes('ENCOUNTER_CLOSED')) return 'border-emerald-200 bg-emerald-50/70 text-emerald-900';
-    if (type.includes('REPORT')) return 'border-emerald-200 bg-emerald-50/70 text-emerald-900';
-    if (type.includes('TRIAGE') || type.includes('VITALS')) return 'border-cyan-200 bg-cyan-50/70 text-cyan-900';
-    if (type.includes('DOCTOR') || type.includes('EXAM')) return 'border-sky-200 bg-sky-50/70 text-sky-900';
-    if (type.includes('LAB')) return 'border-blue-200 bg-blue-50/70 text-blue-900';
-    if (type.includes('PHARMACY') || type.includes('TREATMENT')) return 'border-amber-200 bg-amber-50/70 text-amber-900';
-    return 'border-slate-200 bg-slate-50 text-slate-800';
+    if (type.includes('DISCHARGE') || type.includes('ENCOUNTER_CLOSED'))
+      return <CheckCircle2 aria-hidden="true" style={{ width: 16, height: 16, color: 'var(--success-600)' }} />;
+    if (type.includes('REPORT'))
+      return <FileText aria-hidden="true" style={{ width: 16, height: 16, color: 'var(--indigo-500)' }} />;
+    if (type.includes('TRIAGE') || type.includes('VITALS'))
+      return <Activity aria-hidden="true" style={{ width: 16, height: 16, color: 'var(--info-600)' }} />;
+    if (type.includes('DOCTOR') || type.includes('EXAM'))
+      return <Stethoscope aria-hidden="true" style={{ width: 16, height: 16, color: 'var(--indigo-500)' }} />;
+    if (type.includes('LAB'))
+      return <FlaskConical aria-hidden="true" style={{ width: 16, height: 16, color: 'var(--spectrum-azure)' }} />;
+    if (type.includes('PHARMACY') || type.includes('TREATMENT'))
+      return <Pill aria-hidden="true" style={{ width: 16, height: 16, color: 'var(--warning-600)' }} />;
+    if (type.includes('ARRIVED'))
+      return <User aria-hidden="true" style={{ width: 16, height: 16, color: 'var(--indigo-500)' }} />;
+    return <AlertTriangle aria-hidden="true" style={{ width: 16, height: 16, color: 'var(--neutral-500)' }} />;
   };
 
   const filteredEvents = events.filter((evt) => {
     if (activeFilter === 'REPORTS') return evt.event_type.includes('REPORT');
     if (activeFilter === 'TRIAGE') return evt.event_type.includes('TRIAGE') || evt.event_type.includes('VITALS');
-    if (activeFilter === 'CLINICAL') return evt.event_type.includes('DOCTOR') || evt.event_type.includes('LAB') || evt.event_type.includes('PHARMACY');
+    if (activeFilter === 'CLINICAL')
+      return evt.event_type.includes('DOCTOR') || evt.event_type.includes('LAB') || evt.event_type.includes('PHARMACY');
     return true;
   });
 
   return (
     <>
-      {/* ═══════════════════════════════════════════════════════════════════
-          1. SLIDING LEFT DOCK TRIGGER BUTTON (Always accessible on left edge)
-          ═══════════════════════════════════════════════════════════════════ */}
-      <div className="fixed left-0 top-36 z-40">
+      {/* 1. DOCKED LEFT TRIGGER PILL */}
+      <div style={{ position: 'fixed', left: 0, top: 96, zIndex: 'var(--z-sticky)' }}>
         <button
           onClick={handleOpenDrawer}
-          className={`flex items-center gap-2 pl-2 pr-3 py-2 bg-white/95 hover:bg-white text-slate-800 border-y border-r border-slate-300 shadow-md rounded-r-xl transition-all duration-300 hover:shadow-lg hover:pr-4 cursor-pointer backdrop-blur-md group ${
-            unreadCount > 0 ? 'border-sky-400 ring-2 ring-sky-400/20' : ''
-          }`}
+          type="button"
           title="Open Hospital Event Notifications"
+          aria-label="Open Hospital Event Notifications"
+          className="ak-btn ak-btn--secondary ak-btn--sm"
+          style={{
+            borderTopLeftRadius: 0,
+            borderBottomLeftRadius: 0,
+            borderLeft: 0,
+            paddingLeft: 'var(--space-3)',
+            paddingRight: 'var(--space-4)',
+            boxShadow: 'var(--shadow-sm)',
+            background: 'var(--bg-surface)',
+          }}
         >
-          <div className="relative">
-            <Bell className="w-4 h-4 text-sky-600 group-hover:scale-110 transition-transform" />
+          <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+            <Bell aria-hidden="true" style={{ width: 16, height: 16, color: 'var(--text-brand)' }} />
             {unreadCount > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-1 rounded-full bg-rose-500 text-white font-mono text-[9px] font-bold flex items-center justify-center animate-pulse shadow-xs">
+              <span
+                className="ak-num"
+                style={{
+                  position: 'absolute',
+                  top: -6,
+                  right: -8,
+                  minWidth: 16,
+                  height: 16,
+                  borderRadius: 'var(--radius-pill)',
+                  background: 'var(--danger-600)',
+                  color: 'var(--neutral-0)',
+                  fontSize: 10,
+                  fontWeight: 600,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '0 4px',
+                }}
+              >
                 {unreadCount > 99 ? '99+' : unreadCount}
               </span>
             )}
           </div>
-          <span className="text-[11px] font-mono font-bold tracking-wider text-slate-700 uppercase hidden sm:inline">
-            Notifications
-          </span>
-          <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
+          <span style={{ fontSize: 13, fontWeight: 500 }}>Notifications</span>
+          <ChevronRight aria-hidden="true" style={{ width: 14, height: 14, color: 'var(--text-secondary)' }} />
         </button>
       </div>
 
-      {/* ═══════════════════════════════════════════════════════════════════
-          2. SLIDE-IN LIVE TOAST NOTIFICATION (Appears from left edge)
-          ═══════════════════════════════════════════════════════════════════ */}
-      <div
-        className={`fixed left-4 top-24 z-50 transition-all duration-500 ease-out transform ${
-          activeToast && !isOpen ? 'translate-x-0 opacity-100 pointer-events-auto' : '-translate-x-full opacity-0 pointer-events-none'
-        }`}
-      >
-        {activeToast && (
-          <div className="w-84 p-3.5 rounded-xl bg-white/95 backdrop-blur-md border border-slate-200 shadow-2xl hud-bracket flex items-start gap-3">
-            <div className="w-8 h-8 rounded-lg bg-sky-50 border border-sky-200 flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
-              {getEventIcon(activeToast.event_type)}
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center justify-between gap-1 mb-1">
-                <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-sky-800 truncate">
+      {/* 2. TRANSIENT FLOATING TOAST */}
+      {activeToast && !isOpen && (
+        <div
+          role="status"
+          style={{
+            position: 'fixed',
+            left: 'var(--space-6)',
+            top: 96,
+            zIndex: 'var(--z-toast)',
+          }}
+        >
+          <div className="ak-toast">
+            {getEventIcon(activeToast.event_type)}
+            <div className="ak-toast__text">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}>
+                <span className="caption" style={{ color: 'var(--indigo-200)', textTransform: 'uppercase' }}>
                   {activeToast.event_type.replace(/_/g, ' ')}
                 </span>
-                <span className="text-[9px] font-mono text-slate-400 shrink-0">
-                  {activeToast.timestamp ? new Date(activeToast.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : 'JUST NOW'}
+                <span className="ak-num" style={{ fontSize: 11, color: 'var(--neutral-300)' }}>
+                  {activeToast.timestamp
+                    ? new Date(activeToast.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                    : 'Now'}
                 </span>
               </div>
-              <p className="text-xs text-slate-700 font-medium leading-snug line-clamp-2">
+              <p style={{ margin: '2px 0 0', fontSize: 13, lineHeight: '18px' }}>
                 {activeToast.summary || 'Clinical encounter update recorded.'}
               </p>
-              {activeToast.event_type.includes('REPORT') && onNavigateToTab && (
+            </div>
+            {activeToast.event_type.includes('REPORT') && onNavigateToTab && (
+              <button
+                type="button"
+                className="ak-toast__action"
+                onClick={() => {
+                  onNavigateToTab('REPORTS');
+                  setActiveToast(null);
+                }}
+              >
+                View
+              </button>
+            )}
+            <button
+              type="button"
+              className="ak-btn ak-btn--ghost ak-btn--sm ak-btn--icon"
+              style={{ color: 'var(--neutral-0)' }}
+              onClick={() => setActiveToast(null)}
+              aria-label="Dismiss toast"
+            >
+              <X aria-hidden="true" style={{ width: 16, height: 16 }} />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 3. DOCKED NOTIFICATION DRAWER */}
+      {isOpen && (
+        <div
+          role="presentation"
+          className="ak-scrim"
+          style={{ justifyContent: 'flex-start', padding: 0 }}
+          onClick={handleCloseDrawer}
+        >
+          <aside
+            role="dialog"
+            aria-label="Hospital Event Feed"
+            aria-modal="true"
+            className="ak-card"
+            style={{
+              width: 'min(360px, 100vw)',
+              height: '100vh',
+              borderRadius: 0,
+              padding: 0,
+              display: 'flex',
+              flexDirection: 'column',
+              boxShadow: 'var(--shadow-lg)',
+              animation: 'none',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div
+              style={{
+                padding: 'var(--space-4) var(--space-5)',
+                borderBottom: '1px solid var(--border-default)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+                <Activity aria-hidden="true" style={{ width: 20, height: 20, color: 'var(--indigo-500)' }} />
+                <div>
+                  <h2 className="heading-3" style={{ fontSize: 16, lineHeight: '22px' }}>Hospital Event Feed</h2>
+                  <span className="caption" style={{ color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <Radio aria-hidden="true" style={{ width: 12, height: 12, color: isConnected ? 'var(--success-600)' : 'var(--neutral-400)' }} />
+                    {isConnected ? 'Telemetry Stream Active' : 'Disconnected'}
+                  </span>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                className="ak-btn ak-btn--ghost ak-btn--sm ak-btn--icon"
+                onClick={handleCloseDrawer}
+                aria-label="Close feed"
+              >
+                <ChevronLeft aria-hidden="true" style={{ width: 20, height: 20 }} />
+              </button>
+            </div>
+
+            {/* Filter Row */}
+            <div
+              style={{
+                padding: 'var(--space-2) var(--space-4)',
+                borderBottom: '1px solid var(--border-default)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                background: 'var(--bg-subtle)',
+              }}
+            >
+              <div className="ak-seg">
+                {(['ALL', 'REPORTS', 'TRIAGE', 'CLINICAL'] as const).map((filter) => (
+                  <button
+                    key={filter}
+                    type="button"
+                    aria-pressed={activeFilter === filter}
+                    className="ak-seg__item"
+                    style={{ fontSize: 11, height: 26, padding: '0 8px' }}
+                    onClick={() => setActiveFilter(filter)}
+                  >
+                    {filter}
+                  </button>
+                ))}
+              </div>
+
+              {events.length > 0 && onClearEvents && (
                 <button
-                  onClick={() => {
-                    onNavigateToTab('REPORTS');
-                    setActiveToast(null);
-                  }}
-                  className="mt-2 text-[10px] font-mono font-bold text-sky-700 hover:text-sky-900 flex items-center gap-1 underline underline-offset-2 cursor-pointer"
+                  type="button"
+                  className="ak-btn ak-btn--ghost ak-btn--sm"
+                  style={{ fontSize: 12, padding: '0 8px', color: 'var(--danger-600)' }}
+                  onClick={onClearEvents}
                 >
-                  <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                  <span>View Pending Report in Clinical Review &rarr;</span>
+                  <Trash2 aria-hidden="true" style={{ width: 14, height: 14 }} />
+                  Clear
                 </button>
               )}
             </div>
-            <button
-              onClick={() => setActiveToast(null)}
-              className="text-slate-400 hover:text-slate-700 p-0.5 rounded cursor-pointer"
+
+            {/* Event List */}
+            <div
+              style={{
+                flex: 1,
+                overflowY: 'auto',
+                padding: 'var(--space-4)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 'var(--space-3)',
+                background: 'var(--bg-page)',
+              }}
             >
-              <X className="w-3.5 h-3.5" />
-            </button>
-          </div>
-        )}
-      </div>
-
-      {/* ═══════════════════════════════════════════════════════════════════
-          3. FULL SLIDE-OUT LEFT NOTIFICATION DRAWER (Panel from left)
-          ═══════════════════════════════════════════════════════════════════ */}
-      {/* Backdrop */}
-      {isOpen && (
-        <div
-          onClick={handleCloseDrawer}
-          className="fixed inset-0 bg-slate-900/20 backdrop-blur-xs z-50 transition-opacity duration-300"
-        />
-      )}
-
-      {/* Drawer Container */}
-      <aside
-        className={`fixed top-0 left-0 bottom-0 w-88 sm:w-96 bg-white border-r border-slate-200 shadow-2xl z-50 flex flex-col transition-transform duration-300 ease-in-out ${
-          isOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
-      >
-        {/* Drawer Header */}
-        <div className="p-4 border-b border-slate-200 flex items-center justify-between bg-slate-50/80">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-sky-50 border border-sky-200 flex items-center justify-center text-sky-700 shadow-xs">
-              <Activity className="w-4 h-4 text-sky-600" />
-            </div>
-            <div>
-              <h3 className="text-xs font-mono font-bold text-slate-900 uppercase tracking-wide">
-                Hospital Event Feed
-              </h3>
-              <p className="text-[10px] font-mono text-slate-500 flex items-center gap-1.5">
-                <Radio className={`w-2.5 h-2.5 ${isConnected ? 'text-emerald-500 animate-pulse' : 'text-slate-400'}`} />
-                <span>{isConnected ? 'Telemetry Stream Active' : 'Disconnected'}</span>
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={handleCloseDrawer}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition cursor-pointer"
-            title="Close Drawer"
-          >
-            <ChevronLeft className="w-5 h-5" />
-          </button>
-        </div>
-
-        {/* Filter Pills & Actions */}
-        <div className="px-4 py-2.5 border-b border-slate-200 flex items-center justify-between bg-white text-xs font-mono">
-          <div className="flex items-center gap-1">
-            {(['ALL', 'REPORTS', 'TRIAGE', 'CLINICAL'] as const).map((filter) => (
-              <button
-                key={filter}
-                onClick={() => setActiveFilter(filter)}
-                className={`px-2 py-1 rounded text-[10px] font-bold transition cursor-pointer ${
-                  activeFilter === filter
-                    ? 'bg-sky-50 text-sky-700 border border-sky-300 shadow-2xs'
-                    : 'text-slate-500 hover:text-slate-800'
-                }`}
-              >
-                {filter}
-              </button>
-            ))}
-          </div>
-
-          {events.length > 0 && onClearEvents && (
-            <button
-              onClick={onClearEvents}
-              className="text-[10px] text-slate-400 hover:text-rose-600 flex items-center gap-1 transition cursor-pointer"
-              title="Clear Notification History"
-            >
-              <Trash2 className="w-3 h-3" />
-              <span>Clear</span>
-            </button>
-          )}
-        </div>
-
-        {/* Notification Event List */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-2.5 bg-slate-50/50">
-          {filteredEvents.length === 0 ? (
-            <div className="py-16 text-center text-slate-400 font-mono text-xs">
-              <Activity className="w-8 h-8 text-slate-300 mx-auto mb-2 opacity-50" />
-              <p>No hospital notifications recorded.</p>
-              <p className="text-[10px] text-slate-400 mt-1">Events will appear live during clinical encounters.</p>
-            </div>
-          ) : (
-            [...filteredEvents].reverse().map((evt, idx) => (
-              <div
-                key={evt.id || `${evt.event_type}-${idx}-${evt.timestamp || 'ts'}`}
-                className={`p-3 rounded-xl border transition-all duration-200 bg-white shadow-2xs hover:shadow-xs ${getCategoryColor(
-                  evt.event_type
-                )}`}
-              >
-                <div className="flex items-start gap-2.5">
-                  <div className="w-6 h-6 rounded-md bg-white border border-slate-200 flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
-                    {getEventIcon(evt.event_type)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between gap-1 mb-1">
-                      <span className="text-[10px] font-mono font-bold uppercase tracking-wider truncate">
-                        {evt.event_type.replace(/_/g, ' ')}
-                      </span>
-                      <span className="text-[9px] font-mono text-slate-400 shrink-0">
-                        {evt.timestamp ? new Date(evt.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : ''}
-                      </span>
-                    </div>
-                    <p className="text-xs text-slate-700 font-medium leading-relaxed break-words">
-                      {evt.summary || 'Clinical simulation event dispatched.'}
-                    </p>
-                    {evt.event_type.includes('REPORT') && onNavigateToTab && (
-                      <button
-                        onClick={() => {
-                          onNavigateToTab('REPORTS');
-                          handleCloseDrawer();
-                        }}
-                        className="mt-2 text-[10px] font-mono font-bold text-sky-700 hover:text-sky-900 flex items-center gap-1 underline underline-offset-2 cursor-pointer"
-                      >
-                        <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                        <span>Inspect in Clinical Review</span>
-                      </button>
-                    )}
-                  </div>
+              {filteredEvents.length === 0 ? (
+                <div style={{ padding: '48px 16px', textAlign: 'center', color: 'var(--text-tertiary)' }}>
+                  <Activity aria-hidden="true" style={{ width: 32, height: 32, margin: '0 auto 8px', opacity: 0.4 }} />
+                  <p className="body-sm">No hospital notifications recorded.</p>
                 </div>
-              </div>
-            ))
-          )}
-        </div>
+              ) : (
+                [...filteredEvents].reverse().map((evt, idx) => (
+                  <div
+                    key={evt.id || `${evt.event_type}-${idx}-${evt.timestamp || 'ts'}`}
+                    className="ak-card ak-card--subtle"
+                    style={{
+                      padding: 'var(--space-3)',
+                      background: 'var(--bg-surface)',
+                      border: '1px solid var(--border-default)',
+                    }}
+                  >
+                    <div style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'flex-start' }}>
+                      <div
+                        style={{
+                          width: 28,
+                          height: 28,
+                          borderRadius: 'var(--radius-sm)',
+                          background: 'var(--bg-subtle)',
+                          display: 'grid',
+                          placeItems: 'center',
+                          flexShrink: 0,
+                        }}
+                      >
+                        {getEventIcon(evt.event_type)}
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 6, marginBottom: 2 }}>
+                          <span className="caption" style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
+                            {evt.event_type.replace(/_/g, ' ')}
+                          </span>
+                          <span className="ak-num caption" style={{ color: 'var(--text-tertiary)' }}>
+                            {evt.timestamp
+                              ? new Date(evt.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                              : ''}
+                          </span>
+                        </div>
+                        <p className="body-sm" style={{ color: 'var(--text-secondary)' }}>
+                          {evt.summary || 'Clinical simulation event dispatched.'}
+                        </p>
+                        {evt.event_type.includes('REPORT') && onNavigateToTab && (
+                          <div style={{ marginTop: 8 }}>
+                            <button
+                              type="button"
+                              className="ak-btn ak-btn--ghost ak-btn--sm"
+                              style={{ padding: '0 8px', height: 26, fontSize: 12 }}
+                              onClick={() => {
+                                onNavigateToTab('REPORTS');
+                                handleCloseDrawer();
+                              }}
+                            >
+                              Inspect in Clinical Review &rarr;
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
 
-        {/* Drawer Footer */}
-        <div className="p-3 border-t border-slate-200 bg-white flex items-center justify-between text-[11px] font-mono text-slate-500">
-          <span>Total Logged: <strong className="text-slate-800">{events.length}</strong></span>
-          <button
-            onClick={handleCloseDrawer}
-            className="px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-lg border border-slate-200 transition cursor-pointer"
-          >
-            Close Feed
-          </button>
+            {/* Footer */}
+            <div
+              style={{
+                padding: 'var(--space-3) var(--space-4)',
+                borderTop: '1px solid var(--border-default)',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                background: 'var(--bg-surface)',
+              }}
+            >
+              <span className="caption" style={{ color: 'var(--text-tertiary)' }}>
+                Total: <strong className="ak-num" style={{ color: 'var(--text-primary)' }}>{events.length}</strong>
+              </span>
+              <button
+                type="button"
+                className="ak-btn ak-btn--secondary ak-btn--sm"
+                onClick={handleCloseDrawer}
+              >
+                Close feed
+              </button>
+            </div>
+          </aside>
         </div>
-      </aside>
+      )}
     </>
   );
 };

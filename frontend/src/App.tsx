@@ -29,7 +29,6 @@ import {
   Search,
   Sparkles,
   Stethoscope,
-  Terminal,
   Users,
   Volume2,
   VolumeX,
@@ -208,213 +207,212 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div className="w-screen h-screen flex flex-col bg-[#f8fafc] overflow-hidden font-sans select-none text-slate-900 telemetry-grid">
-      {/* Top Clinical Command Horizon Header */}
-      <header className="h-16 px-5 border-b border-slate-200 bg-white/95 backdrop-blur-md flex items-center justify-between z-30 shrink-0 shadow-xs">
-        {/* Left: Branding & Real-Time System Status */}
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-md bg-sky-50 border border-sky-200 flex items-center justify-center text-sky-600 shadow-xs">
-              <Terminal className="w-4 h-4 text-sky-600 animate-pulse" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-bold tracking-wider text-slate-900 uppercase font-mono">
-                  METROPOLITAN GENERAL
-                </span>
-                <span className="text-[10px] text-sky-700 font-mono tracking-widest font-bold">
-                  // CLINICAL COMMAND HORIZON
-                </span>
-              </div>
-              <p className="text-[10px] text-slate-500 font-mono tracking-tight flex items-center gap-2">
-                <span>Autonomous Multi-Agent Clinical Operating System</span>
-                <span className="text-slate-300">•</span>
-                <span className="text-sky-700">Harrison's 21st Ed & Braunwald's (47.8k Chunks)</span>
-              </p>
-            </div>
-          </div>
+    <div className="w-screen h-screen flex flex-col bg-[var(--bg-page)] overflow-hidden font-sans select-none text-[var(--text-primary)]">
+      {/* Asklevia Clinical App Bar */}
+      <header className="ak-appbar shrink-0">
+        {/* Left: Official Logo Lockup */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-6)' }}>
+          <a href="#" className="ak-appbar__logo" onClick={(e) => { e.preventDefault(); setActiveTab('INTAKE'); }}>
+            <img
+              src="/logos/asklevia-logo-horizontal.svg"
+              alt="Asklevia"
+              style={{ height: 28, width: 'auto' }}
+            />
+          </a>
 
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+            <span className="caption" style={{ color: 'var(--text-secondary)' }}>Virtual Hospital</span>
+            <span style={{ color: 'var(--neutral-300)' }}>•</span>
+            <span className="caption ak-num" style={{ color: 'var(--text-tertiary)' }}>MedGemma 4B</span>
+          </div>
         </div>
 
-        {/* Right: Live Ticker & Voice Toggle */}
-        <div className="flex items-center gap-3">
+        {/* Right: Live UTC Clock & Audio Voice Synthesizer Toggle */}
+        <div className="ak-appbar__end" style={{ marginLeft: 'auto' }}>
           {/* Live UTC Clock */}
-          <div className="hidden 2xl:flex items-center gap-1.5 font-mono text-xs text-slate-600 px-2.5 py-1 bg-slate-100/90 border border-slate-200 rounded">
-            <Clock className="w-3.5 h-3.5 text-slate-500" />
-            <span className="text-slate-800 font-semibold">{currentTime || '12:00:00'}</span>
-            <span className="text-[10px] text-slate-400">UTC</span>
+          <div
+            className="caption ak-num"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              padding: '4px 10px',
+              background: 'var(--bg-subtle)',
+              borderRadius: 'var(--radius-pill)',
+              border: '1px solid var(--border-default)',
+              color: 'var(--text-secondary)',
+            }}
+          >
+            <Clock aria-hidden="true" style={{ width: 14, height: 14 }} />
+            <span style={{ fontWeight: 600 }}>{currentTime || '12:00:00'}</span>
+            <span style={{ fontSize: 10, color: 'var(--text-tertiary)' }}>UTC</span>
           </div>
 
           {/* Audio Voice Synthesizer Toggle */}
           <button
+            type="button"
             onClick={() => setIsAudioMuted(toggleGlobalMute())}
-            title={isAudioMuted ? 'Unmute Clinical Voice Audio' : 'Mute Clinical Voice Audio'}
-            className={`p-1.5 rounded-lg border text-xs transition cursor-pointer ${
-              isAudioMuted
-                ? 'text-slate-400 hover:text-slate-600 bg-slate-100 border-slate-200'
-                : 'text-sky-700 bg-sky-50 border border-sky-300 shadow-xs'
-            }`}
+            title={isAudioMuted ? 'Unmute clinical voice' : 'Mute clinical voice'}
+            aria-label={isAudioMuted ? 'Unmute clinical voice' : 'Mute clinical voice'}
+            className="ak-btn ak-btn--ghost ak-btn--sm ak-btn--icon"
+            style={{ color: isAudioMuted ? 'var(--text-tertiary)' : 'var(--action-primary)' }}
           >
-            {isAudioMuted ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
+            {isAudioMuted ? <VolumeX aria-hidden="true" style={{ width: 18, height: 18 }} /> : <Volume2 aria-hidden="true" style={{ width: 18, height: 18 }} />}
           </button>
         </div>
       </header>
 
       {/* Sub-Header: Clinical Workspace Navigation Tabs */}
-      <div className="bg-white/80 border-b border-slate-200 px-5 flex items-center justify-between shrink-0">
-        <nav className="flex items-center gap-1 overflow-x-auto py-1">
+      <div
+        style={{
+          background: 'var(--bg-surface)',
+          borderBottom: '1px solid var(--border-default)',
+          padding: '0 var(--space-6)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexShrink: 0,
+        }}
+      >
+        <nav className="ak-nav" style={{ padding: 'var(--space-1) 0' }}>
           <button
+            type="button"
             onClick={() => setActiveTab('INTAKE')}
-            className={`px-3.5 py-2 text-xs font-mono font-medium flex items-center gap-2 rounded transition cursor-pointer ${
-              activeTab === 'INTAKE'
-                ? 'bg-sky-50 text-sky-700 border border-sky-300 shadow-xs'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent'
-            }`}
+            className="ak-nav__item"
+            aria-current={activeTab === 'INTAKE' ? 'page' : undefined}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 8, cursor: 'pointer', border: 0 }}
           >
-            <Radio className="w-3.5 h-3.5" />
-            <span>Case Intake & Triage</span>
+            <Radio aria-hidden="true" style={{ width: 16, height: 16 }} />
+            <span>Intake & Triage</span>
           </button>
 
           <button
+            type="button"
             onClick={() => setActiveTab('PATIENTS')}
-            className={`px-3.5 py-2 text-xs font-mono font-medium flex items-center gap-2 rounded transition cursor-pointer ${
-              activeTab === 'PATIENTS'
-                ? 'bg-sky-50 text-sky-700 border border-sky-300 shadow-xs'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent'
-            }`}
+            className="ak-nav__item"
+            aria-current={activeTab === 'PATIENTS' ? 'page' : undefined}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 8, cursor: 'pointer', border: 0 }}
           >
-            <BedDouble className="w-3.5 h-3.5" />
+            <BedDouble aria-hidden="true" style={{ width: 16, height: 16 }} />
             <span>Patient Directory</span>
           </button>
 
           <button
+            type="button"
             onClick={() => setActiveTab('STAFF')}
-            className={`px-3.5 py-2 text-xs font-mono font-medium flex items-center gap-2 rounded transition cursor-pointer ${
-              activeTab === 'STAFF'
-                ? 'bg-sky-50 text-sky-700 border border-sky-300 shadow-xs'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent'
-            }`}
+            className="ak-nav__item"
+            aria-current={activeTab === 'STAFF' ? 'page' : undefined}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 8, cursor: 'pointer', border: 0 }}
           >
-            <Users className="w-3.5 h-3.5" />
-            <span>Hospital Staff</span>
+            <Users aria-hidden="true" style={{ width: 16, height: 16 }} />
+            <span>Staff Roster</span>
           </button>
 
           <button
+            type="button"
             onClick={() => setActiveTab('REPORTS')}
-            className={`px-3.5 py-2 text-xs font-mono font-medium flex items-center gap-2 rounded transition cursor-pointer ${
-              activeTab === 'REPORTS'
-                ? 'bg-sky-50 text-sky-700 border border-sky-300 shadow-xs'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent'
-            }`}
+            className="ak-nav__item"
+            aria-current={activeTab === 'REPORTS' ? 'page' : undefined}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 8, cursor: 'pointer', border: 0 }}
           >
-            <FileText className="w-3.5 h-3.5" />
-            <span>Clinical Reports & Reviews</span>
+            <FileText aria-hidden="true" style={{ width: 16, height: 16 }} />
+            <span>Clinical Reports</span>
             {reports.length > 0 && (
-              <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-sky-100 text-sky-800 border border-sky-300">
-                {reports.length}
-              </span>
+              <span className="ak-tab__count ak-num">({reports.length})</span>
             )}
           </button>
 
           <button
+            type="button"
             onClick={() => setActiveTab('REVIEW')}
-            className={`px-3.5 py-2 text-xs font-mono font-medium flex items-center gap-2 rounded transition cursor-pointer ${
-              activeTab === 'REVIEW'
-                ? 'bg-sky-50 text-sky-700 border border-sky-300 shadow-xs'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent'
-            }`}
+            className="ak-nav__item"
+            aria-current={activeTab === 'REVIEW' ? 'page' : undefined}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 8, cursor: 'pointer', border: 0 }}
           >
-            <Stethoscope className="w-3.5 h-3.5" />
+            <Stethoscope aria-hidden="true" style={{ width: 16, height: 16 }} />
             <span>Doctor Review</span>
           </button>
 
           <button
+            type="button"
             onClick={() => setActiveTab('REVIEWING')}
-            className={`px-3.5 py-2 text-xs font-mono font-medium flex items-center gap-2 rounded transition cursor-pointer ${
-              activeTab === 'REVIEWING'
-                ? 'bg-sky-50 text-sky-700 border border-sky-300 shadow-xs'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent'
-            }`}
+            className="ak-nav__item"
+            aria-current={activeTab === 'REVIEWING' ? 'page' : undefined}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 8, cursor: 'pointer', border: 0 }}
           >
-            <FileCheck2 className="w-3.5 h-3.5 text-emerald-600" />
+            <FileCheck2 aria-hidden="true" style={{ width: 16, height: 16 }} />
             <span>Reviewing</span>
             {reviewedCount > 0 && (
-              <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-emerald-100 text-emerald-800 border border-emerald-300">
-                {reviewedCount}
-              </span>
+              <span className="ak-tab__count ak-num">({reviewedCount})</span>
             )}
           </button>
 
           <button
+            type="button"
             onClick={() => setActiveTab('WARDS')}
-            className={`px-3.5 py-2 text-xs font-mono font-medium flex items-center gap-2 rounded transition cursor-pointer ${
-              activeTab === 'WARDS'
-                ? 'bg-sky-50 text-sky-700 border border-sky-300 shadow-xs'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent'
-            }`}
+            className="ak-nav__item"
+            aria-current={activeTab === 'WARDS' ? 'page' : undefined}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 8, cursor: 'pointer', border: 0 }}
           >
-            <Building2 className="w-3.5 h-3.5" />
+            <Building2 aria-hidden="true" style={{ width: 16, height: 16 }} />
             <span>Department Board</span>
           </button>
 
           <button
+            type="button"
             onClick={() => setActiveTab('HOSPITAL3D')}
-            className={`px-3.5 py-2 text-xs font-mono font-medium flex items-center gap-2 rounded transition cursor-pointer ${
-              activeTab === 'HOSPITAL3D'
-                ? 'bg-sky-50 text-sky-700 border border-sky-300 shadow-xs'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent'
-            }`}
+            className="ak-nav__item"
+            aria-current={activeTab === 'HOSPITAL3D' ? 'page' : undefined}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 8, cursor: 'pointer', border: 0 }}
           >
-            <Box className="w-3.5 h-3.5" />
+            <Box aria-hidden="true" style={{ width: 16, height: 16 }} />
             <span>3D Hospital</span>
           </button>
 
           <button
+            type="button"
             onClick={() => setActiveTab('KNOWLEDGE')}
-            className={`px-3.5 py-2 text-xs font-mono font-medium flex items-center gap-2 rounded transition cursor-pointer ${
-              activeTab === 'KNOWLEDGE'
-                ? 'bg-sky-50 text-sky-700 border border-sky-300 shadow-xs'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent'
-            }`}
+            className="ak-nav__item"
+            aria-current={activeTab === 'KNOWLEDGE' ? 'page' : undefined}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 8, cursor: 'pointer', border: 0 }}
           >
-            <Search className="w-3.5 h-3.5" />
-            <span>Harrison's Vector RAG</span>
+            <Search aria-hidden="true" style={{ width: 16, height: 16 }} />
+            <span>Knowledge Books</span>
           </button>
 
           <button
+            type="button"
             onClick={() => setActiveTab('BENCHMARK')}
-            className={`px-3.5 py-2 text-xs font-mono font-medium flex items-center gap-2 rounded transition cursor-pointer ${
-              activeTab === 'BENCHMARK'
-                ? 'bg-sky-50 text-sky-700 border border-sky-300 shadow-xs'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent'
-            }`}
+            className="ak-nav__item"
+            aria-current={activeTab === 'BENCHMARK' ? 'page' : undefined}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 8, cursor: 'pointer', border: 0 }}
           >
-            <Scale className="w-3.5 h-3.5" />
-            <span>RL Policy Benchmark</span>
+            <Scale aria-hidden="true" style={{ width: 16, height: 16 }} />
+            <span>Policy Benchmark</span>
           </button>
 
           <button
+            type="button"
             onClick={() => setActiveTab('DESIGN_SYSTEM')}
-            className={`px-3.5 py-2 text-xs font-mono font-medium flex items-center gap-2 rounded transition cursor-pointer ${
-              activeTab === 'DESIGN_SYSTEM'
-                ? 'bg-sky-50 text-sky-700 border border-sky-300 shadow-xs'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent'
-            }`}
+            className="ak-nav__item"
+            aria-current={activeTab === 'DESIGN_SYSTEM' ? 'page' : undefined}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 8, cursor: 'pointer', border: 0 }}
           >
-            <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
+            <Sparkles aria-hidden="true" style={{ width: 16, height: 16, color: 'var(--action-primary)' }} />
             <span>Design System</span>
           </button>
         </nav>
 
-        {/* Right: Relocated Patient Journey Graph Action */}
-        <div className="flex items-center gap-2 py-1">
+        {/* Right: Patient Journey Graph Trigger */}
+        <div style={{ display: 'flex', alignItems: 'center', padding: 'var(--space-1) 0' }}>
           <button
+            type="button"
             onClick={() => setIsJourneyOpen(true)}
-            className="px-3.5 py-1.5 rounded-lg text-xs font-mono font-bold flex items-center gap-2 bg-sky-50 hover:bg-sky-100 text-sky-800 border border-sky-300 shadow-2xs transition-all cursor-pointer active:scale-95 group"
-            title="Open Patient Journey Graph & Clinical Flow Architecture"
+            className="ak-btn ak-btn--secondary ak-btn--sm"
+            title="Open patient clinical journey graph"
           >
-            <Activity className="w-3.5 h-3.5 text-sky-600 group-hover:scale-110 transition-transform animate-pulse" />
-            <span>Patient Journey Graph</span>
+            <Activity aria-hidden="true" style={{ width: 14, height: 14, color: 'var(--action-primary)' }} />
+            <span>Trajectory graph</span>
           </button>
         </div>
       </div>
