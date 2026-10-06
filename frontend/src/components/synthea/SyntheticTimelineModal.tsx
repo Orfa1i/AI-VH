@@ -158,21 +158,21 @@ export const SyntheticTimelineModal: React.FC<SyntheticTimelineModalProps> = ({
       case 'encounter':
         return 'bg-blue-50 text-blue-800 border-blue-200';
       case 'condition':
-        return 'bg-amber-50 text-amber-800 border-amber-200';
+        return 'bg-[var(--ak-color-warning-soft)] text-[var(--ak-color-warning)] border-[var(--ak-color-border-subtle)]';
       case 'observation':
-        return 'bg-emerald-50 text-emerald-800 border-emerald-200';
+        return 'bg-[var(--ak-color-success-soft)] text-[var(--ak-color-success)] border-[var(--ak-color-border-subtle)]';
       case 'medication':
-        return 'bg-purple-50 text-purple-800 border-purple-200';
+        return 'bg-purple-50 text-[var(--ak-color-primary)] border-[var(--ak-color-border-subtle)]';
       case 'allergy':
-        return 'bg-rose-50 text-rose-800 border-rose-200';
+        return 'bg-[var(--ak-color-warning-soft)] text-[var(--ak-color-danger)] border-[var(--ak-color-border-subtle)]';
       case 'procedure':
         return 'bg-teal-50 text-teal-800 border-teal-200';
       case 'immunization':
-        return 'bg-sky-50 text-sky-800 border-sky-200';
+        return 'bg-[var(--ak-color-primary-soft)] text-[var(--ak-color-primary)] border-[var(--ak-color-border-subtle)]';
       case 'careplan':
-        return 'bg-indigo-50 text-indigo-800 border-indigo-200';
+        return 'bg-[var(--ak-color-primary-soft)] text-[var(--ak-color-primary)] border-[var(--ak-color-border-subtle)]';
       default:
-        return 'bg-slate-50 text-slate-800 border-slate-200';
+        return 'bg-[var(--ak-color-bg-subtle)] text-[var(--ak-color-text-primary)] border-[var(--ak-color-border-subtle)]';
     }
   };
 
@@ -181,45 +181,45 @@ export const SyntheticTimelineModal: React.FC<SyntheticTimelineModalProps> = ({
       case 'encounter':
         return <Building2 className="w-4 h-4 text-blue-600" />;
       case 'condition':
-        return <AlertTriangle className="w-4 h-4 text-amber-600" />;
+        return <AlertTriangle className="w-4 h-4 text-[var(--ak-color-warning)]" />;
       case 'observation':
-        return <HeartPulse className="w-4 h-4 text-emerald-600" />;
+        return <HeartPulse className="w-4 h-4 text-[var(--ak-color-success)]" />;
       case 'medication':
-        return <Pill className="w-4 h-4 text-purple-600" />;
+        return <Pill className="w-4 h-4 text-[var(--ak-color-primary)]" />;
       case 'allergy':
-        return <ShieldAlert className="w-4 h-4 text-rose-600" />;
+        return <ShieldAlert className="w-4 h-4 text-[var(--ak-color-danger)]" />;
       case 'procedure':
         return <FileSpreadsheet className="w-4 h-4 text-teal-600" />;
       case 'immunization':
-        return <Syringe className="w-4 h-4 text-sky-600" />;
+        return <Syringe className="w-4 h-4 text-[var(--ak-color-primary)]" />;
       case 'careplan':
-        return <ClipboardList className="w-4 h-4 text-indigo-600" />;
+        return <ClipboardList className="w-4 h-4 text-[var(--ak-color-primary)]" />;
       default:
-        return <Activity className="w-4 h-4 text-slate-600" />;
+        return <Activity className="w-4 h-4 text-[var(--ak-color-text-secondary)]" />;
     }
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 overflow-y-auto">
-      <div className="relative w-full max-w-4xl max-h-[92vh] flex flex-col bg-white border border-slate-200 rounded-xl shadow-2xl overflow-hidden font-sans">
+      <div className="relative w-full max-w-4xl max-h-[92vh] flex flex-col bg-white border border-[var(--ak-color-border-subtle)] rounded-xl shadow-2xl overflow-hidden font-sans">
         {/* Header */}
-        <div className="px-6 py-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between shrink-0">
+        <div className="px-6 py-4 bg-[var(--ak-color-bg-subtle)] border-b border-[var(--ak-color-border-subtle)] flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-sky-100 border border-sky-200 flex items-center justify-center text-sky-700">
-              <Clock className="w-5 h-5 text-sky-700" />
+            <div className="w-10 h-10 rounded-lg bg-sky-100 border border-[var(--ak-color-border-subtle)] flex items-center justify-center text-[var(--ak-color-primary)]">
+              <Clock className="w-5 h-5 text-[var(--ak-color-primary)]" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-base font-bold text-slate-900 font-mono tracking-tight">
+                <h2 className="text-base font-bold text-[var(--ak-color-text-primary)] font-mono tracking-tight">
                   {profile ? profile.name : 'Loading Patient Profile...'}
                 </h2>
                 {profile && (
-                  <span className="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-sky-100 text-sky-800 border border-sky-300">
+                  <span className="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-sky-100 text-[var(--ak-color-primary)] border border-[var(--ak-color-border-subtle)]">
                     {profile.mrn}
                   </span>
                 )}
               </div>
-              <p className="text-xs text-slate-500 font-mono">
+              <p className="text-xs text-[var(--ak-color-text-muted)] font-mono">
                 {profile
                   ? `${profile.gender.toUpperCase()} • ${profile.age} YRS • DOB: ${profile.birth_date} • ${profile.city}, ${profile.state}`
                   : 'Synthea FHIR R4 Record'}
@@ -230,16 +230,16 @@ export const SyntheticTimelineModal: React.FC<SyntheticTimelineModalProps> = ({
           <div className="flex items-center gap-2">
             <button
               onClick={handleFetchRawJson}
-              className="px-3 py-1.5 text-xs font-mono font-medium rounded-md bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 transition cursor-pointer flex items-center gap-1.5"
+              className="px-3 py-1.5 text-xs font-mono font-medium rounded-md bg-white border border-[var(--ak-color-border-subtle)] text-[var(--ak-color-text-secondary)] hover:bg-[var(--ak-color-bg-subtle)] transition cursor-pointer flex items-center gap-1.5"
             >
-              <FileCode className="w-3.5 h-3.5 text-slate-500" />
+              <FileCode className="w-3.5 h-3.5 text-[var(--ak-color-text-muted)]" />
               <span>{showRawJson ? 'Hide FHIR' : 'View FHIR'}</span>
             </button>
 
             <button
               onClick={handleAdmitToHospital}
               disabled={isAdmitting}
-              className="px-3.5 py-1.5 text-xs font-mono font-bold rounded-md bg-sky-600 hover:bg-sky-500 text-white transition shadow-xs cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+              className="px-3.5 py-1.5 text-xs font-mono font-bold rounded-md bg-sky-600 hover:bg-[var(--ak-color-primary-soft)]0 text-white transition shadow-xs cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
             >
               <BedDouble className="w-3.5 h-3.5" />
               <span>{isAdmitting ? 'Admitting...' : 'Admit to Hospital'}</span>
@@ -247,7 +247,7 @@ export const SyntheticTimelineModal: React.FC<SyntheticTimelineModalProps> = ({
 
             <button
               onClick={onClose}
-              className="p-1.5 text-slate-400 hover:text-slate-700 rounded-md hover:bg-slate-100 transition cursor-pointer"
+              className="p-1.5 text-[var(--ak-color-text-muted)] hover:text-[var(--ak-color-text-secondary)] rounded-md hover:bg-[var(--ak-color-bg-subtle)] transition cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
@@ -255,15 +255,15 @@ export const SyntheticTimelineModal: React.FC<SyntheticTimelineModalProps> = ({
         </div>
 
         {/* Disclaimer Bar */}
-        <div className="px-6 py-2 bg-amber-50 border-b border-amber-200 text-amber-800 text-[11px] font-mono flex items-center justify-between shrink-0">
+        <div className="px-6 py-2 bg-[var(--ak-color-warning-soft)] border-b border-[var(--ak-color-border-subtle)] text-[var(--ak-color-warning)] text-[11px] font-mono flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2">
-            <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+            <AlertTriangle className="w-4 h-4 text-[var(--ak-color-warning)] shrink-0" />
             <span>
               SYNTHETIC DATA DISCLAIMER: Generated via Synthea FHIR R4. Demonstration and UI testing only.
             </span>
           </div>
           {admitStatus && (
-            <span className="font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded border border-emerald-300 flex items-center gap-1">
+            <span className="font-bold text-[var(--ak-color-success)] bg-[var(--ak-color-success-soft)] px-2 py-0.5 rounded border border-[var(--ak-color-border-subtle)] flex items-center gap-1">
               <CheckCircle className="w-3 h-3" />
               {admitStatus}
             </span>
@@ -272,9 +272,9 @@ export const SyntheticTimelineModal: React.FC<SyntheticTimelineModalProps> = ({
 
         {/* Patient Summary Quick Bar */}
         {profile && (
-          <div className="px-6 py-3 bg-white border-b border-slate-200 grid grid-cols-2 md:grid-cols-4 gap-4 text-xs shrink-0">
+          <div className="px-6 py-3 bg-white border-b border-[var(--ak-color-border-subtle)] grid grid-cols-2 md:grid-cols-4 gap-4 text-xs shrink-0">
             <div>
-              <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider block">
+              <span className="text-[10px] font-mono text-[var(--ak-color-text-muted)] uppercase tracking-wider block">
                 Active Diagnoses
               </span>
               <div className="mt-1 flex flex-wrap gap-1">
@@ -282,19 +282,19 @@ export const SyntheticTimelineModal: React.FC<SyntheticTimelineModalProps> = ({
                   profile.active_conditions.map((c, i) => (
                     <span
                       key={i}
-                      className="px-1.5 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200 text-[10px] font-medium"
+                      className="px-1.5 py-0.5 rounded bg-[var(--ak-color-warning-soft)] text-[var(--ak-color-warning)] border border-[var(--ak-color-border-subtle)] text-[10px] font-medium"
                     >
                       {c.name}
                     </span>
                   ))
                 ) : (
-                  <span className="text-slate-400 italic">None recorded</span>
+                  <span className="text-[var(--ak-color-text-muted)] italic">None recorded</span>
                 )}
               </div>
             </div>
 
             <div>
-              <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider block">
+              <span className="text-[10px] font-mono text-[var(--ak-color-text-muted)] uppercase tracking-wider block">
                 Active Medications
               </span>
               <div className="mt-1 flex flex-wrap gap-1">
@@ -302,19 +302,19 @@ export const SyntheticTimelineModal: React.FC<SyntheticTimelineModalProps> = ({
                   profile.current_medications.map((m, i) => (
                     <span
                       key={i}
-                      className="px-1.5 py-0.5 rounded bg-purple-50 text-purple-800 border border-purple-200 text-[10px] font-medium"
+                      className="px-1.5 py-0.5 rounded bg-purple-50 text-[var(--ak-color-primary)] border border-[var(--ak-color-border-subtle)] text-[10px] font-medium"
                     >
                       {m.name}
                     </span>
                   ))
                 ) : (
-                  <span className="text-slate-400 italic">None active</span>
+                  <span className="text-[var(--ak-color-text-muted)] italic">None active</span>
                 )}
               </div>
             </div>
 
             <div>
-              <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider block">
+              <span className="text-[10px] font-mono text-[var(--ak-color-text-muted)] uppercase tracking-wider block">
                 Known Allergies
               </span>
               <div className="mt-1 flex flex-wrap gap-1">
@@ -322,22 +322,22 @@ export const SyntheticTimelineModal: React.FC<SyntheticTimelineModalProps> = ({
                   profile.allergies.map((a, i) => (
                     <span
                       key={i}
-                      className="px-1.5 py-0.5 rounded bg-rose-50 text-rose-800 border border-rose-200 text-[10px] font-medium"
+                      className="px-1.5 py-0.5 rounded bg-[var(--ak-color-warning-soft)] text-[var(--ak-color-danger)] border border-[var(--ak-color-border-subtle)] text-[10px] font-medium"
                     >
                       {a.substance} ({a.criticality || 'low'})
                     </span>
                   ))
                 ) : (
-                  <span className="text-slate-400 italic">No Known Allergies</span>
+                  <span className="text-[var(--ak-color-text-muted)] italic">No Known Allergies</span>
                 )}
               </div>
             </div>
 
             <div>
-              <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider block">
+              <span className="text-[10px] font-mono text-[var(--ak-color-text-muted)] uppercase tracking-wider block">
                 Latest Baseline Vitals
               </span>
-              <div className="mt-1 font-mono text-[11px] text-slate-700">
+              <div className="mt-1 font-mono text-[11px] text-[var(--ak-color-text-secondary)]">
                 {profile.latest_vitals && Object.keys(profile.latest_vitals).length > 0 ? (
                   <div className="space-y-0.5">
                     {profile.latest_vitals.heart_rate && (
@@ -348,7 +348,7 @@ export const SyntheticTimelineModal: React.FC<SyntheticTimelineModalProps> = ({
                     )}
                   </div>
                 ) : (
-                  <span className="text-slate-400 italic">Vitals standard</span>
+                  <span className="text-[var(--ak-color-text-muted)] italic">Vitals standard</span>
                 )}
               </div>
             </div>
@@ -356,8 +356,8 @@ export const SyntheticTimelineModal: React.FC<SyntheticTimelineModalProps> = ({
         )}
 
         {/* Timeline Category Filters */}
-        <div className="px-6 py-2.5 bg-slate-50 border-b border-slate-200 flex items-center gap-1.5 overflow-x-auto shrink-0">
-          <span className="text-[10px] font-mono font-bold text-slate-500 uppercase mr-2">
+        <div className="px-6 py-2.5 bg-[var(--ak-color-bg-subtle)] border-b border-[var(--ak-color-border-subtle)] flex items-center gap-1.5 overflow-x-auto shrink-0">
+          <span className="text-[10px] font-mono font-bold text-[var(--ak-color-text-muted)] uppercase mr-2">
             Filter Lane:
           </span>
           {(
@@ -379,13 +379,13 @@ export const SyntheticTimelineModal: React.FC<SyntheticTimelineModalProps> = ({
               className={`px-2.5 py-1 rounded text-xs font-mono font-medium flex items-center gap-1.5 transition cursor-pointer whitespace-nowrap ${
                 activeFilter === key
                   ? 'bg-slate-900 text-white shadow-xs'
-                  : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'
+                  : 'bg-white border border-[var(--ak-color-border-subtle)] text-[var(--ak-color-text-secondary)] hover:bg-[var(--ak-color-bg-subtle)]'
               }`}
             >
               <span>{label}</span>
               <span
                 className={`px-1 rounded-full text-[10px] ${
-                  activeFilter === key ? 'bg-slate-800 text-slate-200' : 'bg-slate-100 text-slate-500'
+                  activeFilter === key ? 'bg-slate-800 text-slate-200' : 'bg-[var(--ak-color-bg-subtle)] text-[var(--ak-color-text-muted)]'
                 }`}
               >
                 {count}
@@ -395,10 +395,10 @@ export const SyntheticTimelineModal: React.FC<SyntheticTimelineModalProps> = ({
         </div>
 
         {/* Main Content Area */}
-        <div className="flex-1 p-6 overflow-y-auto bg-slate-100/50">
+        <div className="flex-1 p-6 overflow-y-auto bg-[var(--ak-color-bg-subtle)]/50">
           {loading ? (
-            <div className="py-20 text-center text-slate-400 font-mono text-sm">
-              <Clock className="w-8 h-8 animate-spin mx-auto mb-2 text-sky-600" />
+            <div className="py-20 text-center text-[var(--ak-color-text-muted)] font-mono text-sm">
+              <Clock className="w-8 h-8 animate-spin mx-auto mb-2 text-[var(--ak-color-primary)]" />
               Loading FHIR R4 clinical timeline...
             </div>
           ) : showRawJson ? (
@@ -406,7 +406,7 @@ export const SyntheticTimelineModal: React.FC<SyntheticTimelineModalProps> = ({
               <pre>{JSON.stringify(rawJson, null, 2)}</pre>
             </div>
           ) : filteredEvents.length === 0 ? (
-            <div className="py-16 text-center text-slate-400 font-mono text-xs">
+            <div className="py-16 text-center text-[var(--ak-color-text-muted)] font-mono text-xs">
               No clinical events found for this filter category.
             </div>
           ) : (
@@ -423,7 +423,7 @@ export const SyntheticTimelineModal: React.FC<SyntheticTimelineModalProps> = ({
                   </div>
 
                   {/* Event card */}
-                  <div className="flex-1 bg-white border border-slate-200 rounded-lg p-4 shadow-xs hover:border-slate-300 transition">
+                  <div className="flex-1 bg-white border border-[var(--ak-color-border-subtle)] rounded-lg p-4 shadow-xs hover:border-[var(--ak-color-border-subtle)] transition">
                     <div className="flex items-center justify-between mb-1">
                       <div className="flex items-center gap-2">
                         <span
@@ -433,29 +433,29 @@ export const SyntheticTimelineModal: React.FC<SyntheticTimelineModalProps> = ({
                         >
                           {event.category}
                         </span>
-                        <h4 className="text-sm font-bold text-slate-900">{event.title}</h4>
+                        <h4 className="text-sm font-bold text-[var(--ak-color-text-primary)]">{event.title}</h4>
                       </div>
 
-                      <div className="flex items-center gap-1.5 text-xs text-slate-400 font-mono">
+                      <div className="flex items-center gap-1.5 text-xs text-[var(--ak-color-text-muted)] font-mono">
                         <Calendar className="w-3.5 h-3.5" />
                         <span>{event.display_date}</span>
                       </div>
                     </div>
 
                     {event.subtitle && (
-                      <p className="text-xs text-slate-600 font-medium mb-2">{event.subtitle}</p>
+                      <p className="text-xs text-[var(--ak-color-text-secondary)] font-medium mb-2">{event.subtitle}</p>
                     )}
 
                     {/* Metadata & Details */}
-                    <div className="flex flex-wrap items-center gap-3 text-[11px] font-mono text-slate-500 pt-2 border-t border-slate-100">
+                    <div className="flex flex-wrap items-center gap-3 text-[11px] font-mono text-[var(--ak-color-text-muted)] pt-2 border-t border-slate-100">
                       {event.code && (
                         <div className="flex items-center gap-1">
-                          <Tag className="w-3 h-3 text-slate-400" />
+                          <Tag className="w-3 h-3 text-[var(--ak-color-text-muted)]" />
                           <span>
-                            Code: <span className="text-slate-800">{event.code}</span>
+                            Code: <span className="text-[var(--ak-color-text-primary)]">{event.code}</span>
                           </span>
                           {event.system && (
-                            <span className="text-[10px] text-slate-400">
+                            <span className="text-[10px] text-[var(--ak-color-text-muted)]">
                               ({event.system.split('/').pop()})
                             </span>
                           )}
@@ -465,7 +465,7 @@ export const SyntheticTimelineModal: React.FC<SyntheticTimelineModalProps> = ({
                       {event.status && (
                         <div className="flex items-center gap-1">
                           <span>
-                            Status: <span className="text-slate-800">{event.status}</span>
+                            Status: <span className="text-[var(--ak-color-text-primary)]">{event.status}</span>
                           </span>
                         </div>
                       )}
@@ -475,7 +475,7 @@ export const SyntheticTimelineModal: React.FC<SyntheticTimelineModalProps> = ({
                           {event.details.components.map((c: any, ci: number) => (
                             <span
                               key={ci}
-                              className="px-2 py-0.5 rounded bg-slate-50 border border-slate-200 text-slate-700 text-[10px]"
+                              className="px-2 py-0.5 rounded bg-[var(--ak-color-bg-subtle)] border border-[var(--ak-color-border-subtle)] text-[var(--ak-color-text-secondary)] text-[10px]"
                             >
                               {c.name}: <strong>{c.value} {c.unit}</strong>
                             </span>
@@ -491,13 +491,13 @@ export const SyntheticTimelineModal: React.FC<SyntheticTimelineModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-xs font-mono text-slate-500 shrink-0">
+        <div className="px-6 py-3 bg-[var(--ak-color-bg-subtle)] border-t border-[var(--ak-color-border-subtle)] flex items-center justify-between text-xs font-mono text-[var(--ak-color-text-muted)] shrink-0">
           <span>
             Total Events: <strong>{events.length}</strong> • Showing: <strong>{filteredEvents.length}</strong>
           </span>
           <button
             onClick={onClose}
-            className="px-4 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded font-medium transition cursor-pointer"
+            className="px-4 py-1.5 bg-slate-200 hover:bg-slate-300 text-[var(--ak-color-text-primary)] rounded font-medium transition cursor-pointer"
           >
             Close Timeline
           </button>

@@ -18,6 +18,8 @@ import {
   ChevronUp,
 } from 'lucide-react';
 import { speakClinicalMessage, stopClinicalSpeech } from '../../utils/speechSynthesis';
+import { Button } from '../ui/Button';
+import { Badge, Chip } from '../ui/Badge';
 
 interface DoctorChatModalProps {
   isOpen: boolean;
@@ -48,7 +50,7 @@ const INITIAL_GREETING: DoctorChatMessage = {
   id: 'msg-welcome',
   sender: 'DOCTOR',
   content:
-    'Greetings. I am Dr. Marcus Vance, Chief Attending Physician of Internal Medicine. My clinical reasoning is grounded in Harrison\'s Principles of Internal Medicine (21st Edition) and Internal Medicine Clinical AI diagnostic models.\n\nHow may I assist you with clinical cases, differential diagnoses, evidence-based therapies, or medication contraindications today?',
+    'Greetings. I am Dr. Marcus Vance, Chief Attending Physician of Internal Medicine. My clinical reasoning is grounded in Harrison\'s Principles of Internal Medicine (21st Edition) and internal medicine clinical guidance models.\n\nHow may I assist you with clinical cases, differential diagnoses, evidence-based therapies, or medication contraindications today?',
   timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
   telemetry: {
     live_gpu_inference: true,
@@ -275,83 +277,86 @@ export const DoctorChatModal: React.FC<DoctorChatModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-900/40 backdrop-blur-xs animate-in fade-in duration-200">
-      <div className="bg-white border border-slate-200 w-full max-w-4xl h-[90vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden text-slate-800">
+      <div className="bg-[var(--ak-color-bg-surface)] border border-[var(--ak-color-border-subtle)] w-full max-w-4xl h-[90vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden text-[var(--ak-color-text-primary)]">
         {/* Header */}
-        <div className="p-4 sm:p-5 border-b border-slate-200 bg-slate-50 flex items-center justify-between shrink-0">
+        <div className="p-4 sm:p-5 border-b border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-subtle)] flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3.5">
             {/* Dr. Vance Avatar */}
             <div className="relative shrink-0">
               <img
                 src={drMarcusPhoto}
                 alt="Dr. Marcus Vance, MD"
-                className="w-12 h-12 rounded-xl object-cover object-top border-2 border-sky-500 shadow-sm"
+                className="w-12 h-12 rounded-xl object-cover object-top border border-[var(--ak-color-primary)] shadow-sm"
               />
-              <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-white shadow-xs animate-pulse" />
+              <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full bg-[var(--ak-color-success)] border-2 border-white animate-pulse" />
             </div>
 
             <div>
               <div className="flex flex-wrap items-center gap-2">
-                <h2 className="text-base font-bold text-slate-900 flex items-center gap-1.5">
+                <h2 className="text-base font-semibold text-[var(--ak-color-text-primary)] flex items-center gap-1.5">
                   <span>Dr. Marcus Vance, MD, FACP</span>
                 </h2>
-                <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-300 text-[10px] font-bold font-mono">
-                  ● ON DUTY
-                </span>
+                <Badge variant="success" size="sm">
+                  On duty
+                </Badge>
               </div>
-              <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 mt-0.5">
-                <span className="text-sky-700 font-medium">Chief Attending Physician, Internal Medicine</span>
-                <span className="text-slate-300">•</span>
-                <span className="flex items-center gap-1 text-purple-700 font-mono text-[11px]">
-                  <BookOpen className="w-3 h-3 text-purple-600" />
+              <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--ak-color-text-muted)] mt-0.5">
+                <span className="text-[var(--ak-color-primary)] font-medium">Chief Attending Physician, Internal Medicine</span>
+                <span className="text-[var(--ak-color-border-subtle)]">•</span>
+                <span className="flex items-center gap-1 font-mono text-[11px] text-[var(--ak-color-text-secondary)]">
+                  <BookOpen className="w-3 h-3 text-[var(--ak-color-primary)]" />
                   <span>Harrison's 21st Ed RAG</span>
                 </span>
-                <span className="text-slate-300">•</span>
-                <span className="flex items-center gap-1 text-sky-700 font-mono text-[11px]">
-                  <Cpu className="w-3 h-3 text-sky-600" />
-                  <span>Clinical AI Aligned</span>
+                <span className="text-[var(--ak-color-border-subtle)]">•</span>
+                <span className="flex items-center gap-1 font-mono text-[11px] text-[var(--ak-color-text-secondary)]">
+                  <Cpu className="w-3 h-3 text-[var(--ak-color-primary)]" />
+                  <span>AI-assisted internal medicine</span>
                 </span>
               </div>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
-            <button
+            <Button
+              variant="secondary"
+              size="sm"
               onClick={handleClearHistory}
-              className="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 text-xs flex items-center gap-1 transition"
+              leadingIcon={<Trash2 className="w-3.5 h-3.5" />}
               title="Reset conversation"
             >
-              <Trash2 className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Reset</span>
-            </button>
-            <button
+              Reset
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={onClose}
-              className="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-900 flex items-center justify-center transition"
+              title="Close modal"
             >
               <X className="w-4 h-4" />
-            </button>
+            </Button>
           </div>
         </div>
 
         {/* Quick Scenario Starter Chips */}
-        <div className="px-4 py-2.5 bg-slate-50 border-b border-slate-200 flex items-center gap-2 overflow-x-auto text-xs shrink-0">
-          <span className="text-slate-500 font-medium shrink-0 flex items-center gap-1">
-            <Sparkles className="w-3.5 h-3.5 text-sky-600" />
+        <div className="px-4 py-2.5 bg-[var(--ak-color-bg-subtle)] border-b border-[var(--ak-color-border-subtle)] flex items-center gap-2 overflow-x-auto text-xs shrink-0">
+          <span className="text-[var(--ak-color-text-muted)] font-medium shrink-0 flex items-center gap-1">
+            <Sparkles className="w-3.5 h-3.5 text-[var(--ak-color-primary)]" />
             <span>Presets:</span>
           </span>
           {STARTER_PROMPTS.map((item, idx) => (
-            <button
+            <Chip
               key={idx}
+              clickable
               onClick={() => handleSendMessage(item.prompt)}
-              disabled={isLoading}
-              className="px-2.5 py-1 rounded-lg bg-white hover:bg-sky-50 hover:border-sky-300 border border-slate-200 text-slate-700 hover:text-sky-900 text-[11px] whitespace-nowrap transition cursor-pointer shadow-xs disabled:opacity-50"
+              className="whitespace-nowrap"
             >
               {item.title}
-            </button>
+            </Chip>
           ))}
         </div>
 
         {/* Message Thread */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5 bg-[#f8fafc]">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5 bg-[var(--ak-color-bg-app)]">
           {messages.map((msg) => {
             const isDoc = msg.sender === 'DOCTOR';
             const citationsOpen = !!expandedCitations[msg.id];
@@ -367,49 +372,45 @@ export const DoctorChatModal: React.FC<DoctorChatModalProps> = ({
                   <img
                     src={drMarcusPhoto}
                     alt="Dr. Vance"
-                    className="w-8 h-8 rounded-lg object-cover object-top border border-sky-300 shrink-0 mt-1 shadow-xs"
+                    className="w-8 h-8 rounded-lg object-cover object-top border border-[var(--ak-color-border-subtle)] shrink-0 mt-1 shadow-xs"
                   />
                 )}
 
                 <div
                   className={`max-w-2xl rounded-2xl p-4 sm:p-5 shadow-xs transition-all ${
                     isDoc
-                      ? 'bg-white border border-slate-200 text-slate-800'
-                      : 'bg-sky-600 border border-sky-700 text-white'
+                      ? 'bg-[var(--ak-color-bg-surface)] border border-[var(--ak-color-border-subtle)] text-[var(--ak-color-text-primary)]'
+                      : 'bg-[var(--ak-color-primary)] border border-[var(--ak-color-primary)] text-white'
                   }`}
                 >
                   {/* Sender & Timestamp Header */}
                   <div className={`flex items-center justify-between gap-3 mb-2 pb-1.5 border-b text-[11px] ${
-                    isDoc ? 'border-slate-100' : 'border-sky-500/40'
+                    isDoc ? 'border-[var(--ak-color-border-subtle)]' : 'border-white/20'
                   }`}>
-                    <div className="flex items-center gap-1.5 font-bold tracking-wide">
+                    <div className="flex items-center gap-1.5 font-semibold tracking-wide">
                       {isDoc ? (
                         <>
-                          <span className="text-sky-800">Dr. Marcus Vance, MD</span>
-                          <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-sky-50 text-sky-800 border border-sky-200">
+                          <span className="text-[var(--ak-color-primary)]">Dr. Marcus Vance, MD</span>
+                          <Badge variant="primary" size="sm">
                             Attending
-                          </span>
+                          </Badge>
                         </>
                       ) : (
-                        <span className="text-white font-semibold">Clinician / User</span>
+                        <span className="text-white font-medium">Clinician</span>
                       )}
                     </div>
                     <div className={`flex items-center gap-2 text-[10px] ${
-                      isDoc ? 'text-slate-400' : 'text-sky-100'
+                      isDoc ? 'text-[var(--ak-color-text-muted)]' : 'text-white/80'
                     }`}>
                       <span>{msg.timestamp}</span>
                       {isDoc && (
                         <button
                           onClick={() => handleToggleSpeech(msg)}
-                          className={`p-1 rounded transition ${
-                            isSpeaking
-                              ? 'bg-rose-100 text-rose-700 border border-rose-300'
-                              : 'hover:bg-slate-100 text-slate-500 hover:text-slate-800'
-                          }`}
-                          title={isSpeaking ? 'Stop clinical voice readout' : 'Listen to Dr. Vance read response'}
+                          className="p-1 rounded transition hover:bg-[var(--ak-color-bg-subtle)] cursor-pointer text-[var(--ak-color-text-muted)] hover:text-[var(--ak-color-text-primary)]"
+                          title={isSpeaking ? 'Stop voice readout' : 'Listen to Dr. Vance read response'}
                         >
                           {isSpeaking ? (
-                            <VolumeX className="w-3.5 h-3.5 animate-pulse" />
+                            <VolumeX className="w-3.5 h-3.5 text-[var(--ak-color-danger)] animate-pulse" />
                           ) : (
                             <Volume2 className="w-3.5 h-3.5" />
                           )}
@@ -428,26 +429,26 @@ export const DoctorChatModal: React.FC<DoctorChatModalProps> = ({
                     <>
                       {/* Differential Diagnosis Tags */}
                       {msg.differential && msg.differential.length > 0 && (
-                        <div className="mt-4 pt-3 border-t border-slate-200">
-                          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-2 font-mono">
-                            Evidence-Based Differential Diagnosis:
+                        <div className="mt-4 pt-3 border-t border-[var(--ak-color-border-subtle)]">
+                          <span className="text-[10px] font-semibold text-[var(--ak-color-text-muted)] uppercase tracking-wider block mb-2 font-mono">
+                            Differential diagnosis:
                           </span>
                           <div className="space-y-1.5">
                             {msg.differential.map((diff, dIdx) => (
                               <div
                                 key={dIdx}
-                                className="flex items-center justify-between gap-2 p-2 rounded-lg bg-slate-50 border border-slate-200 text-xs"
+                                className="flex items-center justify-between gap-2 p-2 rounded-lg bg-[var(--ak-color-bg-subtle)] border border-[var(--ak-color-border-subtle)] text-xs"
                               >
-                                <span className="font-semibold text-slate-800">{diff.condition}</span>
+                                <span className="font-medium text-[var(--ak-color-text-primary)]">{diff.condition}</span>
                                 <div className="flex items-center gap-2 shrink-0">
                                   {diff.notes && (
-                                    <span className="text-[10px] text-slate-500 hidden sm:inline">
+                                    <span className="text-[10px] text-[var(--ak-color-text-muted)] hidden sm:inline">
                                       {diff.notes}
                                     </span>
                                   )}
-                                  <span className="px-1.5 py-0.5 rounded bg-sky-50 text-sky-800 border border-sky-300 text-[10px] font-mono font-bold">
+                                  <Badge variant="primary" size="sm">
                                     {(diff.likelihood * 100).toFixed(0)}%
-                                  </span>
+                                  </Badge>
                                 </div>
                               </div>
                             ))}
@@ -457,12 +458,12 @@ export const DoctorChatModal: React.FC<DoctorChatModalProps> = ({
 
                       {/* Safety Alerts / Contraindications */}
                       {msg.contraindications && msg.contraindications.length > 0 && (
-                        <div className="mt-3 p-3 rounded-xl bg-amber-50/70 border border-amber-300 text-amber-900">
-                          <div className="flex items-center gap-1.5 text-xs font-bold text-amber-800 mb-1">
-                            <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
-                            <span>Clinical Safety & Contraindications:</span>
+                        <div className="mt-3 p-3 rounded-xl bg-[var(--ak-color-warning-soft)] border border-[var(--ak-color-border-subtle)] text-[var(--ak-color-text-primary)]">
+                          <div className="flex items-center gap-1.5 text-xs font-semibold text-[var(--ak-color-warning)] mb-1">
+                            <AlertTriangle className="w-4 h-4 shrink-0" />
+                            <span>Clinical safety and contraindications:</span>
                           </div>
-                          <ul className="list-disc list-inside text-xs space-y-0.5 text-amber-900 pl-1">
+                          <ul className="list-disc list-inside text-xs space-y-0.5 text-[var(--ak-color-text-secondary)] pl-1">
                             {msg.contraindications.map((c, cIdx) => (
                               <li key={cIdx}>{c}</li>
                             ))}
@@ -472,12 +473,12 @@ export const DoctorChatModal: React.FC<DoctorChatModalProps> = ({
 
                       {/* Guideline Therapy & Workup */}
                       {msg.guideline_therapy && msg.guideline_therapy.length > 0 && (
-                        <div className="mt-3 p-3 rounded-xl bg-slate-50 border border-slate-200">
-                          <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-700 mb-1.5">
-                            <Stethoscope className="w-3.5 h-3.5 text-emerald-600" />
-                            <span>Guideline-Directed Management:</span>
+                        <div className="mt-3 p-3 rounded-xl bg-[var(--ak-color-bg-subtle)] border border-[var(--ak-color-border-subtle)]">
+                          <div className="flex items-center gap-1.5 text-xs font-semibold text-[var(--ak-color-success)] mb-1.5">
+                            <Stethoscope className="w-3.5 h-3.5" />
+                            <span>Guideline-directed management:</span>
                           </div>
-                          <ul className="list-disc list-inside text-xs space-y-0.5 text-slate-700 pl-1">
+                          <ul className="list-disc list-inside text-xs space-y-0.5 text-[var(--ak-color-text-secondary)] pl-1">
                             {msg.guideline_therapy.map((rx, rxIdx) => (
                               <li key={rxIdx}>{rx}</li>
                             ))}
@@ -490,11 +491,11 @@ export const DoctorChatModal: React.FC<DoctorChatModalProps> = ({
                         <div className="mt-3 pt-2">
                           <button
                             onClick={() => toggleCitations(msg.id)}
-                            className="text-[11px] text-purple-700 hover:text-purple-900 flex items-center gap-1 transition cursor-pointer font-medium"
+                            className="text-[11px] text-[var(--ak-color-primary)] hover:underline flex items-center gap-1 transition cursor-pointer font-medium"
                           >
-                            <BookOpen className="w-3.5 h-3.5 text-purple-600" />
+                            <BookOpen className="w-3.5 h-3.5" />
                             <span>
-                              {citationsOpen ? 'Hide' : 'View'} {msg.citations.length} Harrison's Textbook Citations
+                              {citationsOpen ? 'Hide' : 'View'} {msg.citations.length} Harrison's textbook citations
                             </span>
                             {citationsOpen ? (
                               <ChevronUp className="w-3 h-3" />
@@ -508,12 +509,12 @@ export const DoctorChatModal: React.FC<DoctorChatModalProps> = ({
                               {msg.citations.map((cite, cIdx) => (
                                 <div
                                   key={cIdx}
-                                  className="p-2.5 rounded-lg bg-purple-50/60 border border-purple-200 text-slate-800 text-xs"
+                                  className="p-2.5 rounded-lg bg-[var(--ak-color-bg-subtle)] border border-[var(--ak-color-border-subtle)] text-xs"
                                 >
-                                  <div className="font-bold text-purple-900 text-[11px] mb-1">
+                                  <div className="font-semibold text-[var(--ak-color-text-primary)] text-[11px] mb-1">
                                     {cite.chapter} {cite.page ? `(Page ${cite.page})` : ''}
                                   </div>
-                                  <p className="text-[11px] text-slate-600 italic leading-relaxed">
+                                  <p className="text-[11px] text-[var(--ak-color-text-secondary)] italic leading-relaxed">
                                     "{cite.text}"
                                   </p>
                                 </div>
@@ -525,9 +526,9 @@ export const DoctorChatModal: React.FC<DoctorChatModalProps> = ({
 
                       {/* Telemetry pill */}
                       {msg.telemetry && (
-                        <div className="mt-3 pt-2 border-t border-slate-200 flex flex-wrap items-center justify-between text-[10px] text-slate-500 font-mono">
+                        <div className="mt-3 pt-2 border-t border-[var(--ak-color-border-subtle)] flex flex-wrap items-center justify-between text-[10px] text-[var(--ak-color-text-muted)] font-mono">
                           <span className="flex items-center gap-1">
-                            <Activity className="w-3 h-3 text-sky-600" />
+                            <Activity className="w-3 h-3 text-[var(--ak-color-primary)]" />
                             <span>{msg.telemetry.model}</span>
                           </span>
                           <span>{msg.telemetry.latency_ms > 0 ? `${msg.telemetry.latency_ms} ms` : 'Cached'}</span>
@@ -546,11 +547,11 @@ export const DoctorChatModal: React.FC<DoctorChatModalProps> = ({
               <img
                 src={drMarcusPhoto}
                 alt="Dr. Vance"
-                className="w-8 h-8 rounded-lg object-cover object-top border border-sky-400 shrink-0 mt-1 shadow-xs"
+                className="w-8 h-8 rounded-lg object-cover object-top border border-[var(--ak-color-border-subtle)] shrink-0 mt-1 shadow-xs"
               />
-              <div className="bg-white border border-slate-200 rounded-2xl p-4 flex items-center gap-3 text-xs text-slate-700 shadow-xs">
-                <Loader2 className="w-4 h-4 text-sky-600 animate-spin" />
-                <span>Dr. Vance is analyzing Harrison's clinical knowledge & Diagnostic Engine...</span>
+              <div className="bg-[var(--ak-color-bg-surface)] border border-[var(--ak-color-border-subtle)] rounded-2xl p-4 flex items-center gap-3 text-xs text-[var(--ak-color-text-secondary)] shadow-xs">
+                <Loader2 className="w-4 h-4 text-[var(--ak-color-primary)] animate-spin" />
+                <span>Dr. Vance is analyzing Harrison's clinical knowledge and guidelines...</span>
               </div>
             </div>
           )}
@@ -559,7 +560,7 @@ export const DoctorChatModal: React.FC<DoctorChatModalProps> = ({
         </div>
 
         {/* Input Bar */}
-        <div className="p-4 bg-white border-t border-slate-200 shrink-0">
+        <div className="p-4 bg-[var(--ak-color-bg-surface)] border-t border-[var(--ak-color-border-subtle)] shrink-0">
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -567,7 +568,7 @@ export const DoctorChatModal: React.FC<DoctorChatModalProps> = ({
             }}
             className="flex items-end gap-3"
           >
-            <div className="flex-1 bg-slate-50 border border-slate-300 focus-within:border-sky-500 rounded-xl px-3.5 py-2.5 shadow-xs transition">
+            <div className="flex-1 bg-[var(--ak-color-bg-subtle)] border border-[var(--ak-color-border-subtle)] focus-within:border-[var(--ak-color-primary)] rounded-xl px-3.5 py-2.5 shadow-xs transition">
               <textarea
                 ref={inputRef}
                 value={inputText}
@@ -575,26 +576,22 @@ export const DoctorChatModal: React.FC<DoctorChatModalProps> = ({
                 onKeyDown={handleKeyDown}
                 placeholder="Ask Dr. Vance about clinical cases, differential diagnoses, therapies, or Harrison's guidelines... (Press Enter to send)"
                 rows={2}
-                className="w-full bg-transparent text-slate-900 placeholder-slate-400 text-xs sm:text-sm focus:outline-none resize-none"
+                className="w-full bg-transparent text-[var(--ak-color-text-primary)] placeholder-[var(--ak-color-text-muted)] text-xs sm:text-sm focus:outline-none resize-none font-sans"
               />
             </div>
 
-            <button
+            <Button
               type="submit"
+              variant="primary"
               disabled={!inputText.trim() || isLoading}
-              className="px-4 py-3 rounded-xl bg-sky-600 hover:bg-sky-500 disabled:opacity-40 text-white text-xs sm:text-sm font-bold shadow-xs flex items-center gap-1.5 transition cursor-pointer disabled:cursor-not-allowed shrink-0"
+              leadingIcon={isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
             >
-              {isLoading ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Send className="w-4 h-4" />
-              )}
-              <span className="hidden sm:inline">Send</span>
-            </button>
+              Send
+            </Button>
           </form>
-          <div className="flex items-center justify-between text-[10px] text-slate-500 mt-2 px-1 font-mono">
+          <div className="flex items-center justify-between text-[10px] text-[var(--ak-color-text-muted)] mt-2 px-1 font-mono">
             <span>Press Enter to send, Shift+Enter for newline</span>
-            <span>Grounding: Harrison's Principles of Internal Medicine 21st Ed & Clinical AI</span>
+            <span>Grounding: Harrison's Principles of Internal Medicine 21st Ed</span>
           </div>
         </div>
       </div>

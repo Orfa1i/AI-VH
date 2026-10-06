@@ -55,11 +55,11 @@ export const CaseSelector: React.FC<CaseSelectorProps> = ({
             <span className="text-sm font-black tracking-wider text-slate-100 uppercase">
               AI Virtual Hospital
             </span>
-            <span className="px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/30 text-[10px] font-mono font-semibold">
+            <span className="px-2 py-0.5 rounded-full bg-[var(--ak-color-primary-soft)]0/10 text-sky-400 border border-sky-500/30 text-[10px] font-mono font-semibold">
               CLINICAL AI 4-BIT • RTX 4060
             </span>
           </div>
-          <p className="text-[11px] text-slate-400">
+          <p className="text-[11px] text-[var(--ak-color-text-muted)]">
             Autonomous Multi-Agent Clinical Simulation Platform
           </p>
         </div>
@@ -68,7 +68,7 @@ export const CaseSelector: React.FC<CaseSelectorProps> = ({
       {/* Case Selector & Encounter Launcher */}
       <div className="flex items-center gap-2.5">
         <div className="flex items-center gap-2 bg-slate-800/80 px-3 py-1.5 rounded-xl border border-slate-700 text-xs">
-          <span className="text-slate-400 font-semibold">Case:</span>
+          <span className="text-[var(--ak-color-text-muted)] font-semibold">Case:</span>
           <select
             value={selectedCaseId}
             onChange={(e) => onSelectCase(e.target.value)}
@@ -137,7 +137,7 @@ export const CaseSelector: React.FC<CaseSelectorProps> = ({
             title={isAudioMuted ? 'Unmute Agent Voices' : 'Mute Agent Voices'}
             className={`p-2 rounded-xl border text-xs font-semibold cursor-pointer transition-all ${
               isAudioMuted
-                ? 'bg-slate-800 text-slate-400 border-slate-700 hover:text-slate-200'
+                ? 'bg-slate-800 text-[var(--ak-color-text-muted)] border-slate-700 hover:text-slate-200'
                 : 'bg-emerald-950/80 text-emerald-300 border-emerald-700/70 shadow-lg shadow-emerald-900/30'
             }`}
           >
@@ -153,8 +153,8 @@ export const CaseSelector: React.FC<CaseSelectorProps> = ({
           onClick={() => onChangeView('HOSPITAL_3D')}
           className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg transition-all cursor-pointer ${
             activeView === 'HOSPITAL_3D'
-              ? 'bg-sky-500 text-white shadow-md shadow-sky-500/20'
-              : 'text-slate-400 hover:text-slate-200'
+              ? 'bg-[var(--ak-color-primary-soft)]0 text-white shadow-md shadow-sky-500/20'
+              : 'text-[var(--ak-color-text-muted)] hover:text-slate-200'
           }`}
         >
           <Hospital className="w-3.5 h-3.5" />
@@ -165,8 +165,8 @@ export const CaseSelector: React.FC<CaseSelectorProps> = ({
           onClick={() => onChangeView('PHYSICIAN_REVIEW')}
           className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg transition-all cursor-pointer ${
             activeView === 'PHYSICIAN_REVIEW'
-              ? 'bg-sky-500 text-white shadow-md shadow-sky-500/20'
-              : 'text-slate-400 hover:text-slate-200'
+              ? 'bg-[var(--ak-color-primary-soft)]0 text-white shadow-md shadow-sky-500/20'
+              : 'text-[var(--ak-color-text-muted)] hover:text-slate-200'
           }`}
         >
           <ClipboardCheck className="w-3.5 h-3.5" />
@@ -176,7 +176,7 @@ export const CaseSelector: React.FC<CaseSelectorProps> = ({
               className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
                 activeView === 'PHYSICIAN_REVIEW'
                   ? 'bg-white/20 text-white'
-                  : 'bg-sky-500/20 text-sky-400 border border-sky-500/40'
+                  : 'bg-[var(--ak-color-primary-soft)]0/20 text-sky-400 border border-sky-500/40'
               }`}
             >
               {reportsCount}

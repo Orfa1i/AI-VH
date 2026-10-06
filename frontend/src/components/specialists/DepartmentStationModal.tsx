@@ -10,6 +10,8 @@ import {
   Zap,
 } from 'lucide-react';
 import type { BenchmarkCase } from '../../types';
+import { Button } from '../ui/Button';
+import { Badge } from '../ui/Badge';
 
 interface DepartmentStationModalProps {
   stationId: string | null;
@@ -36,102 +38,104 @@ export const DepartmentStationModal: React.FC<DepartmentStationModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-      <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 text-slate-800">
+      <div className="bg-[var(--ak-color-bg-surface)] border border-[var(--ak-color-border-subtle)] rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 text-[var(--ak-color-text-primary)]">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+        <div className="px-6 py-4 border-b border-[var(--ak-color-border-subtle)] flex items-center justify-between bg-[var(--ak-color-bg-subtle)]">
           <div className="flex items-center gap-3">
             {stationId === 'LABORATORY' && (
-              <div className="w-10 h-10 rounded-xl bg-purple-50 border border-purple-200 flex items-center justify-center text-purple-700 shadow-xs">
+              <div className="w-10 h-10 rounded-xl bg-[var(--ak-color-primary-soft)] border border-[var(--ak-color-border-subtle)] flex items-center justify-center text-[var(--ak-color-primary)]">
                 <FlaskConical className="w-5 h-5" />
               </div>
             )}
             {stationId === 'RADIOLOGY' && (
-              <div className="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-200 flex items-center justify-center text-indigo-700 shadow-xs">
+              <div className="w-10 h-10 rounded-xl bg-[var(--ak-color-primary-soft)] border border-[var(--ak-color-border-subtle)] flex items-center justify-center text-[var(--ak-color-primary)]">
                 <Radio className="w-5 h-5" />
               </div>
             )}
             {stationId === 'NURSE_STATION' && (
-              <div className="w-10 h-10 rounded-xl bg-cyan-50 border border-cyan-200 flex items-center justify-center text-cyan-700 shadow-xs">
+              <div className="w-10 h-10 rounded-xl bg-[var(--ak-color-primary-soft)] border border-[var(--ak-color-border-subtle)] flex items-center justify-center text-[var(--ak-color-primary)]">
                 <HeartPulse className="w-5 h-5" />
               </div>
             )}
             <div>
-              <h2 className="text-base font-bold text-slate-900">
-                {stationId === 'LABORATORY' && 'Clinical Pathology & Automated Analyzers'}
-                {stationId === 'RADIOLOGY' && 'Radiology Suite & Diagnostic PACS Console'}
-                {stationId === 'NURSE_STATION' && 'Central Rotunda Triage & Intake Desk'}
+              <h2 className="text-base font-semibold text-[var(--ak-color-text-primary)]">
+                {stationId === 'LABORATORY' && 'Clinical pathology and automated analyzers'}
+                {stationId === 'RADIOLOGY' && 'Radiology suite and diagnostic PACS console'}
+                {stationId === 'NURSE_STATION' && 'Central rotunda triage and intake desk'}
               </h2>
-              <p className="text-xs text-slate-500">
-                {stationId === 'LABORATORY' && 'David Chen, MLS(ASCP) • Central Laboratory Workbench'}
-                {stationId === 'RADIOLOGY' && 'Dr. Hayes, MD • High-Resolution CT Gantry & X-Ray Console'}
-                {stationId === 'NURSE_STATION' && 'Sarah Jenkins, RN • Patient Intake & Triage Acuity Assessment'}
+              <p className="text-xs text-[var(--ak-color-text-muted)]">
+                {stationId === 'LABORATORY' && 'David Chen, MLS(ASCP) • Central laboratory workbench'}
+                {stationId === 'RADIOLOGY' && 'Dr. Hayes, MD • High-resolution CT gantry and X-ray console'}
+                {stationId === 'NURSE_STATION' && 'Sarah Jenkins, RN • Patient intake and triage acuity assessment'}
               </p>
             </div>
           </div>
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors cursor-pointer"
+            title="Close modal"
           >
-            <X className="w-5 h-5" />
-          </button>
+            <X className="w-4 h-4" />
+          </Button>
         </div>
 
         {/* Content Body */}
-        <div className="p-6 space-y-5 overflow-y-auto bg-white">
+        <div className="p-6 space-y-5 overflow-y-auto bg-[var(--ak-color-bg-surface)]">
           {/* LABORATORY VIEW */}
           {stationId === 'LABORATORY' && (
             <>
-              <div className="p-4 rounded-xl bg-purple-50/60 border border-purple-200 text-xs text-purple-900 leading-relaxed">
-                <div className="font-bold text-purple-800 mb-1 flex items-center gap-1.5">
-                  <Zap className="w-4 h-4 text-purple-600" />
-                  Automated High-Throughput Diagnostic Analyzers:
+              <div className="p-4 rounded-xl bg-[var(--ak-color-bg-subtle)] border border-[var(--ak-color-border-subtle)] text-xs text-[var(--ak-color-text-primary)] leading-relaxed">
+                <div className="font-semibold text-[var(--ak-color-text-primary)] mb-1 flex items-center gap-1.5">
+                  <Zap className="w-4 h-4 text-[var(--ak-color-primary)]" />
+                  Automated high-throughput diagnostic analyzers:
                 </div>
-                The Clinical Laboratory executes automated spectrophotometric and chemiluminescent biomarker assays for acute inpatient encounters.
+                The clinical laboratory executes automated spectrophotometric and chemiluminescent biomarker assays for acute inpatient encounters.
               </div>
 
               <div>
-                <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-                  Active Clinical Assay Panels:
+                <h3 className="text-xs font-semibold text-[var(--ak-color-text-muted)] uppercase tracking-wider mb-2">
+                  Active clinical assay panels:
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
-                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs flex items-center justify-between">
+                  <div className="p-3 rounded-xl bg-[var(--ak-color-bg-subtle)] border border-[var(--ak-color-border-subtle)] text-xs flex items-center justify-between">
                     <div>
-                      <div className="font-semibold text-slate-900">High-Sensitivity Troponin-I</div>
-                      <div className="text-[11px] text-slate-500">Chemiluminescence Immunoassay</div>
+                      <div className="font-medium text-[var(--ak-color-text-primary)]">High-sensitivity Troponin-I</div>
+                      <div className="text-[11px] text-[var(--ak-color-text-muted)]">Chemiluminescence immunoassay</div>
                     </div>
-                    <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-50 text-emerald-800 border border-emerald-300 flex items-center gap-1 font-semibold">
-                      <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Online
-                    </span>
+                    <Badge variant="success" size="sm">
+                      <CheckCircle2 className="w-3 h-3 mr-1" /> Online
+                    </Badge>
                   </div>
 
-                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs flex items-center justify-between">
+                  <div className="p-3 rounded-xl bg-[var(--ak-color-bg-subtle)] border border-[var(--ak-color-border-subtle)] text-xs flex items-center justify-between">
                     <div>
-                      <div className="font-semibold text-slate-900">Comprehensive Metabolic Panel (CMP)</div>
-                      <div className="text-[11px] text-slate-500">ISE Ion-Selective Electrode (Na, K, Cl, CO2, BUN, Cr)</div>
+                      <div className="font-medium text-[var(--ak-color-text-primary)]">Comprehensive Metabolic Panel (CMP)</div>
+                      <div className="text-[11px] text-[var(--ak-color-text-muted)]">ISE Ion-Selective Electrode</div>
                     </div>
-                    <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-50 text-emerald-800 border border-emerald-300 flex items-center gap-1 font-semibold">
-                      <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Online
-                    </span>
+                    <Badge variant="success" size="sm">
+                      <CheckCircle2 className="w-3 h-3 mr-1" /> Online
+                    </Badge>
                   </div>
 
-                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs flex items-center justify-between">
+                  <div className="p-3 rounded-xl bg-[var(--ak-color-bg-subtle)] border border-[var(--ak-color-border-subtle)] text-xs flex items-center justify-between">
                     <div>
-                      <div className="font-semibold text-slate-900">Complete Blood Count (CBC) with Diff</div>
-                      <div className="text-[11px] text-slate-500">Flow Cytometry / Impedance Counting</div>
+                      <div className="font-medium text-[var(--ak-color-text-primary)]">Complete Blood Count (CBC)</div>
+                      <div className="text-[11px] text-[var(--ak-color-text-muted)]">Flow cytometry counting</div>
                     </div>
-                    <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-50 text-emerald-800 border border-emerald-300 flex items-center gap-1 font-semibold">
-                      <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Online
-                    </span>
+                    <Badge variant="success" size="sm">
+                      <CheckCircle2 className="w-3 h-3 mr-1" /> Online
+                    </Badge>
                   </div>
 
-                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs flex items-center justify-between">
+                  <div className="p-3 rounded-xl bg-[var(--ak-color-bg-subtle)] border border-[var(--ak-color-border-subtle)] text-xs flex items-center justify-between">
                     <div>
-                      <div className="font-semibold text-slate-900">Arterial Blood Gas (ABG) & Lactate</div>
-                      <div className="text-[11px] text-slate-500">Point-of-Care Amperometric Sensor</div>
+                      <div className="font-medium text-[var(--ak-color-text-primary)]">Arterial Blood Gas (ABG) & Lactate</div>
+                      <div className="text-[11px] text-[var(--ak-color-text-muted)]">Point-of-care amperometric sensor</div>
                     </div>
-                    <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-50 text-emerald-800 border border-emerald-300 flex items-center gap-1 font-semibold">
-                      <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Online
-                    </span>
+                    <Badge variant="success" size="sm">
+                      <CheckCircle2 className="w-3 h-3 mr-1" /> Online
+                    </Badge>
                   </div>
                 </div>
               </div>
@@ -141,47 +145,47 @@ export const DepartmentStationModal: React.FC<DepartmentStationModalProps> = ({
           {/* RADIOLOGY VIEW */}
           {stationId === 'RADIOLOGY' && (
             <>
-              <div className="p-4 rounded-xl bg-indigo-50/60 border border-indigo-200 text-xs text-indigo-900 leading-relaxed">
-                <div className="font-bold text-indigo-800 mb-1 flex items-center gap-1.5">
-                  <Radio className="w-4 h-4 text-indigo-600" />
-                  Radiology Imaging & PACS Diagnostic Suite:
+              <div className="p-4 rounded-xl bg-[var(--ak-color-bg-subtle)] border border-[var(--ak-color-border-subtle)] text-xs text-[var(--ak-color-text-primary)] leading-relaxed">
+                <div className="font-semibold text-[var(--ak-color-text-primary)] mb-1 flex items-center gap-1.5">
+                  <Radio className="w-4 h-4 text-[var(--ak-color-primary)]" />
+                  Radiology imaging and PACS diagnostic suite:
                 </div>
-                Equipped with a 64-slice helical CT scanner with sky-blue bore illumination, motorized patient couch, and shielded lead console.
+                Equipped with a 64-slice helical CT scanner with bore illumination, motorized couch, and shielded lead console.
               </div>
 
               <div>
-                <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-                  Imaging Modalities & Diagnostic Feeds:
+                <h3 className="text-xs font-semibold text-[var(--ak-color-text-muted)] uppercase tracking-wider mb-2">
+                  Imaging modalities and diagnostic feeds:
                 </h3>
                 <div className="space-y-2">
-                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs flex items-center justify-between">
+                  <div className="p-3 rounded-xl bg-[var(--ak-color-bg-subtle)] border border-[var(--ak-color-border-subtle)] text-xs flex items-center justify-between">
                     <div>
-                      <div className="font-semibold text-slate-900">12-Lead Electrocardiogram (ECG)</div>
-                      <div className="text-[11px] text-slate-500">Real-time ST-segment elevation / depression analyzer</div>
+                      <div className="font-medium text-[var(--ak-color-text-primary)]">12-Lead Electrocardiogram (ECG)</div>
+                      <div className="text-[11px] text-[var(--ak-color-text-muted)]">ST-segment elevation analyzer</div>
                     </div>
-                    <span className="px-2.5 py-1 rounded bg-indigo-50 text-indigo-800 border border-indigo-300 text-[10px] font-bold font-mono">
-                      CALIBRATED
-                    </span>
+                    <Badge variant="primary" size="sm">
+                      Calibrated
+                    </Badge>
                   </div>
 
-                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs flex items-center justify-between">
+                  <div className="p-3 rounded-xl bg-[var(--ak-color-bg-subtle)] border border-[var(--ak-color-border-subtle)] text-xs flex items-center justify-between">
                     <div>
-                      <div className="font-semibold text-slate-900">Chest Radiography (PA & Lateral)</div>
-                      <div className="text-[11px] text-slate-500">Cardiomegaly, pulmonary edema, infiltrates, and pneumothorax screen</div>
+                      <div className="font-medium text-[var(--ak-color-text-primary)]">Chest Radiography (PA & Lateral)</div>
+                      <div className="text-[11px] text-[var(--ak-color-text-muted)]">Cardiomegaly and infiltrates screen</div>
                     </div>
-                    <span className="px-2.5 py-1 rounded bg-indigo-50 text-indigo-800 border border-indigo-300 text-[10px] font-bold font-mono">
-                      READY
-                    </span>
+                    <Badge variant="primary" size="sm">
+                      Ready
+                    </Badge>
                   </div>
 
-                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs flex items-center justify-between">
+                  <div className="p-3 rounded-xl bg-[var(--ak-color-bg-subtle)] border border-[var(--ak-color-border-subtle)] text-xs flex items-center justify-between">
                     <div>
-                      <div className="font-semibold text-slate-900">Helical CT Angiography / Non-Contrast Head CT</div>
-                      <div className="text-[11px] text-slate-500">High-resolution reconstruction with lead-glass workstation</div>
+                      <div className="font-medium text-[var(--ak-color-text-primary)]">Helical CT Angiography / Head CT</div>
+                      <div className="text-[11px] text-[var(--ak-color-text-muted)]">High-resolution reconstruction</div>
                     </div>
-                    <span className="px-2.5 py-1 rounded bg-indigo-50 text-indigo-800 border border-indigo-300 text-[10px] font-bold font-mono">
-                      STANDBY
-                    </span>
+                    <Badge variant="neutral" size="sm">
+                      Standby
+                    </Badge>
                   </div>
                 </div>
               </div>
@@ -191,53 +195,51 @@ export const DepartmentStationModal: React.FC<DepartmentStationModalProps> = ({
           {/* NURSE STATION VIEW */}
           {stationId === 'NURSE_STATION' && (
             <>
-              <div className="p-4 rounded-xl bg-cyan-50/60 border border-cyan-200 text-xs text-cyan-900 leading-relaxed">
-                <div className="font-bold text-cyan-800 mb-1 flex items-center gap-1.5">
-                  <HeartPulse className="w-4 h-4 text-cyan-600" />
-                  Central Rotunda Nurse Station:
+              <div className="p-4 rounded-xl bg-[var(--ak-color-bg-subtle)] border border-[var(--ak-color-border-subtle)] text-xs text-[var(--ak-color-text-primary)] leading-relaxed">
+                <div className="font-semibold text-[var(--ak-color-text-primary)] mb-1 flex items-center gap-1.5">
+                  <HeartPulse className="w-4 h-4 text-[var(--ak-color-primary)]" />
+                  Central rotunda nurse station:
                 </div>
                 Sarah Jenkins, RN conducts patient triage, vital signs acquisition, and alerts Dr. Marcus Vance for examination.
               </div>
 
-              <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
+              <div className="p-4 rounded-xl bg-[var(--ak-color-bg-subtle)] border border-[var(--ak-color-border-subtle)] space-y-3">
                 {currentCase ? (
                   <>
                     <div className="flex items-center justify-between">
-                      <span className="text-xs text-slate-500">Current Inpatient Queue:</span>
-                      <span className="px-2 py-0.5 rounded bg-cyan-50 text-cyan-800 border border-cyan-300 text-[10px] font-mono font-bold">
+                      <span className="text-xs text-[var(--ak-color-text-muted)]">Current inpatient queue:</span>
+                      <Badge variant="primary" size="sm">
                         {currentCase.id} • {currentCase.name}
-                      </span>
+                      </Badge>
                     </div>
 
-                    <div className="text-xs text-slate-700">
-                      <span className="text-slate-500">Chief Complaint:</span> {currentCase.chief_complaint}
+                    <div className="text-xs text-[var(--ak-color-text-secondary)]">
+                      <span className="text-[var(--ak-color-text-muted)]">Chief Complaint:</span> {currentCase.chief_complaint}
                     </div>
 
                     <div className="pt-2 flex justify-end">
-                      <button
+                      <Button
+                        variant="primary"
+                        size="sm"
                         onClick={() => {
                           if (onRunEncounter) onRunEncounter();
                           onClose();
                         }}
                         disabled={isRunning}
-                        className="px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 text-white text-xs font-bold shadow-md shadow-cyan-600/20 border border-cyan-500 flex items-center gap-2 cursor-pointer transition-all"
-                      >
-                        {isRunning ? (
-                          <>
+                        leadingIcon={
+                          isRunning ? (
                             <Clock className="w-4 h-4 animate-spin" />
-                            <span>Encounter Running...</span>
-                          </>
-                        ) : (
-                          <>
+                          ) : (
                             <Play className="w-4 h-4 fill-white" />
-                            <span>Simulate Complete Encounter</span>
-                          </>
-                        )}
-                      </button>
+                          )
+                        }
+                      >
+                        {isRunning ? 'Encounter running...' : 'Simulate encounter'}
+                      </Button>
                     </div>
                   </>
                 ) : (
-                  <div className="text-center py-4 text-xs text-slate-500 font-mono">
+                  <div className="text-center py-4 text-xs text-[var(--ak-color-text-muted)] font-mono">
                     No active patients in admission queue. Admit patients via Case Intake.
                   </div>
                 )}

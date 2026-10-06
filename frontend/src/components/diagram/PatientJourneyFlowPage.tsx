@@ -5,6 +5,8 @@ import { InternalMedicineConsultModal } from '../specialists/InternalMedicineCon
 import { DepartmentStationModal } from '../specialists/DepartmentStationModal';
 import { toggleGlobalMute, isGlobalMuted } from '../../utils/speechSynthesis';
 import type { HospitalEvent, BenchmarkCase, VitalSigns } from '../../types';
+import { Button } from '../ui/Button';
+import { Badge } from '../ui/Badge';
 import {
   Activity,
   ArrowLeft,
@@ -32,7 +34,7 @@ export const PatientJourneyFlowPage: React.FC<PatientJourneyFlowPageProps> = ({ 
 
   // Department State
   const [activeDepartment, setActiveDepartment] = useState<string>('RECEPTION');
-  const [doctorAction, setDoctorAction] = useState<string>('Reviewing Inpatient Charts');
+  const [doctorAction, setDoctorAction] = useState<string>('Reviewing inpatient charts');
 
   const wsRef = useRef<WebSocket | null>(null);
   const isMountedRef = useRef<boolean>(true);
@@ -59,7 +61,7 @@ export const PatientJourneyFlowPage: React.FC<PatientJourneyFlowPageProps> = ({ 
       case 'EXAMINATION_STARTED':
       case 'PATIENT_INTERVIEWED':
         setActiveDepartment('EXAMINATION_ROOM_1');
-        setDoctorAction('Conducting Clinical Exam & Interview');
+        setDoctorAction('Conducting clinical exam and interview');
         break;
 
       case 'RAG_QUERY_INITIATED':
@@ -70,23 +72,23 @@ export const PatientJourneyFlowPage: React.FC<PatientJourneyFlowPageProps> = ({ 
       case 'LAB_ORDERED':
       case 'LAB_RESULT_READY':
         setActiveDepartment('LABORATORY');
-        setDoctorAction('Reviewing Lab Biomarkers');
+        setDoctorAction('Reviewing laboratory biomarkers');
         break;
 
       case 'DIAGNOSIS_MADE':
       case 'TREATMENT_ORDERED':
         setActiveDepartment('DOCTOR_STATION');
-        setDoctorAction('Physician Diagnosis Established');
+        setDoctorAction('Physician diagnosis established');
         break;
 
       case 'CLINICAL_REPORT_GENERATED':
         setActiveDepartment('DOCTOR_STATION');
-        setDoctorAction('Report Finalized & Queued');
+        setDoctorAction('Report finalized and queued');
         break;
 
       case 'ENCOUNTER_CLOSED':
         setActiveDepartment('DISCHARGE');
-        setDoctorAction('Patient Discharged & Route Closed');
+        setDoctorAction('Patient discharged and route closed');
         break;
     }
   }, []);
@@ -186,59 +188,59 @@ export const PatientJourneyFlowPage: React.FC<PatientJourneyFlowPageProps> = ({ 
   };
 
   return (
-    <div className="w-full h-full flex flex-col bg-[#f8fafc] overflow-hidden select-none font-sans relative isolate telemetry-grid text-slate-900">
+    <div className="w-full h-full flex flex-col bg-[var(--ak-color-bg-app)] overflow-hidden select-none font-sans relative isolate text-[var(--ak-color-text-primary)]">
       {/* Top Clinical Header */}
-      <header className="h-14 bg-white/95 backdrop-blur-md border-b border-slate-200 px-4 flex items-center justify-between z-30 shrink-0 shadow-xs">
+      <header className="h-14 bg-[var(--ak-color-bg-surface)] border-b border-[var(--ak-color-border-subtle)] px-4 flex items-center justify-between z-30 shrink-0">
         {/* Left: Branding & Back Button */}
         <div className="flex items-center gap-3">
           {onBackToPortal && (
-            <button
+            <Button
+              variant="secondary"
+              size="sm"
               onClick={onBackToPortal}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-slate-900 font-medium text-xs rounded-lg border border-slate-300 transition shadow-xs cursor-pointer active:scale-95"
+              leadingIcon={<ArrowLeft className="w-3.5 h-3.5" />}
               title="Return to Clinical Management Portal"
             >
-              <ArrowLeft className="w-3.5 h-3.5" />
-              <span>Back to Portal</span>
-            </button>
+              Back to portal
+            </Button>
           )}
 
-          {onBackToPortal && <div className="h-4 w-px bg-slate-200 mx-1" />}
+          {onBackToPortal && <div className="h-4 w-px bg-[var(--ak-color-border-subtle)] mx-1" />}
 
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-sky-50 border border-sky-200 flex items-center justify-center text-sky-600 shadow-xs">
-              <Activity className="w-4 h-4 text-sky-600 animate-pulse" />
+            <div className="w-7 h-7 rounded-lg bg-[var(--ak-color-primary-soft)] border border-[var(--ak-color-border-subtle)] flex items-center justify-center text-[var(--ak-color-primary)]">
+              <Activity className="w-4 h-4 animate-pulse" />
             </div>
             <div>
-              <span className="text-sm font-bold bg-gradient-to-r from-sky-700 via-cyan-700 to-teal-700 bg-clip-text text-transparent">
-                AI-VH Clinical Flow Architecture & Patient Journey
+              <span className="text-sm font-semibold text-[var(--ak-color-text-primary)]">
+                Clinical flow architecture and patient journey
               </span>
-              <span className="hidden sm:inline-block ml-2 px-2 py-0.5 text-[10px] font-mono rounded-full bg-emerald-50 text-emerald-700 border border-emerald-300 font-semibold">
-                2D Clinical Process Pathway
+              <span className="hidden sm:inline-block ml-2">
+                <Badge variant="success" size="sm">
+                  2D clinical pathway
+                </Badge>
               </span>
             </div>
           </div>
         </div>
 
         {/* Center: Real-Time Department Tracker */}
-        <div className="hidden md:flex items-center gap-2 bg-slate-100 px-3.5 py-1 rounded-full border border-slate-200 text-xs">
-          <span className={`w-2 h-2 rounded-full ${isWsConnected ? 'bg-emerald-500 animate-pulse' : 'bg-amber-400'}`} />
-          <span className="text-slate-500">Current Station:</span>
-          <span className="text-slate-800 font-semibold font-mono">{activeDepartment.replace(/_/g, ' ')}</span>
+        <div className="hidden md:flex items-center gap-2 bg-[var(--ak-color-bg-subtle)] px-3.5 py-1 rounded-full border border-[var(--ak-color-border-subtle)] text-xs">
+          <span className={`w-2 h-2 rounded-full ${isWsConnected ? 'bg-[var(--ak-color-success)] animate-pulse' : 'bg-[var(--ak-color-warning)]'}`} />
+          <span className="text-[var(--ak-color-text-muted)]">Current station:</span>
+          <span className="text-[var(--ak-color-text-primary)] font-medium font-mono">{activeDepartment.replace(/_/g, ' ')}</span>
         </div>
 
         {/* Right: Audio Toggle */}
         <div className="flex items-center gap-2">
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => setIsAudioMuted(toggleGlobalMute())}
-            className={`p-1.5 rounded-lg border text-xs transition cursor-pointer ${
-              isAudioMuted
-                ? 'bg-slate-100 text-slate-400 border-slate-200 hover:bg-slate-200'
-                : 'bg-sky-50 text-sky-700 border-sky-300'
-            }`}
-            title={isAudioMuted ? 'Unmute Audio Voice Synthesis' : 'Mute Audio Voice Synthesis'}
+            title={isAudioMuted ? 'Unmute voice synthesis' : 'Mute voice synthesis'}
           >
-            {isAudioMuted ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5 text-sky-600" />}
-          </button>
+            {isAudioMuted ? <VolumeX className="w-4 h-4 text-[var(--ak-color-text-muted)]" /> : <Volume2 className="w-4 h-4 text-[var(--ak-color-primary)]" />}
+          </Button>
         </div>
       </header>
 
@@ -258,7 +260,7 @@ export const PatientJourneyFlowPage: React.FC<PatientJourneyFlowPageProps> = ({ 
           onOpenDepartmentStation={handleStationInteract}
         />
 
-        {/* Floating Glassmorphism Vitals Telemetry */}
+        {/* Floating Vitals Telemetry */}
         <VitalsMonitorHUD vitals={activeVitals} patientName={currentPatientName} />
       </main>
 

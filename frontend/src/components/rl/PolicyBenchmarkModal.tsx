@@ -350,23 +350,23 @@ export const PolicyBenchmarkModal: React.FC<PolicyBenchmarkModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs animate-in fade-in duration-200">
-      <div className="relative w-full max-w-5xl bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] text-slate-800">
+      <div className="relative w-full max-w-5xl bg-white border border-[var(--ak-color-border-subtle)] rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] text-[var(--ak-color-text-primary)]">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+        <div className="px-6 py-4 border-b border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-subtle)] flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-purple-50 border border-purple-200 flex items-center justify-center text-purple-700 font-bold shadow-xs">
+            <div className="w-10 h-10 rounded-xl bg-purple-50 border border-[var(--ak-color-border-subtle)] flex items-center justify-center text-[var(--ak-color-primary)] font-bold shadow-xs">
               <Award className="w-5 h-5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-base font-bold text-slate-900">
+                <h2 className="text-base font-bold text-[var(--ak-color-text-primary)]">
                   Comparative Policy Benchmark: Base vs RL DPO Agent
                 </h2>
-                <span className="px-2 py-0.5 rounded-full bg-purple-50 text-purple-800 border border-purple-300 text-[10px] font-mono font-semibold">
+                <span className="px-2 py-0.5 rounded-full bg-purple-50 text-[var(--ak-color-primary)] border border-purple-300 text-[10px] font-mono font-semibold">
                   EMPIRICAL EVALUATION
                 </span>
               </div>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-[var(--ak-color-text-muted)]">
                 Evaluation of Clinical Decision-Making Quality, Safety Adherence, and Diagnostic Accuracy
               </p>
             </div>
@@ -376,7 +376,7 @@ export const PolicyBenchmarkModal: React.FC<PolicyBenchmarkModalProps> = ({
             <button
               onClick={fetchBenchmark}
               disabled={loading}
-              className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-all shadow-xs"
+              className="px-3 py-1.5 rounded-xl bg-[var(--ak-color-bg-subtle)] hover:bg-[var(--ak-color-bg-subtle)] border border-[var(--ak-color-border-subtle)] text-[var(--ak-color-text-secondary)] text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-all shadow-xs"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
               <span>{loading ? 'Evaluating...' : 'Re-Run Benchmark'}</span>
@@ -386,8 +386,8 @@ export const PolicyBenchmarkModal: React.FC<PolicyBenchmarkModalProps> = ({
               onClick={handleSpeakVerdict}
               className={`px-3 py-1.5 rounded-xl border text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-all shadow-xs ${
                 isSpeaking
-                  ? 'bg-amber-100 text-amber-800 border-amber-300'
-                  : 'bg-slate-100 hover:bg-slate-200 border-slate-300 text-slate-700'
+                  ? 'bg-[var(--ak-color-warning-soft)] text-[var(--ak-color-warning)] border-[var(--ak-color-border-subtle)]'
+                  : 'bg-[var(--ak-color-bg-subtle)] hover:bg-[var(--ak-color-bg-subtle)] border-[var(--ak-color-border-subtle)] text-[var(--ak-color-text-secondary)]'
               }`}
             >
               {isSpeaking ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
@@ -396,7 +396,7 @@ export const PolicyBenchmarkModal: React.FC<PolicyBenchmarkModalProps> = ({
 
             <button
               onClick={handleCopyReport}
-              className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-all shadow-xs"
+              className="px-3 py-1.5 rounded-xl bg-[var(--ak-color-bg-subtle)] hover:bg-[var(--ak-color-bg-subtle)] border border-[var(--ak-color-border-subtle)] text-[var(--ak-color-text-secondary)] text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-all shadow-xs"
             >
               <Copy className="w-3.5 h-3.5" />
               <span>{copied ? 'Copied!' : 'Copy JSON'}</span>
@@ -404,7 +404,7 @@ export const PolicyBenchmarkModal: React.FC<PolicyBenchmarkModalProps> = ({
 
             <button
               onClick={onClose}
-              className="p-1.5 rounded-xl hover:bg-slate-100 text-slate-500 hover:text-slate-800 transition-all cursor-pointer"
+              className="p-1.5 rounded-xl hover:bg-[var(--ak-color-bg-subtle)] text-[var(--ak-color-text-muted)] hover:text-[var(--ak-color-text-primary)] transition-all cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
@@ -412,13 +412,13 @@ export const PolicyBenchmarkModal: React.FC<PolicyBenchmarkModalProps> = ({
         </div>
 
         {/* Tab Selector */}
-        <div className="px-6 py-2 bg-slate-50 border-b border-slate-200 flex items-center gap-4 text-xs font-semibold">
+        <div className="px-6 py-2 bg-[var(--ak-color-bg-subtle)] border-b border-[var(--ak-color-border-subtle)] flex items-center gap-4 text-xs font-semibold">
           <button
             onClick={() => setActiveTab('OVERVIEW')}
             className={`pb-2 pt-1 border-b-2 transition-all cursor-pointer ${
               activeTab === 'OVERVIEW'
-                ? 'border-purple-600 text-purple-800 font-bold'
-                : 'border-transparent text-slate-500 hover:text-slate-800'
+                ? 'border-[var(--ak-color-primary)] text-[var(--ak-color-primary)] font-bold'
+                : 'border-transparent text-[var(--ak-color-text-muted)] hover:text-[var(--ak-color-text-primary)]'
             }`}
           >
             Benchmark Overview & Aggregate Deltas
@@ -427,8 +427,8 @@ export const PolicyBenchmarkModal: React.FC<PolicyBenchmarkModalProps> = ({
             onClick={() => setActiveTab('CASES')}
             className={`pb-2 pt-1 border-b-2 transition-all cursor-pointer ${
               activeTab === 'CASES'
-                ? 'border-purple-600 text-purple-800 font-bold'
-                : 'border-transparent text-slate-500 hover:text-slate-800'
+                ? 'border-[var(--ak-color-primary)] text-[var(--ak-color-primary)] font-bold'
+                : 'border-transparent text-[var(--ak-color-text-muted)] hover:text-[var(--ak-color-text-primary)]'
             }`}
           >
             Case-by-Case Head-to-Head Drilldown ({report.case_comparisons.length} Cases)
@@ -442,13 +442,13 @@ export const PolicyBenchmarkModal: React.FC<PolicyBenchmarkModalProps> = ({
             }}
             className={`pb-2 pt-1 border-b-2 transition-all cursor-pointer flex items-center gap-1.5 ${
               activeTab === 'LIVE_INFERENCE'
-                ? 'border-emerald-600 text-emerald-800 font-bold'
-                : 'border-transparent text-slate-500 hover:text-slate-800'
+                ? 'border-emerald-600 text-[var(--ak-color-success)] font-bold'
+                : 'border-transparent text-[var(--ak-color-text-muted)] hover:text-[var(--ak-color-text-primary)]'
             }`}
           >
-            <Cpu className="w-3.5 h-3.5 text-emerald-600" />
+            <Cpu className="w-3.5 h-3.5 text-[var(--ak-color-success)]" />
             <span>Live On-Device Model Inference (RTX 4060)</span>
-            <span className="px-1.5 py-0.2 rounded-full bg-emerald-50 text-emerald-700 text-[9px] font-mono border border-emerald-300 font-semibold">
+            <span className="px-1.5 py-0.2 rounded-full bg-[var(--ak-color-success-soft)] text-[var(--ak-color-success)] text-[9px] font-mono border border-[var(--ak-color-border-subtle)] font-semibold">
               4-BIT LORA
             </span>
           </button>
@@ -460,12 +460,12 @@ export const PolicyBenchmarkModal: React.FC<PolicyBenchmarkModalProps> = ({
           {activeTab === 'OVERVIEW' ? (
             <>
               {/* Research Hypothesis & Scientific Conclusion */}
-              <div className="p-4 rounded-xl bg-purple-50/70 border border-purple-200 shadow-xs">
-                <div className="flex items-center gap-2 mb-2 text-purple-700 text-xs font-bold uppercase tracking-wider">
-                  <Sparkles className="w-4 h-4 text-purple-600" />
+              <div className="p-4 rounded-xl bg-[var(--ak-color-bg-subtle)] border border-[var(--ak-color-border-subtle)] shadow-xs">
+                <div className="flex items-center gap-2 mb-2 text-[var(--ak-color-primary)] text-xs font-bold uppercase tracking-wider">
+                  <Sparkles className="w-4 h-4 text-[var(--ak-color-primary)]" />
                   <span>Research Conclusion</span>
                 </div>
-                <p className="text-sm font-medium text-slate-800 leading-relaxed">
+                <p className="text-sm font-medium text-[var(--ak-color-text-primary)] leading-relaxed">
                   {report.research_verdict}
                 </p>
               </div>
@@ -473,134 +473,134 @@ export const PolicyBenchmarkModal: React.FC<PolicyBenchmarkModalProps> = ({
               {/* High-Level Comparison Metrics Grid */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 {/* Score Gain */}
-                <div className="p-4 rounded-xl bg-slate-50 border border-slate-200">
-                  <div className="flex items-center justify-between text-xs text-slate-500 mb-1">
+                <div className="p-4 rounded-xl bg-[var(--ak-color-bg-subtle)] border border-[var(--ak-color-border-subtle)]">
+                  <div className="flex items-center justify-between text-xs text-[var(--ak-color-text-muted)] mb-1">
                     <span>Clinical Score (1-5)</span>
-                    <TrendingUp className="w-4 h-4 text-emerald-600" />
+                    <TrendingUp className="w-4 h-4 text-[var(--ak-color-success)]" />
                   </div>
                   <div className="flex items-baseline gap-2">
-                    <span className="text-2xl font-black text-slate-900">
+                    <span className="text-2xl font-black text-[var(--ak-color-text-primary)]">
                       {report.rl_agent_mean_score.toFixed(1)}
                     </span>
-                    <span className="text-xs text-slate-400 line-through font-mono">
+                    <span className="text-xs text-[var(--ak-color-text-muted)] line-through font-mono">
                       {report.base_agent_mean_score.toFixed(1)}
                     </span>
                   </div>
-                  <div className="mt-2 text-[11px] font-semibold text-emerald-600 flex items-center gap-1">
+                  <div className="mt-2 text-[11px] font-semibold text-[var(--ak-color-success)] flex items-center gap-1">
                     <span>+{report.mean_score_improvement_percent}% Gain</span>
-                    <span className="text-slate-400">• RL DPO Superior</span>
+                    <span className="text-[var(--ak-color-text-muted)]">• RL DPO Superior</span>
                   </div>
                 </div>
 
                 {/* Safety Improvement */}
-                <div className="p-4 rounded-xl bg-slate-50 border border-slate-200">
-                  <div className="flex items-center justify-between text-xs text-slate-500 mb-1">
+                <div className="p-4 rounded-xl bg-[var(--ak-color-bg-subtle)] border border-[var(--ak-color-border-subtle)]">
+                  <div className="flex items-center justify-between text-xs text-[var(--ak-color-text-muted)] mb-1">
                     <span>Treatment Safety</span>
-                    <ShieldCheck className="w-4 h-4 text-sky-600" />
+                    <ShieldCheck className="w-4 h-4 text-[var(--ak-color-primary)]" />
                   </div>
                   <div className="flex items-baseline gap-2">
-                    <span className="text-2xl font-black text-slate-900">96.7%</span>
-                    <span className="text-xs text-slate-400 line-through font-mono">42.3%</span>
+                    <span className="text-2xl font-black text-[var(--ak-color-text-primary)]">96.7%</span>
+                    <span className="text-xs text-[var(--ak-color-text-muted)] line-through font-mono">42.3%</span>
                   </div>
-                  <div className="mt-2 text-[11px] font-semibold text-sky-600 flex items-center gap-1">
+                  <div className="mt-2 text-[11px] font-semibold text-[var(--ak-color-primary)] flex items-center gap-1">
                     <span>+{report.mean_safety_improvement_percent}% Compliance</span>
                   </div>
                 </div>
 
                 {/* Diagnostic Accuracy */}
-                <div className="p-4 rounded-xl bg-slate-50 border border-slate-200">
-                  <div className="flex items-center justify-between text-xs text-slate-500 mb-1">
+                <div className="p-4 rounded-xl bg-[var(--ak-color-bg-subtle)] border border-[var(--ak-color-border-subtle)]">
+                  <div className="flex items-center justify-between text-xs text-[var(--ak-color-text-muted)] mb-1">
                     <span>Diagnostic Accuracy</span>
-                    <CheckCircle2 className="w-4 h-4 text-indigo-600" />
+                    <CheckCircle2 className="w-4 h-4 text-[var(--ak-color-primary)]" />
                   </div>
                   <div className="flex items-baseline gap-2">
-                    <span className="text-2xl font-black text-slate-900">96.7%</span>
-                    <span className="text-xs text-slate-400 line-through font-mono">48.0%</span>
+                    <span className="text-2xl font-black text-[var(--ak-color-text-primary)]">96.7%</span>
+                    <span className="text-xs text-[var(--ak-color-text-muted)] line-through font-mono">48.0%</span>
                   </div>
-                  <div className="mt-2 text-[11px] font-semibold text-indigo-600 flex items-center gap-1">
+                  <div className="mt-2 text-[11px] font-semibold text-[var(--ak-color-primary)] flex items-center gap-1">
                     <span>+{report.diagnostic_accuracy_gain_percent}% Accuracy</span>
                   </div>
                 </div>
 
                 {/* Contraindication Reduction */}
-                <div className="p-4 rounded-xl bg-slate-50 border border-slate-200">
-                  <div className="flex items-center justify-between text-xs text-slate-500 mb-1">
+                <div className="p-4 rounded-xl bg-[var(--ak-color-bg-subtle)] border border-[var(--ak-color-border-subtle)]">
+                  <div className="flex items-center justify-between text-xs text-[var(--ak-color-text-muted)] mb-1">
                     <span>Adverse Orders</span>
-                    <AlertTriangle className="w-4 h-4 text-emerald-600" />
+                    <AlertTriangle className="w-4 h-4 text-[var(--ak-color-success)]" />
                   </div>
                   <div className="flex items-baseline gap-2">
-                    <span className="text-2xl font-black text-emerald-600">0 Missed</span>
+                    <span className="text-2xl font-black text-[var(--ak-color-success)]">0 Missed</span>
                     <span className="text-xs text-rose-500 line-through font-mono">3 Missed</span>
                   </div>
-                  <div className="mt-2 text-[11px] font-semibold text-emerald-600 flex items-center gap-1">
+                  <div className="mt-2 text-[11px] font-semibold text-[var(--ak-color-success)] flex items-center gap-1">
                     <span>100% Elimination</span>
                   </div>
                 </div>
               </div>
 
               {/* Head-to-Head Comparison Table */}
-              <div className="rounded-xl border border-slate-200 overflow-hidden bg-slate-50 shadow-xs">
-                <div className="px-4 py-3 bg-slate-100 border-b border-slate-200 text-xs font-bold text-slate-800 flex items-center justify-between">
+              <div className="rounded-xl border border-[var(--ak-color-border-subtle)] overflow-hidden bg-[var(--ak-color-bg-subtle)] shadow-xs">
+                <div className="px-4 py-3 bg-[var(--ak-color-bg-subtle)] border-b border-[var(--ak-color-border-subtle)] text-xs font-bold text-[var(--ak-color-text-primary)] flex items-center justify-between">
                   <span>Policy Performance Dimension</span>
                   <div className="flex gap-8 text-right">
-                    <span className="text-rose-700 w-28">Base Model</span>
-                    <span className="text-emerald-700 w-28">RL DPO Model</span>
-                    <span className="text-purple-700 w-20">Delta</span>
+                    <span className="text-[var(--ak-color-danger)] w-28">Base Model</span>
+                    <span className="text-[var(--ak-color-success)] w-28">RL DPO Model</span>
+                    <span className="text-[var(--ak-color-primary)] w-20">Delta</span>
                   </div>
                 </div>
 
                 <div className="divide-y divide-slate-200 text-xs font-medium bg-white">
-                  <div className="px-4 py-2.5 flex items-center justify-between hover:bg-slate-50">
-                    <span className="text-slate-700">Mean Clinical Quality Score</span>
+                  <div className="px-4 py-2.5 flex items-center justify-between hover:bg-[var(--ak-color-bg-subtle)]">
+                    <span className="text-[var(--ak-color-text-secondary)]">Mean Clinical Quality Score</span>
                     <div className="flex gap-8 text-right font-mono">
-                      <span className="text-rose-700 w-28">2.3 / 5.0</span>
-                      <span className="text-emerald-700 font-bold w-28">4.8 / 5.0</span>
-                      <span className="text-purple-700 font-bold w-20">+108.7%</span>
+                      <span className="text-[var(--ak-color-danger)] w-28">2.3 / 5.0</span>
+                      <span className="text-[var(--ak-color-success)] font-bold w-28">4.8 / 5.0</span>
+                      <span className="text-[var(--ak-color-primary)] font-bold w-20">+108.7%</span>
                     </div>
                   </div>
 
-                  <div className="px-4 py-2.5 flex items-center justify-between hover:bg-slate-50">
-                    <span className="text-slate-700">Diagnostic Accuracy</span>
+                  <div className="px-4 py-2.5 flex items-center justify-between hover:bg-[var(--ak-color-bg-subtle)]">
+                    <span className="text-[var(--ak-color-text-secondary)]">Diagnostic Accuracy</span>
                     <div className="flex gap-8 text-right font-mono">
-                      <span className="text-rose-700 w-28">48.0%</span>
-                      <span className="text-emerald-700 font-bold w-28">96.7%</span>
-                      <span className="text-purple-700 font-bold w-20">+48.7%</span>
+                      <span className="text-[var(--ak-color-danger)] w-28">48.0%</span>
+                      <span className="text-[var(--ak-color-success)] font-bold w-28">96.7%</span>
+                      <span className="text-[var(--ak-color-primary)] font-bold w-20">+48.7%</span>
                     </div>
                   </div>
 
-                  <div className="px-4 py-2.5 flex items-center justify-between hover:bg-slate-50">
-                    <span className="text-slate-700">Guideline Treatment Safety</span>
+                  <div className="px-4 py-2.5 flex items-center justify-between hover:bg-[var(--ak-color-bg-subtle)]">
+                    <span className="text-[var(--ak-color-text-secondary)]">Guideline Treatment Safety</span>
                     <div className="flex gap-8 text-right font-mono">
-                      <span className="text-rose-700 w-28">42.3%</span>
-                      <span className="text-emerald-700 font-bold w-28">96.7%</span>
-                      <span className="text-purple-700 font-bold w-20">+54.4%</span>
+                      <span className="text-[var(--ak-color-danger)] w-28">42.3%</span>
+                      <span className="text-[var(--ak-color-success)] font-bold w-28">96.7%</span>
+                      <span className="text-[var(--ak-color-primary)] font-bold w-20">+54.4%</span>
                     </div>
                   </div>
 
-                  <div className="px-4 py-2.5 flex items-center justify-between hover:bg-slate-50">
-                    <span className="text-slate-700">Evidence Grounding (Harrison's RAG)</span>
+                  <div className="px-4 py-2.5 flex items-center justify-between hover:bg-[var(--ak-color-bg-subtle)]">
+                    <span className="text-[var(--ak-color-text-secondary)]">Evidence Grounding (Harrison's RAG)</span>
                     <div className="flex gap-8 text-right font-mono">
-                      <span className="text-rose-700 w-28">37.7%</span>
-                      <span className="text-emerald-700 font-bold w-28">95.0%</span>
-                      <span className="text-purple-700 font-bold w-20">+57.3%</span>
+                      <span className="text-[var(--ak-color-danger)] w-28">37.7%</span>
+                      <span className="text-[var(--ak-color-success)] font-bold w-28">95.0%</span>
+                      <span className="text-[var(--ak-color-primary)] font-bold w-20">+57.3%</span>
                     </div>
                   </div>
 
-                  <div className="px-4 py-2.5 flex items-center justify-between hover:bg-slate-50">
-                    <span className="text-slate-700">Adverse Contraindications Missed</span>
+                  <div className="px-4 py-2.5 flex items-center justify-between hover:bg-[var(--ak-color-bg-subtle)]">
+                    <span className="text-[var(--ak-color-text-secondary)]">Adverse Contraindications Missed</span>
                     <div className="flex gap-8 text-right font-mono">
-                      <span className="text-rose-700 w-28">3 Orders</span>
-                      <span className="text-emerald-700 font-bold w-28">0 Orders</span>
-                      <span className="text-purple-700 font-bold w-20">-100.0%</span>
+                      <span className="text-[var(--ak-color-danger)] w-28">3 Orders</span>
+                      <span className="text-[var(--ak-color-success)] font-bold w-28">0 Orders</span>
+                      <span className="text-[var(--ak-color-primary)] font-bold w-20">-100.0%</span>
                     </div>
                   </div>
 
-                  <div className="px-4 py-2.5 flex items-center justify-between hover:bg-slate-50">
-                    <span className="text-slate-700">Head-to-Head Win Rate</span>
+                  <div className="px-4 py-2.5 flex items-center justify-between hover:bg-[var(--ak-color-bg-subtle)]">
+                    <span className="text-[var(--ak-color-text-secondary)]">Head-to-Head Win Rate</span>
                     <div className="flex gap-8 text-right font-mono">
-                      <span className="text-rose-700 w-28">0.0%</span>
-                      <span className="text-emerald-700 font-bold w-28">100.0%</span>
-                      <span className="text-purple-700 font-bold w-20">RL Dominant</span>
+                      <span className="text-[var(--ak-color-danger)] w-28">0.0%</span>
+                      <span className="text-[var(--ak-color-success)] font-bold w-28">100.0%</span>
+                      <span className="text-[var(--ak-color-primary)] font-bold w-20">RL Dominant</span>
                     </div>
                   </div>
                 </div>
@@ -610,15 +610,15 @@ export const PolicyBenchmarkModal: React.FC<PolicyBenchmarkModalProps> = ({
             /* Case-by-Case Drilldown */
             <div className="space-y-6">
               {/* Case Picker Tabs */}
-              <div className="flex gap-2 border-b border-slate-200 pb-2">
+              <div className="flex gap-2 border-b border-[var(--ak-color-border-subtle)] pb-2">
                 {report.case_comparisons.map((c, idx) => (
                   <button
                     key={c.case_id}
                     onClick={() => setSelectedCaseIdx(idx)}
                     className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                       selectedCaseIdx === idx
-                        ? 'bg-purple-600 text-white shadow-md shadow-purple-600/30'
-                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'
+                        ? 'bg-[var(--ak-color-primary)] text-white shadow-md shadow-purple-600/30'
+                        : 'bg-[var(--ak-color-bg-subtle)] text-[var(--ak-color-text-secondary)] hover:bg-[var(--ak-color-bg-subtle)] border border-[var(--ak-color-border-subtle)]'
                     }`}
                   >
                     {c.case_id}: {c.patient_name}
@@ -627,11 +627,11 @@ export const PolicyBenchmarkModal: React.FC<PolicyBenchmarkModalProps> = ({
               </div>
 
               {/* Case Summary Banner */}
-              <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between">
+              <div className="p-4 rounded-xl bg-[var(--ak-color-bg-subtle)] border border-[var(--ak-color-border-subtle)] flex items-center justify-between">
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-bold text-slate-900">{currentCase.patient_name}</span>
-                    <span className="px-2 py-0.5 rounded bg-sky-50 text-sky-700 border border-sky-200 text-[10px] font-mono font-semibold">
+                    <span className="text-sm font-bold text-[var(--ak-color-text-primary)]">{currentCase.patient_name}</span>
+                    <span className="px-2 py-0.5 rounded bg-[var(--ak-color-primary-soft)] text-[var(--ak-color-primary)] border border-[var(--ak-color-border-subtle)] text-[10px] font-mono font-semibold">
                       {currentCase.case_id}
                     </span>
                     <span className="px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-mono font-semibold">
@@ -639,46 +639,46 @@ export const PolicyBenchmarkModal: React.FC<PolicyBenchmarkModalProps> = ({
                     </span>
                   </div>
                   <p className="text-xs text-slate-600 mt-1">
-                    <span className="font-semibold text-slate-800">True Diagnosis:</span>{' '}
+                    <span className="font-semibold text-[var(--ak-color-text-primary)]">True Diagnosis:</span>{' '}
                     {currentCase.true_diagnosis}
                   </p>
                 </div>
                 <div className="text-right">
-                  <div className="text-xs text-slate-500 font-medium">Score Improvement</div>
-                  <div className="text-xl font-black text-emerald-600">+{currentCase.score_delta} / 5.0</div>
-                  <div className="text-[10px] text-sky-600 font-semibold">+{currentCase.safety_gain_percent}% Safety</div>
+                  <div className="text-xs text-[var(--ak-color-text-muted)] font-medium">Score Improvement</div>
+                  <div className="text-xl font-black text-[var(--ak-color-success)]">+{currentCase.score_delta} / 5.0</div>
+                  <div className="text-[10px] text-[var(--ak-color-primary)] font-semibold">+{currentCase.safety_gain_percent}% Safety</div>
                 </div>
               </div>
 
               {/* Side-by-Side Comparison */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Base Agent */}
-                <div className="p-4 rounded-xl bg-rose-50/60 border border-rose-200 space-y-3">
-                  <div className="flex items-center justify-between border-b border-rose-200 pb-2">
+                <div className="p-4 rounded-xl bg-[var(--ak-color-warning-soft)]/60 border border-[var(--ak-color-border-subtle)] space-y-3">
+                  <div className="flex items-center justify-between border-b border-[var(--ak-color-border-subtle)] pb-2">
                     <div>
                       <div className="text-xs font-bold text-rose-900">Base Foundation Model (v0.1)</div>
-                      <div className="text-[10px] text-slate-500">Zero-Shot Baseline</div>
+                      <div className="text-[10px] text-[var(--ak-color-text-muted)]">Zero-Shot Baseline</div>
                     </div>
                     <div className="text-right">
-                      <div className="text-lg font-black text-rose-600">
+                      <div className="text-lg font-black text-[var(--ak-color-danger)]">
                         {currentCase.base_agent_metrics.overall_clinical_score} / 5.0
                       </div>
-                      <div className="text-[10px] text-rose-700 font-semibold">
+                      <div className="text-[10px] text-[var(--ak-color-danger)] font-semibold">
                         {currentCase.base_agent_metrics.diagnostic_accuracy_percent}% Accuracy
                       </div>
                     </div>
                   </div>
 
                   <div>
-                    <div className="text-[11px] font-semibold text-slate-500">Diagnosis Formulated:</div>
+                    <div className="text-[11px] font-semibold text-[var(--ak-color-text-muted)]">Diagnosis Formulated:</div>
                     <div className="text-xs font-bold text-rose-900 mt-0.5">
                       {currentCase.base_agent_metrics.primary_diagnosis}
                     </div>
                   </div>
 
                   <div>
-                    <div className="text-[11px] font-semibold text-slate-500">Treatment Plan:</div>
-                    <ul className="list-disc list-inside text-xs text-slate-700 mt-1 space-y-0.5">
+                    <div className="text-[11px] font-semibold text-[var(--ak-color-text-muted)]">Treatment Plan:</div>
+                    <ul className="list-disc list-inside text-xs text-[var(--ak-color-text-secondary)] mt-1 space-y-0.5">
                       {currentCase.base_agent_metrics.treatment_plan.map((t, i) => (
                         <li key={i}>{t}</li>
                       ))}
@@ -686,8 +686,8 @@ export const PolicyBenchmarkModal: React.FC<PolicyBenchmarkModalProps> = ({
                   </div>
 
                   {currentCase.base_agent_metrics.contraindications_missed > 0 && (
-                    <div className="p-2 rounded-lg bg-rose-100 border border-rose-300 text-[11px] text-rose-900 flex items-center gap-1.5 font-medium">
-                      <AlertTriangle className="w-3.5 h-3.5 text-rose-600 shrink-0" />
+                    <div className="p-2 rounded-lg bg-[var(--ak-color-warning-soft)] border border-[var(--ak-color-border-subtle)] text-[11px] text-rose-900 flex items-center gap-1.5 font-medium">
+                      <AlertTriangle className="w-3.5 h-3.5 text-[var(--ak-color-danger)] shrink-0" />
                       <span>
                         Missed {currentCase.base_agent_metrics.contraindications_missed} high-risk clinical
                         contraindication(s).
@@ -697,40 +697,40 @@ export const PolicyBenchmarkModal: React.FC<PolicyBenchmarkModalProps> = ({
                 </div>
 
                 {/* RL DPO Agent */}
-                <div className="p-4 rounded-xl bg-emerald-50/60 border border-emerald-200 space-y-3">
-                  <div className="flex items-center justify-between border-b border-emerald-200 pb-2">
+                <div className="p-4 rounded-xl bg-[var(--ak-color-success-soft)]/60 border border-[var(--ak-color-border-subtle)] space-y-3">
+                  <div className="flex items-center justify-between border-b border-[var(--ak-color-border-subtle)] pb-2">
                     <div>
                       <div className="text-xs font-bold text-emerald-900">RL DPO Aligned Model (v0.3)</div>
-                      <div className="text-[10px] text-slate-500">Physician-Aligned Model</div>
+                      <div className="text-[10px] text-[var(--ak-color-text-muted)]">Physician-Aligned Model</div>
                     </div>
                     <div className="text-right">
-                      <div className="text-lg font-black text-emerald-600">
+                      <div className="text-lg font-black text-[var(--ak-color-success)]">
                         {currentCase.rl_agent_metrics.overall_clinical_score} / 5.0
                       </div>
-                      <div className="text-[10px] text-emerald-700 font-semibold">
+                      <div className="text-[10px] text-[var(--ak-color-success)] font-semibold">
                         {currentCase.rl_agent_metrics.diagnostic_accuracy_percent}% Accuracy
                       </div>
                     </div>
                   </div>
 
                   <div>
-                    <div className="text-[11px] font-semibold text-slate-500">Diagnosis Formulated:</div>
+                    <div className="text-[11px] font-semibold text-[var(--ak-color-text-muted)]">Diagnosis Formulated:</div>
                     <div className="text-xs font-bold text-emerald-900 mt-0.5">
                       {currentCase.rl_agent_metrics.primary_diagnosis}
                     </div>
                   </div>
 
                   <div>
-                    <div className="text-[11px] font-semibold text-slate-500">Treatment Plan:</div>
-                    <ul className="list-disc list-inside text-xs text-slate-700 mt-1 space-y-0.5">
+                    <div className="text-[11px] font-semibold text-[var(--ak-color-text-muted)]">Treatment Plan:</div>
+                    <ul className="list-disc list-inside text-xs text-[var(--ak-color-text-secondary)] mt-1 space-y-0.5">
                       {currentCase.rl_agent_metrics.treatment_plan.map((t, i) => (
                         <li key={i}>{t}</li>
                       ))}
                     </ul>
                   </div>
 
-                  <div className="p-2 rounded-lg bg-emerald-100 border border-emerald-300 text-[11px] text-emerald-900 flex items-center gap-1.5 font-medium">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                  <div className="p-2 rounded-lg bg-[var(--ak-color-success-soft)] border border-[var(--ak-color-border-subtle)] text-[11px] text-emerald-900 flex items-center gap-1.5 font-medium">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[var(--ak-color-success)] shrink-0" />
                     <span>
                       100% Guideline compliant with {currentCase.rl_agent_metrics.citations_count} Harrison's
                       evidence citations.
@@ -740,8 +740,8 @@ export const PolicyBenchmarkModal: React.FC<PolicyBenchmarkModalProps> = ({
               </div>
 
               {/* Expert Comparative Critique */}
-              <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-700 leading-relaxed">
-                <span className="font-bold text-purple-700">Physician Expert Review: </span>
+              <div className="p-4 rounded-xl bg-[var(--ak-color-bg-subtle)] border border-[var(--ak-color-border-subtle)] text-xs text-[var(--ak-color-text-secondary)] leading-relaxed">
+                <span className="font-bold text-[var(--ak-color-primary)]">Physician Expert Review: </span>
                 {currentCase.clinical_analysis}
               </div>
             </div>
@@ -749,35 +749,35 @@ export const PolicyBenchmarkModal: React.FC<PolicyBenchmarkModalProps> = ({
             /* Live On-Device Comparative Inference Tab */
             <div className="space-y-6">
               {/* Hardware & Model Telemetry Header Card */}
-              <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 shadow-xs">
+              <div className="p-4 rounded-xl bg-[var(--ak-color-bg-subtle)] border border-[var(--ak-color-border-subtle)] shadow-xs">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-lg bg-emerald-100 border border-emerald-200 flex items-center justify-center text-emerald-700">
+                    <div className="w-9 h-9 rounded-lg bg-[var(--ak-color-success-soft)] border border-[var(--ak-color-border-subtle)] flex items-center justify-center text-[var(--ak-color-success)]">
                       <Cpu className="w-5 h-5" />
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-slate-900">
+                        <span className="text-xs font-bold text-[var(--ak-color-text-primary)]">
                           {inferenceResult?.telemetry.hardware_device || 'Local On-Device Engine (RTX 4060 / 4-bit NF4)'}
                         </span>
-                        <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-mono border border-emerald-300 font-semibold">
+                        <span className="px-2 py-0.5 rounded-full bg-[var(--ak-color-success-soft)] text-[var(--ak-color-success)] text-[10px] font-mono border border-[var(--ak-color-border-subtle)] font-semibold">
                           ACTIVE 4-BIT NF4
                         </span>
                       </div>
-                      <div className="text-[11px] text-slate-500 mt-0.5">
-                        Foundation: <span className="text-slate-700 font-mono">clinical-ai-4b</span> • Adapter: <span className="text-purple-700 font-mono font-medium">models/clinical-dpo-lora (r=16, α=32)</span>
+                      <div className="text-[11px] text-[var(--ak-color-text-muted)] mt-0.5">
+                        Foundation: <span className="text-[var(--ak-color-text-secondary)] font-mono">clinical-ai-4b</span> • Adapter: <span className="text-[var(--ak-color-primary)] font-mono font-medium">models/clinical-dpo-lora (r=16, α=32)</span>
                       </div>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <div className="px-3 py-1 rounded-lg bg-white border border-slate-200 text-[11px] text-slate-700 flex items-center gap-1.5 font-mono">
+                    <div className="px-3 py-1 rounded-lg bg-white border border-[var(--ak-color-border-subtle)] text-[11px] text-[var(--ak-color-text-secondary)] flex items-center gap-1.5 font-mono">
                       <Zap className="w-3 h-3 text-amber-500" />
                       <span>VRAM: ~4.15 GB / 8.00 GB</span>
                     </div>
                     {inferenceResult && (
-                      <div className="px-3 py-1 rounded-lg bg-white border border-slate-200 text-[11px] text-slate-700 flex items-center gap-1.5 font-mono">
-                        <Activity className="w-3 h-3 text-sky-600" />
+                      <div className="px-3 py-1 rounded-lg bg-white border border-[var(--ak-color-border-subtle)] text-[11px] text-[var(--ak-color-text-secondary)] flex items-center gap-1.5 font-mono">
+                        <Activity className="w-3 h-3 text-[var(--ak-color-primary)]" />
                         <span>Latency: {inferenceResult.dpo_model_output.latency_ms.toFixed(1)}ms</span>
                       </div>
                     )}
@@ -786,12 +786,12 @@ export const PolicyBenchmarkModal: React.FC<PolicyBenchmarkModalProps> = ({
               </div>
 
               {/* Case Quick-Picker & Scenario Prompt Input */}
-              <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
+              <div className="p-4 rounded-xl bg-[var(--ak-color-bg-subtle)] border border-[var(--ak-color-border-subtle)] space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-slate-800">
+                  <span className="text-xs font-bold text-[var(--ak-color-text-primary)]">
                     Select Benchmark Presentation or Edit Custom Vignette:
                   </span>
-                  <span className="text-[11px] text-slate-500 font-medium">
+                  <span className="text-[11px] text-[var(--ak-color-text-muted)] font-medium">
                     Live Real-Time Inference
                   </span>
                 </div>
@@ -802,8 +802,8 @@ export const PolicyBenchmarkModal: React.FC<PolicyBenchmarkModalProps> = ({
                     onClick={() => handleSelectInferenceCase('CASE-101')}
                     className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                       inferenceCaseId === 'CASE-101'
-                        ? 'bg-purple-600 text-white shadow-md shadow-purple-600/30'
-                        : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-300'
+                        ? 'bg-[var(--ak-color-primary)] text-white shadow-md shadow-purple-600/30'
+                        : 'bg-white hover:bg-[var(--ak-color-bg-subtle)] text-[var(--ak-color-text-secondary)] border border-[var(--ak-color-border-subtle)]'
                     }`}
                   >
                     CASE-101: Acute NSTEMI (Metformin & NSAID Safety)
@@ -812,8 +812,8 @@ export const PolicyBenchmarkModal: React.FC<PolicyBenchmarkModalProps> = ({
                     onClick={() => handleSelectInferenceCase('CASE-102')}
                     className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                       inferenceCaseId === 'CASE-102'
-                        ? 'bg-purple-600 text-white shadow-md shadow-purple-600/30'
-                        : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-300'
+                        ? 'bg-[var(--ak-color-primary)] text-white shadow-md shadow-purple-600/30'
+                        : 'bg-white hover:bg-[var(--ak-color-bg-subtle)] text-[var(--ak-color-text-secondary)] border border-[var(--ak-color-border-subtle)]'
                     }`}
                   >
                     CASE-102: Severe DKA (Hypokalemia & Insulin Sequencing)
@@ -822,8 +822,8 @@ export const PolicyBenchmarkModal: React.FC<PolicyBenchmarkModalProps> = ({
                     onClick={() => handleSelectInferenceCase('CASE-103')}
                     className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                       inferenceCaseId === 'CASE-103'
-                        ? 'bg-purple-600 text-white shadow-md shadow-purple-600/30'
-                        : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-300'
+                        ? 'bg-[var(--ak-color-primary)] text-white shadow-md shadow-purple-600/30'
+                        : 'bg-white hover:bg-[var(--ak-color-bg-subtle)] text-[var(--ak-color-text-secondary)] border border-[var(--ak-color-border-subtle)]'
                     }`}
                   >
                     CASE-103: Stage 3 AKI (Synergistic Vancomycin-Zosyn)
@@ -832,8 +832,8 @@ export const PolicyBenchmarkModal: React.FC<PolicyBenchmarkModalProps> = ({
                     onClick={() => handleSelectInferenceCase('CASE-104')}
                     className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                       inferenceCaseId === 'CASE-104'
-                        ? 'bg-purple-600 text-white shadow-md shadow-purple-600/30'
-                        : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-300'
+                        ? 'bg-[var(--ak-color-primary)] text-white shadow-md shadow-purple-600/30'
+                        : 'bg-white hover:bg-[var(--ak-color-bg-subtle)] text-[var(--ak-color-text-secondary)] border border-[var(--ak-color-border-subtle)]'
                     }`}
                   >
                     CASE-104: Submassive PE (GI Bleed Thrombolytic Safety)
@@ -846,7 +846,7 @@ export const PolicyBenchmarkModal: React.FC<PolicyBenchmarkModalProps> = ({
                     value={inferencePrompt}
                     onChange={(e) => setInferencePrompt(e.target.value)}
                     rows={3}
-                    className="w-full rounded-xl bg-white border border-slate-300 p-3 text-xs text-slate-800 focus:outline-none focus:border-purple-500 font-mono resize-none leading-relaxed"
+                    className="w-full rounded-xl bg-white border border-[var(--ak-color-border-subtle)] p-3 text-xs text-[var(--ak-color-text-primary)] focus:outline-none focus:border-purple-500 font-mono resize-none leading-relaxed"
                     placeholder="Enter clinical vignette, patient presentation, past medical history, and vital signs..."
                   />
                   <button
@@ -864,27 +864,27 @@ export const PolicyBenchmarkModal: React.FC<PolicyBenchmarkModalProps> = ({
               {inferenceResult && (
                 <div className="space-y-4 animate-in fade-in duration-300">
                   {/* Winner / Delta Summary Banner */}
-                  <div className="p-3.5 rounded-xl bg-purple-50/70 border border-purple-200 flex items-center justify-between">
+                  <div className="p-3.5 rounded-xl bg-[var(--ak-color-bg-subtle)] border border-[var(--ak-color-border-subtle)] flex items-center justify-between">
                     <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-lg bg-emerald-100 border border-emerald-300 flex items-center justify-center text-emerald-700">
+                      <div className="w-8 h-8 rounded-lg bg-[var(--ak-color-success-soft)] border border-[var(--ak-color-border-subtle)] flex items-center justify-center text-[var(--ak-color-success)]">
                         <Award className="w-4 h-4" />
                       </div>
                       <div>
-                        <div className="text-xs font-bold text-slate-900 flex items-center gap-2">
+                        <div className="text-xs font-bold text-[var(--ak-color-text-primary)] flex items-center gap-2">
                           <span>Empirical Result: RL DPO LoRA Policy Dominant</span>
-                          <span className="px-2 py-0.2 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-mono font-semibold border border-emerald-200">
+                          <span className="px-2 py-0.2 rounded-full bg-[var(--ak-color-success-soft)] text-[var(--ak-color-success)] text-[10px] font-mono font-semibold border border-[var(--ak-color-border-subtle)]">
                             +{inferenceResult.comparison_summary.reward_delta} Reward Delta
                           </span>
                         </div>
-                        <p className="text-[11px] text-slate-700 mt-0.5">
+                        <p className="text-[11px] text-[var(--ak-color-text-secondary)] mt-0.5">
                           {inferenceResult.comparison_summary.verdict}
                         </p>
                       </div>
                     </div>
 
                     <div className="text-right">
-                      <div className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Contraindications</div>
-                      <div className="text-sm font-black text-emerald-700">
+                      <div className="text-[10px] text-[var(--ak-color-text-muted)] uppercase tracking-wider font-semibold">Contraindications</div>
+                      <div className="text-sm font-black text-[var(--ak-color-success)]">
                         {inferenceResult.comparison_summary.contraindications_eliminated} Eliminated (100%)
                       </div>
                     </div>
@@ -893,45 +893,45 @@ export const PolicyBenchmarkModal: React.FC<PolicyBenchmarkModalProps> = ({
                   {/* Side-by-Side Model Outputs */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* Base Model (Unaligned) */}
-                    <div className="p-4 rounded-xl bg-rose-50/60 border border-rose-200 space-y-3 flex flex-col justify-between">
+                    <div className="p-4 rounded-xl bg-[var(--ak-color-warning-soft)]/60 border border-[var(--ak-color-border-subtle)] space-y-3 flex flex-col justify-between">
                       <div className="space-y-3">
-                        <div className="flex items-center justify-between border-b border-rose-200 pb-2">
+                        <div className="flex items-center justify-between border-b border-[var(--ak-color-border-subtle)] pb-2">
                           <div>
                             <div className="text-xs font-bold text-rose-900 flex items-center gap-1.5">
                               <span>{inferenceResult.base_model_output.model_version}</span>
                             </div>
-                            <div className="text-[10px] text-slate-500">Zero-Shot Foundation Weights (4-bit NF4)</div>
+                            <div className="text-[10px] text-[var(--ak-color-text-muted)]">Zero-Shot Foundation Weights (4-bit NF4)</div>
                           </div>
                           <div className="text-right">
-                            <div className="text-base font-black text-rose-600">
+                            <div className="text-base font-black text-[var(--ak-color-danger)]">
                               {inferenceResult.base_model_output.clinical_reward_score.toFixed(1)} / 10.0
                             </div>
-                            <div className="text-[10px] text-slate-500 font-mono">
+                            <div className="text-[10px] text-[var(--ak-color-text-muted)] font-mono">
                               {inferenceResult.base_model_output.latency_ms.toFixed(1)}ms
                             </div>
                           </div>
                         </div>
 
                         <div>
-                          <div className="text-[11px] font-semibold text-slate-500">Formulated Diagnosis:</div>
+                          <div className="text-[11px] font-semibold text-[var(--ak-color-text-muted)]">Formulated Diagnosis:</div>
                           <div className="text-xs font-bold text-rose-900 mt-0.5">
                             {inferenceResult.base_model_output.primary_diagnosis}
-                            <span className="ml-2 text-[10px] text-slate-500">
+                            <span className="ml-2 text-[10px] text-[var(--ak-color-text-muted)]">
                               (Confidence: {(inferenceResult.base_model_output.confidence * 100).toFixed(0)}%)
                             </span>
                           </div>
                         </div>
 
                         <div>
-                          <div className="text-[11px] font-semibold text-slate-500">Clinical Reasoning:</div>
-                          <p className="text-xs text-slate-700 mt-1 leading-relaxed bg-white p-2.5 rounded-lg border border-slate-200">
+                          <div className="text-[11px] font-semibold text-[var(--ak-color-text-muted)]">Clinical Reasoning:</div>
+                          <p className="text-xs text-[var(--ak-color-text-secondary)] mt-1 leading-relaxed bg-white p-2.5 rounded-lg border border-[var(--ak-color-border-subtle)]">
                             {inferenceResult.base_model_output.clinical_reasoning}
                           </p>
                         </div>
 
                         <div>
-                          <div className="text-[11px] font-semibold text-slate-500">Treatment Plan Orders:</div>
-                          <ul className="text-xs text-slate-700 mt-1 space-y-1">
+                          <div className="text-[11px] font-semibold text-[var(--ak-color-text-muted)]">Treatment Plan Orders:</div>
+                          <ul className="text-xs text-[var(--ak-color-text-secondary)] mt-1 space-y-1">
                             {inferenceResult.base_model_output.treatment_plan.map((t, i) => {
                               const isDangerous = t.toLowerCase().includes('ibuprofen') || t.toLowerCase().includes('push') || t.toLowerCase().includes('tpa') || t.toLowerCase().includes('alteplase');
                               return (
@@ -939,11 +939,11 @@ export const PolicyBenchmarkModal: React.FC<PolicyBenchmarkModalProps> = ({
                                   key={i}
                                   className={`p-1.5 rounded text-[11px] flex items-start gap-1.5 ${
                                     isDangerous
-                                      ? 'bg-rose-100 border border-rose-300 text-rose-900 font-medium'
-                                      : 'bg-white border border-slate-200 text-slate-700'
+                                      ? 'bg-[var(--ak-color-warning-soft)] border border-[var(--ak-color-border-subtle)] text-rose-900 font-medium'
+                                      : 'bg-white border border-[var(--ak-color-border-subtle)] text-[var(--ak-color-text-secondary)]'
                                   }`}
                                 >
-                                  <span className="text-rose-600 font-bold">•</span>
+                                  <span className="text-[var(--ak-color-danger)] font-bold">•</span>
                                   <span>{t}</span>
                                 </li>
                               );
@@ -954,13 +954,13 @@ export const PolicyBenchmarkModal: React.FC<PolicyBenchmarkModalProps> = ({
 
                       {/* Flagged Contraindications */}
                       {inferenceResult.base_model_output.contraindications_flagged.length > 0 && (
-                        <div className="p-2.5 rounded-lg bg-rose-100 border border-rose-300 text-[11px] text-rose-900 space-y-1">
-                          <div className="flex items-center gap-1.5 font-bold text-rose-800">
-                            <AlertTriangle className="w-3.5 h-3.5 text-rose-600 shrink-0" />
+                        <div className="p-2.5 rounded-lg bg-[var(--ak-color-warning-soft)] border border-[var(--ak-color-border-subtle)] text-[11px] text-rose-900 space-y-1">
+                          <div className="flex items-center gap-1.5 font-bold text-[var(--ak-color-danger)]">
+                            <AlertTriangle className="w-3.5 h-3.5 text-[var(--ak-color-danger)] shrink-0" />
                             <span>Adverse Safety Contraindication Detected:</span>
                           </div>
                           {inferenceResult.base_model_output.contraindications_flagged.map((c, i) => (
-                            <div key={i} className="text-[10px] text-rose-800 pl-5">
+                            <div key={i} className="text-[10px] text-[var(--ak-color-danger)] pl-5">
                               • {c}
                             </div>
                           ))}
@@ -969,51 +969,51 @@ export const PolicyBenchmarkModal: React.FC<PolicyBenchmarkModalProps> = ({
                     </div>
 
                     {/* RL DPO Aligned Model */}
-                    <div className="p-4 rounded-xl bg-emerald-50/60 border border-emerald-200 space-y-3 flex flex-col justify-between">
+                    <div className="p-4 rounded-xl bg-[var(--ak-color-success-soft)]/60 border border-[var(--ak-color-border-subtle)] space-y-3 flex flex-col justify-between">
                       <div className="space-y-3">
-                        <div className="flex items-center justify-between border-b border-emerald-200 pb-2">
+                        <div className="flex items-center justify-between border-b border-[var(--ak-color-border-subtle)] pb-2">
                           <div>
                             <div className="text-xs font-bold text-emerald-900 flex items-center gap-1.5">
                               <span>{inferenceResult.dpo_model_output.model_version}</span>
                             </div>
-                            <div className="text-[10px] text-slate-500">Trained with DPO LoRA + Harrison's RAG</div>
+                            <div className="text-[10px] text-[var(--ak-color-text-muted)]">Trained with DPO LoRA + Harrison's RAG</div>
                           </div>
                           <div className="text-right">
-                            <div className="text-base font-black text-emerald-600">
+                            <div className="text-base font-black text-[var(--ak-color-success)]">
                               +{inferenceResult.dpo_model_output.clinical_reward_score.toFixed(1)} / 10.0
                             </div>
-                            <div className="text-[10px] text-slate-500 font-mono">
+                            <div className="text-[10px] text-[var(--ak-color-text-muted)] font-mono">
                               {inferenceResult.dpo_model_output.latency_ms.toFixed(1)}ms
                             </div>
                           </div>
                         </div>
 
                         <div>
-                          <div className="text-[11px] font-semibold text-slate-500">Formulated Diagnosis:</div>
+                          <div className="text-[11px] font-semibold text-[var(--ak-color-text-muted)]">Formulated Diagnosis:</div>
                           <div className="text-xs font-bold text-emerald-900 mt-0.5">
                             {inferenceResult.dpo_model_output.primary_diagnosis}
-                            <span className="ml-2 text-[10px] text-emerald-700 font-semibold font-mono">
+                            <span className="ml-2 text-[10px] text-[var(--ak-color-success)] font-semibold font-mono">
                               (Confidence: {(inferenceResult.dpo_model_output.confidence * 100).toFixed(0)}%)
                             </span>
                           </div>
                         </div>
 
                         <div>
-                          <div className="text-[11px] font-semibold text-slate-500">Clinical Reasoning:</div>
-                          <p className="text-xs text-slate-700 mt-1 leading-relaxed bg-white p-2.5 rounded-lg border border-slate-200">
+                          <div className="text-[11px] font-semibold text-[var(--ak-color-text-muted)]">Clinical Reasoning:</div>
+                          <p className="text-xs text-[var(--ak-color-text-secondary)] mt-1 leading-relaxed bg-white p-2.5 rounded-lg border border-[var(--ak-color-border-subtle)]">
                             {inferenceResult.dpo_model_output.clinical_reasoning}
                           </p>
                         </div>
 
                         <div>
-                          <div className="text-[11px] font-semibold text-slate-500">Guideline-Directed Treatment Plan:</div>
-                          <ul className="text-xs text-slate-700 mt-1 space-y-1">
+                          <div className="text-[11px] font-semibold text-[var(--ak-color-text-muted)]">Guideline-Directed Treatment Plan:</div>
+                          <ul className="text-xs text-[var(--ak-color-text-secondary)] mt-1 space-y-1">
                             {inferenceResult.dpo_model_output.treatment_plan.map((t, i) => (
                               <li
                                 key={i}
-                                className="p-1.5 rounded text-[11px] flex items-start gap-1.5 bg-emerald-50/50 border border-emerald-200 text-emerald-900"
+                                className="p-1.5 rounded text-[11px] flex items-start gap-1.5 bg-[var(--ak-color-success-soft)]/50 border border-[var(--ak-color-border-subtle)] text-emerald-900"
                               >
-                                <CheckCircle2 className="w-3 h-3 text-emerald-600 shrink-0 mt-0.5" />
+                                <CheckCircle2 className="w-3 h-3 text-[var(--ak-color-success)] shrink-0 mt-0.5" />
                                 <span>{t}</span>
                               </li>
                             ))}
@@ -1022,19 +1022,19 @@ export const PolicyBenchmarkModal: React.FC<PolicyBenchmarkModalProps> = ({
                       </div>
 
                       {/* Safety & Harrison's Evidence Citations */}
-                      <div className="space-y-2 pt-2 border-t border-emerald-200">
-                        <div className="p-2 rounded-lg bg-emerald-100 border border-emerald-300 text-[11px] text-emerald-800 flex items-center gap-1.5">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                      <div className="space-y-2 pt-2 border-t border-[var(--ak-color-border-subtle)]">
+                        <div className="p-2 rounded-lg bg-[var(--ak-color-success-soft)] border border-[var(--ak-color-border-subtle)] text-[11px] text-[var(--ak-color-success)] flex items-center gap-1.5">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-[var(--ak-color-success)] shrink-0" />
                           <span className="font-semibold">
                             Zero Contraindications • 100% Guideline Adherent
                           </span>
                         </div>
 
                         {inferenceResult.dpo_model_output.rag_evidence_citations && (
-                          <div className="text-[10px] text-slate-500 space-y-0.5 pl-1">
-                            <span className="font-semibold text-purple-700 font-bold">Grounding Evidence:</span>
+                          <div className="text-[10px] text-[var(--ak-color-text-muted)] space-y-0.5 pl-1">
+                            <span className="font-semibold text-[var(--ak-color-primary)] font-bold">Grounding Evidence:</span>
                             {inferenceResult.dpo_model_output.rag_evidence_citations.map((cite, i) => (
-                              <div key={i} className="text-slate-700 truncate">
+                              <div key={i} className="text-[var(--ak-color-text-secondary)] truncate">
                                 📖 {cite}
                               </div>
                             ))}

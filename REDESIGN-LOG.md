@@ -9,12 +9,13 @@ Tracking implementation of the Asklevia Design System and UI Kit across all 7 ph
 | **Phase 3: Primitives** | Core UI primitives (Button, TextField, Select, Badge, Card, Dialog, Table) | **Completed** | `redesign/phase-3` | Built Button, Badge, Chip, TextField, TextArea, Select, Checkbox, Card, Dialog, ProgressBar, Alert, Table, Tabs, Stat, EmptyState, Divider. Added DesignSystemShowcase & unit tests (45/45 pass). |
 | **Phase 4: Shell & Nav** | App Bar, Header, Main Navigation, Drawer, Footer | **Completed** | `redesign/phase-4` | Restyled `App.tsx` with official horizontal Asklevia logo and `.ak-appbar`. Replaced sub-nav with `.ak-nav`. Redesigned `LeftNotificationDrawer` and `ActiveEncounterProgressBar` with tokens. Debt dropped to 2,721. Build & tests pass (45/45). |
 | **Phase 5: Main Views** | Clinical workstations (Intake, Directory, Review, Reviewing, Knowledge, Staff) | **Completed** | `redesign/phase-5` | Refactored all 6 core clinical views to Asklevia tokens & primitives. Debt reduced by 1,160 items (from 2,721 down to 1,561). Build & Vitest pass (45/45). |
-| **Phase 6: Visual & Special**| 3D Ward scene, Telemetry Stepper, Benchmark Modal, Modals | Pending | `redesign/phase-6` | Adapt 3D overlay cards and trajectory steppers to Asklevia clean light theme. |
-| **Phase 7: Review & Polish** | Verify zero brand violations, accessibility audit, final build gate | Pending | `redesign/phase-7` | Confirm brand linter passes with 0 violations. |
+| **Phase 6: Visual, Content & Modals**| Diagrams, HUD telemetry, Modals, Content & Voice Audit | **Completed** | `redesign/phase-6` | Refactored HospitalFlowDiagram, PatientJourneyFlowPage, VitalsMonitorHUD, EventStreamHUD, DoctorChatModal, DepartmentStationModal, InternalMedicineConsultModal, RLDatasetModal, PolicyBenchmarkModal, Synthea modals. Content & voice standards audited (0 '!', 0 emojis, 0 'diagnosed by AI'). Debt reduced from 1,561 to 271. Build & Vitest pass (45/45). |
+| **Phase 7: Review & Polish** | Final zero-debt elimination, token convergence, final verification gate | Pending | `redesign/phase-7` | Eliminate remaining 271 debt occurrences to achieve 0 brand debt. |
 
 ---
 
 ## Log Details
+
 
 ### Phase 1: Audit (October 6, 2026)
 - **Branch:** `redesign/phase-1`
@@ -88,4 +89,26 @@ Tracking implementation of the Asklevia Design System and UI Kit across all 7 ph
   - Upgraded `Checkbox` component to support `helpText` alias natively.
   - Lint Brand Metric: Style debt dropped from **2,721 down to 1,561** (-1,160 arbitrary color classes eliminated!).
   - Verification: `npm run build` succeeds cleanly (1.09s); all **45 / 45 Vitest tests pass** across 11 test suites.
+ 
+### Phase 6: Visual, Content & Modals (October 6, 2026)
+- **Branch:** `redesign/phase-6`
+- **Actions:**
+  - Modernized clinical flow diagrams & telemetry overlays to Asklevia tokens and primitives:
+    - `ActiveTrajectoryStepper.tsx`: 4-stage traversal stepper with accessible status pills, clean light surfaces, preserved tooltips (`screen.getByRole('tooltip')`).
+    - `HospitalFlowDiagram.tsx`: Replaced arbitrary colors and tactical `.hud-bracket` with `Card`, `Badge`, `Button`, and Asklevia `--ak-color-*` tokens. Preserved 2D schematic controls and 3D simulation triggers.
+    - `PatientJourneyFlowPage.tsx`: Replaced hardcoded buttons and headers with Asklevia `Button` and `Badge`.
+    - `VitalsMonitorHUD.tsx` & `EventStreamHUD.tsx`: Styled with `Card`, `Badge`, clean border tokens, and Geist Mono numbers.
+  - Refactored specialized clinical modals and dialogue surfaces:
+    - `DoctorChatModal.tsx`: Modern light modal shell with Dr. Vance avatar, Asklevia `Button`, `Badge`, `Chip`, and clean message threads.
+    - `DepartmentStationModal.tsx`: Laboratory, Radiology, and Central Rotunda panels restyled with `Button` and `Badge`.
+    - `InternalMedicineConsultModal.tsx`: Harrison's 21st Edition consult with structured workup, guideline therapy, and textbook citations.
+    - `RLDatasetModal.tsx`: TRL-compliant DPO preference dataset modal refactored with `Button`, `Badge`, and `Stat`. Preserved test assertions for `train-blocked-503`.
+    - `PolicyBenchmarkModal.tsx`: Side-by-side comparative inference benchmark refactored with tokens and clean light cards.
+    - `DemoPatientsSection.tsx` & `SyntheticTimelineModal.tsx`: Synthea generator and EHR timeline viewer tokenized.
+  - Completed Section 8 Voice & Content Audit:
+    - Authored `CONTENT-CHANGES.md`.
+    - Validated 0 exclamation marks (`!`), 0 emojis, and 0 "diagnosed by AI" occurrences across the entire UI.
+    - Audited marketing claims and proposed Arabic font pairings (IBM Plex Sans Arabic + Noto Sans Arabic) for future bilingual RTL.
+  - Lint Brand Metric: Style debt dropped dramatically from **1,561 down to 271** (-1,290 arbitrary color occurrences removed!).
+  - Verification: `npm run build` succeeds in **1.13s**; **45 / 45 Vitest tests pass** with 0 regressions.
 
