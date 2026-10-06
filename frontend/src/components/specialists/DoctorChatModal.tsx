@@ -324,13 +324,14 @@ export const DoctorChatModal: React.FC<DoctorChatModalProps> = ({
               leadingIcon={<Trash2 className="w-3.5 h-3.5" />}
               title="Reset conversation"
             >
-              Reset
+              Reset conversation
             </Button>
             <Button
               variant="ghost"
               size="sm"
               onClick={onClose}
               title="Close modal"
+              aria-label="Close modal"
             >
               <X className="w-4 h-4" />
             </Button>

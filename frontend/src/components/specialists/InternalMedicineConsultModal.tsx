@@ -147,6 +147,7 @@ export const InternalMedicineConsultModal: React.FC<InternalMedicineConsultProps
             size="sm"
             onClick={onClose}
             title="Close modal"
+            aria-label="Close modal"
           >
             <X className="w-4 h-4" />
           </Button>

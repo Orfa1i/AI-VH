@@ -239,7 +239,7 @@ export const SyntheticTimelineModal: React.FC<SyntheticTimelineModalProps> = ({
             <button
               onClick={handleAdmitToHospital}
               disabled={isAdmitting}
-              className="px-3.5 py-1.5 text-xs font-mono font-bold rounded-md bg-[var(--ak-color-primary)] hover:bg-[var(--ak-color-primary-soft)]0 text-white transition shadow-xs cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+              className="px-3.5 py-1.5 text-xs font-mono font-bold rounded-md bg-[var(--ak-color-primary)] hover:opacity-90 text-white transition shadow-xs cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
             >
               <BedDouble className="w-3.5 h-3.5" />
               <span>{isAdmitting ? 'Admitting...' : 'Admit to Hospital'}</span>

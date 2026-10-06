@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import type { PatientRecord } from '../../types';
 import {
   Search,
@@ -42,7 +42,7 @@ export const PatientDirectorySection: React.FC<PatientDirectorySectionProps> = (
   const [departmentFilter, setDepartmentFilter] = useState<string>('ALL');
   const [selectedPatient, setSelectedPatient] = useState<PatientRecord | null>(null);
 
-  const fetchPatients = async () => {
+  const fetchPatients = useCallback(async () => {
     setLoading(true);
     try {
       const url = statusFilter === 'ALL' ? '/api/patients' : `/api/patients?status=${statusFilter}`;
@@ -57,11 +57,11 @@ export const PatientDirectorySection: React.FC<PatientDirectorySectionProps> = (
     } finally {
       setLoading(false);
     }
-  };
+  }, [statusFilter]);
 
   useEffect(() => {
     fetchPatients();
-  }, [statusFilter, refreshTrigger]);
+  }, [fetchPatients, refreshTrigger]);
 
   const handleDischarge = async (patientId: string) => {
     if (!confirm('Are you sure you want to discharge this patient?')) return;
@@ -129,7 +129,7 @@ export const PatientDirectorySection: React.FC<PatientDirectorySectionProps> = (
           disabled={loading}
           leadingIcon={<RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />}
         >
-          Refresh Census
+          Refresh census
         </Button>
       }
     >

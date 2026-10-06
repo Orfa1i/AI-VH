@@ -3,6 +3,13 @@ import type { HospitalStaffRecord } from '../../types';
 import drMarcusPhoto from '../../assets/dr_marcus_vance.jpg';
 import { DoctorChatModal } from '../specialists/DoctorChatModal';
 import {
+  Stethoscope,
+  HeartPulse,
+  FlaskConical,
+  FileScan,
+  ClipboardList,
+} from 'lucide-react';
+import {
   Button,
   Badge,
   Card,
@@ -280,15 +287,15 @@ export const StaffManagementSection: React.FC<StaffManagementSectionProps> = ({ 
                           background: 'var(--bg-subtle)',
                           display: 'grid',
                           placeItems: 'center',
-                          fontSize: 24,
                           flexShrink: 0,
+                          color: 'var(--action-primary)',
                         }}
                       >
-                        {staff.role === 'DOCTOR' && '👨‍⚕️'}
-                        {staff.role === 'NURSE' && '👩‍⚕️'}
-                        {staff.role === 'LAB_SCIENTIST' && '🔬'}
-                        {staff.role === 'RADIOLOGIST' && '🩻'}
-                        {staff.role === 'RECEPTIONIST' && '📋'}
+                        {staff.role === 'DOCTOR' && <Stethoscope style={{ width: 24, height: 24 }} />}
+                        {staff.role === 'NURSE' && <HeartPulse style={{ width: 24, height: 24 }} />}
+                        {staff.role === 'LAB_SCIENTIST' && <FlaskConical style={{ width: 24, height: 24 }} />}
+                        {staff.role === 'RADIOLOGIST' && <FileScan style={{ width: 24, height: 24 }} />}
+                        {staff.role === 'RECEPTIONIST' && <ClipboardList style={{ width: 24, height: 24 }} />}
                       </div>
                     )}
 
@@ -401,7 +408,7 @@ export const StaffManagementSection: React.FC<StaffManagementSectionProps> = ({ 
         actions={
           <>
             <Button variant="secondary" onClick={() => setIsRegisterOpen(false)}>
-              Cancel
+              Dismiss
             </Button>
             <Button
               variant="primary"

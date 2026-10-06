@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   Search,
   BookOpen,
@@ -44,6 +44,15 @@ export const KnowledgeSearchSection: React.FC = () => {
   const [isSeeding, setIsSeeding] = useState<boolean>(false);
   const [seedStatus, setSeedStatus] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const seedTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const copyTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (seedTimerRef.current) clearTimeout(seedTimerRef.current);
+      if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
+    };
+  }, []);
 
   const handleSearch = async (e?: React.FormEvent, customQuery?: string) => {
     if (e) e.preventDefault();
@@ -92,7 +101,8 @@ export const KnowledgeSearchSection: React.FC = () => {
       setSeedStatus('Failed to re-index knowledge base.');
     } finally {
       setIsSeeding(false);
-      setTimeout(() => setSeedStatus(null), 5000);
+      if (seedTimerRef.current) clearTimeout(seedTimerRef.current);
+      seedTimerRef.current = setTimeout(() => setSeedStatus(null), 5000);
     }
   };
 
@@ -100,7 +110,8 @@ export const KnowledgeSearchSection: React.FC = () => {
     const citation = `"${result.content}" — ${result.book_title}, ${result.chapter}: ${result.topic} (${result.specialty})`;
     navigator.clipboard.writeText(citation);
     setCopiedId(result.id);
-    setTimeout(() => setCopiedId(null), 2000);
+    if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
+    copyTimerRef.current = setTimeout(() => setCopiedId(null), 2000);
   };
 
   const sampleQueries = [

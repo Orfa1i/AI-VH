@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import type { DPOPreferencePair, DPOStatistics } from '../../types';
 import {
   X,
@@ -34,6 +34,17 @@ export const RLDatasetModal: React.FC<RLDatasetModalProps> = ({ isOpen, onClose 
   const [validationResult, setValidationResult] = useState<any | null>(null);
   const [isValidating, setIsValidating] = useState(false);
   const [showValidation, setShowValidation] = useState(false);
+  const exportTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const trainTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const errorTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (exportTimerRef.current) clearTimeout(exportTimerRef.current);
+      if (trainTimerRef.current) clearTimeout(trainTimerRef.current);
+      if (errorTimerRef.current) clearTimeout(errorTimerRef.current);
+    };
+  }, []);
 
   const handleValidateGates = async () => {
     setIsValidating(true);
@@ -81,9 +92,10 @@ export const RLDatasetModal: React.FC<RLDatasetModalProps> = ({ isOpen, onClose 
       if (res.ok) {
         const data = await res.json();
         setExportMessage(`Exported ${data.exported_count} pairs to ${data.filepath}`);
-        setTimeout(() => setExportMessage(null), 5000);
+        if (exportTimerRef.current) clearTimeout(exportTimerRef.current);
+        exportTimerRef.current = setTimeout(() => setExportMessage(null), 5000);
       }
-    } catch (err) {
+    } catch {
       setExportMessage('Failed to export dataset. Check server logs.');
     } finally {
       setExporting(false);
@@ -123,10 +135,12 @@ export const RLDatasetModal: React.FC<RLDatasetModalProps> = ({ isOpen, onClose 
       }
       const data = await res.json();
       setTrainMessage(`Model fine-tuning finished. Status: ${data.status}, Pairs: ${data.training_summary?.pairs_trained || data.pairs_trained || 0}, Output: ${data.manifest?.manifest_id || 'models/medgemma-dpo-lora'}`);
-      setTimeout(() => setTrainMessage(null), 8000);
+      if (trainTimerRef.current) clearTimeout(trainTimerRef.current);
+      trainTimerRef.current = setTimeout(() => setTrainMessage(null), 8000);
     } catch (err: any) {
       setTrainError(err.message || 'Manual fine-tuning failed. Please retry.');
-      setTimeout(() => setTrainError(null), 8000);
+      if (errorTimerRef.current) clearTimeout(errorTimerRef.current);
+      errorTimerRef.current = setTimeout(() => setTrainError(null), 8000);
     } finally {
       setTraining(false);
     }

@@ -15,6 +15,7 @@ import {
   Zap,
   Activity,
   Play,
+  BookOpen,
 } from 'lucide-react';
 import { speakClinicalMessage, stopClinicalSpeech } from '../../utils/speechSynthesis';
 
@@ -379,7 +380,7 @@ export const PolicyBenchmarkModal: React.FC<PolicyBenchmarkModalProps> = ({
               className="px-3 py-1.5 rounded-xl bg-[var(--ak-color-bg-subtle)] hover:bg-[var(--ak-color-bg-subtle)] border border-[var(--ak-color-border-subtle)] text-[var(--ak-color-text-secondary)] text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-all shadow-xs"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-              <span>{loading ? 'Evaluating...' : 'Re-Run Benchmark'}</span>
+              <span>{loading ? 'Evaluating...' : 'Rerun benchmark'}</span>
             </button>
 
             <button
@@ -391,7 +392,7 @@ export const PolicyBenchmarkModal: React.FC<PolicyBenchmarkModalProps> = ({
               }`}
             >
               {isSpeaking ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
-              <span>{isSpeaking ? 'Mute' : 'Voice Readout'}</span>
+              <span>{isSpeaking ? 'Mute' : 'Read aloud'}</span>
             </button>
 
             <button
@@ -399,11 +400,12 @@ export const PolicyBenchmarkModal: React.FC<PolicyBenchmarkModalProps> = ({
               className="px-3 py-1.5 rounded-xl bg-[var(--ak-color-bg-subtle)] hover:bg-[var(--ak-color-bg-subtle)] border border-[var(--ak-color-border-subtle)] text-[var(--ak-color-text-secondary)] text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-all shadow-xs"
             >
               <Copy className="w-3.5 h-3.5" />
-              <span>{copied ? 'Copied!' : 'Copy JSON'}</span>
+              <span>{copied ? 'Copied' : 'Copy JSON'}</span>
             </button>
 
             <button
               onClick={onClose}
+              aria-label="Close modal"
               className="p-1.5 rounded-xl hover:bg-[var(--ak-color-bg-subtle)] text-[var(--ak-color-text-muted)] hover:text-[var(--ak-color-text-primary)] transition-all cursor-pointer"
             >
               <X className="w-5 h-5" />
@@ -617,7 +619,7 @@ export const PolicyBenchmarkModal: React.FC<PolicyBenchmarkModalProps> = ({
                     onClick={() => setSelectedCaseIdx(idx)}
                     className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                       selectedCaseIdx === idx
-                        ? 'bg-[var(--ak-color-primary)] text-white shadow-md shadow-purple-600/30'
+                        ? 'bg-[var(--ak-color-primary)] text-white shadow-xs'
                         : 'bg-[var(--ak-color-bg-subtle)] text-[var(--ak-color-text-secondary)] hover:bg-[var(--ak-color-bg-subtle)] border border-[var(--ak-color-border-subtle)]'
                     }`}
                   >
@@ -802,7 +804,7 @@ export const PolicyBenchmarkModal: React.FC<PolicyBenchmarkModalProps> = ({
                     onClick={() => handleSelectInferenceCase('CASE-101')}
                     className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                       inferenceCaseId === 'CASE-101'
-                        ? 'bg-[var(--ak-color-primary)] text-white shadow-md shadow-purple-600/30'
+                        ? 'bg-[var(--ak-color-primary)] text-white shadow-xs'
                         : 'bg-white hover:bg-[var(--ak-color-bg-subtle)] text-[var(--ak-color-text-secondary)] border border-[var(--ak-color-border-subtle)]'
                     }`}
                   >
@@ -812,7 +814,7 @@ export const PolicyBenchmarkModal: React.FC<PolicyBenchmarkModalProps> = ({
                     onClick={() => handleSelectInferenceCase('CASE-102')}
                     className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                       inferenceCaseId === 'CASE-102'
-                        ? 'bg-[var(--ak-color-primary)] text-white shadow-md shadow-purple-600/30'
+                        ? 'bg-[var(--ak-color-primary)] text-white shadow-xs'
                         : 'bg-white hover:bg-[var(--ak-color-bg-subtle)] text-[var(--ak-color-text-secondary)] border border-[var(--ak-color-border-subtle)]'
                     }`}
                   >
@@ -822,7 +824,7 @@ export const PolicyBenchmarkModal: React.FC<PolicyBenchmarkModalProps> = ({
                     onClick={() => handleSelectInferenceCase('CASE-103')}
                     className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                       inferenceCaseId === 'CASE-103'
-                        ? 'bg-[var(--ak-color-primary)] text-white shadow-md shadow-purple-600/30'
+                        ? 'bg-[var(--ak-color-primary)] text-white shadow-xs'
                         : 'bg-white hover:bg-[var(--ak-color-bg-subtle)] text-[var(--ak-color-text-secondary)] border border-[var(--ak-color-border-subtle)]'
                     }`}
                   >
@@ -832,7 +834,7 @@ export const PolicyBenchmarkModal: React.FC<PolicyBenchmarkModalProps> = ({
                     onClick={() => handleSelectInferenceCase('CASE-104')}
                     className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                       inferenceCaseId === 'CASE-104'
-                        ? 'bg-[var(--ak-color-primary)] text-white shadow-md shadow-purple-600/30'
+                        ? 'bg-[var(--ak-color-primary)] text-white shadow-xs'
                         : 'bg-white hover:bg-[var(--ak-color-bg-subtle)] text-[var(--ak-color-text-secondary)] border border-[var(--ak-color-border-subtle)]'
                     }`}
                   >
@@ -852,10 +854,10 @@ export const PolicyBenchmarkModal: React.FC<PolicyBenchmarkModalProps> = ({
                   <button
                     onClick={() => runComparativeInference()}
                     disabled={inferenceLoading}
-                    className="absolute right-2.5 bottom-3 px-3 py-1.5 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-semibold flex items-center gap-1.5 shadow-lg shadow-purple-600/30 cursor-pointer disabled:opacity-50"
+                    className="absolute right-2.5 bottom-3 px-3 py-1.5 rounded-lg bg-[var(--ak-color-primary)] hover:opacity-90 text-white text-xs font-semibold flex items-center gap-1.5 shadow-xs cursor-pointer disabled:opacity-50"
                   >
                     <Play className={`w-3.5 h-3.5 fill-current ${inferenceLoading ? 'animate-spin' : ''}`} />
-                    <span>{inferenceLoading ? 'Computing Live GPU Inference...' : 'Run Comparative Inference'}</span>
+                    <span>{inferenceLoading ? 'Computing live GPU inference...' : 'Run comparative inference'}</span>
                   </button>
                 </div>
               </div>
@@ -1031,11 +1033,12 @@ export const PolicyBenchmarkModal: React.FC<PolicyBenchmarkModalProps> = ({
                         </div>
 
                         {inferenceResult.dpo_model_output.rag_evidence_citations && (
-                          <div className="text-[10px] text-[var(--ak-color-text-muted)] space-y-0.5 pl-1">
+                          <div className="text-xs text-[var(--ak-color-text-muted)] space-y-0.5 pl-1">
                             <span className="font-semibold text-[var(--ak-color-primary)] font-bold">Grounding Evidence:</span>
                             {inferenceResult.dpo_model_output.rag_evidence_citations.map((cite, i) => (
-                              <div key={i} className="text-[var(--ak-color-text-secondary)] truncate">
-                                📖 {cite}
+                              <div key={`${cite}-${i}`} className="text-[var(--ak-color-text-secondary)] truncate flex items-center gap-1.5">
+                                <BookOpen className="w-3.5 h-3.5 text-[var(--ak-color-primary)] shrink-0" />
+                                <span>{cite}</span>
                               </div>
                             ))}
                           </div>

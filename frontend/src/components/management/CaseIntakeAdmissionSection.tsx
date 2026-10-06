@@ -185,7 +185,7 @@ export const CaseIntakeAdmissionSection: React.FC<CaseIntakeAdmissionSectionProp
               onClick={handleApplyNormalVitals}
               leadingIcon={<Zap className="w-3.5 h-3.5" style={{ color: 'var(--color-primary)' }} />}
             >
-              Normal Baseline Vitals
+              Load normal vitals
             </Button>
             <Button
               variant="ghost"
@@ -193,7 +193,7 @@ export const CaseIntakeAdmissionSection: React.FC<CaseIntakeAdmissionSectionProp
               onClick={handleResetForm}
               leadingIcon={<RotateCcw className="w-3.5 h-3.5" />}
             >
-              Reset Form
+              Reset form
             </Button>
           </div>
         )
@@ -655,7 +655,7 @@ export const CaseIntakeAdmissionSection: React.FC<CaseIntakeAdmissionSectionProp
               }}
             >
               <Button variant="secondary" size="md" onClick={handleResetForm}>
-                Reset Fields
+                Reset fields
               </Button>
 
               <Button
@@ -666,7 +666,7 @@ export const CaseIntakeAdmissionSection: React.FC<CaseIntakeAdmissionSectionProp
                 isLoading={isSubmitting}
                 leadingIcon={<FileSpreadsheet className="w-4 h-4" />}
               >
-                {isSubmitting ? 'Admitting Patient...' : 'Admit Patient to Record System'}
+                {isSubmitting ? 'Admitting patient...' : 'Admit patient to record system'}
               </Button>
             </div>
           </form>

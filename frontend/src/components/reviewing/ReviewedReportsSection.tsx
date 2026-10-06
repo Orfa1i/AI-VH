@@ -129,7 +129,7 @@ export const ReviewedReportsSection: React.FC<ReviewedReportsSectionProps> = ({
 
       const result = await res.json();
       setTrainingResult(result);
-      setTrainingStatus(`Model fine-tuning completed successfully! Adapter saved to ${result.adapter_path || 'models/medgemma-dpo-lora'}`);
+      setTrainingStatus(`Model fine-tuning completed successfully. Adapter saved to ${result.adapter_path || 'models/medgemma-dpo-lora'}`);
       if (onTriggerTrainingSuccess) {
         onTriggerTrainingSuccess();
       }
@@ -191,7 +191,7 @@ export const ReviewedReportsSection: React.FC<ReviewedReportsSectionProps> = ({
             onClick={() => setIsTrainingModalOpen(true)}
             leadingIcon={<Cpu className="w-3.5 h-3.5" />}
           >
-            MANUAL MODEL TRAINING
+            Start manual training
           </Button>
 
           <Button
@@ -201,7 +201,7 @@ export const ReviewedReportsSection: React.FC<ReviewedReportsSectionProps> = ({
             disabled={loading}
             leadingIcon={<RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />}
           >
-            Refresh
+            Refresh reports
           </Button>
         </div>
       }
@@ -268,7 +268,7 @@ export const ReviewedReportsSection: React.FC<ReviewedReportsSectionProps> = ({
                   isSelected={scoreFilter === sc}
                   onClick={() => setScoreFilter(sc)}
                 >
-                  {sc === 'ALL' ? 'All Scores' : sc === '3_OR_LESS' ? '≤3★' : `${sc}★`}
+                  {sc === 'ALL' ? 'All scores' : sc === '3_OR_LESS' ? '≤ 3 stars' : `${sc} stars`}
                 </Chip>
               ))}
             </div>
@@ -338,14 +338,14 @@ export const ReviewedReportsSection: React.FC<ReviewedReportsSectionProps> = ({
                         justifyContent: 'space-between',
                         paddingTop: 'var(--space-2)',
                         borderTop: '1px solid var(--border-subtle)',
-                        fontSize: '0.6875rem',
+                        fontSize: '0.75rem',
                       }}
                     >
                       <span className="caption" style={{ color: 'var(--text-tertiary)' }}>
                         {item.physician_name || 'Attending Physician'}
                       </span>
                       <span className="ak-num" style={{ fontWeight: 700, color: 'var(--ak-color-warning)' }}>
-                        {item.overall_score}/5 ★
+                        {item.overall_score}/5 stars
                       </span>
                     </div>
                   </div>

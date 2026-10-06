@@ -19,7 +19,7 @@ export const Badge: React.FC<BadgeProps> = ({
   const classNames = [
     'ak-badge',
     resolvedVariant !== 'neutral' ? `ak-badge--${resolvedVariant}` : '',
-    size === 'sm' ? 'text-[10px] px-1.5 py-0.2' : '',
+    size === 'sm' ? 'text-xs px-1.5 py-0.5' : '',
     className,
   ]
     .filter(Boolean)

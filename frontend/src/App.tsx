@@ -208,6 +208,9 @@ export const App: React.FC = () => {
 
   return (
     <div className="w-screen h-screen flex flex-col bg-[var(--bg-page)] overflow-hidden font-sans select-none text-[var(--text-primary)]">
+      <a href="#main-content" className="ak-skip-link">
+        Skip to clinical content
+      </a>
       {/* Asklevia Clinical App Bar */}
       <header className="ak-appbar shrink-0">
         {/* Left: Official Logo Lockup */}
@@ -245,7 +248,7 @@ export const App: React.FC = () => {
           >
             <Clock aria-hidden="true" style={{ width: 14, height: 14 }} />
             <span style={{ fontWeight: 600 }}>{currentTime || '12:00:00'}</span>
-            <span style={{ fontSize: 10, color: 'var(--text-tertiary)' }}>UTC</span>
+            <span style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>UTC</span>
           </div>
 
           {/* Audio Voice Synthesizer Toggle */}
@@ -425,7 +428,7 @@ export const App: React.FC = () => {
       />
 
       {/* Main Portal Viewport */}
-      <main className="flex-1 overflow-hidden flex flex-col relative bg-[var(--ak-color-bg-app)]">
+      <div className="flex-1 overflow-hidden flex flex-col relative bg-[var(--ak-color-bg-app)]">
         {activeTab === 'INTAKE' && (
           <CaseIntakeAdmissionSection
             cases={cases}
@@ -469,7 +472,7 @@ export const App: React.FC = () => {
 
         {activeTab === 'BENCHMARK' && (
           <div className="flex-1 p-6 overflow-y-auto max-w-5xl mx-auto flex flex-col justify-center items-center text-center">
-            <div className="max-w-xl p-8 bg-white border border-[var(--ak-color-border-subtle)] rounded-xl shadow-md hud-bracket">
+            <div className="max-w-xl p-8 bg-white border border-[var(--ak-color-border-subtle)] rounded-xl shadow-md">
               <div className="w-12 h-12 rounded-lg bg-[var(--ak-color-primary-soft)] border border-[var(--ak-color-border-subtle)] flex items-center justify-center text-[var(--ak-color-primary)] mx-auto mb-4 shadow-xs">
                 <Scale className="w-6 h-6 text-[var(--ak-color-primary)]" />
               </div>
@@ -497,7 +500,7 @@ export const App: React.FC = () => {
           </div>
         )}
 
-      </main>
+      </div>
 
       {/* Hospital Notification System (Slide-In/Out Drawer & Live Event Toasts) */}
       <LeftNotificationDrawer

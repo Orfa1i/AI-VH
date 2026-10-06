@@ -155,7 +155,12 @@ export const PatientJourneyFlowPage: React.FC<PatientJourneyFlowPageProps> = ({ 
     return () => {
       isMountedRef.current = false;
       if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
-      if (wsRef.current) wsRef.current.close();
+      if (wsRef.current) {
+        wsRef.current.onclose = null;
+        wsRef.current.onerror = null;
+        wsRef.current.onmessage = null;
+        wsRef.current.close();
+      }
     };
   }, [handleIncomingEvent]);
 
@@ -238,6 +243,7 @@ export const PatientJourneyFlowPage: React.FC<PatientJourneyFlowPageProps> = ({ 
             size="sm"
             onClick={() => setIsAudioMuted(toggleGlobalMute())}
             title={isAudioMuted ? 'Unmute voice synthesis' : 'Mute voice synthesis'}
+            aria-label={isAudioMuted ? 'Unmute voice synthesis' : 'Mute voice synthesis'}
           >
             {isAudioMuted ? <VolumeX className="w-4 h-4 text-[var(--ak-color-text-muted)]" /> : <Volume2 className="w-4 h-4 text-[var(--ak-color-primary)]" />}
           </Button>

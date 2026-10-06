@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Search,
   Sparkles,
@@ -59,6 +59,15 @@ export const DemoPatientsSection: React.FC<DemoPatientsSectionProps> = ({
 
   // Toast / Status state
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const feedbackTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const toastTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (feedbackTimerRef.current) clearTimeout(feedbackTimerRef.current);
+      if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    };
+  }, []);
 
   const fetchPatients = async () => {
     setLoading(true);
@@ -106,7 +115,8 @@ export const DemoPatientsSection: React.FC<DemoPatientsSectionProps> = ({
         const data = await res.json();
         setGenFeedback(`Successfully generated ${data.population_generated} synthetic patients!`);
         await fetchPatients();
-        setTimeout(() => {
+        if (feedbackTimerRef.current) clearTimeout(feedbackTimerRef.current);
+        feedbackTimerRef.current = setTimeout(() => {
           setIsGenModalOpen(false);
           setGenFeedback(null);
           setGenError(null);
@@ -118,7 +128,7 @@ export const DemoPatientsSection: React.FC<DemoPatientsSectionProps> = ({
           if (errData && errData.detail) {
             errorDetail = typeof errData.detail === 'string' ? errData.detail : JSON.stringify(errData.detail);
           }
-        } catch (_) {}
+        } catch {}
         setGenError(`Failed to generate patients: ${errorDetail}`);
       }
     } catch (err: any) {
@@ -139,7 +149,8 @@ export const DemoPatientsSection: React.FC<DemoPatientsSectionProps> = ({
         if (onAdmitSuccess) {
           onAdmitSuccess();
         }
-        setTimeout(() => setToastMessage(null), 3500);
+        if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+        toastTimerRef.current = setTimeout(() => setToastMessage(null), 3500);
       } else {
         let msg = `HTTP ${res.status}`;
         try {
@@ -147,14 +158,16 @@ export const DemoPatientsSection: React.FC<DemoPatientsSectionProps> = ({
           if (errData?.detail) {
             msg = typeof errData.detail === 'string' ? errData.detail : JSON.stringify(errData.detail);
           }
-        } catch (_) {}
+        } catch {}
         setToastMessage(`Failed to admit ${patientName}: ${msg}`);
-        setTimeout(() => setToastMessage(null), 4000);
+        if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+        toastTimerRef.current = setTimeout(() => setToastMessage(null), 4000);
       }
     } catch (err: any) {
       console.error('Error admitting patient:', err);
       setToastMessage(`Network error admitting ${patientName}: ${err?.message || err}`);
-      setTimeout(() => setToastMessage(null), 4000);
+      if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+      toastTimerRef.current = setTimeout(() => setToastMessage(null), 4000);
     }
   };
 
@@ -257,7 +270,7 @@ export const DemoPatientsSection: React.FC<DemoPatientsSectionProps> = ({
               setGenError(null);
               setIsGenModalOpen(true);
             }}
-            className="px-3.5 py-2 rounded-md bg-[var(--ak-color-primary)] hover:bg-[var(--ak-color-primary-soft)]0 text-white font-mono font-bold text-xs flex items-center gap-1.5 shadow-xs transition cursor-pointer"
+            className="px-3.5 py-2 rounded-md bg-[var(--ak-color-primary)] hover:opacity-90 text-white font-mono font-bold text-xs flex items-center gap-1.5 shadow-xs transition cursor-pointer"
           >
             <PlusCircle className="w-4 h-4" />
             <span>Generate Patients</span>
@@ -390,7 +403,7 @@ export const DemoPatientsSection: React.FC<DemoPatientsSectionProps> = ({
                       e.stopPropagation();
                       handleAdmit(patient.id, patient.name);
                     }}
-                    className="py-1.5 px-3 bg-[var(--ak-color-primary)] hover:bg-[var(--ak-color-primary-soft)]0 text-white text-xs font-bold rounded-md transition cursor-pointer flex items-center justify-center gap-1 shadow-2xs"
+                    className="py-1.5 px-3 bg-[var(--ak-color-primary)] hover:opacity-90 text-white text-xs font-bold rounded-md transition cursor-pointer flex items-center justify-center gap-1 shadow-2xs"
                     title="Admit directly into hospital wards"
                   >
                     <BedDouble className="w-3.5 h-3.5" />
@@ -440,7 +453,7 @@ export const DemoPatientsSection: React.FC<DemoPatientsSectionProps> = ({
                   max="10"
                   value={genPopulation}
                   onChange={(e) => setGenPopulation(Number(e.target.value))}
-                  className="w-full accent-sky-600"
+                  className="w-full accent-[var(--ak-color-primary)]"
                 />
               </div>
 
@@ -507,14 +520,14 @@ export const DemoPatientsSection: React.FC<DemoPatientsSectionProps> = ({
               </div>
 
               {genFeedback && (
-                <div className="p-2.5 rounded bg-[var(--ak-color-success-soft)] border border-[var(--ak-color-border-subtle)] text-[var(--ak-color-success)] text-[11px] font-mono flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-[var(--ak-color-success-soft)]0 animate-pulse shrink-0"></span>
+                <div className="p-2.5 rounded bg-[var(--ak-color-success-soft)] border border-[var(--ak-color-border-subtle)] text-[var(--ak-color-success)] text-xs font-mono flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-[var(--ak-color-success)] animate-pulse shrink-0"></span>
                   <span>{genFeedback}</span>
                 </div>
               )}
 
               {genError && (
-                <div className="p-2.5 rounded bg-[var(--ak-color-warning-soft)] border border-[var(--ak-color-border-subtle)] text-[var(--ak-color-danger)] text-[11px] font-mono flex items-center gap-2">
+                <div className="p-2.5 rounded bg-[var(--ak-color-warning-soft)] border border-[var(--ak-color-border-subtle)] text-[var(--ak-color-danger)] text-xs font-mono flex items-center gap-2">
                   <AlertTriangle className="w-4 h-4 text-[var(--ak-color-danger)] shrink-0" />
                   <span>{genError}</span>
                 </div>
@@ -531,7 +544,7 @@ export const DemoPatientsSection: React.FC<DemoPatientsSectionProps> = ({
                 <button
                   type="submit"
                   disabled={isGenerating}
-                  className="px-4 py-2 rounded bg-[var(--ak-color-primary)] hover:bg-[var(--ak-color-primary-soft)]0 text-white font-bold transition cursor-pointer flex items-center gap-1.5 shadow-xs disabled:opacity-50"
+                  className="px-4 py-2 rounded bg-[var(--ak-color-primary)] hover:opacity-90 text-white font-bold transition cursor-pointer flex items-center gap-1.5 shadow-xs disabled:opacity-50"
                 >
                   <Sparkles className="w-3.5 h-3.5" />
                   <span>{isGenerating ? 'Generating...' : 'Run Generator'}</span>

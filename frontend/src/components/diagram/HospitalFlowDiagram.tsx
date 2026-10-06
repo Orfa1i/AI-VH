@@ -194,12 +194,12 @@ export const HospitalFlowDiagram: React.FC<HospitalFlowDiagramProps> = ({
           </div>
 
           {/* ECG Lead II Rhythm Strip */}
-          <div className="flex-1 min-w-[220px] max-w-lg h-14 bg-[var(--ak-color-text-primary)] rounded-lg relative overflow-hidden flex items-center px-3">
-            <div className="absolute top-1 left-2 font-mono text-[9px] text-[var(--ak-color-primary-soft)] tracking-wider flex items-center gap-2 z-10">
-              <span className="font-medium text-white/90">Lead II • ECG 25mm/s</span>
-              <span className="border-[var(--ak-color-border-subtle)] font-medium">NSR Conduction</span>
+          <div className="flex-1 min-w-[220px] max-w-lg h-14 bg-[var(--ak-color-bg-subtle)] border border-[var(--ak-color-border-subtle)] rounded-lg relative overflow-hidden flex items-center px-3">
+            <div className="absolute top-1 left-2 font-mono text-xs text-[var(--ak-color-text-secondary)] tracking-wider flex items-center gap-2 z-10">
+              <span className="font-medium text-[var(--ak-color-text-primary)]">Lead II • ECG 25mm/s</span>
+              <span className="font-medium text-[var(--ak-color-text-tertiary)]">NSR Conduction</span>
             </div>
-            <svg className="w-full h-8 stroke-white/80" fill="none" preserveAspectRatio="none" viewBox="0 0 500 40">
+            <svg className="w-full h-8 stroke-[var(--ak-color-primary)]" fill="none" preserveAspectRatio="none" viewBox="0 0 500 40">
               <path
                 d="M 0,20 L 40,20 L 50,18 L 55,20 L 70,20 L 75,5 L 82,36 L 88,14 L 92,20 L 110,20 L 125,16 L 140,20 L 180,20 L 190,18 L 195,20 L 210,20 L 215,5 L 222,36 L 228,14 L 232,20 L 250,20 L 265,16 L 280,20 L 320,20 L 330,18 L 335,20 L 350,20 L 355,5 L 362,36 L 368,14 L 372,20 L 390,20 L 405,16 L 420,20 L 460,20 L 470,18 L 475,20 L 500,20"
                 strokeLinecap="round"
@@ -207,7 +207,7 @@ export const HospitalFlowDiagram: React.FC<HospitalFlowDiagramProps> = ({
                 strokeWidth="1.8"
               />
             </svg>
-            <div className="absolute inset-y-0 w-12 bg-gradient-to-r from-transparent via-white/20 to-transparent ecg-scanner pointer-events-none" />
+            <div className="absolute inset-y-0 w-12 bg-gradient-to-r from-transparent via-[var(--ak-color-primary-soft)] to-transparent ecg-scanner pointer-events-none" />
           </div>
 
           {/* Tabular Telemetry Grid */}

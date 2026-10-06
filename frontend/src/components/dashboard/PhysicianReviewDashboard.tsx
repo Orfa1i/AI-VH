@@ -198,7 +198,7 @@ export const PhysicianReviewDashboard: React.FC<PhysicianReviewDashboardProps> =
           onClick={handleResetReports}
           leadingIcon={<RotateCcw className="w-3.5 h-3.5" />}
         >
-          Reset Review Queue
+          Reset review queue
         </Button>
       }
     >
@@ -392,7 +392,7 @@ export const PhysicianReviewDashboard: React.FC<PhysicianReviewDashboardProps> =
                     Heart Rate
                   </div>
                   <div className="heading-3 ak-num" style={{ marginTop: 4 }}>
-                    {activeReport.vital_signs.heart_rate} BPM
+                    {activeReport?.vital_signs?.heart_rate ?? '—'} BPM
                   </div>
                 </div>
 
@@ -410,7 +410,9 @@ export const PhysicianReviewDashboard: React.FC<PhysicianReviewDashboardProps> =
                     Blood Pressure
                   </div>
                   <div className="heading-3 ak-num" style={{ marginTop: 4 }}>
-                    {activeReport.vital_signs.systolic_bp}/{activeReport.vital_signs.diastolic_bp}
+                    {activeReport?.vital_signs?.systolic_bp != null && activeReport?.vital_signs?.diastolic_bp != null
+                      ? `${activeReport.vital_signs.systolic_bp}/${activeReport.vital_signs.diastolic_bp}`
+                      : '—'}
                   </div>
                 </div>
 
@@ -428,7 +430,7 @@ export const PhysicianReviewDashboard: React.FC<PhysicianReviewDashboardProps> =
                     O2 Saturation
                   </div>
                   <div className="heading-3 ak-num" style={{ marginTop: 4 }}>
-                    {activeReport.vital_signs.spo2_percent}%
+                    {activeReport?.vital_signs?.spo2_percent != null ? `${activeReport.vital_signs.spo2_percent}%` : '—'}
                   </div>
                 </div>
               </div>
@@ -599,7 +601,7 @@ export const PhysicianReviewDashboard: React.FC<PhysicianReviewDashboardProps> =
                       </div>
                       <ProgressBar
                         value={pct}
-                        variant={idx === 0 ? 'spectrum' : 'primary'}
+                        variant="primary"
                         size="sm"
                       />
                     </div>
@@ -764,6 +766,9 @@ export const PhysicianReviewDashboard: React.FC<PhysicianReviewDashboardProps> =
                         key={star}
                         type="button"
                         onClick={() => setOverallScore(star)}
+                        aria-label={`Rate ${star} out of 5 stars`}
+                        aria-pressed={star === overallScore}
+                        className="rounded-xs focus-visible:outline-2 focus-visible:outline-[var(--ak-color-primary)]"
                         style={{
                           background: 'none',
                           border: 'none',
@@ -972,7 +977,7 @@ export const PhysicianReviewDashboard: React.FC<PhysicianReviewDashboardProps> =
                   isLoading={isSubmitting}
                   leadingIcon={<ThumbsUp className="w-4 h-4" />}
                 >
-                  Approve Verdict
+                  Approve report
                 </Button>
 
                 <Button
@@ -982,7 +987,7 @@ export const PhysicianReviewDashboard: React.FC<PhysicianReviewDashboardProps> =
                   disabled={isSubmitting}
                   leadingIcon={<ThumbsDown className="w-4 h-4" />}
                 >
-                  Reject / Flag Case
+                  Reject report
                 </Button>
               </div>
             </Card>

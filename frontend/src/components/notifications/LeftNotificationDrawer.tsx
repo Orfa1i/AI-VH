@@ -128,7 +128,7 @@ export const LeftNotificationDrawer: React.FC<LeftNotificationDrawerProps> = ({
                   borderRadius: 'var(--radius-pill)',
                   background: 'var(--danger-600)',
                   color: 'var(--neutral-0)',
-                  fontSize: 10,
+                  fontSize: 12,
                   fontWeight: 600,
                   display: 'flex',
                   alignItems: 'center',
@@ -163,7 +163,7 @@ export const LeftNotificationDrawer: React.FC<LeftNotificationDrawerProps> = ({
                 <span className="caption" style={{ color: 'var(--indigo-200)', textTransform: 'uppercase' }}>
                   {activeToast.event_type.replace(/_/g, ' ')}
                 </span>
-                <span className="ak-num" style={{ fontSize: 11, color: 'var(--neutral-300)' }}>
+                <span className="ak-num" style={{ fontSize: 12, color: 'var(--neutral-300)' }}>
                   {activeToast.timestamp
                     ? new Date(activeToast.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                     : 'Now'}
@@ -272,7 +272,7 @@ export const LeftNotificationDrawer: React.FC<LeftNotificationDrawerProps> = ({
                     type="button"
                     aria-pressed={activeFilter === filter}
                     className="ak-seg__item"
-                    style={{ fontSize: 11, height: 26, padding: '0 8px' }}
+                    style={{ fontSize: 12, height: 26, padding: '0 8px' }}
                     onClick={() => setActiveFilter(filter)}
                   >
                     {filter}

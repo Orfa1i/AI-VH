@@ -88,7 +88,7 @@ export const DepartmentBoardSection: React.FC = () => {
   return (
     <div className="flex-1 p-6 overflow-y-auto">
       <div className="max-w-6xl mx-auto space-y-4">
-        <div className="p-4 bg-white border border-[var(--ak-color-border-subtle)] rounded-xl shadow-md hud-bracket">
+        <div className="p-4 bg-white border border-[var(--ak-color-border-subtle)] rounded-xl shadow-md">
           <div className="flex items-center gap-2 mb-3">
             <Building2 className="w-4 h-4 text-[var(--ak-color-primary)]" aria-hidden="true" />
             <h1 className="text-sm font-mono font-bold uppercase tracking-wide text-[var(--ak-color-text-primary)]">

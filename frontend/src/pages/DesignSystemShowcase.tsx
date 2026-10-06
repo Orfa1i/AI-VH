@@ -154,7 +154,7 @@ export const DesignSystemShowcase: React.FC = () => {
               <Badge variant="danger">Critical Alert</Badge>
               <Badge variant="info">In Workup</Badge>
               <Badge variant="outline">ICD-10</Badge>
-              <Badge variant="ai">MedGemma Diagnosed</Badge>
+              <Badge variant="ai">AI-assisted diagnosis</Badge>
             </div>
 
             <div style={{ display: 'flex', gap: 12, marginTop: 16 }}>

@@ -23,7 +23,8 @@ export const TextField = React.forwardRef<HTMLInputElement, TextFieldProps>(
     },
     ref
   ) => {
-    const inputId = id || React.useId();
+    const generatedId = React.useId();
+    const inputId = id || generatedId;
     const hasError = Boolean(error);
 
     return (
@@ -81,7 +82,8 @@ export const TextArea = React.forwardRef<HTMLTextAreaElement, TextAreaProps>(
     },
     ref
   ) => {
-    const inputId = id || React.useId();
+    const generatedId = React.useId();
+    const inputId = id || generatedId;
     const hasError = Boolean(error);
 
     return (
@@ -137,7 +139,8 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
     },
     ref
   ) => {
-    const selectId = id || React.useId();
+    const generatedId = React.useId();
+    const selectId = id || generatedId;
     const hasError = Boolean(error);
 
     return (
@@ -182,7 +185,8 @@ export interface CheckboxProps extends React.InputHTMLAttributes<HTMLInputElemen
 
 export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
   ({ label, hint, helpText, id, className = '', ...props }, ref) => {
-    const inputId = id || React.useId();
+    const generatedId = React.useId();
+    const inputId = id || generatedId;
     const effectiveHint = hint || helpText;
 
     return (
