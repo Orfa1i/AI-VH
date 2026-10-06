@@ -177,11 +177,13 @@ Select.displayName = 'Select';
 export interface CheckboxProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   hint?: string;
+  helpText?: string;
 }
 
 export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
-  ({ label, hint, id, className = '', ...props }, ref) => {
+  ({ label, hint, helpText, id, className = '', ...props }, ref) => {
     const inputId = id || React.useId();
+    const effectiveHint = hint || helpText;
 
     return (
       <label htmlFor={inputId} className="ak-choice">
@@ -192,15 +194,16 @@ export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
           className={`ak-check ${className}`}
           {...props}
         />
-        {(label || hint) && (
+        {(label || effectiveHint) && (
           <div>
             {label && <span>{label}</span>}
-            {hint && <span className="ak-choice__hint">{hint}</span>}
+            {effectiveHint && <span className="ak-choice__hint">{effectiveHint}</span>}
           </div>
         )}
       </label>
     );
   }
 );
+
 
 Checkbox.displayName = 'Checkbox';

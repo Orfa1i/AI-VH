@@ -8,7 +8,7 @@ Tracking implementation of the Asklevia Design System and UI Kit across all 7 ph
 | **Phase 2: Foundations** | Fonts, logos, tokens, base styles, CSS variables, `lint:brand` script | **Completed** | `redesign/phase-2` | Tokens & Asklevia CSS configured. Preloaded fonts, new favicon/OG metadata, global focus ring, lint:brand active (2,951 tracked). Build & Vitest pass (39/39). |
 | **Phase 3: Primitives** | Core UI primitives (Button, TextField, Select, Badge, Card, Dialog, Table) | **Completed** | `redesign/phase-3` | Built Button, Badge, Chip, TextField, TextArea, Select, Checkbox, Card, Dialog, ProgressBar, Alert, Table, Tabs, Stat, EmptyState, Divider. Added DesignSystemShowcase & unit tests (45/45 pass). |
 | **Phase 4: Shell & Nav** | App Bar, Header, Main Navigation, Drawer, Footer | **Completed** | `redesign/phase-4` | Restyled `App.tsx` with official horizontal Asklevia logo and `.ak-appbar`. Replaced sub-nav with `.ak-nav`. Redesigned `LeftNotificationDrawer` and `ActiveEncounterProgressBar` with tokens. Debt dropped to 2,721. Build & tests pass (45/45). |
-| **Phase 5: Main Views** | Clinical workstations (Intake, Directory, Review, Reviewing, Knowledge) | Pending | `redesign/phase-5` | Eliminate arbitrary colors from primary clinical dashboards. |
+| **Phase 5: Main Views** | Clinical workstations (Intake, Directory, Review, Reviewing, Knowledge, Staff) | **Completed** | `redesign/phase-5` | Refactored all 6 core clinical views to Asklevia tokens & primitives. Debt reduced by 1,160 items (from 2,721 down to 1,561). Build & Vitest pass (45/45). |
 | **Phase 6: Visual & Special**| 3D Ward scene, Telemetry Stepper, Benchmark Modal, Modals | Pending | `redesign/phase-6` | Adapt 3D overlay cards and trajectory steppers to Asklevia clean light theme. |
 | **Phase 7: Review & Polish** | Verify zero brand violations, accessibility audit, final build gate | Pending | `redesign/phase-7` | Confirm brand linter passes with 0 violations. |
 
@@ -73,3 +73,19 @@ Tracking implementation of the Asklevia Design System and UI Kit across all 7 ph
     - Implemented `.ak-progress--spectrum` for active encounter synthesis, clean status badges, and collapsible milestones.
   - Lint Brand Metric: Style debt dropped from **2,958 to 2,721** (-237 debt items eliminated).
   - Verification: `npm run build` succeeds (978ms); all 45 Vitest tests pass across 11 test suites.
+
+### Phase 5: Main Views & Workstations (October 6, 2026)
+- **Branch:** `redesign/phase-5`
+- **Actions:**
+  - Redesigned 6 primary clinical workstations using Asklevia UI primitives and `AppPage` layout template:
+    1. `frontend/src/components/management/KnowledgeSearchSection.tsx`: Harrison's 21st Ed search, chapter selectors, token badges, Geist Mono chunk metrics, responsive cards.
+    2. `frontend/src/components/management/StaffManagementSection.tsx`: Medical staff directory, interactive cards, status badges, registration modal with Dialog, profile photo viewer.
+    3. `frontend/src/components/management/PatientDirectorySection.tsx`: Inpatient bed board, KPI metrics with `Stat`, responsive card grid, filter chips, patient EHR chart `Dialog`.
+    4. `frontend/src/components/management/CaseIntakeAdmissionSection.tsx`: Emergency case intake, ESI triage rating cards, live telemetry inputs, synthetic patient mode switcher via `Tabs`.
+    5. `frontend/src/components/dashboard/PhysicianReviewDashboard.tsx`: Clinical queue master-detail, 6-dimension automated audit scorecards, differential diagnosis probability rankings with Neural Spectrum, RL DPO alignment console with star ratings and structured rubric selects.
+    6. `frontend/src/components/reviewing/ReviewedReportsSection.tsx`: Reviewing archive, master-detail evaluation viewer, 4-axis rubric display, manual model fine-tuning `Dialog` console with DPO parameter fields.
+  - Upgraded `Button` component to support `leadingIcon` and `trailingIcon` props natively.
+  - Upgraded `Checkbox` component to support `helpText` alias natively.
+  - Lint Brand Metric: Style debt dropped from **2,721 down to 1,561** (-1,160 arbitrary color classes eliminated!).
+  - Verification: `npm run build` succeeds cleanly (1.09s); all **45 / 45 Vitest tests pass** across 11 test suites.
+

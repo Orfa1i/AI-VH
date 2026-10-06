@@ -6,6 +6,8 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
   isIconOnly?: boolean;
   isBlock?: boolean;
   isLoading?: boolean;
+  leadingIcon?: React.ReactNode;
+  trailingIcon?: React.ReactNode;
   children?: React.ReactNode;
 }
 
@@ -17,6 +19,8 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       isIconOnly = false,
       isBlock = false,
       isLoading = false,
+      leadingIcon,
+      trailingIcon,
       disabled,
       className = '',
       children,
@@ -47,11 +51,21 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       >
         {isLoading ? (
           <span className="ak-spinner ak-spinner--sm" aria-hidden="true" />
+        ) : leadingIcon ? (
+          <span style={{ display: 'inline-flex', alignItems: 'center', marginRight: children ? 6 : 0 }}>
+            {leadingIcon}
+          </span>
         ) : null}
         {children}
+        {trailingIcon && !isLoading && (
+          <span style={{ display: 'inline-flex', alignItems: 'center', marginLeft: children ? 6 : 0 }}>
+            {trailingIcon}
+          </span>
+        )}
       </button>
     );
   }
 );
 
 Button.displayName = 'Button';
+
