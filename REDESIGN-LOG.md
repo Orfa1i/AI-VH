@@ -4,8 +4,8 @@ Tracking implementation of the Asklevia Design System and UI Kit across all 7 ph
 
 | Phase | Description | Status | Branch | Notes |
 | :--- | :--- | :--- | :--- | :--- |
-| **Phase 1: Audit** | Full codebase & design system audit, baseline counts, component mapping | **Completed** | `redesign/phase-1` | `AUDIT.md` produced. Exact baseline color count: 2,971. Zero code changes made. Ready for user approval. |
-| **Phase 2: Foundations** | Fonts, logos, tokens, base styles, CSS variables, `lint:brand` script | Pending | `redesign/phase-2` | Will configure `tokens.css`, `asklevia.css`, Host Grotesk, Funnel Display, Geist Mono. |
+| **Phase 1: Audit** | Full codebase & design system audit, baseline counts, component mapping | **Completed** | `redesign/phase-1` | `AUDIT.md` produced. Exact baseline color count: 2,971. Zero code changes made. |
+| **Phase 2: Foundations** | Fonts, logos, tokens, base styles, CSS variables, `lint:brand` script | **Completed** | `redesign/phase-2` | Tokens & Asklevia CSS configured. Preloaded fonts, new favicon/OG metadata, global focus ring, lint:brand active (2,951 tracked). Build & Vitest pass (39/39). |
 | **Phase 3: Primitives** | Core UI primitives (Button, TextField, Select, Badge, Card, Dialog, Table) | Pending | `redesign/phase-3` | Drop-in `.ak-*` wrappers preserving all existing React props. |
 | **Phase 4: Shell & Nav** | App Bar, Header, Main Navigation, Drawer, Footer | Pending | `redesign/phase-4` | Restyle `App.tsx` navigation and docked notifications drawer. |
 | **Phase 5: Main Views** | Clinical workstations (Intake, Directory, Review, Reviewing, Knowledge) | Pending | `redesign/phase-5` | Eliminate arbitrary colors from primary clinical dashboards. |
@@ -27,3 +27,16 @@ Tracking implementation of the Asklevia Design System and UI Kit across all 7 ph
   - Cataloged reusable components and mapped each to Asklevia UI Kit components.
   - Authored `AUDIT.md` and `REDESIGN-LOG.md`.
   - Preserved all code files; verified git status purity.
+
+### Phase 2: Foundations (October 6, 2026)
+- **Branch:** `redesign/phase-2`
+- **Actions:**
+  - Migrated brand fonts (`FunnelDisplay-Variable.woff2`, `HostGrotesk-Variable.woff2`, `GeistMono-Variable.woff2`) to `frontend/public/fonts/` and `frontend/src/fonts/`.
+  - Migrated brand logos and favicon assets to `frontend/public/logos/`, `frontend/src/logos/`, and `frontend/public/`.
+  - Configured `frontend/index.html`: preloaded Host Grotesk and Funnel Display fonts, updated metadata, title to "Asklevia — Clinical Operating System", theme-color `#F7F8FB`, and added `ak-app` class to `<body>`.
+  - Imported `tokens.css` and `asklevia.css` in `frontend/src/index.css`. Added Tailwind preset `tailwind.preset.cjs`.
+  - Established global focus-visible ring (2px `--focus-ring` with 2px offset), selection styling (`--indigo-100`), calibrated scrollbars, and `prefers-reduced-motion` accessibility support.
+  - Removed tactical military reticles (`.hud-bracket`) and blue dot telemetry grid from base styles.
+  - Implemented `frontend/scripts/lint-brand.js` and added `npm run lint:brand` script.
+  - Lint Brand Initial Metric: **2,951** style debt occurrences tracked.
+  - Verified compilation: `npm run build` succeeds (1.50s) with clean chunk output; all 39 Vitest tests pass across 10 test suites.

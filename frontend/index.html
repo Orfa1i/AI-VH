@@ -2,11 +2,27 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>frontend</title>
+    <title>Asklevia — Clinical Operating System</title>
+    <meta name="description" content="Asklevia: AI-assisted diagnosis and virtual hospital care." />
+    <meta name="theme-color" content="#F7F8FB" />
+
+    <!-- Favicons -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="Asklevia — Clinical Operating System" />
+    <meta property="og:description" content="AI-assisted diagnosis and virtual hospital care." />
+    <meta property="og:image" content="/logos/asklevia-app-icon-rounded-512.png" />
+    <meta property="og:type" content="website" />
+
+    <!-- Preload critical variable fonts (Host Grotesk and Funnel Display) -->
+    <link rel="preload" href="/fonts/HostGrotesk-Variable.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/FunnelDisplay-Variable.woff2" as="font" type="font/woff2" crossorigin />
   </head>
-  <body>
+  <body class="ak-app">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

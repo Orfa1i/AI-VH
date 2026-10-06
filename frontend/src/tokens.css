@@ -1,0 +1,143 @@
+/* Asklevia design tokens — generated from one source. Light mode only. */
+:root {
+  color-scheme: light;
+  /* Colour */
+  --neutral-0: #FFFFFF;
+  --neutral-25: #F7F8FB;
+  --neutral-50: #F0F2F7;
+  --neutral-100: #E3E6EE;
+  --neutral-200: #C9CEE0;
+  --neutral-300: #A3A9BD;
+  --neutral-400: #7A8199;
+  --neutral-500: #5C6380;
+  --neutral-600: #4A5068;
+  --neutral-700: #353A50;
+  --neutral-800: #23273A;
+  --neutral-900: #0F1222;
+  --indigo-50: #EEF0FC;
+  --indigo-100: #DDE0FA;
+  --indigo-200: #BBC0F5;
+  --indigo-300: #8F95EE;
+  --indigo-500: #2B2FD9;
+  --indigo-600: #2226B5;
+  --indigo-700: #1B1E8F;
+  --spectrum-violet: #5B3DF5;
+  --spectrum-azure: #1F7BEA;
+  --spectrum-teal: #0E9AA7;
+  --spectrum-verdant: #13A06B;
+  --spectrum-violet-50: #F1EEFE;
+  --spectrum-azure-50: #E7F0FC;
+  --spectrum-teal-50: #E3F4F5;
+  --spectrum-verdant-50: #E6F5EE;
+  --success-600: #0B7A50;
+  --success-50: #E6F5EE;
+  --warning-600: #A3530A;
+  --warning-50: #FDF1E1;
+  --danger-600: #C42B3E;
+  --danger-700: #A11F31;
+  --danger-50: #FCE9EB;
+  --info-600: #1765C2;
+  --info-50: #E7F0FC;
+  --bg-page: var(--neutral-25);
+  --bg-surface: var(--neutral-0);
+  --bg-subtle: var(--neutral-50);
+  --bg-brand-subtle: var(--indigo-50);
+  --text-primary: var(--neutral-900);
+  --text-secondary: var(--neutral-600);
+  --text-tertiary: var(--neutral-500);
+  --text-disabled: var(--neutral-300);
+  --text-brand: var(--indigo-500);
+  --text-on-brand: var(--neutral-0);
+  --border-default: var(--neutral-100);
+  --border-strong: var(--neutral-200);
+  --border-control: var(--neutral-400);
+  --action-primary: var(--indigo-500);
+  --action-primary-hover: var(--indigo-600);
+  --action-primary-active: var(--indigo-700);
+  --focus-ring: var(--indigo-500);
+  --spectrum-gradient: linear-gradient(90deg, #2B2FD9 0%, #5B3DF5 25%, #1F7BEA 50%, #0E9AA7 75%, #13A06B 100%);
+  /* Type */
+  --font-display: "Funnel Display", "Host Grotesk", Arial, sans-serif;
+  --font-sans: "Host Grotesk", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  --text-display-xl-size: 56px; --text-display-xl-line: 60px; --text-display-xl-weight: 500; --text-display-xl-tracking: -0.02em;
+  --text-display-lg-size: 44px; --text-display-lg-line: 48px; --text-display-lg-weight: 500; --text-display-lg-tracking: -0.02em;
+  --text-heading-1-size: 34px; --text-heading-1-line: 40px; --text-heading-1-weight: 500; --text-heading-1-tracking: -0.015em;
+  --text-heading-2-size: 26px; --text-heading-2-line: 32px; --text-heading-2-weight: 500; --text-heading-2-tracking: -0.01em;
+  --text-heading-3-size: 20px; --text-heading-3-line: 28px; --text-heading-3-weight: 500; --text-heading-3-tracking: -0.005em;
+  --text-body-lg-size: 18px; --text-body-lg-line: 28px; --text-body-lg-weight: 400; --text-body-lg-tracking: 0em;
+  --text-body-size: 16px; --text-body-line: 24px; --text-body-weight: 400; --text-body-tracking: 0em;
+  --text-body-sm-size: 14px; --text-body-sm-line: 20px; --text-body-sm-weight: 400; --text-body-sm-tracking: 0em;
+  --text-label-size: 14px; --text-label-line: 20px; --text-label-weight: 600; --text-label-tracking: 0em;
+  --text-caption-size: 12px; --text-caption-line: 16px; --text-caption-weight: 500; --text-caption-tracking: 0.01em;
+  --text-overline-size: 12px; --text-overline-line: 16px; --text-overline-weight: 600; --text-overline-tracking: 0.06em;
+  --text-mono-size: 13px; --text-mono-line: 20px; --text-mono-weight: 400; --text-mono-tracking: 0em;
+  --text-mono-lg-size: 16px; --text-mono-lg-line: 24px; --text-mono-lg-weight: 500; --text-mono-lg-tracking: 0em;
+  /* Spacing, radius, shadow, size, z-index, motion */
+  --space-0: 0px;
+  --space-0_5: 2px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-24: 96px;
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-pill: 999px;
+  --shadow-xs: 0 1px 2px rgba(15,18,34,0.06);
+  --shadow-sm: 0 1px 2px rgba(15,18,34,0.06), 0 2px 6px rgba(15,18,34,0.06);
+  --shadow-md: 0 8px 24px rgba(15,18,34,0.10), 0 2px 6px rgba(15,18,34,0.06);
+  --shadow-lg: 0 24px 56px rgba(43,47,217,0.14), 0 4px 12px rgba(15,18,34,0.08);
+  --shadow-focus: 0 0 0 2px #FFFFFF, 0 0 0 4px #2B2FD9;
+  --control-sm: 32px;
+  --control-md: 40px;
+  --control-lg: 48px;
+  --icon-sm: 16px;
+  --icon-md: 20px;
+  --icon-lg: 24px;
+  --progress-sm: 4px;
+  --progress-md: 8px;
+  --progress-lg: 12px;
+  --content-max: 1200px;
+  --sidebar: 264px;
+  --z-dropdown: 1000;
+  --z-sticky: 1100;
+  --z-overlay: 1200;
+  --z-modal: 1300;
+  --z-toast: 1400;
+  --z-tooltip: 1500;
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
+  --duration-slow: 320ms;
+  --ease-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-exit: cubic-bezier(0.4, 0, 1, 1);
+}
+
+@font-face { font-family: "Funnel Display"; src: url("./fonts/FunnelDisplay-Variable.woff2") format("woff2"); font-weight: 300 800; font-style: normal; font-display: swap; }
+@font-face { font-family: "Host Grotesk"; src: url("./fonts/HostGrotesk-Variable.woff2") format("woff2"); font-weight: 300 800; font-style: normal; font-display: swap; }
+@font-face { font-family: "Geist Mono"; src: url("./fonts/GeistMono-Variable.woff2") format("woff2"); font-weight: 100 900; font-style: normal; font-display: swap; }
+
+.display-xl { font-family: var(--font-display); font-size: 56px; line-height: 60px; font-weight: 500; letter-spacing: -0.02em; }
+.display-lg { font-family: var(--font-display); font-size: 44px; line-height: 48px; font-weight: 500; letter-spacing: -0.02em; }
+.heading-1 { font-family: var(--font-display); font-size: 34px; line-height: 40px; font-weight: 500; letter-spacing: -0.015em; }
+.heading-2 { font-family: var(--font-display); font-size: 26px; line-height: 32px; font-weight: 500; letter-spacing: -0.01em; }
+.heading-3 { font-family: var(--font-display); font-size: 20px; line-height: 28px; font-weight: 500; letter-spacing: -0.005em; }
+.body-lg { font-family: var(--font-sans); font-size: 18px; line-height: 28px; font-weight: 400; letter-spacing: 0em; }
+.body { font-family: var(--font-sans); font-size: 16px; line-height: 24px; font-weight: 400; letter-spacing: 0em; }
+.body-sm { font-family: var(--font-sans); font-size: 14px; line-height: 20px; font-weight: 400; letter-spacing: 0em; }
+.label { font-family: var(--font-sans); font-size: 14px; line-height: 20px; font-weight: 600; letter-spacing: 0em; }
+.caption { font-family: var(--font-sans); font-size: 12px; line-height: 16px; font-weight: 500; letter-spacing: 0.01em; }
+.overline { font-family: var(--font-sans); font-size: 12px; line-height: 16px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; }
+.mono { font-family: var(--font-mono); font-size: 13px; line-height: 20px; font-weight: 400; letter-spacing: 0em; font-variant-numeric: tabular-nums; }
+.mono-lg { font-family: var(--font-mono); font-size: 16px; line-height: 24px; font-weight: 500; letter-spacing: 0em; font-variant-numeric: tabular-nums; }
+
+/* Breakpoints (use in media queries): bp-sm 640px, bp-md 768px, bp-lg 1024px, bp-xl 1280px */
