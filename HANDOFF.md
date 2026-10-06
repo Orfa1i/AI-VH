@@ -79,7 +79,21 @@ $$\text{Synthea} \rightarrow \text{Synthetic Case Builder} \rightarrow \text{Cas
 
 ---
 
-## 4. Next Steps
-1. Perform an end-to-end live simulation run in the browser (Admit -> Run Simulation -> Specialty Routing -> Diagnostic Synthesis -> 6-Dimension Evaluation -> Review Dashboard with Structured Feedback -> Pre-Training Gate Audit -> Curated Manifest).
-2. Expand the Specialty Agent roster with Neurology (Adams & Victor's Principles of Neurology RAG).
-3. Fine-tuning dataset scaling: collect additional physician reviews to satisfy the 500-case threshold for production model fine-tuning.
+## 4. Design System Migration Status (Asklevia Design System)
+- **Phase 1: Audit**: Complete (`redesign/phase-1`, commit `5fb3626e`). Baseline style debt: 2,971 occurrences.
+- **Phase 2: Foundations**: Complete (`redesign/phase-2`, commit `0d11f86a`). Variable fonts (`HostGrotesk`, `FunnelDisplay`, `GeistMono`), `#F7F8FB` background, hairline borders, brand linter.
+- **Phase 3: Core Primitives**: Complete (`redesign/phase-3`, commit `0c3cff94`). 16 accessible primitives in `frontend/src/components/ui/`, `DesignSystemShowcase.tsx`.
+- **Phase 4: Shell & Navigation**: Complete (`redesign/phase-4`, commit `a73720b`). Asklevia App Bar, horizontal logo, navigation tabs, layout templates (`Container`, `AppPage`, `DetailPage`), notifications drawer, progress bar.
+- **Phase 5: Main Views & Workstations**: Complete (`redesign/phase-5`, commit `9f5bd05`). Redesigned all 6 core clinical views (`KnowledgeSearchSection`, `StaffManagementSection`, `PatientDirectorySection`, `CaseIntakeAdmissionSection`, `PhysicianReviewDashboard`, `ReviewedReportsSection`).
+  - Style debt dropped from **2,721 down to 1,561** (-1,160 arbitrary color classes eliminated).
+  - All 45 Vitest unit tests pass across 11 test suites. Production build succeeds in 1.09s.
+
+---
+
+## 5. Next Steps
+1. Proceed to **Phase 6: Visual & Special Components** (`redesign/phase-6`):
+   - 3D Ward scene (`frontend/src/components/hospital3d/`) light theme adaptation.
+   - Active Trajectory Stepper (`ActiveTrajectoryStepper.tsx` & `HospitalFlowDiagram.tsx`).
+   - Modal dialogs (RL Dataset modal, Doctor chat modal, benchmark modal).
+2. Phase 7: Final Polish & Zero Brand Debt verification.
+
