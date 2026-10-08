@@ -1,7 +1,17 @@
 # AI Virtual Hospital (AI-VH) : Session Handoff
 
-## 0. Current Session (2026-10-08) — Intake Actions & Header Cleanup, ESI Triage Color Coding (Commit `88fbadc`)
-- **Case Intake & Triage Admission Form Actions Cleanup**:
+## 0. Current Session (2026-10-08) — Virtual Hospital by Asklevia Brand Kit Migration
+- **Official Brand Kit Deployment & Integration (`virtual-hospital-brand-kit`)**:
+  - Integrated official **Virtual Hospital by Asklevia** identity system (medical cross helix symbol and outlined Funnel Display wordmark).
+  - Deployed master vector SVGs to `frontend/public/logos/`: `vh-logo-horizontal.svg`, `vh-logo-compact.svg`, `vh-logo-stacked.svg`, `vh-symbol.svg`, `vh-symbol-small.svg`, `vh-wordmark.svg`, `vh-app-icon-rounded.svg`, `vh-favicon.svg`, and one-colour ink/indigo variants.
+  - Deployed multi-resolution raster assets to `frontend/public/` and `frontend/public/logos/`: `favicon.ico` (multi-res 16/32/48), `vh-favicon.svg`, `favicon-32.png`, `apple-touch-icon-180.png`, `vh-og-1200x630.png`, and high-DPI social/app icons.
+  - Created web app manifest `frontend/public/manifest.json` for PWA tablet/workstation installation.
+  - Updated `frontend/index.html`: Set title to `Virtual Hospital by Asklevia — Clinical Operating System`, linked new favicons, manifest, and Open Graph metadata with official brand voice ("AI-assisted diagnosis, reviewed by clinicians").
+  - Updated `frontend/src/App.tsx`: Header app bar now renders `/logos/vh-logo-horizontal.svg` with streamlined `MedGemma 4B • Live Telemetry` status metadata.
+  - Updated `frontend/src/components/layout/Templates.tsx`: `AuthPage` and dialog templates now render `/logos/vh-logo-horizontal.svg`.
+  - Updated `frontend/src/pages/DesignSystemShowcase.tsx`: Added comprehensive **Brand Identity & Assets** showcase tab displaying primary, compact, stacked lockups, symbols, and PWA app icons.
+  - Verified 0 brand style debt (`npm run lint:brand`), all unit tests green (46/46), and clean production build (`npm run build`).
+- **Case Intake & Triage Admission Form Actions Cleanup (Commit `88fbadc`)**:
   - Removed "Load normal vitals" quick-action button and unused `handleApplyNormalVitals` handler / `Zap` icon import from `CaseIntakeAdmissionSection.tsx`, retaining clean form controls ("Reset form" and "Admit to Ledger").
   - Removed description subtitle text (*"Register patient encounters with verified MRNs, ESI acuity categorization, bed allocations, and baseline telemetry."*) from `CaseIntakeAdmissionSection.tsx` per clinician layout requirements (Commit `5955ddb`).
   - Verified 0 brand style debt (`npm run lint:brand`), 100% test pass (46/46 tests green), and clean production build (`npm run build`).
