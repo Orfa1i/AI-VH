@@ -27,7 +27,6 @@ interface HospitalFlowDiagramProps {
   doctorAction: string;
   events: HospitalEvent[];
   activeVitals: VitalSigns | null;
-  onOpenConsult?: () => void;
   onOpenDepartmentStation?: (stationId: string) => void;
   onToggleTo3D?: () => void;
 }
@@ -42,7 +41,6 @@ export const HospitalFlowDiagram: React.FC<HospitalFlowDiagramProps> = ({
   doctorAction,
   events,
   activeVitals,
-  onOpenConsult: _onOpenConsult,
   onOpenDepartmentStation,
   onToggleTo3D: _onToggleTo3D,
 }) => {

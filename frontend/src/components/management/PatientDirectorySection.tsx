@@ -3,7 +3,6 @@ import type { PatientRecord } from '../../types';
 import {
   Search,
   RefreshCw,
-  Stethoscope,
   HeartPulse,
   Activity,
   Thermometer,
@@ -26,12 +25,10 @@ import {
 import { AppPage } from '../layout/Templates';
 
 interface PatientDirectorySectionProps {
-  onOpenConsult?: (patientName: string) => void;
   refreshTrigger?: number;
 }
 
 export const PatientDirectorySection: React.FC<PatientDirectorySectionProps> = ({
-  onOpenConsult,
   refreshTrigger = 0,
 }) => {
   const [patients, setPatients] = useState<PatientRecord[]>([]);
@@ -398,20 +395,6 @@ export const PatientDirectorySection: React.FC<PatientDirectorySectionProps> = (
                   </span>
 
                   <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-                    {onOpenConsult && isAdmitted && (
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onOpenConsult(p.name);
-                        }}
-                        leadingIcon={<Stethoscope className="w-3 h-3" />}
-                      >
-                        Consult
-                      </Button>
-                    )}
-
                     {isAdmitted && (
                       <Button
                         variant="ghost"
@@ -445,18 +428,6 @@ export const PatientDirectorySection: React.FC<PatientDirectorySectionProps> = (
               <Button variant="secondary" onClick={() => setSelectedPatient(null)}>
                 Close Chart
               </Button>
-              {onOpenConsult && selectedPatient.admission_status === 'ADMITTED' && (
-                <Button
-                  variant="primary"
-                  onClick={() => {
-                    onOpenConsult(selectedPatient.name);
-                    setSelectedPatient(null);
-                  }}
-                  leadingIcon={<Stethoscope className="w-4 h-4" />}
-                >
-                  Consult Specialist
-                </Button>
-              )}
               {selectedPatient.admission_status === 'ADMITTED' && (
                 <Button
                   variant="danger"

@@ -5,7 +5,6 @@ import { StaffManagementSection } from './components/management/StaffManagementS
 import { KnowledgeSearchSection } from './components/management/KnowledgeSearchSection';
 import { KnowledgeSourcesSection } from './components/management/KnowledgeSourcesSection';
 import { PhysicianReviewDashboard } from './components/dashboard/PhysicianReviewDashboard';
-import { InternalMedicineConsultModal } from './components/specialists/InternalMedicineConsultModal';
 import { RLDatasetModal } from './components/rl/RLDatasetModal';
 import { PolicyBenchmarkModal } from './components/rl/PolicyBenchmarkModal';
 import { ReviewedReportsSection } from './components/reviewing/ReviewedReportsSection';
@@ -46,7 +45,6 @@ export const App: React.FC = () => {
   const [patientRefreshCounter, setPatientRefreshCounter] = useState<number>(0);
 
   // Quick Action Modals
-  const [isConsultOpen, setIsConsultOpen] = useState<boolean>(false);
   const [isRLModalOpen, setIsRLModalOpen] = useState<boolean>(false);
   const [isBenchmarkOpen, setIsBenchmarkOpen] = useState<boolean>(false);
 
@@ -346,13 +344,12 @@ export const App: React.FC = () => {
 
         {activeTab === 'PATIENTS' && (
           <PatientDirectorySection
-            onOpenConsult={() => setIsConsultOpen(true)}
             refreshTrigger={patientRefreshCounter}
           />
         )}
 
         {activeTab === 'STAFF' && (
-          <StaffManagementSection onOpenConsult={() => setIsConsultOpen(true)} />
+          <StaffManagementSection />
         )}
 
         {activeTab === 'REPORTS' && (
@@ -417,11 +414,6 @@ export const App: React.FC = () => {
       />
 
       {/* Global Clinical Specialist Modals */}
-      <InternalMedicineConsultModal
-        isOpen={isConsultOpen}
-        onClose={() => setIsConsultOpen(false)}
-      />
-
       <PolicyBenchmarkModal
         isOpen={isBenchmarkOpen}
         onClose={() => setIsBenchmarkOpen(false)}

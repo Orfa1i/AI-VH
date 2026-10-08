@@ -25,11 +25,9 @@ import {
 } from '../ui';
 import { AppPage } from '../layout/Templates';
 
-interface StaffManagementSectionProps {
-  onOpenConsult?: () => void;
-}
+interface StaffManagementSectionProps {}
 
-export const StaffManagementSection: React.FC<StaffManagementSectionProps> = ({ onOpenConsult }) => {
+export const StaffManagementSection: React.FC<StaffManagementSectionProps> = () => {
   const [staffList, setStaffList] = useState<HospitalStaffRecord[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [roleFilter, setRoleFilter] = useState<string>('ALL');
@@ -373,11 +371,6 @@ export const StaffManagementSection: React.FC<StaffManagementSectionProps> = ({ 
 
                   {isVance ? (
                     <div style={{ display: 'flex', gap: 6 }}>
-                      {onOpenConsult && (
-                        <Button size="sm" variant="secondary" onClick={onOpenConsult}>
-                          Consult
-                        </Button>
-                      )}
                       <Button size="sm" variant="primary" onClick={() => setIsDoctorChatOpen(true)}>
                         Chat
                       </Button>
