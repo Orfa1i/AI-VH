@@ -5,7 +5,6 @@ import { StaffManagementSection } from './components/management/StaffManagementS
 import { KnowledgeSearchSection } from './components/management/KnowledgeSearchSection';
 import { KnowledgeSourcesSection } from './components/management/KnowledgeSourcesSection';
 import { PhysicianReviewDashboard } from './components/dashboard/PhysicianReviewDashboard';
-import { DoctorReviewSection } from './components/review/DoctorReviewSection';
 import { InternalMedicineConsultModal } from './components/specialists/InternalMedicineConsultModal';
 import { RLDatasetModal } from './components/rl/RLDatasetModal';
 import { PolicyBenchmarkModal } from './components/rl/PolicyBenchmarkModal';
@@ -13,7 +12,6 @@ import { ReviewedReportsSection } from './components/reviewing/ReviewedReportsSe
 import { LeftNotificationDrawer } from './components/notifications/LeftNotificationDrawer';
 import { ActiveEncounterProgressBar } from './components/simulation/ActiveEncounterProgressBar';
 import { PatientJourneyFlowPage } from './components/diagram/PatientJourneyFlowPage';
-import { DesignSystemShowcase } from './pages/DesignSystemShowcase';
 import {
   Activity,
   BedDouble,
@@ -23,8 +21,6 @@ import {
   Radio,
   Scale,
   Search,
-  Sparkles,
-  Stethoscope,
   Users,
 } from 'lucide-react';
 import type {
@@ -35,7 +31,7 @@ import type {
   HospitalEvent,
 } from './types';
 
-type PortalTab = 'INTAKE' | 'PATIENTS' | 'STAFF' | 'REPORTS' | 'REVIEW' | 'REVIEWING' | 'KNOWLEDGE' | 'KNOWLEDGE_SOURCES' | 'BENCHMARK' | 'DESIGN_SYSTEM' | 'JOURNEY';
+type PortalTab = 'INTAKE' | 'PATIENTS' | 'STAFF' | 'REPORTS' | 'REVIEWING' | 'KNOWLEDGE' | 'KNOWLEDGE_SOURCES' | 'BENCHMARK' | 'JOURNEY';
 
 
 
@@ -271,17 +267,6 @@ export const App: React.FC = () => {
 
           <button
             type="button"
-            onClick={() => setActiveTab('REVIEW')}
-            className="ak-nav__item"
-            aria-current={activeTab === 'REVIEW' ? 'page' : undefined}
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 8, cursor: 'pointer', border: 0 }}
-          >
-            <Stethoscope aria-hidden="true" style={{ width: 16, height: 16 }} />
-            <span>Doctor Review</span>
-          </button>
-
-          <button
-            type="button"
             onClick={() => setActiveTab('REVIEWING')}
             className="ak-nav__item"
             aria-current={activeTab === 'REVIEWING' ? 'page' : undefined}
@@ -323,36 +308,21 @@ export const App: React.FC = () => {
             aria-current={activeTab === 'BENCHMARK' ? 'page' : undefined}
             style={{ display: 'inline-flex', alignItems: 'center', gap: 8, cursor: 'pointer', border: 0 }}
           >
-
             <Scale aria-hidden="true" style={{ width: 16, height: 16 }} />
             <span>Policy Benchmark</span>
           </button>
 
           <button
             type="button"
-            onClick={() => setActiveTab('DESIGN_SYSTEM')}
+            onClick={() => setActiveTab('JOURNEY')}
             className="ak-nav__item"
-            aria-current={activeTab === 'DESIGN_SYSTEM' ? 'page' : undefined}
+            aria-current={activeTab === 'JOURNEY' ? 'page' : undefined}
             style={{ display: 'inline-flex', alignItems: 'center', gap: 8, cursor: 'pointer', border: 0 }}
           >
-            <Sparkles aria-hidden="true" style={{ width: 16, height: 16, color: 'var(--action-primary)' }} />
-            <span>Design System</span>
-          </button>
-        </nav>
-
-        {/* Right: Patient Journey Graph Trigger */}
-        <div style={{ display: 'flex', alignItems: 'center', padding: 'var(--space-1) 0' }}>
-          <button
-            type="button"
-            onClick={() => setActiveTab('JOURNEY')}
-            className={`ak-btn ak-btn--sm ${activeTab === 'JOURNEY' ? 'ak-btn--primary' : 'ak-btn--secondary'}`}
-            title="Open patient clinical journey graph"
-            aria-current={activeTab === 'JOURNEY' ? 'page' : undefined}
-          >
-            <Activity aria-hidden="true" style={{ width: 14, height: 14, color: activeTab === 'JOURNEY' ? 'var(--text-inverse)' : 'var(--action-primary)' }} />
+            <Activity aria-hidden="true" style={{ width: 16, height: 16 }} />
             <span>Trajectory graph</span>
           </button>
-        </div>
+        </nav>
       </div>
 
 
@@ -394,15 +364,12 @@ export const App: React.FC = () => {
           />
         )}
 
-        {activeTab === 'REVIEW' && <DoctorReviewSection />}
-
         {activeTab === 'REVIEWING' && (
           <ReviewedReportsSection onTriggerTrainingSuccess={refreshData} />
         )}
 
         {activeTab === 'KNOWLEDGE' && <KnowledgeSearchSection />}
         {activeTab === 'KNOWLEDGE_SOURCES' && <KnowledgeSourcesSection />}
-        {activeTab === 'DESIGN_SYSTEM' && <DesignSystemShowcase />}
         {activeTab === 'JOURNEY' && (
           <div className="flex-1 w-full h-full overflow-hidden flex flex-col">
             <PatientJourneyFlowPage onBackToPortal={() => setActiveTab('INTAKE')} />
