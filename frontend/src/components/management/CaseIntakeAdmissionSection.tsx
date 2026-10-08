@@ -213,7 +213,6 @@ export const CaseIntakeAdmissionSection: React.FC<CaseIntakeAdmissionSectionProp
   return (
     <AppPage
       title="Case Intake & Triage Admission"
-      description="Register patient encounters with verified MRNs, ESI acuity categorization, bed allocations, and baseline telemetry."
       breadcrumbs={[
         { label: 'Clinical Ops', href: '#' },
         { label: 'Case Intake & Triage', isCurrent: true },
