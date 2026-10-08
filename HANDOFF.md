@@ -1,6 +1,20 @@
 # AI Virtual Hospital (AI-VH) : Session Handoff
 
-## 0. Current Session (2026-10-08) — Patient Journey Alignment & Compact Layout (Commit `4bf80e3`)
+## 0. Current Session (2026-10-08) — Dr. Vance Consult & Harrison's 21st Edition Removal (Commit `d38226f`)
+- **Node 2 (Attending Examination) De-cluttering**:
+  - Removed the "Dr. Vance consult" button and the secondary "Harrison's Principles 21st Edition" badge from `frontend/src/components/diagram/HospitalFlowDiagram.tsx`.
+  - Retained Dr. Marcus Vance's doctor profile information in full: photo avatar, credentials (`MD, FACP`), roles (`Chief Attending Physician`, `Internal Medicine & Clinical Diagnostics`), status indicator (`Active / On Service`), and real-time clinical activity badge.
+  - Made consult modal callback props optional and cleaned unused parameters to satisfy `noUnusedParameters: true`.
+- **References Cleanup**:
+  - Updated `ActiveTrajectoryStepper.tsx` step 2 traversal text to emphasize differential diagnosis and clinical evidence synthesis.
+  - Updated `PatientJourneyFlowPage.tsx` interactive station handlers and action indicators to reference clinical medical evidence rather than Harrison's 21st Edition.
+  - Updated `DoctorChatModal.tsx` and `InternalMedicineConsultModal.tsx` badges and headers to evidence-based clinical reasoning guidelines.
+- **Verification & Quality**:
+  - `scripts/lint-brand.js`: **0 style debt (100% brand token compliant)**.
+  - `npm test -- --run`: **38/38 unit tests green** across 10 test files.
+  - `npm run build`: Production bundle compiled cleanly in 1.18s.
+
+## 1. Previous Session (2026-10-08) — Patient Journey Alignment & Compact Layout (Commit `4bf80e3`)
 - **Patient Journey Header Alignment & Whitespace Reduction**:
   - Moved the **Awaiting admission / Simulate selected case** action button directly into the `actions` prop of `AppPage` in `PatientJourneyFlowPage.tsx`, horizontally aligning it with the main page heading on the top row alongside the audio mute toggle.
   - Eliminated the redundant secondary top action bar (`pb-4 border-b mb-5`) and inner container padding (`p-4 md:p-6`) from `HospitalFlowDiagram.tsx`, bringing the left edge of all page elements (ECG rhythm strip, station nodes, trajectory stepper) into direct alignment with the main page heading.
