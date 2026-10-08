@@ -1,6 +1,13 @@
 # AI Virtual Hospital (AI-VH) : Session Handoff
 
-## 0. Current Session (2026-10-08) — Medical Knowledge Sources Workspace & RAG Pipeline Synchronization (Commit `45522b1`)
+## 0. Current Session (2026-10-08) — Patient Journey Layout & Global Navigation Preservation (Commit `5269bc4`)
+- **Patient Journey Layout & Global Navigation**:
+  - Refactored `PatientJourneyFlowPage` from a modal overlay (`fixed inset-0 z-50`) into a first-class portal viewport section inside `App.tsx` (`JOURNEY` in `PortalTab`).
+  - Preserved the top application header (`ak-appbar`), official Asklevia logo mark, and sub-header workspace navigation tabs (`Intake & Triage`, `Patient Directory`, `Staff Roster`, `Clinical Reports`, `Doctor Review`, `Reviewing`, `Knowledge Books`, `Knowledge Sources`, `Policy Benchmark`, `Design System`).
+  - The "Trajectory graph" button now highlights seamlessly as an active tab (`ak-btn--primary` with `aria-current="page"`).
+  - Clinicians can freely transition back and forth between Patient Journey and any other portal workspace without loss of state.
+  - Quality verification: **0 style debt** (`scripts/lint-brand.js`), **38/38 unit tests passing**, and **clean Vite production build in <1s**.
+
 - **Knowledge Sources Management Workspace**:
   - Implemented `KnowledgeSourcesSection.tsx` (`frontend/src/components/management/KnowledgeSourcesSection.tsx`):
     - URL entry, source name, and description input form.
