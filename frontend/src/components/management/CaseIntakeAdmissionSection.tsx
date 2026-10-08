@@ -161,11 +161,53 @@ export const CaseIntakeAdmissionSection: React.FC<CaseIntakeAdmissionSectionProp
   };
 
   const acuityOptions = [
-    { id: 'RESUSCITATION', label: 'ESI 1', title: 'Resuscitation', desc: 'Immediate life threat', variant: 'danger' as const },
-    { id: 'EMERGENT', label: 'ESI 2', title: 'Emergent', desc: 'High-risk / Severe vitals', variant: 'danger' as const },
-    { id: 'URGENT', label: 'ESI 3', title: 'Urgent', desc: 'Multiple resources needed', variant: 'warning' as const },
-    { id: 'LESS_URGENT', label: 'ESI 4', title: 'Less Urgent', desc: 'One resource needed', variant: 'info' as const },
-    { id: 'NON_URGENT', label: 'ESI 5', title: 'Non-Urgent', desc: 'Clinical evaluation only', variant: 'success' as const },
+    {
+      id: 'RESUSCITATION',
+      label: 'ESI 1',
+      title: 'Resuscitation',
+      desc: 'Immediate life threat',
+      variant: 'danger' as const,
+      color: 'var(--color-emergency-dark, var(--danger-700))',
+      bgTint: 'var(--emergency-subtle, var(--danger-50))',
+      badgeStyle: { backgroundColor: 'var(--danger-50)', color: 'var(--danger-700)' },
+    },
+    {
+      id: 'EMERGENT',
+      label: 'ESI 2',
+      title: 'Emergent',
+      desc: 'High-risk / Severe vitals',
+      variant: 'danger' as const,
+      color: 'var(--color-emergency, var(--danger-600))',
+      bgTint: 'var(--emergency-subtle, var(--danger-50))',
+      badgeStyle: { backgroundColor: 'var(--danger-50)', color: 'var(--danger-600)' },
+    },
+    {
+      id: 'URGENT',
+      label: 'ESI 3',
+      title: 'Urgent',
+      desc: 'Multiple resources needed',
+      variant: 'warning' as const,
+      color: 'var(--warning-600)',
+      bgTint: 'var(--warning-50)',
+    },
+    {
+      id: 'LESS_URGENT',
+      label: 'ESI 4',
+      title: 'Less Urgent',
+      desc: 'One resource needed',
+      variant: 'info' as const,
+      color: 'var(--info-600)',
+      bgTint: 'var(--info-50)',
+    },
+    {
+      id: 'NON_URGENT',
+      label: 'ESI 5',
+      title: 'Non-Urgent',
+      desc: 'Clinical evaluation only',
+      variant: 'success' as const,
+      color: 'var(--success-600)',
+      bgTint: 'var(--success-50)',
+    },
   ];
 
   return (
@@ -334,6 +376,8 @@ export const CaseIntakeAdmissionSection: React.FC<CaseIntakeAdmissionSectionProp
                 >
                   {acuityOptions.map((lvl) => {
                     const isSelected = triageAcuity === lvl.id;
+                    const activeColor = lvl.color || 'var(--color-emergency, var(--danger-600))';
+                    const activeBg = lvl.bgTint || 'var(--emergency-subtle, var(--color-emergency-tint, var(--danger-50)))';
                     return (
                       <div
                         key={lvl.id}
@@ -351,13 +395,13 @@ export const CaseIntakeAdmissionSection: React.FC<CaseIntakeAdmissionSectionProp
                           padding: 'var(--space-3)',
                           borderRadius: 'var(--radius-md)',
                           border: isSelected
-                            ? '2px solid var(--emergency, var(--color-emergency, var(--danger-600)))'
+                            ? `2px solid ${activeColor}`
                             : '1px solid var(--border-default)',
                           backgroundColor: isSelected
-                            ? 'var(--emergency-subtle, var(--color-emergency-tint, var(--danger-50)))'
+                            ? activeBg
                             : 'var(--bg-surface)',
                           boxShadow: isSelected
-                            ? '0 0 0 1px var(--emergency, var(--color-emergency, var(--danger-600)))'
+                            ? `0 0 0 1px ${activeColor}`
                             : 'none',
                           cursor: 'pointer',
                           transition: 'all 0.15s ease',
@@ -365,14 +409,14 @@ export const CaseIntakeAdmissionSection: React.FC<CaseIntakeAdmissionSectionProp
                         }}
                       >
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                          <Badge variant={lvl.variant}>{lvl.label}</Badge>
+                          <Badge variant={lvl.variant} style={lvl.badgeStyle}>{lvl.label}</Badge>
                           {isSelected && (
                             <span
                               style={{
                                 width: 8,
                                 height: 8,
                                 borderRadius: '50%',
-                                backgroundColor: 'var(--emergency, var(--color-emergency, var(--danger-600)))',
+                                backgroundColor: activeColor,
                               }}
                             />
                           )}

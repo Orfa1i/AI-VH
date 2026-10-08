@@ -32,13 +32,15 @@ describe('CaseIntakeAdmissionSection ESI Selection', () => {
     expect(esi1Btn).toHaveAttribute('aria-pressed', 'true');
     expect(esi3Btn).toHaveAttribute('aria-pressed', 'false');
 
-    // Verify the border style uses the emergency theme
-    expect(esi1Btn.style.border).toContain('var(--emergency');
+    // Verify the border style uses the dark red emergency theme for ESI 1
+    expect(esi1Btn.style.border).toContain('var(--color-emergency-dark, var(--danger-700))');
 
     // Click ESI 2 (Emergent)
     await user.click(esi2Btn);
     expect(esi2Btn).toHaveAttribute('aria-pressed', 'true');
     expect(esi1Btn).toHaveAttribute('aria-pressed', 'false');
-    expect(esi2Btn.style.border).toContain('var(--emergency');
+
+    // Verify the border style uses the lighter red emergency theme for ESI 2
+    expect(esi2Btn.style.border).toContain('var(--color-emergency, var(--danger-600))');
   });
 });
