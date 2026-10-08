@@ -8,7 +8,6 @@ import {
   Thermometer,
   Layers,
   FileSpreadsheet,
-  Zap,
 } from 'lucide-react';
 
 
@@ -84,15 +83,6 @@ export const CaseIntakeAdmissionSection: React.FC<CaseIntakeAdmissionSectionProp
     setSpo2(98.0);
     setTemperature(37.0);
     setSuccessMessage(null);
-  };
-
-  const handleApplyNormalVitals = () => {
-    setHeartRate(72);
-    setSystolicBp(120);
-    setDiastolicBp(80);
-    setRespiratoryRate(16);
-    setSpo2(98.5);
-    setTemperature(37.0);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -220,14 +210,6 @@ export const CaseIntakeAdmissionSection: React.FC<CaseIntakeAdmissionSectionProp
       actions={
         intakeMode === 'MANUAL' && (
           <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
-            <Button
-              variant="secondary"
-              size="md"
-              onClick={handleApplyNormalVitals}
-              leadingIcon={<Zap className="w-3.5 h-3.5" style={{ color: 'var(--color-primary)' }} />}
-            >
-              Load normal vitals
-            </Button>
             <Button
               variant="ghost"
               size="md"
