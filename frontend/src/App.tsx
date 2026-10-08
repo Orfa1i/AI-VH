@@ -35,7 +35,8 @@ import type {
   HospitalEvent,
 } from './types';
 
-type PortalTab = 'INTAKE' | 'PATIENTS' | 'STAFF' | 'REPORTS' | 'REVIEW' | 'REVIEWING' | 'KNOWLEDGE' | 'KNOWLEDGE_SOURCES' | 'BENCHMARK' | 'DESIGN_SYSTEM';
+type PortalTab = 'INTAKE' | 'PATIENTS' | 'STAFF' | 'REPORTS' | 'REVIEW' | 'REVIEWING' | 'KNOWLEDGE' | 'KNOWLEDGE_SOURCES' | 'BENCHMARK' | 'DESIGN_SYSTEM' | 'JOURNEY';
+
 
 
 export const App: React.FC = () => {
@@ -52,7 +53,7 @@ export const App: React.FC = () => {
   const [isConsultOpen, setIsConsultOpen] = useState<boolean>(false);
   const [isRLModalOpen, setIsRLModalOpen] = useState<boolean>(false);
   const [isBenchmarkOpen, setIsBenchmarkOpen] = useState<boolean>(false);
-  const [isJourneyOpen, setIsJourneyOpen] = useState<boolean>(false);
+
 
   // Telemetry & Simulation States
   const [events, setEvents] = useState<HospitalEvent[]>([]);
@@ -66,7 +67,7 @@ export const App: React.FC = () => {
       const path = window.location.pathname.toLowerCase();
       const hash = window.location.hash.toLowerCase();
       if (path === '/journey' || hash === '#journey') {
-        setIsJourneyOpen(true);
+        setActiveTab('JOURNEY');
       }
     };
     handleUrlRoute();
@@ -77,6 +78,7 @@ export const App: React.FC = () => {
       window.removeEventListener('hashchange', handleUrlRoute);
     };
   }, []);
+
 
   // Real-time Event Telemetry Listener for Left Notification Drawer
   useEffect(() => {
@@ -342,15 +344,18 @@ export const App: React.FC = () => {
         <div style={{ display: 'flex', alignItems: 'center', padding: 'var(--space-1) 0' }}>
           <button
             type="button"
-            onClick={() => setIsJourneyOpen(true)}
-            className="ak-btn ak-btn--secondary ak-btn--sm"
+            onClick={() => setActiveTab('JOURNEY')}
+            className={`ak-btn ak-btn--sm ${activeTab === 'JOURNEY' ? 'ak-btn--primary' : 'ak-btn--secondary'}`}
             title="Open patient clinical journey graph"
+            aria-current={activeTab === 'JOURNEY' ? 'page' : undefined}
           >
-            <Activity aria-hidden="true" style={{ width: 14, height: 14, color: 'var(--action-primary)' }} />
+            <Activity aria-hidden="true" style={{ width: 14, height: 14, color: activeTab === 'JOURNEY' ? 'var(--text-inverse)' : 'var(--action-primary)' }} />
             <span>Trajectory graph</span>
           </button>
         </div>
       </div>
+
+
 
       {/* Active Trajectory Progress Bar (100% Live Updates without stalls) */}
       <ActiveEncounterProgressBar
@@ -398,7 +403,11 @@ export const App: React.FC = () => {
         {activeTab === 'KNOWLEDGE' && <KnowledgeSearchSection />}
         {activeTab === 'KNOWLEDGE_SOURCES' && <KnowledgeSourcesSection />}
         {activeTab === 'DESIGN_SYSTEM' && <DesignSystemShowcase />}
-
+        {activeTab === 'JOURNEY' && (
+          <div className="flex-1 w-full h-full overflow-hidden flex flex-col">
+            <PatientJourneyFlowPage onBackToPortal={() => setActiveTab('INTAKE')} />
+          </div>
+        )}
 
         {activeTab === 'BENCHMARK' && (
           <div className="flex-1 p-6 overflow-y-auto max-w-5xl mx-auto flex flex-col justify-center items-center text-center">
@@ -455,15 +464,9 @@ export const App: React.FC = () => {
         isOpen={isRLModalOpen}
         onClose={() => setIsRLModalOpen(false)}
       />
-
-      {/* Relocated Patient Journey Graph & Clinical Flow Viewport */}
-      {isJourneyOpen && (
-        <div className="fixed inset-0 z-50 bg-white flex flex-col animate-in fade-in duration-200">
-          <PatientJourneyFlowPage onBackToPortal={() => setIsJourneyOpen(false)} />
-        </div>
-      )}
     </div>
   );
 };
+
 
 export default App;
