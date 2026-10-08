@@ -1,12 +1,17 @@
 # AI Virtual Hospital (AI-VH) : Session Handoff
 
-## 0. Current Session (2026-10-08) — ESI Triage Selection Fix, Nebius Nemotron Engine & Platform Execution
-- **Case Intake & Triage Admission ESI Selection Resolution**:
-  - Fixed selection visibility issue in `CaseIntakeAdmissionSection.tsx`: Replaced undefined CSS variables (`--color-primary`, `--border-subtle`) with dedicated emergency theme tokens (`var(--emergency, var(--color-emergency, var(--danger-600)))` and `var(--emergency-subtle, var(--color-emergency-tint, var(--danger-50)))`).
-  - Added semantic emergency color tokens (`--emergency`, `--emergency-hover`, `--emergency-subtle`, `--color-emergency`, `--color-emergency-tint`) to `frontend/src/tokens.css`.
-  - Added accessible interactive attributes (`role="button"`, `tabIndex={0}`, `aria-pressed={isSelected}`, and keyboard Enter/Space support) and high-contrast outer ring highlight.
-  - Added dedicated unit test in `frontend/src/components/management/__tests__/CaseIntakeAdmissionSection.test.tsx` (all 46/46 frontend tests green).
-  - Maintained **0 brand style debt (100% brand compliant)** and verified production bundling (`npm run build` in 1.26s).
+## 0. Current Session (2026-10-08) — ESI Triage Color Coding & Visual Severity Enhancement (Commit `5534e36`)
+- **Emergency Severity Index (ESI) Triage Rating Visual Color Coding**:
+  - Implemented differentiated color coding for ESI levels in `CaseIntakeAdmissionSection.tsx`:
+    - **ESI 1 (Resuscitation)**: Dark red color (`var(--color-emergency-dark, var(--danger-700))`, `#A11F31`) signifying the highest level of danger and immediate life threat. High-contrast danger tint background and dark red badge styling.
+    - **ESI 2 (Emergent)**: Slightly lighter shade of red (`var(--color-emergency, var(--danger-600))`, `#C42B3E`) for high-risk / severe vitals presentations.
+    - **ESI 3 (Urgent)**: Amber/warning styling (`var(--warning-600)`).
+    - **ESI 4 (Less Urgent)**: Blue/info styling (`var(--info-600)`).
+    - **ESI 5 (Non-Urgent)**: Green/success styling (`var(--success-600)`).
+  - Updated button rendering loop to dynamically apply level-specific border (`2px solid ${activeColor}`), outer focus glow (`0 0 0 1px ${activeColor}`), background tint (`activeBg`), badge custom style, and dot indicator.
+  - Added semantic `--danger-700`, `--danger-800`, `--emergency-dark`, and `--color-emergency-dark` variables in `frontend/src/tokens.css`.
+  - Updated test in `frontend/src/components/management/__tests__/CaseIntakeAdmissionSection.test.tsx` verifying distinct dark red and lighter red emergency border styles for ESI 1 and ESI 2.
+  - Verification: `npm run lint:brand` reported **0 style debt (100% brand token compliant)**, Vitest passed **12/12 files, 46/46 tests (100% green)**, and `npm run build` compiled cleanly.
 - **Nebius Nemotron Integration as Clinical Reasoning & Diagnostic Synthesis Engine**:
   - Implemented `NemotronSynthesisEngine` (`backend/llm/nemotron_synthesis.py`) connecting to Nebius AI Studio via OpenAI-compatible API (`https://api.studio.nebius.ai/v1/`).
   - Implemented the 3-input synthesis layer: `Patient Data + MedGemma Output + RAG Evidence -> Nemotron -> Final Diagnostic Report`.
