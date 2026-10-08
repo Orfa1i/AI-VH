@@ -329,4 +329,20 @@ export interface HospitalStaffRecord {
   created_at?: string;
 }
 
+export type KnowledgeSourceStatus = 'ACTIVE' | 'INACTIVE' | 'SYNCING' | 'ERROR';
+export type KnowledgeSourceType = 'PUBMED' | 'OPENFDA' | 'RXNORM' | 'CUSTOM';
+
+export interface KnowledgeSource {
+  id: string;
+  name: string;
+  url: string;
+  description: string;
+  status: KnowledgeSourceStatus;
+  source_type: KnowledgeSourceType;
+  last_synced_at?: string | null;
+  error_message?: string | null;
+  created_at?: string;
+}
+
+
 

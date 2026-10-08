@@ -3,6 +3,7 @@ import { CaseIntakeAdmissionSection } from './components/management/CaseIntakeAd
 import { PatientDirectorySection } from './components/management/PatientDirectorySection';
 import { StaffManagementSection } from './components/management/StaffManagementSection';
 import { KnowledgeSearchSection } from './components/management/KnowledgeSearchSection';
+import { KnowledgeSourcesSection } from './components/management/KnowledgeSourcesSection';
 import { PhysicianReviewDashboard } from './components/dashboard/PhysicianReviewDashboard';
 import { DoctorReviewSection } from './components/review/DoctorReviewSection';
 import { InternalMedicineConsultModal } from './components/specialists/InternalMedicineConsultModal';
@@ -18,6 +19,7 @@ import {
   BedDouble,
   FileText,
   FileCheck2,
+  Globe,
   Radio,
   Scale,
   Search,
@@ -33,7 +35,8 @@ import type {
   HospitalEvent,
 } from './types';
 
-type PortalTab = 'INTAKE' | 'PATIENTS' | 'STAFF' | 'REPORTS' | 'REVIEW' | 'REVIEWING' | 'KNOWLEDGE' | 'BENCHMARK' | 'DESIGN_SYSTEM';
+type PortalTab = 'INTAKE' | 'PATIENTS' | 'STAFF' | 'REPORTS' | 'REVIEW' | 'REVIEWING' | 'KNOWLEDGE' | 'KNOWLEDGE_SOURCES' | 'BENCHMARK' | 'DESIGN_SYSTEM';
+
 
 export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<PortalTab>('INTAKE');
@@ -302,11 +305,23 @@ export const App: React.FC = () => {
 
           <button
             type="button"
+            onClick={() => setActiveTab('KNOWLEDGE_SOURCES')}
+            className="ak-nav__item"
+            aria-current={activeTab === 'KNOWLEDGE_SOURCES' ? 'page' : undefined}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 8, cursor: 'pointer', border: 0 }}
+          >
+            <Globe aria-hidden="true" style={{ width: 16, height: 16 }} />
+            <span>Knowledge Sources</span>
+          </button>
+
+          <button
+            type="button"
             onClick={() => setActiveTab('BENCHMARK')}
             className="ak-nav__item"
             aria-current={activeTab === 'BENCHMARK' ? 'page' : undefined}
             style={{ display: 'inline-flex', alignItems: 'center', gap: 8, cursor: 'pointer', border: 0 }}
           >
+
             <Scale aria-hidden="true" style={{ width: 16, height: 16 }} />
             <span>Policy Benchmark</span>
           </button>
@@ -381,7 +396,9 @@ export const App: React.FC = () => {
         )}
 
         {activeTab === 'KNOWLEDGE' && <KnowledgeSearchSection />}
+        {activeTab === 'KNOWLEDGE_SOURCES' && <KnowledgeSourcesSection />}
         {activeTab === 'DESIGN_SYSTEM' && <DesignSystemShowcase />}
+
 
         {activeTab === 'BENCHMARK' && (
           <div className="flex-1 p-6 overflow-y-auto max-w-5xl mx-auto flex flex-col justify-center items-center text-center">

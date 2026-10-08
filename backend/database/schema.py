@@ -142,12 +142,25 @@ CREATE TABLE IF NOT EXISTS training_dataset_records (
     FOREIGN KEY (report_id) REFERENCES clinical_reports(id)
 );
 
+CREATE TABLE IF NOT EXISTS knowledge_sources (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    url TEXT NOT NULL,
+    description TEXT DEFAULT '',
+    status TEXT NOT NULL DEFAULT 'ACTIVE',
+    source_type TEXT NOT NULL DEFAULT 'CUSTOM',
+    last_synced_at TIMESTAMP,
+    error_message TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE INDEX IF NOT EXISTS idx_reports_case ON clinical_reports(case_id);
 CREATE INDEX IF NOT EXISTS idx_reports_encounter ON clinical_reports(encounter_id);
 CREATE INDEX IF NOT EXISTS idx_reviews_report ON physician_reviews(report_id);
 CREATE INDEX IF NOT EXISTS idx_reviews_encounter ON physician_reviews(encounter_id);
 CREATE INDEX IF NOT EXISTS idx_dpo_prompt ON dpo_feedback_pairs(prompt);
 CREATE INDEX IF NOT EXISTS idx_knowledge_specialty ON knowledge_chunks(specialty);
+CREATE INDEX IF NOT EXISTS idx_knowledge_sources_status ON knowledge_sources(status);
 CREATE INDEX IF NOT EXISTS idx_patients_status ON patients(admission_status);
 CREATE INDEX IF NOT EXISTS idx_patients_mrn ON patients(mrn);
 CREATE INDEX IF NOT EXISTS idx_staff_role ON hospital_staff(role);
@@ -159,6 +172,7 @@ CREATE INDEX IF NOT EXISTS idx_tdr_eligibility ON training_dataset_records(datas
 """
 
 POSTGRES_SCHEMA = """
+
 CREATE TABLE IF NOT EXISTS encounters (
     encounter_id VARCHAR(64) PRIMARY KEY,
     case_id VARCHAR(64) NOT NULL,
@@ -292,12 +306,25 @@ CREATE TABLE IF NOT EXISTS training_dataset_records (
     FOREIGN KEY (report_id) REFERENCES clinical_reports(id)
 );
 
+CREATE TABLE IF NOT EXISTS knowledge_sources (
+    id VARCHAR(64) PRIMARY KEY,
+    name VARCHAR(128) NOT NULL,
+    url VARCHAR(512) NOT NULL,
+    description TEXT DEFAULT '',
+    status VARCHAR(32) NOT NULL DEFAULT 'ACTIVE',
+    source_type VARCHAR(32) NOT NULL DEFAULT 'CUSTOM',
+    last_synced_at TIMESTAMP WITH TIME ZONE,
+    error_message TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE INDEX IF NOT EXISTS idx_reports_case ON clinical_reports(case_id);
 CREATE INDEX IF NOT EXISTS idx_reports_encounter ON clinical_reports(encounter_id);
 CREATE INDEX IF NOT EXISTS idx_reviews_report ON physician_reviews(report_id);
 CREATE INDEX IF NOT EXISTS idx_reviews_encounter ON physician_reviews(encounter_id);
 CREATE INDEX IF NOT EXISTS idx_dpo_prompt ON dpo_feedback_pairs(prompt);
 CREATE INDEX IF NOT EXISTS idx_knowledge_specialty ON knowledge_chunks(specialty);
+CREATE INDEX IF NOT EXISTS idx_knowledge_sources_status ON knowledge_sources(status);
 CREATE INDEX IF NOT EXISTS idx_patients_status ON patients(admission_status);
 CREATE INDEX IF NOT EXISTS idx_patients_mrn ON patients(mrn);
 CREATE INDEX IF NOT EXISTS idx_staff_role ON hospital_staff(role);
@@ -307,3 +334,4 @@ CREATE INDEX IF NOT EXISTS idx_pool_specialty ON case_pool(specialty_category);
 CREATE INDEX IF NOT EXISTS idx_tdr_patient_case ON training_dataset_records(patient_id, case_id);
 CREATE INDEX IF NOT EXISTS idx_tdr_eligibility ON training_dataset_records(dataset_eligibility);
 """
+

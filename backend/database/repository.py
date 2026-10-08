@@ -1367,10 +1367,182 @@ class DatabaseRepository:
             self.add_staff_member(s)
         logger.info(f"Initialized hospital staff roster with {len(default_roster)} clinical personnel (Dr. Marcus Vance).")
 
+    # =========================================================================
+    # Knowledge Sources Management
+    # =========================================================================
+
+    def list_knowledge_sources(self) -> List[Dict[str, Any]]:
+        """Returns all registered clinical knowledge sources."""
+        with self.manager.get_connection() as conn:
+            cur = conn.cursor()
+            cur.execute("""
+                SELECT id, name, url, description, status, source_type, last_synced_at, error_message, created_at
+                FROM knowledge_sources
+                ORDER BY created_at ASC
+            """)
+            rows = cur.fetchall()
+            return [
+                {
+                    "id": r[0],
+                    "name": r[1],
+                    "url": r[2],
+                    "description": r[3] or "",
+                    "status": r[4],
+                    "source_type": r[5],
+                    "last_synced_at": r[6].isoformat() if hasattr(r[6], "isoformat") else (str(r[6]) if r[6] else None),
+                    "error_message": r[7],
+                    "created_at": r[8].isoformat() if hasattr(r[8], "isoformat") else str(r[8]),
+                }
+                for r in rows
+            ]
+
+    def get_knowledge_source(self, source_id: str) -> Optional[Dict[str, Any]]:
+        """Gets a single knowledge source by ID."""
+        with self.manager.get_connection() as conn:
+            cur = conn.cursor()
+            cur.execute("""
+                SELECT id, name, url, description, status, source_type, last_synced_at, error_message, created_at
+                FROM knowledge_sources
+                WHERE id = ?
+            """ if self.manager.engine_type == "sqlite" else """
+                SELECT id, name, url, description, status, source_type, last_synced_at, error_message, created_at
+                FROM knowledge_sources
+                WHERE id = %s
+            """, (source_id,))
+            row = cur.fetchone()
+            if not row:
+                return None
+            return {
+                "id": row[0],
+                "name": row[1],
+                "url": row[2],
+                "description": row[3] or "",
+                "status": row[4],
+                "source_type": row[5],
+                "last_synced_at": row[6].isoformat() if hasattr(row[6], "isoformat") else (str(row[6]) if row[6] else None),
+                "error_message": row[7],
+                "created_at": row[8].isoformat() if hasattr(row[8], "isoformat") else str(row[8]),
+            }
+
+    def save_knowledge_source(
+        self,
+        source_id: str,
+        name: str,
+        url: str,
+        description: str = "",
+        status: str = "ACTIVE",
+        source_type: str = "CUSTOM",
+        last_synced_at: Optional[datetime] = None,
+        error_message: Optional[str] = None,
+    ) -> str:
+        """Inserts or updates a medical knowledge source."""
+        is_pg = self.manager.engine_type == "postgresql"
+        with self.manager.get_connection() as conn:
+            cur = conn.cursor()
+            if is_pg:
+                cur.execute("""
+                    INSERT INTO knowledge_sources (id, name, url, description, status, source_type, last_synced_at, error_message)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                    ON CONFLICT (id) DO UPDATE SET
+                        name = EXCLUDED.name,
+                        url = EXCLUDED.url,
+                        description = EXCLUDED.description,
+                        status = EXCLUDED.status,
+                        source_type = EXCLUDED.source_type,
+                        last_synced_at = EXCLUDED.last_synced_at,
+                        error_message = EXCLUDED.error_message
+                """, (source_id, name, url, description, status, source_type, last_synced_at, error_message))
+            else:
+                cur.execute("""
+                    INSERT OR REPLACE INTO knowledge_sources (id, name, url, description, status, source_type, last_synced_at, error_message)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """, (source_id, name, url, description, status, source_type, last_synced_at, error_message))
+        return source_id
+
+    def update_knowledge_source_status(
+        self,
+        source_id: str,
+        status: str,
+        error_message: Optional[str] = None,
+        last_synced_at: Optional[datetime] = None,
+    ) -> bool:
+        """Updates the operational status of a knowledge source."""
+        is_pg = self.manager.engine_type == "postgresql"
+        with self.manager.get_connection() as conn:
+            cur = conn.cursor()
+            query = """
+                UPDATE knowledge_sources
+                SET status = %s, error_message = %s, last_synced_at = COALESCE(%s, last_synced_at)
+                WHERE id = %s
+            """ if is_pg else """
+                UPDATE knowledge_sources
+                SET status = ?, error_message = ?, last_synced_at = COALESCE(?, last_synced_at)
+                WHERE id = ?
+            """
+            cur.execute(query, (status, error_message, last_synced_at, source_id))
+            return cur.rowcount > 0
+
+    def delete_knowledge_source(self, source_id: str) -> bool:
+        """Deletes a knowledge source."""
+        is_pg = self.manager.engine_type == "postgresql"
+        with self.manager.get_connection() as conn:
+            cur = conn.cursor()
+            query = "DELETE FROM knowledge_sources WHERE id = %s" if is_pg else "DELETE FROM knowledge_sources WHERE id = ?"
+            cur.execute(query, (source_id,))
+            return cur.rowcount > 0
+
+    def count_knowledge_sources(self) -> int:
+        """Returns total configured knowledge sources."""
+        with self.manager.get_connection() as conn:
+            cur = conn.cursor()
+            cur.execute("SELECT COUNT(*) FROM knowledge_sources")
+            return cur.fetchone()[0]
+
+    def seed_default_knowledge_sources(self):
+        """Seeds default canonical medical knowledge sources if table is empty."""
+        if self.count_knowledge_sources() > 0:
+            return
+
+        now = datetime.now(timezone.utc)
+        defaults = [
+            {
+                "source_id": "SRC-PUBMED",
+                "name": "PubMed / MEDLINE Clinical Library",
+                "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/",
+                "description": "National Center for Biotechnology Information (NCBI) peer-reviewed biomedical literature and clinical guidelines.",
+                "status": "ACTIVE",
+                "source_type": "PUBMED",
+                "last_synced_at": now,
+            },
+            {
+                "source_id": "SRC-OPENFDA",
+                "name": "openFDA Drug Labels & Safety Alerts",
+                "url": "https://api.fda.gov/drug/label.json",
+                "description": "FDA structured product labeling, boxed warnings, indications, contraindications, and adverse reaction registries.",
+                "status": "ACTIVE",
+                "source_type": "OPENFDA",
+                "last_synced_at": now,
+            },
+            {
+                "source_id": "SRC-RXNORM",
+                "name": "NLM RxNorm Clinical Formulary",
+                "url": "https://rxnav.nlm.nih.gov/REST/",
+                "description": "National Library of Medicine standardized clinical drug nomenclature, RXCUIs, and active ingredient maps.",
+                "status": "ACTIVE",
+                "source_type": "RXNORM",
+                "last_synced_at": now,
+            },
+        ]
+        for src in defaults:
+            self.save_knowledge_source(**src)
+        logger.info(f"Seeded {len(defaults)} default clinical knowledge sources.")
+
 
 # Global singleton repository
 db_repo = DatabaseRepository()
 db_repo.seed_default_staff()
+db_repo.seed_default_knowledge_sources()
+
 
 
 
