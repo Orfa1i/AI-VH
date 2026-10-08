@@ -83,11 +83,8 @@ describe('KnowledgeSourcesSection Component', () => {
     vi.restoreAllMocks();
   });
 
-  it('renders registered knowledge sources and architecture flow banner', async () => {
+  it('renders registered knowledge sources and status indicators', async () => {
     render(<KnowledgeSourcesSection />);
-
-    expect(screen.getByText(/Shared Clinical Knowledge Pipeline Architecture/i)).toBeInTheDocument();
-    expect(screen.getByText(/Nemotron-3-Nano-30B-A3B/i)).toBeInTheDocument();
 
     expect(await screen.findByText('PubMed / MEDLINE Clinical Library', {}, { timeout: 3000 })).toBeInTheDocument();
     expect(screen.getAllByText('openFDA Drug Labels & Safety Alerts').length).toBeGreaterThan(0);

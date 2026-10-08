@@ -6,11 +6,6 @@ import {
   AlertCircle,
   Power,
   Trash2,
-  BookOpen,
-  Cpu,
-  Layers,
-  ArrowRight,
-  ShieldCheck,
 } from 'lucide-react';
 
 
@@ -233,58 +228,6 @@ export const KnowledgeSourcesSection: React.FC = () => {
         </Button>
       }
     >
-      {/* Architectural Pipeline Banner */}
-      <div
-        style={{
-          background: 'var(--bg-surface)',
-          border: '1px solid var(--border-default)',
-          borderRadius: 'var(--radius-md)',
-          padding: 'var(--space-4)',
-          marginBottom: 'var(--space-6)',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', marginBottom: 'var(--space-2)' }}>
-          <ShieldCheck style={{ width: 18, height: 18, color: 'var(--color-primary)' }} />
-          <span style={{ fontWeight: 600, fontSize: '0.875rem', color: 'var(--text-primary)' }}>
-            Shared Clinical Knowledge Pipeline Architecture
-          </span>
-        </div>
-        <div
-          style={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            alignItems: 'center',
-            gap: 'var(--space-3)',
-            fontSize: '0.8125rem',
-            color: 'var(--text-secondary)',
-          }}
-        >
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 500, color: 'var(--text-primary)' }}>
-            <Globe style={{ width: 14, height: 14, color: 'var(--color-primary)' }} />
-            Active Knowledge Sources
-          </span>
-          <ArrowRight style={{ width: 14, height: 14, color: 'var(--text-muted)' }} />
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 500, color: 'var(--text-primary)' }}>
-            <Layers style={{ width: 14, height: 14, color: 'var(--color-primary)' }} />
-            Retrieve Evidence
-          </span>
-          <ArrowRight style={{ width: 14, height: 14, color: 'var(--text-muted)' }} />
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 500, color: 'var(--text-primary)' }}>
-            <BookOpen style={{ width: 14, height: 14, color: 'var(--color-primary)' }} />
-            MedGemma + Harrison's + Sources
-          </span>
-          <ArrowRight style={{ width: 14, height: 14, color: 'var(--text-muted)' }} />
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 500, color: 'var(--text-primary)' }}>
-            <Cpu style={{ width: 14, height: 14, color: 'var(--color-primary)' }} />
-            Nemotron-3-Nano-30B-A3B
-          </span>
-          <ArrowRight style={{ width: 14, height: 14, color: 'var(--text-muted)' }} />
-          <span style={{ fontWeight: 600, color: 'var(--color-success)' }}>
-            Evidence-Grounded Diagnostic Report
-          </span>
-        </div>
-      </div>
-
       {/* Global Stat Cards */}
       <div
         style={{
