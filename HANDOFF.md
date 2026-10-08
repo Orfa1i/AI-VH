@@ -1,8 +1,9 @@
 # AI Virtual Hospital (AI-VH) : Session Handoff
 
-## 0. Current Session (2026-10-08) — Intake Header Subtitle Cleanup & ESI Triage Color Coding (Commit `5955ddb`)
-- **Case Intake & Triage Admission Screen Cleanup**:
-  - Removed description subtitle text (*"Register patient encounters with verified MRNs, ESI acuity categorization, bed allocations, and baseline telemetry."*) from `CaseIntakeAdmissionSection.tsx` per clinician layout requirements.
+## 0. Current Session (2026-10-08) — Intake Actions & Header Cleanup, ESI Triage Color Coding (Commit `88fbadc`)
+- **Case Intake & Triage Admission Form Actions Cleanup**:
+  - Removed "Load normal vitals" quick-action button and unused `handleApplyNormalVitals` handler / `Zap` icon import from `CaseIntakeAdmissionSection.tsx`, retaining clean form controls ("Reset form" and "Admit to Ledger").
+  - Removed description subtitle text (*"Register patient encounters with verified MRNs, ESI acuity categorization, bed allocations, and baseline telemetry."*) from `CaseIntakeAdmissionSection.tsx` per clinician layout requirements (Commit `5955ddb`).
   - Verified 0 brand style debt (`npm run lint:brand`), 100% test pass (46/46 tests green), and clean production build (`npm run build`).
 - **Emergency Severity Index (ESI) Triage Rating Visual Color Coding (Commit `5534e36`)**:
   - Implemented differentiated color coding for ESI levels in `CaseIntakeAdmissionSection.tsx`:
