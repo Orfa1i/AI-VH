@@ -5,8 +5,6 @@ import { StaffManagementSection } from './components/management/StaffManagementS
 import { KnowledgeSearchSection } from './components/management/KnowledgeSearchSection';
 import { PhysicianReviewDashboard } from './components/dashboard/PhysicianReviewDashboard';
 import { DoctorReviewSection } from './components/review/DoctorReviewSection';
-import { DepartmentBoardSection } from './components/hospital/DepartmentBoardSection';
-import { DepartmentBoard3DSection } from './components/hospital3d/DepartmentBoard3DSection';
 import { InternalMedicineConsultModal } from './components/specialists/InternalMedicineConsultModal';
 import { RLDatasetModal } from './components/rl/RLDatasetModal';
 import { PolicyBenchmarkModal } from './components/rl/PolicyBenchmarkModal';
@@ -18,8 +16,6 @@ import { DesignSystemShowcase } from './pages/DesignSystemShowcase';
 import {
   Activity,
   BedDouble,
-  Box,
-  Building2,
   FileText,
   FileCheck2,
   Radio,
@@ -37,7 +33,7 @@ import type {
   HospitalEvent,
 } from './types';
 
-type PortalTab = 'INTAKE' | 'PATIENTS' | 'STAFF' | 'REPORTS' | 'REVIEW' | 'REVIEWING' | 'WARDS' | 'HOSPITAL3D' | 'KNOWLEDGE' | 'BENCHMARK' | 'DESIGN_SYSTEM';
+type PortalTab = 'INTAKE' | 'PATIENTS' | 'STAFF' | 'REPORTS' | 'REVIEW' | 'REVIEWING' | 'KNOWLEDGE' | 'BENCHMARK' | 'DESIGN_SYSTEM';
 
 export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<PortalTab>('INTAKE');
@@ -66,9 +62,6 @@ export const App: React.FC = () => {
     const handleUrlRoute = () => {
       const path = window.location.pathname.toLowerCase();
       const hash = window.location.hash.toLowerCase();
-      if (path === '/3d' || hash === '#3d') {
-        setActiveTab('HOSPITAL3D');
-      }
       if (path === '/journey' || hash === '#journey') {
         setIsJourneyOpen(true);
       }
@@ -298,28 +291,6 @@ export const App: React.FC = () => {
 
           <button
             type="button"
-            onClick={() => setActiveTab('WARDS')}
-            className="ak-nav__item"
-            aria-current={activeTab === 'WARDS' ? 'page' : undefined}
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 8, cursor: 'pointer', border: 0 }}
-          >
-            <Building2 aria-hidden="true" style={{ width: 16, height: 16 }} />
-            <span>Department Board</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab('HOSPITAL3D')}
-            className="ak-nav__item"
-            aria-current={activeTab === 'HOSPITAL3D' ? 'page' : undefined}
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 8, cursor: 'pointer', border: 0 }}
-          >
-            <Box aria-hidden="true" style={{ width: 16, height: 16 }} />
-            <span>3D Hospital</span>
-          </button>
-
-          <button
-            type="button"
             onClick={() => setActiveTab('KNOWLEDGE')}
             className="ak-nav__item"
             aria-current={activeTab === 'KNOWLEDGE' ? 'page' : undefined}
@@ -408,10 +379,6 @@ export const App: React.FC = () => {
         {activeTab === 'REVIEWING' && (
           <ReviewedReportsSection onTriggerTrainingSuccess={refreshData} />
         )}
-
-        {activeTab === 'WARDS' && <DepartmentBoardSection />}
-
-        {activeTab === 'HOSPITAL3D' && <DepartmentBoard3DSection />}
 
         {activeTab === 'KNOWLEDGE' && <KnowledgeSearchSection />}
         {activeTab === 'DESIGN_SYSTEM' && <DesignSystemShowcase />}
