@@ -1,12 +1,16 @@
 # AI Virtual Hospital (AI-VH) : Session Handoff
 
-## 0. Current Session (2026-10-08) — Patient Journey Layout & Global Navigation Preservation (Commit `5269bc4`)
-- **Patient Journey Layout & Global Navigation**:
-  - Refactored `PatientJourneyFlowPage` from a modal overlay (`fixed inset-0 z-50`) into a first-class portal viewport section inside `App.tsx` (`JOURNEY` in `PortalTab`).
-  - Preserved the top application header (`ak-appbar`), official Asklevia logo mark, and sub-header workspace navigation tabs (`Intake & Triage`, `Patient Directory`, `Staff Roster`, `Clinical Reports`, `Doctor Review`, `Reviewing`, `Knowledge Books`, `Knowledge Sources`, `Policy Benchmark`, `Design System`).
-  - The "Trajectory graph" button now highlights seamlessly as an active tab (`ak-btn--primary` with `aria-current="page"`).
-  - Clinicians can freely transition back and forth between Patient Journey and any other portal workspace without loss of state.
-  - Quality verification: **0 style debt** (`scripts/lint-brand.js`), **38/38 unit tests passing**, and **clean Vite production build in <1s**.
+## 0. Current Session (2026-10-08) — Patient Journey Styling & Design System Alignment (Commit `141a2af`)
+- **Patient Journey / Trajectory Graph Styling & Header Standardization**:
+  - Replaced the compact legacy `h-14` header bar in `frontend/src/components/diagram/PatientJourneyFlowPage.tsx` with the canonical `AppPage` pattern matching the rest of the application.
+  - **Removed the "Back to portal" button**: Seamless workspace switching is now managed universally by the persistent portal tabs in `ak-appbar`.
+  - **Removed the "Current station: RECEPTION" indicator badge** from the header.
+  - **Added large black headline** (`<h1 className="heading-1">Patient Journey & Clinical Flow</h1>`, `var(--font-display)`, 34px, 500 weight, `var(--text-primary)`) with clinical breadcrumbs and descriptive subtitle.
+  - Preserved the voice synthesis mute toggle action (`Volume2`/`VolumeX`), the full interactive 2D schematic diagram, HUD vitals telemetry, and consultation modals.
+  - **Quality Verification**:
+    - `scripts/lint-brand.js`: **0 brand style debt (100% brand token compliant)**.
+    - Vitest: **10 test files passed, 38/38 unit tests green**.
+    - Production build: `npm run build` compiled cleanly in 1.12s.
 
 - **Knowledge Sources Management Workspace**:
   - Implemented `KnowledgeSourcesSection.tsx` (`frontend/src/components/management/KnowledgeSourcesSection.tsx`):
