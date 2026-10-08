@@ -4,7 +4,6 @@ import drMarcusPhoto from '../../assets/dr_marcus_vance.jpg';
 import { ActiveTrajectoryStepper } from './ActiveTrajectoryStepper';
 import { Card } from '../ui/Card';
 import { Badge } from '../ui/Badge';
-import { Button } from '../ui/Button';
 import {
   Activity,
   ArrowRight,
@@ -14,11 +13,8 @@ import {
   DoorOpen,
   FileText,
   HeartPulse,
-  Play,
-  RefreshCw,
   Stethoscope,
   Sparkles,
-  Building2,
 } from 'lucide-react';
 
 interface HospitalFlowDiagramProps {
@@ -40,7 +36,7 @@ export const HospitalFlowDiagram: React.FC<HospitalFlowDiagramProps> = ({
   cases,
   selectedCaseId,
   onSelectCase,
-  onRunSimulation,
+  onRunSimulation: _onRunSimulation,
   isRunning,
   activeDepartment,
   doctorAction,
@@ -48,7 +44,7 @@ export const HospitalFlowDiagram: React.FC<HospitalFlowDiagramProps> = ({
   activeVitals,
   onOpenConsult,
   onOpenDepartmentStation,
-  onToggleTo3D,
+  onToggleTo3D: _onToggleTo3D,
 }) => {
   const [hoveredNode, setHoveredNode] = useState<string | null>(null);
 
@@ -104,51 +100,11 @@ export const HospitalFlowDiagram: React.FC<HospitalFlowDiagramProps> = ({
   const temp = activeVitals?.temperature_c ?? 37.1;
 
   return (
-    <div className="w-full h-full flex flex-col bg-[var(--ak-color-bg-app)] text-[var(--ak-color-text-primary)] overflow-y-auto p-4 md:p-6 select-none relative isolate">
-      {/* ═══════════════════════════════════════════════════════════════════
-          TOP ACTION BAR & DIAGRAM CONTROLS
-          ═══════════════════════════════════════════════════════════════════ */}
-      <div className="w-full flex items-center justify-end gap-2.5 pb-4 border-b border-[var(--ak-color-border-subtle)] mb-5 z-10 shrink-0">
-        {/* Action Controls */}
-        <div className="flex items-center gap-2.5">
-          {onToggleTo3D && (
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={onToggleTo3D}
-              leadingIcon={<Building2 className="w-3.5 h-3.5 text-[var(--ak-color-primary)]" />}
-              title="Switch to 3D spatial simulation"
-            >
-              Open 3D view
-            </Button>
-          )}
-
-          <Button
-            variant={isRunning ? 'secondary' : 'primary'}
-            size="sm"
-            onClick={onRunSimulation}
-            disabled={isRunning || !currentCase}
-            leadingIcon={
-              isRunning ? (
-                <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-              ) : (
-                <Play className="w-3.5 h-3.5 fill-current" />
-              )
-            }
-          >
-            {isRunning
-              ? 'Traversing pathway...'
-              : currentCase
-              ? 'Simulate selected case'
-              : 'Awaiting admission'}
-          </Button>
-        </div>
-      </div>
-
+    <div className="w-full flex flex-col bg-[var(--ak-color-bg-app)] text-[var(--ak-color-text-primary)] select-none relative isolate">
       {/* ═══════════════════════════════════════════════════════════════════
           LIVE HUD VITALS TELEMETRY & ECG RHYTHM STRIP
           ═══════════════════════════════════════════════════════════════════ */}
-      <Card className="p-3.5 mb-6 z-10 shrink-0">
+      <Card className="p-3.5 mb-4 z-10 shrink-0">
         <div className="flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-4">
           {/* Patient Quick Info */}
           <div className="flex items-center gap-4 border-b xl:border-b-0 xl:border-r border-[var(--ak-color-border-subtle)] pb-3 xl:pb-0 pr-0 xl:pr-5 shrink-0">
@@ -257,7 +213,7 @@ export const HospitalFlowDiagram: React.FC<HospitalFlowDiagramProps> = ({
       {/* ═══════════════════════════════════════════════════════════════════
           MAIN FLOW DIAGRAM NODES GRID (4-STAGE CLINICAL TRAVERSAL)
           ═══════════════════════════════════════════════════════════════════ */}
-      <div className="w-full flex-1 flex flex-col gap-6 z-10">
+      <div className="w-full flex-1 flex flex-col gap-4 z-10">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch relative">
 
           {/* ═══════════════════════════════════════════════════════════════════

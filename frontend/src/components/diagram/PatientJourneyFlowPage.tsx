@@ -1,12 +1,11 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { HospitalFlowDiagram } from './HospitalFlowDiagram';
-import { VitalsMonitorHUD } from '../dashboard/VitalsMonitorHUD';
 import { InternalMedicineConsultModal } from '../specialists/InternalMedicineConsultModal';
 import { DepartmentStationModal } from '../specialists/DepartmentStationModal';
 import { toggleGlobalMute, isGlobalMuted } from '../../utils/speechSynthesis';
 import type { HospitalEvent, BenchmarkCase, VitalSigns } from '../../types';
 import { Button } from '../ui/Button';
-import { Volume2, VolumeX } from 'lucide-react';
+import { Volume2, VolumeX, Play, RefreshCw } from 'lucide-react';
 import { AppPage } from '../layout/Templates';
 
 interface PatientJourneyFlowPageProps {
@@ -19,7 +18,6 @@ export const PatientJourneyFlowPage: React.FC<PatientJourneyFlowPageProps> = () 
   const [isRunning, setIsRunning] = useState<boolean>(false);
   const [events, setEvents] = useState<HospitalEvent[]>([]);
   const [activeVitals, setActiveVitals] = useState<VitalSigns | null>(null);
-  const [currentPatientName, setCurrentPatientName] = useState<string>('');
   const [isAudioMuted, setIsAudioMuted] = useState<boolean>(isGlobalMuted());
 
   // Modals
@@ -40,7 +38,6 @@ export const PatientJourneyFlowPage: React.FC<PatientJourneyFlowPageProps> = () 
     switch (evt.event_type) {
       case 'PATIENT_ARRIVED':
         setActiveDepartment('RECEPTION');
-        if (evt.payload.name) setCurrentPatientName(evt.payload.name);
         break;
 
       case 'NURSE_TRIAGE_STARTED':
@@ -185,16 +182,34 @@ export const PatientJourneyFlowPage: React.FC<PatientJourneyFlowPageProps> = () 
     }
   };
 
+  const currentCase = cases.find((c) => c.id === selectedCaseId) || (cases.length > 0 ? cases[0] : null);
+
   return (
     <AppPage
       title="Patient Journey & Clinical Flow"
       description="Real-time encounter trajectory, department transitions, and interactive clinical simulation stations."
-      breadcrumbs={[
-        { label: 'Clinical Ops', href: '#' },
-        { label: 'Patient Journey & Flow', isCurrent: true },
-      ]}
       actions={
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+          <Button
+            variant={isRunning ? 'secondary' : 'primary'}
+            size="sm"
+            onClick={handleRunSimulation}
+            disabled={isRunning || !currentCase}
+            leadingIcon={
+              isRunning ? (
+                <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Play className="w-3.5 h-3.5 fill-current" />
+              )
+            }
+          >
+            {isRunning
+              ? 'Traversing pathway...'
+              : currentCase
+              ? 'Simulate selected case'
+              : 'Awaiting admission'}
+          </Button>
+
           <Button
             variant="ghost"
             size="sm"
@@ -212,7 +227,7 @@ export const PatientJourneyFlowPage: React.FC<PatientJourneyFlowPageProps> = () 
       }
     >
       {/* 2D Clinical Flow Diagram & Encounter Trajectory */}
-      <div className="relative w-full flex flex-col">
+      <div className="w-full flex flex-col">
         <HospitalFlowDiagram
           cases={cases}
           selectedCaseId={selectedCaseId}
@@ -226,9 +241,6 @@ export const PatientJourneyFlowPage: React.FC<PatientJourneyFlowPageProps> = () 
           onOpenConsult={() => setIsConsultOpen(true)}
           onOpenDepartmentStation={handleStationInteract}
         />
-
-        {/* Floating Vitals Telemetry */}
-        <VitalsMonitorHUD vitals={activeVitals} patientName={currentPatientName} />
       </div>
 
       {/* Modals */}
