@@ -1,6 +1,16 @@
 # AI Virtual Hospital (AI-VH) : Session Handoff
 
-## 0. Current Session (2026-10-09) — Dr. Vance Consult Modal & Residual Container Purge (Commit `f11b24c`)
+## 0. Current Session (2026-10-09) — Shared Clinical Knowledge Pipeline Architecture Banner Removal (Commit `b010230`)
+- **Knowledge Sources De-cluttering**:
+  - Removed the entire "Shared Clinical Knowledge Pipeline Architecture" visual card/box and its nested layout containers from `frontend/src/components/management/KnowledgeSourcesSection.tsx`.
+  - Removed unused lucide icons (`BookOpen`, `Cpu`, `Layers`, `ArrowRight`, `ShieldCheck`).
+  - Updated unit test in `src/components/management/__tests__/KnowledgeSourcesSection.test.tsx` to assert registered knowledge sources and status indicators.
+- **Verification & Quality**:
+  - `scripts/lint-brand.js`: **0 style debt (100% brand token compliant)**.
+  - `npm test -- --run`: **38/38 unit tests green** across 10 test files.
+  - `npm run build`: Production bundle built cleanly in 1.16s.
+
+## 1. Previous Session (2026-10-09) — Dr. Vance Consult Modal & Residual Container Purge (Commit `f11b24c`)
 - **Node 2 & Modal Component Deletion**:
   - Permanently removed `frontend/src/components/specialists/InternalMedicineConsultModal.tsx` and all references across `App.tsx`, `StaffManagementSection.tsx`, and `PatientDirectorySection.tsx`.
   - Removed dead `isConsultOpen` modal state and `onOpenConsult` callbacks.
