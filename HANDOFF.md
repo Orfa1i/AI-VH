@@ -1,16 +1,17 @@
 # AI Virtual Hospital (AI-VH) : Session Handoff
 
-## 0. Current Session (2026-10-08) — Patient Journey Styling & Design System Alignment (Commit `141a2af`)
-- **Patient Journey / Trajectory Graph Styling & Header Standardization**:
+## 0. Current Session (2026-10-08) — Patient Journey Styling & Design System Alignment (Commit `ce2a2af`)
+- **Patient Journey / Trajectory Graph Header De-cluttering**:
+  - Removed redundant `Layers` icon, secondary headline (`"Clinical pathway and encounter trajectory"`), and descriptive subtext (`"Admission triage → Attending examination → Active cases disposition → Discharge hub"`) from `HospitalFlowDiagram.tsx`.
+  - The page now exclusively displays the primary standardized black headline (`Patient Journey & Clinical Flow`) provided by `AppPage`.
+  - Right-aligned simulation controls seamlessly above the live HUD ECG telemetry strip.
+  - Quality verification: **0 style debt** (`scripts/lint-brand.js`), **38/38 unit tests green**, and clean Vite production build in 1.03s.
+- **Patient Journey / Trajectory Graph Styling & Header Standardization (Commit `141a2af`)**:
   - Replaced the compact legacy `h-14` header bar in `frontend/src/components/diagram/PatientJourneyFlowPage.tsx` with the canonical `AppPage` pattern matching the rest of the application.
   - **Removed the "Back to portal" button**: Seamless workspace switching is now managed universally by the persistent portal tabs in `ak-appbar`.
   - **Removed the "Current station: RECEPTION" indicator badge** from the header.
   - **Added large black headline** (`<h1 className="heading-1">Patient Journey & Clinical Flow</h1>`, `var(--font-display)`, 34px, 500 weight, `var(--text-primary)`) with clinical breadcrumbs and descriptive subtitle.
   - Preserved the voice synthesis mute toggle action (`Volume2`/`VolumeX`), the full interactive 2D schematic diagram, HUD vitals telemetry, and consultation modals.
-  - **Quality Verification**:
-    - `scripts/lint-brand.js`: **0 brand style debt (100% brand token compliant)**.
-    - Vitest: **10 test files passed, 38/38 unit tests green**.
-    - Production build: `npm run build` compiled cleanly in 1.12s.
 
 - **Knowledge Sources Management Workspace**:
   - Implemented `KnowledgeSourcesSection.tsx` (`frontend/src/components/management/KnowledgeSourcesSection.tsx`):
