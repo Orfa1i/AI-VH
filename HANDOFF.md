@@ -1,11 +1,21 @@
 # AI Virtual Hospital (AI-VH) : Session Handoff
 
-## 0. Current Session (2026-10-09) — Cloudflare Quick Tunnel Activation (Commit `04b0ef6`)
-- **Cloudflare Quick Tunnel Launched**:
-  - Started daemon tunnel process via `cloudflared.exe tunnel --url http://localhost:5173`.
-  - Configured `allowedHosts: true` in `frontend/vite.config.ts` to allow requests originating from `trycloudflare.com` domains.
-  - Verified public reachability for both frontend static pages and reverse-proxied FastAPI backend routes (`/api/cases`, `/ws`).
-  - Active public tunnel URL: `https://troops-lectures-corp-domain.trycloudflare.com`.
+## 0. Current Session (2026-10-09) — Comprehensive Site Scan & Visual Design Audit
+- **Full-Screen Capture & Architectural Extraction**:
+  - Captured full-height, 1600px desktop screenshots across all 9 primary platform views into `brain/.../site-scan/`:
+    1. `01-intake-triage.png` — Case intake, ESI 1–5 scoring, vitals telemetry.
+    2. `02-patient-directory.png` — Inpatient census, bed board, occupancy.
+    3. `03-staff-roster.png` — Clinical staff roster, Dr. Vance profile, duty status.
+    4. `04-clinical-reports.png` — Review queue and pending clinical reports.
+    5. `05-reviewing.png` — Ground truth archive, 5-star doctor ratings, DPO feedback.
+    6. `06-knowledge-books.png` — Semantic vector store (`bge-small-en`, 47.8k chunks) & RAG search.
+    7. `07-knowledge-sources.png` — Shared clinical pipeline endpoints (PubMed, OpenFDA, RxNorm).
+    8. `08-policy-benchmark.png` — RL DPO policy vs. baseline foundation model evaluation.
+    9. `09-trajectory-graph.png` — 4-stage encounter trajectory, ECG rhythm strip, patient state.
+  - Authored comprehensive design language and architectural blueprint artifact: `site-scan-analysis.md`.
+  - Detailed color tokens (`--bg-page: #F7F8FB`, `--indigo-500: #2B2FD9`), typography (`Funnel Display`, `Host Grotesk`, `Geist Mono`), geometry, and core hospital simulation concepts.
+
+## 1. Previous Session (2026-10-09) — Cloudflare Quick Tunnel Activation (Commit `04b0ef6`)
 
 ## 1. Previous Session (2026-10-09) — Shared Clinical Knowledge Pipeline Architecture Banner Removal (Commit `b010230`)
 - **Knowledge Sources De-cluttering**:
