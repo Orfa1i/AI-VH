@@ -130,7 +130,7 @@ export const InternalMedicineConsultModal: React.FC<InternalMedicineConsultProps
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="text-base font-semibold text-[var(--ak-color-text-primary)]">
-                  Internal medicine specialist and Harrison's consult
+                  Internal medicine clinical consultation
                 </h2>
                 <Badge variant="success" size="sm">
                   Dr. Marcus Vance, MD, FACP
@@ -138,7 +138,7 @@ export const InternalMedicineConsultModal: React.FC<InternalMedicineConsultProps
               </div>
               <div className="flex items-center gap-1 text-xs text-[var(--ak-color-text-muted)] mt-0.5 font-medium">
                 <BookOpen className="w-3.5 h-3.5 text-[var(--ak-color-primary)]" />
-                <span>Harrison's Principles of Internal Medicine, 21st Edition</span>
+                <span>Evidence-based clinical guidelines & diagnostics</span>
               </div>
             </div>
           </div>

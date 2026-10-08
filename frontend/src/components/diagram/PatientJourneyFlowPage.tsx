@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { HospitalFlowDiagram } from './HospitalFlowDiagram';
-import { InternalMedicineConsultModal } from '../specialists/InternalMedicineConsultModal';
 import { DepartmentStationModal } from '../specialists/DepartmentStationModal';
 import { toggleGlobalMute, isGlobalMuted } from '../../utils/speechSynthesis';
 import type { HospitalEvent, BenchmarkCase, VitalSigns } from '../../types';
@@ -21,7 +20,6 @@ export const PatientJourneyFlowPage: React.FC<PatientJourneyFlowPageProps> = () 
   const [isAudioMuted, setIsAudioMuted] = useState<boolean>(isGlobalMuted());
 
   // Modals
-  const [isConsultOpen, setIsConsultOpen] = useState<boolean>(false);
   const [departmentStationId, setDepartmentStationId] = useState<string | null>(null);
 
   // Department State
@@ -57,7 +55,7 @@ export const PatientJourneyFlowPage: React.FC<PatientJourneyFlowPageProps> = () 
 
       case 'RAG_QUERY_INITIATED':
       case 'RAG_KNOWLEDGE_RETRIEVED':
-        setDoctorAction("Querying Harrison's Internal Medicine");
+        setDoctorAction('Querying clinical medical knowledge base');
         break;
 
       case 'LAB_ORDERED':
@@ -156,9 +154,6 @@ export const PatientJourneyFlowPage: React.FC<PatientJourneyFlowPageProps> = () 
 
   const handleStationInteract = (stationId: string) => {
     switch (stationId) {
-      case 'INTERNAL_MEDICINE':
-        setIsConsultOpen(true);
-        break;
       case 'LABORATORY':
       case 'RADIOLOGY':
       case 'NURSE_STATION':
@@ -238,17 +233,11 @@ export const PatientJourneyFlowPage: React.FC<PatientJourneyFlowPageProps> = () 
           doctorAction={doctorAction}
           events={events}
           activeVitals={activeVitals}
-          onOpenConsult={() => setIsConsultOpen(true)}
           onOpenDepartmentStation={handleStationInteract}
         />
       </div>
 
       {/* Modals */}
-      <InternalMedicineConsultModal
-        isOpen={isConsultOpen}
-        onClose={() => setIsConsultOpen(false)}
-      />
-
       <DepartmentStationModal
         stationId={departmentStationId}
         isOpen={departmentStationId !== null}

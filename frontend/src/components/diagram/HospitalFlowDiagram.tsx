@@ -21,13 +21,13 @@ interface HospitalFlowDiagramProps {
   cases: BenchmarkCase[];
   selectedCaseId: string;
   onSelectCase: (caseId: string) => void;
-  onRunSimulation: () => void;
+  onRunSimulation?: () => void;
   isRunning: boolean;
   activeDepartment: string;
   doctorAction: string;
   events: HospitalEvent[];
   activeVitals: VitalSigns | null;
-  onOpenConsult: () => void;
+  onOpenConsult?: () => void;
   onOpenDepartmentStation?: (stationId: string) => void;
   onToggleTo3D?: () => void;
 }
@@ -42,7 +42,7 @@ export const HospitalFlowDiagram: React.FC<HospitalFlowDiagramProps> = ({
   doctorAction,
   events,
   activeVitals,
-  onOpenConsult,
+  onOpenConsult: _onOpenConsult,
   onOpenDepartmentStation,
   onToggleTo3D: _onToggleTo3D,
 }) => {
@@ -376,22 +376,6 @@ export const HospitalFlowDiagram: React.FC<HospitalFlowDiagramProps> = ({
                   {doctorAction || 'Evaluating patient case and clinical guidelines'}
                 </div>
               </div>
-
-              {/* Diagnostic Consult Action Button */}
-              <button
-                onClick={onOpenConsult}
-                className={`w-full p-2 rounded-lg border text-left transition flex items-center gap-2 cursor-pointer group ${
-                  isDoctorActive || isLabActive
-                    ? 'bg-[var(--ak-color-primary-soft)] border-[var(--ak-color-primary)]'
-                    : 'bg-[var(--ak-color-bg-subtle)] hover:bg-[var(--ak-color-bg-app)] border-[var(--ak-color-border-subtle)]'
-                }`}
-              >
-                <FileText className="w-3.5 h-3.5 text-[var(--ak-color-primary)] group-hover:scale-105 transition-transform" />
-                <div className="min-w-0 flex-1">
-                  <div className="text-xs font-medium text-[var(--ak-color-text-primary)] truncate">Dr. Vance consult</div>
-                  <div className="text-[9px] text-[var(--ak-color-text-muted)] font-mono">Harrison's Principles 21st Edition</div>
-                </div>
-              </button>
 
               {/* Trajectory Exit Arrow */}
               <div className="pt-2 border-t border-[var(--ak-color-border-subtle)] flex items-center justify-between text-xs font-mono">

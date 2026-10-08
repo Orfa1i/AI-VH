@@ -305,7 +305,7 @@ export const DoctorChatModal: React.FC<DoctorChatModalProps> = ({
                 <span className="text-[var(--ak-color-border-subtle)]">•</span>
                 <span className="flex items-center gap-1 font-mono text-[11px] text-[var(--ak-color-text-secondary)]">
                   <BookOpen className="w-3 h-3 text-[var(--ak-color-primary)]" />
-                  <span>Harrison's 21st Ed RAG</span>
+                  <span>Clinical Evidence RAG</span>
                 </span>
                 <span className="text-[var(--ak-color-border-subtle)]">•</span>
                 <span className="flex items-center gap-1 font-mono text-[11px] text-[var(--ak-color-text-secondary)]">

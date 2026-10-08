@@ -86,9 +86,9 @@ export const ActiveTrajectoryStepper: React.FC<ActiveTrajectoryStepperProps> = (
       title: 'Attending Physician Examination',
       department: 'Internal Medicine Department',
       stationId: 'INTERNAL_MEDICINE',
-      description: 'Differential diagnosis synthesis, physical findings analysis, and Harrison’s Principles RAG retrieval.',
+      description: 'Differential diagnosis synthesis, physical findings analysis, and evidence-based clinical reasoning.',
       actionRequired: 'Attending physician evaluation and preliminary clinical orders.',
-      evidence: doctorAction || 'Harrison’s Principles 21st Ed. Semantic Retrieval',
+      evidence: doctorAction || 'Clinical Diagnostics & Evidence Synthesis',
       timestamp: normalizedProgress >= 35 ? 'T+00:15' : undefined,
       status: isExamComplete && !isExamActive ? 'completed' : isExamActive || (normalizedProgress >= 35 && normalizedProgress < 65) ? 'active' : 'upcoming',
     },
@@ -123,7 +123,7 @@ export const ActiveTrajectoryStepper: React.FC<ActiveTrajectoryStepperProps> = (
   const getStageHeaderSummary = () => {
     if (isDischargeComplete) return 'Discharge Gate Cleared • Clinical Report Finalized';
     if (isWorkupActive) return 'Diagnostic Workup In Progress • Biomarker & Imaging Analysis';
-    if (isExamActive) return 'Attending Examination • Dr. Vance Harrison’s RAG Analysis';
+    if (isExamActive) return 'Attending Examination • Internal Medicine Clinical Synthesis';
     if (isTriageActive) return 'Triage Gateway • Objective Telemetry & Vitals Acquisition';
     if (isRunning) return 'Encounter Active • Routing Patient Trajectory...';
     return currentCase ? 'Patient Admitted • Clinical Trajectory Ready' : 'System Standby • Awaiting Patient Intake';
