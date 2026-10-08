@@ -1,6 +1,34 @@
 # AI Virtual Hospital (AI-VH) : Session Handoff
 
-## 0. Current Session (2026-10-08) — 3D Hospital & Department Board Removal (Commit `1e9368f`)
+## 0. Current Session (2026-10-08) — Medical Knowledge Sources Workspace & RAG Pipeline Synchronization (Commit `45522b1`)
+- **Knowledge Sources Management Workspace**:
+  - Implemented `KnowledgeSourcesSection.tsx` (`frontend/src/components/management/KnowledgeSourcesSection.tsx`):
+    - URL entry, source name, and description input form.
+    - Category selector (`PUBMED`, `OPENFDA`, `RXNORM`, `CUSTOM`).
+    - Real-time status cards and source table displaying URL, description, and status badges (`Active`, `Inactive`, `Syncing`, `Error`).
+    - One-click Activate / Deactivate switch toggle.
+    - "Sync Now" action button with live connection verification.
+    - Architectural Pipeline Flow visual banner illustrating:
+      `Knowledge Source → Retrieve Evidence → MedGemma + Harrison's + Sources → Nemotron-3-Nano-30B-A3B → Diagnostic Report`.
+    - Integrated as dedicated tab `Knowledge Sources` in `PortalTab` within `App.tsx`.
+- **Database Schema & CRUD Endpoints**:
+  - Added `KnowledgeSourceRecord` in `backend/database/models.py`.
+  - Added `knowledge_sources` table and index to both SQLite and PostgreSQL schemas (`backend/database/schema.py`).
+  - Added repository CRUD methods (`list_knowledge_sources`, `get_knowledge_source`, `save_knowledge_source`, `update_knowledge_source_status`, `delete_knowledge_source`, and default seeding for PubMed, openFDA, and RxNorm) in `backend/database/repository.py`.
+  - Added REST API routes in `backend/api/router.py`:
+    - `GET /api/knowledge/sources`
+    - `POST /api/knowledge/sources`
+    - `PATCH /api/knowledge/sources/{id}/status`
+    - `POST /api/knowledge/sources/{id}/sync`
+    - `DELETE /api/knowledge/sources/{id}`
+- **RAG Pipeline Dynamic Synchronization**:
+  - Updated `SharedKnowledgeService` in `backend/rag/shared_sources.py` to query active sources dynamically from `DatabaseRepository`.
+  - Seamlessly bridges active configured sources (`RxNorm`, `openFDA`, `PubMed`, and custom guidelines) into the evidence retrieval step (`book_citations + shared_citations`) before being fed into **MedGemma** and **Nemotron** synthesis engine in `backend/agents/specialists/reasoning_engine.py`.
+- **Quality & Brand Verification**:
+  - `scripts/lint-brand.js`: **0 style debt (100% brand token compliant)**.
+  - Vitest: **10 test files passed, 38/38 unit tests green**.
+  - Production build: `npm run build` compiled cleanly.
+
 - **Top Navigation Bar & Workspace De-cluttering**:
   - Removed "Department Board" and "3D Hospital" navigation items and tab states from `PortalTab` in `App.tsx`.
   - Deleted the `/3d` hash route listener in `handleUrlRoute`.
