@@ -1,6 +1,13 @@
 # AI Virtual Hospital (AI-VH) : Session Handoff
 
-## 0. Current Session (2026-10-09) — Shared Clinical Knowledge Pipeline Architecture Banner Removal (Commit `b010230`)
+## 0. Current Session (2026-10-09) — Cloudflare Quick Tunnel Activation (Commit `04b0ef6`)
+- **Cloudflare Quick Tunnel Launched**:
+  - Started daemon tunnel process via `cloudflared.exe tunnel --url http://localhost:5173`.
+  - Configured `allowedHosts: true` in `frontend/vite.config.ts` to allow requests originating from `trycloudflare.com` domains.
+  - Verified public reachability for both frontend static pages and reverse-proxied FastAPI backend routes (`/api/cases`, `/ws`).
+  - Active public tunnel URL: `https://troops-lectures-corp-domain.trycloudflare.com`.
+
+## 1. Previous Session (2026-10-09) — Shared Clinical Knowledge Pipeline Architecture Banner Removal (Commit `b010230`)
 - **Knowledge Sources De-cluttering**:
   - Removed the entire "Shared Clinical Knowledge Pipeline Architecture" visual card/box and its nested layout containers from `frontend/src/components/management/KnowledgeSourcesSection.tsx`.
   - Removed unused lucide icons (`BookOpen`, `Cpu`, `Layers`, `ArrowRight`, `ShieldCheck`).
