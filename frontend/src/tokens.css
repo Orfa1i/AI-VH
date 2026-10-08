@@ -36,6 +36,11 @@
   --danger-600: #C42B3E;
   --danger-700: #A11F31;
   --danger-50: #FCE9EB;
+  --emergency: var(--danger-600);
+  --emergency-hover: var(--danger-700);
+  --emergency-subtle: var(--danger-50);
+  --color-emergency: var(--danger-600);
+  --color-emergency-tint: var(--danger-50);
   --info-600: #1765C2;
   --info-50: #E7F0FC;
   --bg-page: var(--neutral-25);

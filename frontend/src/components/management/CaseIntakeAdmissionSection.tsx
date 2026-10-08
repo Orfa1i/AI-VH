@@ -28,7 +28,7 @@ import {
 import { AppPage } from '../layout/Templates';
 
 interface CaseIntakeAdmissionSectionProps {
-  cases: BenchmarkCase[];
+  cases?: BenchmarkCase[];
   onPatientAdmitted: (patient: PatientRecord) => void;
   onAdmitAndSimulate?: (caseId: string, patientName?: string) => void;
 }
@@ -337,16 +337,31 @@ export const CaseIntakeAdmissionSection: React.FC<CaseIntakeAdmissionSectionProp
                     return (
                       <div
                         key={lvl.id}
+                        role="button"
+                        tabIndex={0}
+                        aria-pressed={isSelected}
                         onClick={() => setTriageAcuity(lvl.id)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            setTriageAcuity(lvl.id);
+                          }
+                        }}
                         style={{
                           padding: 'var(--space-3)',
                           borderRadius: 'var(--radius-md)',
                           border: isSelected
-                            ? '2px solid var(--color-primary)'
-                            : '1px solid var(--border-subtle)',
-                          backgroundColor: isSelected ? 'var(--color-primary-tint)' : 'var(--bg-surface)',
+                            ? '2px solid var(--emergency, var(--color-emergency, var(--danger-600)))'
+                            : '1px solid var(--border-default)',
+                          backgroundColor: isSelected
+                            ? 'var(--emergency-subtle, var(--color-emergency-tint, var(--danger-50)))'
+                            : 'var(--bg-surface)',
+                          boxShadow: isSelected
+                            ? '0 0 0 1px var(--emergency, var(--color-emergency, var(--danger-600)))'
+                            : 'none',
                           cursor: 'pointer',
                           transition: 'all 0.15s ease',
+                          outline: 'none',
                         }}
                       >
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -357,7 +372,7 @@ export const CaseIntakeAdmissionSection: React.FC<CaseIntakeAdmissionSectionProp
                                 width: 8,
                                 height: 8,
                                 borderRadius: '50%',
-                                backgroundColor: 'var(--color-primary)',
+                                backgroundColor: 'var(--emergency, var(--color-emergency, var(--danger-600)))',
                               }}
                             />
                           )}
