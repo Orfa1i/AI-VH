@@ -1,7 +1,13 @@
 # AI Virtual Hospital (AI-VH) : Session Handoff
 
-## 0. Current Session (2026-10-08) — Patient Journey Styling & Design System Alignment (Commit `ce2a2af`)
-- **Patient Journey / Trajectory Graph Header De-cluttering**:
+## 0. Current Session (2026-10-08) — Patient Journey Alignment & Compact Layout (Commit `4bf80e3`)
+- **Patient Journey Header Alignment & Whitespace Reduction**:
+  - Moved the **Awaiting admission / Simulate selected case** action button directly into the `actions` prop of `AppPage` in `PatientJourneyFlowPage.tsx`, horizontally aligning it with the main page heading on the top row alongside the audio mute toggle.
+  - Eliminated the redundant secondary top action bar (`pb-4 border-b mb-5`) and inner container padding (`p-4 md:p-6`) from `HospitalFlowDiagram.tsx`, bringing the left edge of all page elements (ECG rhythm strip, station nodes, trajectory stepper) into direct alignment with the main page heading.
+  - Tightened vertical spacing across the workspace: removed breadcrumbs to position the title directly at the top, reduced HUD card margin from `mb-6` to `mb-4`, and tightened station node grid gap from `gap-6` to `gap-4`.
+  - Removed redundant floating `VitalsMonitorHUD` overlay to prevent visual overlap.
+  - Quality verification: **0 brand style debt** (`scripts/lint-brand.js`), **38/38 unit tests green**, and clean Vite production build in 1.24s.
+- **Patient Journey / Trajectory Graph Header De-cluttering (Commit `ce2a2af`)**:
   - Removed redundant `Layers` icon, secondary headline (`"Clinical pathway and encounter trajectory"`), and descriptive subtext (`"Admission triage → Attending examination → Active cases disposition → Discharge hub"`) from `HospitalFlowDiagram.tsx`.
   - The page now exclusively displays the primary standardized black headline (`Patient Journey & Clinical Flow`) provided by `AppPage`.
   - Right-aligned simulation controls seamlessly above the live HUD ECG telemetry strip.
