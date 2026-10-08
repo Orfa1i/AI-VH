@@ -6,26 +6,20 @@ import { DepartmentStationModal } from '../specialists/DepartmentStationModal';
 import { toggleGlobalMute, isGlobalMuted } from '../../utils/speechSynthesis';
 import type { HospitalEvent, BenchmarkCase, VitalSigns } from '../../types';
 import { Button } from '../ui/Button';
-import { Badge } from '../ui/Badge';
-import {
-  Activity,
-  ArrowLeft,
-  Volume2,
-  VolumeX,
-} from 'lucide-react';
+import { Volume2, VolumeX } from 'lucide-react';
+import { AppPage } from '../layout/Templates';
 
 interface PatientJourneyFlowPageProps {
   onBackToPortal?: () => void;
 }
 
-export const PatientJourneyFlowPage: React.FC<PatientJourneyFlowPageProps> = ({ onBackToPortal }) => {
+export const PatientJourneyFlowPage: React.FC<PatientJourneyFlowPageProps> = () => {
   const [cases, setCases] = useState<BenchmarkCase[]>([]);
   const [selectedCaseId, setSelectedCaseId] = useState<string>('CASE-101');
   const [isRunning, setIsRunning] = useState<boolean>(false);
   const [events, setEvents] = useState<HospitalEvent[]>([]);
   const [activeVitals, setActiveVitals] = useState<VitalSigns | null>(null);
   const [currentPatientName, setCurrentPatientName] = useState<string>('');
-  const [isWsConnected, setIsWsConnected] = useState<boolean>(false);
   const [isAudioMuted, setIsAudioMuted] = useState<boolean>(isGlobalMuted());
 
   // Modals
@@ -122,7 +116,7 @@ export const PatientJourneyFlowPage: React.FC<PatientJourneyFlowPageProps> = ({ 
         wsRef.current = socket;
 
         socket.onopen = () => {
-          if (isMountedRef.current) setIsWsConnected(true);
+          // Connected to simulation event stream
         };
 
         socket.onmessage = (event) => {
@@ -136,7 +130,6 @@ export const PatientJourneyFlowPage: React.FC<PatientJourneyFlowPageProps> = ({ 
 
         socket.onclose = () => {
           if (isMountedRef.current) {
-            setIsWsConnected(false);
             if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
             reconnectTimerRef.current = setTimeout(connectWs, 3000);
           }
@@ -193,51 +186,15 @@ export const PatientJourneyFlowPage: React.FC<PatientJourneyFlowPageProps> = ({ 
   };
 
   return (
-    <div className="w-full h-full flex flex-col bg-[var(--ak-color-bg-app)] overflow-hidden select-none font-sans relative isolate text-[var(--ak-color-text-primary)]">
-      {/* Top Clinical Header */}
-      <header className="h-14 bg-[var(--ak-color-bg-surface)] border-b border-[var(--ak-color-border-subtle)] px-4 flex items-center justify-between z-30 shrink-0">
-        {/* Left: Branding & Back Button */}
-        <div className="flex items-center gap-3">
-          {onBackToPortal && (
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={onBackToPortal}
-              leadingIcon={<ArrowLeft className="w-3.5 h-3.5" />}
-              title="Return to Clinical Management Portal"
-            >
-              Back to portal
-            </Button>
-          )}
-
-          {onBackToPortal && <div className="h-4 w-px bg-[var(--ak-color-border-subtle)] mx-1" />}
-
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-[var(--ak-color-primary-soft)] border border-[var(--ak-color-border-subtle)] flex items-center justify-center text-[var(--ak-color-primary)]">
-              <Activity className="w-4 h-4 animate-pulse" />
-            </div>
-            <div>
-              <span className="text-sm font-semibold text-[var(--ak-color-text-primary)]">
-                Clinical flow architecture and patient journey
-              </span>
-              <span className="hidden sm:inline-block ml-2">
-                <Badge variant="success" size="sm">
-                  2D clinical pathway
-                </Badge>
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Center: Real-Time Department Tracker */}
-        <div className="hidden md:flex items-center gap-2 bg-[var(--ak-color-bg-subtle)] px-3.5 py-1 rounded-full border border-[var(--ak-color-border-subtle)] text-xs">
-          <span className={`w-2 h-2 rounded-full ${isWsConnected ? 'bg-[var(--ak-color-success)] animate-pulse' : 'bg-[var(--ak-color-warning)]'}`} />
-          <span className="text-[var(--ak-color-text-muted)]">Current station:</span>
-          <span className="text-[var(--ak-color-text-primary)] font-medium font-mono">{activeDepartment.replace(/_/g, ' ')}</span>
-        </div>
-
-        {/* Right: Audio Toggle */}
-        <div className="flex items-center gap-2">
+    <AppPage
+      title="Patient Journey & Clinical Flow"
+      description="Real-time encounter trajectory, department transitions, and interactive clinical simulation stations."
+      breadcrumbs={[
+        { label: 'Clinical Ops', href: '#' },
+        { label: 'Patient Journey & Flow', isCurrent: true },
+      ]}
+      actions={
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
           <Button
             variant="ghost"
             size="sm"
@@ -245,13 +202,17 @@ export const PatientJourneyFlowPage: React.FC<PatientJourneyFlowPageProps> = ({ 
             title={isAudioMuted ? 'Unmute voice synthesis' : 'Mute voice synthesis'}
             aria-label={isAudioMuted ? 'Unmute voice synthesis' : 'Mute voice synthesis'}
           >
-            {isAudioMuted ? <VolumeX className="w-4 h-4 text-[var(--ak-color-text-muted)]" /> : <Volume2 className="w-4 h-4 text-[var(--ak-color-primary)]" />}
+            {isAudioMuted ? (
+              <VolumeX className="w-4 h-4" style={{ color: 'var(--text-muted)' }} />
+            ) : (
+              <Volume2 className="w-4 h-4" style={{ color: 'var(--color-primary)' }} />
+            )}
           </Button>
         </div>
-      </header>
-
-      {/* Main Viewport: 2D Clinical Flow Diagram & Encounter Trajectory */}
-      <main className="flex-1 relative overflow-hidden flex flex-col">
+      }
+    >
+      {/* 2D Clinical Flow Diagram & Encounter Trajectory */}
+      <div className="relative w-full flex flex-col">
         <HospitalFlowDiagram
           cases={cases}
           selectedCaseId={selectedCaseId}
@@ -268,7 +229,7 @@ export const PatientJourneyFlowPage: React.FC<PatientJourneyFlowPageProps> = ({ 
 
         {/* Floating Vitals Telemetry */}
         <VitalsMonitorHUD vitals={activeVitals} patientName={currentPatientName} />
-      </main>
+      </div>
 
       {/* Modals */}
       <InternalMedicineConsultModal
@@ -285,7 +246,7 @@ export const PatientJourneyFlowPage: React.FC<PatientJourneyFlowPageProps> = ({ 
         onRunEncounter={handleRunSimulation}
         isRunning={isRunning}
       />
-    </div>
+    </AppPage>
   );
 };
 
