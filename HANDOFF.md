@@ -1,6 +1,17 @@
 # AI Virtual Hospital (AI-VH) : Session Handoff
 
-## 0. Current Session (2026-10-08) — Dr. Vance Consult & Harrison's 21st Edition Removal (Commit `d38226f`)
+## 0. Current Session (2026-10-08) — Top Navigation Alignment & Trajectory Graph Integration (Commit `2bca037`)
+- **Navigation Bar De-cluttering & Standardization**:
+  - Removed "Doctor Review" (`REVIEW`) tab from the primary workspace navigation in `frontend/src/App.tsx`.
+  - Replaced the "Design System" option with "Trajectory graph" (`JOURNEY`).
+  - Integrated "Trajectory graph" directly inside `<nav className="ak-nav">` with identical visual styles: pill styling (`ak-nav__item`), SVG icon (`Activity`, 16x16), active state (`aria-current="page"`), and spacing.
+  - Eliminated the isolated, separate right-aligned container and button (`ak-btn ak-btn--sm`) from the headbar, ensuring all navigation options are cleanly grouped and horizontally aligned together.
+- **Verification & Quality**:
+  - `scripts/lint-brand.js`: **0 style debt (100% brand token compliant)**.
+  - `npm test -- --run`: **38/38 unit tests green** across 10 test files.
+  - `npm run build`: Production bundle built cleanly in 1.13s (reduced client bundle size).
+
+## 1. Previous Session (2026-10-08) — Dr. Vance Consult & Harrison's 21st Edition Removal (Commit `d38226f`)
 - **Node 2 (Attending Examination) De-cluttering**:
   - Removed the "Dr. Vance consult" button and the secondary "Harrison's Principles 21st Edition" badge from `frontend/src/components/diagram/HospitalFlowDiagram.tsx`.
   - Retained Dr. Marcus Vance's doctor profile information in full: photo avatar, credentials (`MD, FACP`), roles (`Chief Attending Physician`, `Internal Medicine & Clinical Diagnostics`), status indicator (`Active / On Service`), and real-time clinical activity badge.
