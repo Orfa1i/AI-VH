@@ -215,18 +215,23 @@ export const App: React.FC = () => {
       <header className="ak-appbar shrink-0">
         {/* Left: Official Logo Lockup */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-6)' }}>
-          <a href="#" className="ak-appbar__logo" onClick={(e) => { e.preventDefault(); setActiveTab('INTAKE'); }}>
+          <a
+            href="#"
+            className="ak-appbar__logo"
+            onClick={(e) => { e.preventDefault(); setActiveTab('INTAKE'); }}
+            aria-label="Virtual Hospital by Asklevia - Home"
+          >
             <img
-              src="/logos/asklevia-logo-horizontal.svg"
-              alt="Asklevia"
-              style={{ height: 28, width: 'auto' }}
+              src="/logos/vh-logo-horizontal.svg"
+              alt="Virtual Hospital by Asklevia"
+              style={{ height: 30, width: 'auto' }}
             />
           </a>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-            <span className="caption" style={{ color: 'var(--text-secondary)' }}>Virtual Hospital</span>
-            <span style={{ color: 'var(--neutral-300)' }}>•</span>
             <span className="caption ak-num" style={{ color: 'var(--text-tertiary)' }}>MedGemma 4B</span>
+            <span style={{ color: 'var(--neutral-300)' }}>•</span>
+            <span className="caption" style={{ color: 'var(--text-secondary)' }}>Clinical OS</span>
           </div>
         </div>
 

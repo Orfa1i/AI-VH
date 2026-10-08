@@ -254,9 +254,9 @@ export const AuthPage: React.FC<AuthPageProps> = ({
     >
       <div style={{ marginBottom: 'var(--space-6)' }}>
         <img
-          src="/logos/asklevia-logo-horizontal.svg"
-          alt="Asklevia"
-          style={{ height: 32, width: 'auto' }}
+          src="/logos/vh-logo-horizontal.svg"
+          alt="Virtual Hospital by Asklevia"
+          style={{ height: 36, width: 'auto' }}
         />
       </div>
       <div
