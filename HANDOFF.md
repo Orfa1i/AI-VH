@@ -1,6 +1,12 @@
 # AI Virtual Hospital (AI-VH) : Session Handoff
 
-## 0. Current Session (2026-10-08) — Nebius Nemotron-3-Nano-30B-A3B Clinical Synthesis Engine & Full Platform Execution
+## 0. Current Session (2026-10-08) — ESI Triage Selection Fix, Nebius Nemotron Engine & Platform Execution
+- **Case Intake & Triage Admission ESI Selection Resolution**:
+  - Fixed selection visibility issue in `CaseIntakeAdmissionSection.tsx`: Replaced undefined CSS variables (`--color-primary`, `--border-subtle`) with dedicated emergency theme tokens (`var(--emergency, var(--color-emergency, var(--danger-600)))` and `var(--emergency-subtle, var(--color-emergency-tint, var(--danger-50)))`).
+  - Added semantic emergency color tokens (`--emergency`, `--emergency-hover`, `--emergency-subtle`, `--color-emergency`, `--color-emergency-tint`) to `frontend/src/tokens.css`.
+  - Added accessible interactive attributes (`role="button"`, `tabIndex={0}`, `aria-pressed={isSelected}`, and keyboard Enter/Space support) and high-contrast outer ring highlight.
+  - Added dedicated unit test in `frontend/src/components/management/__tests__/CaseIntakeAdmissionSection.test.tsx` (all 46/46 frontend tests green).
+  - Maintained **0 brand style debt (100% brand compliant)** and verified production bundling (`npm run build` in 1.26s).
 - **Nebius Nemotron Integration as Clinical Reasoning & Diagnostic Synthesis Engine**:
   - Implemented `NemotronSynthesisEngine` (`backend/llm/nemotron_synthesis.py`) connecting to Nebius AI Studio via OpenAI-compatible API (`https://api.studio.nebius.ai/v1/`).
   - Implemented the 3-input synthesis layer: `Patient Data + MedGemma Output + RAG Evidence -> Nemotron -> Final Diagnostic Report`.
