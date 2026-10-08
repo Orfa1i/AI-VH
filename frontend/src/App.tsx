@@ -15,13 +15,11 @@ import { LeftNotificationDrawer } from './components/notifications/LeftNotificat
 import { ActiveEncounterProgressBar } from './components/simulation/ActiveEncounterProgressBar';
 import { PatientJourneyFlowPage } from './components/diagram/PatientJourneyFlowPage';
 import { DesignSystemShowcase } from './pages/DesignSystemShowcase';
-import { toggleGlobalMute, isGlobalMuted } from './utils/speechSynthesis';
 import {
   Activity,
   BedDouble,
   Box,
   Building2,
-  Clock,
   FileText,
   FileCheck2,
   Radio,
@@ -30,8 +28,6 @@ import {
   Sparkles,
   Stethoscope,
   Users,
-  Volume2,
-  VolumeX,
 } from 'lucide-react';
 import type {
   BenchmarkCase,
@@ -52,9 +48,6 @@ export const App: React.FC = () => {
   const [reviewedCount, setReviewedCount] = useState<number>(0);
   const [isSubmittingReview, setIsSubmittingReview] = useState<boolean>(false);
   const [patientRefreshCounter, setPatientRefreshCounter] = useState<number>(0);
-  const [isAudioMuted, setIsAudioMuted] = useState<boolean>(isGlobalMuted());
-  const [currentTime, setCurrentTime] = useState<string>('');
-
 
   // Quick Action Modals
   const [isConsultOpen, setIsConsultOpen] = useState<boolean>(false);
@@ -67,24 +60,6 @@ export const App: React.FC = () => {
   const [isWsConnected, setIsWsConnected] = useState<boolean>(false);
   const [isSimulating, setIsSimulating] = useState<boolean>(false);
   const [simulatingPatientName, setSimulatingPatientName] = useState<string>('Active Encounter');
-
-  // Live Clock Ticker
-  useEffect(() => {
-    const updateTime = () => {
-      const now = new Date();
-      setCurrentTime(
-        now.toLocaleTimeString('en-US', {
-          hour12: false,
-          hour: '2-digit',
-          minute: '2-digit',
-          second: '2-digit',
-        })
-      );
-    };
-    updateTime();
-    const timer = setInterval(updateTime, 1000);
-    return () => clearInterval(timer);
-  }, []);
 
   // Hash Navigation listener
   useEffect(() => {
@@ -212,61 +187,27 @@ export const App: React.FC = () => {
         Skip to clinical content
       </a>
       {/* Asklevia Clinical App Bar */}
+      {/* Header */}
       <header className="ak-appbar shrink-0">
-        {/* Left: Official Logo Lockup */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-6)' }}>
+        {/* Official Logo Lockup */}
+        <div style={{ display: 'flex', alignItems: 'center' }}>
           <a
             href="#"
             className="ak-appbar__logo"
             onClick={(e) => { e.preventDefault(); setActiveTab('INTAKE'); }}
-            aria-label="Virtual Hospital by Asklevia - Home"
+            aria-label="Virtual Hospital - Home"
+            style={{ display: 'inline-flex', alignItems: 'center' }}
           >
             <img
-              src="/logos/vh-logo-horizontal.svg"
-              alt="Virtual Hospital by Asklevia"
-              style={{ height: 30, width: 'auto' }}
+              src="/logos/vh-logo-compact.svg"
+              alt="Virtual Hospital"
+              style={{
+                height: 28,
+                width: 'auto',
+                transform: 'translateY(2px)',
+              }}
             />
           </a>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-            <span className="caption ak-num" style={{ color: 'var(--text-tertiary)' }}>MedGemma 4B</span>
-            <span style={{ color: 'var(--neutral-300)' }}>•</span>
-            <span className="caption" style={{ color: 'var(--text-secondary)' }}>Clinical OS</span>
-          </div>
-        </div>
-
-        {/* Right: Live UTC Clock & Audio Voice Synthesizer Toggle */}
-        <div className="ak-appbar__end" style={{ marginLeft: 'auto' }}>
-          {/* Live UTC Clock */}
-          <div
-            className="caption ak-num"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 6,
-              padding: '4px 10px',
-              background: 'var(--bg-subtle)',
-              borderRadius: 'var(--radius-pill)',
-              border: '1px solid var(--border-default)',
-              color: 'var(--text-secondary)',
-            }}
-          >
-            <Clock aria-hidden="true" style={{ width: 14, height: 14 }} />
-            <span style={{ fontWeight: 600 }}>{currentTime || '12:00:00'}</span>
-            <span style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>UTC</span>
-          </div>
-
-          {/* Audio Voice Synthesizer Toggle */}
-          <button
-            type="button"
-            onClick={() => setIsAudioMuted(toggleGlobalMute())}
-            title={isAudioMuted ? 'Unmute clinical voice' : 'Mute clinical voice'}
-            aria-label={isAudioMuted ? 'Unmute clinical voice' : 'Mute clinical voice'}
-            className="ak-btn ak-btn--ghost ak-btn--sm ak-btn--icon"
-            style={{ color: isAudioMuted ? 'var(--text-tertiary)' : 'var(--action-primary)' }}
-          >
-            {isAudioMuted ? <VolumeX aria-hidden="true" style={{ width: 18, height: 18 }} /> : <Volume2 aria-hidden="true" style={{ width: 18, height: 18 }} />}
-          </button>
         </div>
       </header>
 
