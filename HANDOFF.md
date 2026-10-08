@@ -1,6 +1,17 @@
 # AI Virtual Hospital (AI-VH) : Session Handoff
 
-## 0. Current Session (2026-10-08) — Top Navigation Alignment & Trajectory Graph Integration (Commit `2bca037`)
+## 0. Current Session (2026-10-09) — Dr. Vance Consult Modal & Residual Container Purge (Commit `f11b24c`)
+- **Node 2 & Modal Component Deletion**:
+  - Permanently removed `frontend/src/components/specialists/InternalMedicineConsultModal.tsx` and all references across `App.tsx`, `StaffManagementSection.tsx`, and `PatientDirectorySection.tsx`.
+  - Removed dead `isConsultOpen` modal state and `onOpenConsult` callbacks.
+  - Node 2 (Attending Examination) in `HospitalFlowDiagram.tsx` cleanly renders only Dr. Marcus Vance's profile card, live activity badge, and trajectory path output without dead action containers or unused callbacks.
+  - Removed "Consult" trigger buttons from patient cards and staff management cards.
+- **Verification & Quality**:
+  - `scripts/lint-brand.js`: **0 style debt (100% brand token compliant)**.
+  - `npm test -- --run`: **38/38 unit tests green** across 10 test files.
+  - `npm run build`: Production bundle built cleanly in 1.40s.
+
+## 1. Previous Session (2026-10-08) — Top Navigation Alignment & Trajectory Graph Integration (Commit `2bca037`)
 - **Navigation Bar De-cluttering & Standardization**:
   - Removed "Doctor Review" (`REVIEW`) tab from the primary workspace navigation in `frontend/src/App.tsx`.
   - Replaced the "Design System" option with "Trajectory graph" (`JOURNEY`).
