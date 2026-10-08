@@ -1,7 +1,13 @@
 # AI Virtual Hospital (AI-VH) : Session Handoff
 
-## 0. Current Session (2026-10-08) — Header Refinement & Brand Kit Integration (Commit `61841be`)
-- **Header Refinement & Brand Lockup Simplification**:
+## 0. Current Session (2026-10-08) — 3D Hospital & Department Board Removal (Commit `1e9368f`)
+- **Top Navigation Bar & Workspace De-cluttering**:
+  - Removed "Department Board" and "3D Hospital" navigation items and tab states from `PortalTab` in `App.tsx`.
+  - Deleted the `/3d` hash route listener in `handleUrlRoute`.
+  - Completely purged the `frontend/src/components/hospital/` directory (`DepartmentBoard.tsx`, `DepartmentBoardSection.tsx`, `PatientCard.tsx`, `departments.ts`, `api.ts`, and unit tests).
+  - Completely purged the `frontend/src/components/hospital3d/` directory (`DepartmentBoard3DSection.tsx`, `Scene3D.tsx`, `sceneState.ts`, and unit tests).
+  - Results: Reduced production client bundle size by almost **1 MB** (from 1,489 kB down to 562 kB JS), eliminated Three.js load overhead, 0 brand style debt (`npm run lint:brand`), all unit tests green (35/35 passing in 9 files), and clean production build in 1.41s.
+- **Header Refinement & Brand Lockup Simplification (Commit `61841be`)**:
   - Replaced the horizontal lockup in the main header (`ak-appbar`) with the official compact mark (`/logos/vh-logo-compact.svg`), removing "by Asklevia" from underneath the logo.
   - Optically centered the "Virtual Hospital" logo text in the 64px header using a slight downward offset (`transform: translateY(2px)`).
   - Removed adjacent `MedGemma 4B` and `Clinical OS` status labels next to the logo for a minimalist, uncluttered presentation.
