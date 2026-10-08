@@ -1,7 +1,13 @@
 # AI Virtual Hospital (AI-VH) : Session Handoff
 
-## 0. Current Session (2026-10-08) — Virtual Hospital by Asklevia Brand Kit Migration
-- **Official Brand Kit Deployment & Integration (`virtual-hospital-brand-kit`)**:
+## 0. Current Session (2026-10-08) — Header Refinement & Brand Kit Integration (Commit `61841be`)
+- **Header Refinement & Brand Lockup Simplification**:
+  - Replaced the horizontal lockup in the main header (`ak-appbar`) with the official compact mark (`/logos/vh-logo-compact.svg`), removing "by Asklevia" from underneath the logo.
+  - Optically centered the "Virtual Hospital" logo text in the 64px header using a slight downward offset (`transform: translateY(2px)`).
+  - Removed adjacent `MedGemma 4B` and `Clinical OS` status labels next to the logo for a minimalist, uncluttered presentation.
+  - Removed the UTC clock widget and audio speaker icon from the right side of the app bar, removing the 1-second interval timer and eliminating unnecessary periodic re-renders.
+  - Verified 0 brand style debt (`npm run lint:brand`), all unit tests green (46/46), and clean production build (`npm run build`).
+- **Official Brand Kit Deployment & Integration (`virtual-hospital-brand-kit`, Commit `b99ad61`)**:
   - Integrated official **Virtual Hospital by Asklevia** identity system (medical cross helix symbol and outlined Funnel Display wordmark).
   - Deployed master vector SVGs to `frontend/public/logos/`: `vh-logo-horizontal.svg`, `vh-logo-compact.svg`, `vh-logo-stacked.svg`, `vh-symbol.svg`, `vh-symbol-small.svg`, `vh-wordmark.svg`, `vh-app-icon-rounded.svg`, `vh-favicon.svg`, and one-colour ink/indigo variants.
   - Deployed multi-resolution raster assets to `frontend/public/` and `frontend/public/logos/`: `favicon.ico` (multi-res 16/32/48), `vh-favicon.svg`, `favicon-32.png`, `apple-touch-icon-180.png`, `vh-og-1200x630.png`, and high-DPI social/app icons.
