@@ -29,6 +29,7 @@ from backend.clinical.models import (
 from backend.clinical.tools import ClinicalToolkit
 from backend.llm.medgemma_service import MedGemmaService
 from backend.llm.model_config import get_model_id
+from backend.llm.nemotron_synthesis import nemotron_synthesis_engine
 from backend.rag.shared_sources import shared_knowledge_service, SharedKnowledgeService
 from backend.simulation.events import HospitalEvent, EventType
 from backend.simulation.event_bus import event_bus
@@ -505,9 +506,22 @@ class SpecialtyClinicalReasoningEngine:
                 f"{self.specialist_name}: MedGemma returned no primary diagnosis for encounter {encounter_id}."
             )
 
-        primary_diagnosis = str(decision["primary_diagnosis"])
-        confidence = float(max(0.0, min(1.0, decision.get("confidence", 0.0))))
-        re_evaluated_differential = [
+        # Step 10: Clinical Reasoning & Diagnostic Synthesis Engine (Nemotron)
+        # Critically synthesizes Patient Data + MedGemma Output + RAG Evidence
+        logger.info(f"{self.specialist_name}: Invoking Nemotron Synthesis Engine for diagnostic reasoning...")
+        synthesis_result = await asyncio.to_thread(
+            nemotron_synthesis_engine.synthesize_diagnostic_report,
+            patient_info=patient_info,
+            vitals_summary=vitals.summary(),
+            exam_findings=exam,
+            lab_results=lab_results_payload,
+            medgemma_decision=decision,
+            citations=all_citations,
+        )
+
+        primary_diagnosis = synthesis_result.primary_diagnosis or str(decision["primary_diagnosis"])
+        confidence = float(max(0.0, min(1.0, synthesis_result.confidence)))
+        re_evaluated_differential = synthesis_result.differential or [
             DifferentialItem(
                 condition=d["condition"],
                 likelihood=float(max(0.0, min(1.0, d.get("likelihood", 0.0)))),
@@ -522,15 +536,15 @@ class SpecialtyClinicalReasoningEngine:
             event_type=EventType.DIFFERENTIAL_UPDATED,
             encounter_id=encounter_id,
             patient_id=patient_id,
-            summary=f"{self.specialist_name} re-evaluated the differential against objective findings and retrieved evidence.",
-            payload={"phase": "RE_EVALUATED", "top_diagnosis": primary_diagnosis, "confidence": confidence},
+            summary=f"{self.specialist_name} re-evaluated the differential via {synthesis_result.engine_name} against objective findings and retrieved evidence.",
+            payload={"phase": "RE_EVALUATED", "top_diagnosis": primary_diagnosis, "confidence": confidence, "engine": synthesis_result.engine_name},
         )
         await self._emit(
             event_type=EventType.DIAGNOSIS_MADE,
             encounter_id=encounter_id,
             patient_id=patient_id,
             summary=f"{self.specialist_name} established primary clinical diagnosis: {primary_diagnosis} ({confidence * 100:.1f}%)",
-            payload={"primary_diagnosis": primary_diagnosis, "confidence": confidence},
+            payload={"primary_diagnosis": primary_diagnosis, "confidence": confidence, "engine": synthesis_result.engine_name},
         )
 
         treatment_plan = list(decision.get("treatment_plan") or [])
@@ -540,6 +554,10 @@ class SpecialtyClinicalReasoningEngine:
         if pending:
             next_steps.append(f"Reassess to confirm or exclude: {', '.join(pending)}")
         next_steps.append("Serial vital signs and repeat key investigations to track response to therapy")
+        if synthesis_result.missing_information:
+            next_steps.extend([f"Missing info: {item}" for item in synthesis_result.missing_information[:2]])
+        if synthesis_result.red_flags:
+            next_steps.extend([f"Red Flag: {item}" for item in synthesis_result.red_flags[:2]])
 
         await self._emit(
             event_type=EventType.TREATMENT_ORDERED,
@@ -550,22 +568,24 @@ class SpecialtyClinicalReasoningEngine:
         )
 
         # Step 11: Produce one coherent final clinical report (synthesis + attribution, no copied text)
-        model_reasoning, removed = self.strip_verbatim_passages(
-            str(decision.get("clinical_reasoning", "")), all_citations
-        )
-        if removed:
-            logger.warning(
-                "Removed %d sentence(s) copied verbatim from sources in encounter %s", removed, encounter_id
+        clinical_reasoning = synthesis_result.clinical_reasoning
+        if not clinical_reasoning or len(clinical_reasoning.strip()) < 20:
+            model_reasoning, removed = self.strip_verbatim_passages(
+                str(decision.get("clinical_reasoning", "")), all_citations
             )
-        references = self.build_source_attribution(all_citations)
-        reasoning_parts = [model_reasoning] if model_reasoning else []
-        if relevant_findings:
-            reasoning_parts.append("Key patient findings: " + "; ".join(relevant_findings[:6]) + ".")
-        if references:
-            reasoning_parts.append(
-                "Evidence consulted: " + "; ".join(f"[{i + 1}] {r}" for i, r in enumerate(references)) + "."
-            )
-        clinical_reasoning = " ".join(reasoning_parts) or f"Diagnosis of {primary_diagnosis} generated by {get_model_id()}."
+            if removed:
+                logger.warning(
+                    "Removed %d sentence(s) copied verbatim from sources in encounter %s", removed, encounter_id
+                )
+            references = self.build_source_attribution(all_citations)
+            reasoning_parts = [model_reasoning] if model_reasoning else []
+            if relevant_findings:
+                reasoning_parts.append("Key patient findings: " + "; ".join(relevant_findings[:6]) + ".")
+            if references:
+                reasoning_parts.append(
+                    "Evidence consulted: " + "; ".join(f"[{i + 1}] {r}" for i, r in enumerate(references)) + "."
+                )
+            clinical_reasoning = " ".join(reasoning_parts) or f"Diagnosis of {primary_diagnosis} generated by {get_model_id()}."
 
         report = toolkit.write_clinical_report(
             encounter_id=encounter_id,
