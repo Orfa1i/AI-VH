@@ -1,7 +1,10 @@
 # AI Virtual Hospital (AI-VH) : Session Handoff
 
-## 0. Current Session (2026-10-08) — ESI Triage Color Coding & Visual Severity Enhancement (Commit `5534e36`)
-- **Emergency Severity Index (ESI) Triage Rating Visual Color Coding**:
+## 0. Current Session (2026-10-08) — Intake Header Subtitle Cleanup & ESI Triage Color Coding (Commit `5955ddb`)
+- **Case Intake & Triage Admission Screen Cleanup**:
+  - Removed description subtitle text (*"Register patient encounters with verified MRNs, ESI acuity categorization, bed allocations, and baseline telemetry."*) from `CaseIntakeAdmissionSection.tsx` per clinician layout requirements.
+  - Verified 0 brand style debt (`npm run lint:brand`), 100% test pass (46/46 tests green), and clean production build (`npm run build`).
+- **Emergency Severity Index (ESI) Triage Rating Visual Color Coding (Commit `5534e36`)**:
   - Implemented differentiated color coding for ESI levels in `CaseIntakeAdmissionSection.tsx`:
     - **ESI 1 (Resuscitation)**: Dark red color (`var(--color-emergency-dark, var(--danger-700))`, `#A11F31`) signifying the highest level of danger and immediate life threat. High-contrast danger tint background and dark red badge styling.
     - **ESI 2 (Emergent)**: Slightly lighter shade of red (`var(--color-emergency, var(--danger-600))`, `#C42B3E`) for high-risk / severe vitals presentations.
