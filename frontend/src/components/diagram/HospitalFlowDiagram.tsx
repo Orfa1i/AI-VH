@@ -18,7 +18,6 @@ import {
   RefreshCw,
   Stethoscope,
   Sparkles,
-  Layers,
   Building2,
 } from 'lucide-react';
 
@@ -109,26 +108,7 @@ export const HospitalFlowDiagram: React.FC<HospitalFlowDiagramProps> = ({
       {/* ═══════════════════════════════════════════════════════════════════
           TOP ACTION BAR & DIAGRAM CONTROLS
           ═══════════════════════════════════════════════════════════════════ */}
-      <div className="w-full flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-[var(--ak-color-border-subtle)] mb-5 z-10 shrink-0">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-[var(--ak-color-primary-soft)] border border-[var(--ak-color-border-subtle)] flex items-center justify-center text-[var(--ak-color-primary)]">
-            <Layers className="w-5 h-5" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h2 className="text-sm md:text-base font-semibold text-[var(--ak-color-text-primary)] tracking-tight">
-                Clinical pathway and encounter trajectory
-              </h2>
-              <Badge variant="neutral" size="sm">
-                2D Schematic
-              </Badge>
-            </div>
-            <p className="text-xs text-[var(--ak-color-text-muted)]">
-              Admission triage &rarr; Attending examination &rarr; Active cases disposition &rarr; Discharge hub
-            </p>
-          </div>
-        </div>
-
+      <div className="w-full flex items-center justify-end gap-2.5 pb-4 border-b border-[var(--ak-color-border-subtle)] mb-5 z-10 shrink-0">
         {/* Action Controls */}
         <div className="flex items-center gap-2.5">
           {onToggleTo3D && (
