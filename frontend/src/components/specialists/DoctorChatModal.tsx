@@ -194,11 +194,11 @@ const INFECTIOUS_DISEASES_PROFILE: SpecialtyProfile = {
   postNominals: 'MD, FIDSA',
   shortName: 'Dr. Mercer',
   roleTitle: 'Attending Physician, Infectious Diseases & Antimicrobial Stewardship',
-  bookTitle: "Mandell's Principles and Practice of Infectious Diseases / Harrison's (21st Ed)",
+  bookTitle: "Harrison's Infectious Diseases (Fauci & Kasper)",
   avatar: agentInternalMed,
   voiceKey: 'DR_MERCER',
-  streamEndpoint: '/api/specialists/internal-medicine/chat/stream',
-  syncEndpoint: '/api/specialists/internal-medicine/chat',
+  streamEndpoint: '/api/specialists/infectious-diseases/chat/stream',
+  syncEndpoint: '/api/specialists/infectious-diseases/chat',
   starterPrompts: [
     {
       title: 'Septic Shock & Empiric Regimen',
@@ -218,10 +218,10 @@ const INFECTIOUS_DISEASES_PROFILE: SpecialtyProfile = {
     },
   ],
   greetingText:
-    "Greetings. I am Dr. Anthony Mercer, MD, FIDSA, Attending Physician in Infectious Diseases and Antimicrobial Stewardship. My clinical reasoning is grounded in Mandell's Principles and Practice of Infectious Diseases and evidence-based antimicrobial therapy.\n\nHow may I assist you with diagnostic workup, targeted antimicrobial selection, fever of unknown origin, sepsis protocols, or pathogen identification today?",
+    "Greetings. I am Dr. Anthony Mercer, MD, FIDSA, Attending Physician in Infectious Diseases and Antimicrobial Stewardship. My clinical reasoning and antimicrobial guidance are grounded directly in Harrison's Infectious Diseases (Fauci & Kasper).\n\nHow may I assist you with diagnostic workup, targeted antimicrobial selection, fever of unknown origin, sepsis protocols, or pathogen resistance today?",
   placeholderText:
-    "Ask Dr. Mercer about antimicrobial therapy, sepsis protocols, pathogen resistance, or ID guidance... (Press Enter to send)",
-  analyzingText: "Dr. Anthony Mercer is analyzing infectious disease evidence and antimicrobial regimens...",
+    "Ask Dr. Mercer about antimicrobial therapy, sepsis protocols, pathogen resistance, or Harrison's ID guidance... (Press Enter to send)",
+  analyzingText: "Dr. Anthony Mercer is analyzing Harrison's Infectious Diseases protocols and antimicrobial regimens...",
 };
 
 const getSpecialistProfile = (specialty?: string, agentKey?: string): SpecialtyProfile => {

@@ -302,6 +302,51 @@ async def chat_emergency_stream(req: DoctorChatRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@api_router.post("/specialists/infectious-diseases/consult")
+async def consult_infectious_diseases(req: SpecialistConsultRequest):
+    """Consult Dr. Anthony Mercer, MD, FIDSA (Infectious Diseases) powered by Harrison's Infectious Diseases RAG."""
+    try:
+        result = await orchestrator.conduct_infectious_diseases_consult(
+            clinical_scenario=req.clinical_scenario,
+            abnormal_labs=req.abnormal_labs,
+            patient_id=req.patient_id or "PAT-ID-CONSULT",
+        )
+        return result
+    except Exception as e:
+        logger.error(f"Infectious Diseases consult error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.post("/specialists/infectious-diseases/chat")
+async def chat_infectious_diseases(req: DoctorChatRequest):
+    """Direct conversational clinical consultation with Dr. Anthony Mercer, MD, FIDSA (Infectious Diseases)."""
+    try:
+        result = await orchestrator.chat_with_dr_anthony_mercer(
+            user_message=req.message,
+            conversation_history=req.conversation_history,
+            patient_context=req.patient_context,
+        )
+        return result
+    except Exception as e:
+        logger.error(f"Doctor Anthony Mercer chat error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.post("/specialists/infectious-diseases/chat/stream")
+async def chat_infectious_diseases_stream(req: DoctorChatRequest):
+    """Streams real-time clinical diagnostic consultation tokens with Dr. Anthony Mercer, MD, FIDSA (Infectious Diseases)."""
+    try:
+        generator = orchestrator.stream_chat_with_dr_anthony_mercer(
+            user_message=req.message,
+            conversation_history=req.conversation_history,
+            patient_context=req.patient_context,
+        )
+        return StreamingResponse(generator, media_type="text/event-stream")
+    except Exception as e:
+        logger.error(f"Doctor Anthony Mercer streaming error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @api_router.post("/router/route")
 async def route_clinical_case(req: SpecialistConsultRequest):
     """Evaluates clinical presentation through MedicalSpecialtyRouter without altering models."""

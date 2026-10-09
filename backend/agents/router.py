@@ -66,6 +66,15 @@ class MedicalSpecialtyRouter:
         "heat stroke", "emergency stabilization", "unresponsive"
     ]
 
+    INFECTIOUS_DISEASES_KEYWORDS = [
+        "fever of unknown origin", "fuo", "bacteremia", "endocarditis", "vegetation",
+        "septic shock", "sepsis", "meningitis", "osteomyelitis", "tuberculosis",
+        "mrsa", "vre", "esbl", "carbapenemase", "cre", "c difficile", "pseudomembranous",
+        "antimicrobial resistance", "opportunistic infection", "hiv", "cd4",
+        "aspergillosis", "candidemia", "cryptococcus", "antimicrobial stewardship",
+        "prolonged fever", "gram-negative bacteremia", "staphylococcus aureus bacteremia"
+    ]
+
     @classmethod
     def route_case(cls, case_data: Any) -> RoutingDecision:
         """
@@ -90,12 +99,14 @@ class MedicalSpecialtyRouter:
         em_hits = [k for k in cls.EMERGENCY_KEYWORDS if k in combined_text]
         cardio_hits = [k for k in cls.CARDIOLOGY_KEYWORDS if k in combined_text]
         surgery_hits = [k for k in cls.SURGERY_KEYWORDS if k in combined_text]
+        id_hits = [k for k in cls.INFECTIOUS_DISEASES_KEYWORDS if k in combined_text]
         im_hits = [k for k in cls.INTERNAL_MEDICINE_KEYWORDS if k in combined_text]
 
         # Score weights: complaint hits count for 2, HPI/PMH hits count for 1
         em_score = sum(2 if k in complaint.lower() else 1 for k in em_hits)
         cardio_score = sum(2 if k in complaint.lower() else 1 for k in cardio_hits)
         surgery_score = sum(2 if k in complaint.lower() else 1 for k in surgery_hits)
+        id_score = sum(2 if k in complaint.lower() else 1 for k in id_hits)
         im_score = sum(2 if k in complaint.lower() else 1 for k in im_hits)
 
         # High-acuity resuscitation triggers take precedence
@@ -115,28 +126,42 @@ class MedicalSpecialtyRouter:
                 "strangulated", "incarcerated hernia", "perforation", "pneumoperitoneum"
             ]
         )
+        is_infectious_primary = any(
+            k in complaint.lower() for k in [
+                "fever of unknown origin", "fuo", "endocarditis", "bacteremia",
+                "bloodstream infection", "osteomyelitis", "tuberculosis",
+                "opportunistic infection", "c difficile", "c. diff", "mrsa bacteremia"
+            ]
+        )
 
-        if is_immediate_resuscitation or (em_score > cardio_score and em_score > surgery_score and em_score > im_score):
+        if is_immediate_resuscitation or (em_score > cardio_score and em_score > surgery_score and em_score > id_score and em_score > im_score):
             specialty = "EMERGENCY"
             specialist_name = "Dr. David Kim, MD, FACEP"
             book = "Tintinalli's Emergency Medicine Manual"
             confidence = min(0.98, max(0.75, 0.70 + 0.05 * len(em_hits)))
             rationale = f"Acute resuscitation / emergency pathology identified ({', '.join(em_hits[:3]) or 'emergency symptoms'}). Routed to Emergency Medicine."
             hits = em_hits
-        elif is_cardiac_emergency or (cardio_score > surgery_score and cardio_score > im_score):
+        elif is_cardiac_emergency or (cardio_score > surgery_score and cardio_score > id_score and cardio_score > im_score):
             specialty = "CARDIOLOGY"
             specialist_name = "Dr. Rachel Vance, MD, FACC"
             book = "Braunwald's Heart Disease: A Textbook of Cardiovascular Medicine (12th Ed)"
             confidence = min(0.98, max(0.75, 0.70 + 0.05 * len(cardio_hits)))
             rationale = f"Primary cardiovascular presentation identified ({', '.join(cardio_hits[:3]) or 'cardiac symptoms'}). Routed to Cardiology."
             hits = cardio_hits
-        elif is_surgical_emergency or (surgery_score > im_score):
+        elif is_surgical_emergency or (surgery_score > id_score and surgery_score > im_score):
             specialty = "SURGERY"
             specialist_name = "Dr. Sarah Lin, MD, FACS"
             book = "Schwartz's Principles of Surgery (10th Ed)"
             confidence = min(0.98, max(0.75, 0.70 + 0.05 * len(surgery_hits)))
             rationale = f"Surgical pathology / acute abdomen identified ({', '.join(surgery_hits[:3]) or 'surgical symptoms'}). Routed to Surgery."
             hits = surgery_hits
+        elif is_infectious_primary or (id_score > im_score):
+            specialty = "INFECTIOUS_DISEASES"
+            specialist_name = "Dr. Anthony Mercer, MD, FIDSA"
+            book = "Harrison's Infectious Diseases (Fauci & Kasper)"
+            confidence = min(0.98, max(0.75, 0.70 + 0.05 * len(id_hits)))
+            rationale = f"Primary infectious / microbiological pathology identified ({', '.join(id_hits[:3]) or 'infectious symptoms'}). Routed to Infectious Diseases."
+            hits = id_hits
         else:
             specialty = "INTERNAL_MEDICINE"
             specialist_name = "Dr. Marcus Vance, MD, FACP"

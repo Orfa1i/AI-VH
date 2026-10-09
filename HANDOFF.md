@@ -1,17 +1,48 @@
 # AI Virtual Hospital (AI-VH) : Session Handoff
 
-## 0. Current Session (2026-10-09) — Infectious Diseases Specialist Agent Transition & Tintinalli Ingestion
-- **Obstetrics AI Agent Renamed to Infectious Diseases**:
-  - Renamed the 6th AI specialist agent in `frontend/public/staff-roster.html` from Obstetrics to **Infectious Diseases** (`Dr. Anthony Mercer, MD, FIDSA`).
-  - Reference literature updated to *Mandell's Principles and Practice of Infectious Diseases* with clinical coverage spanning sepsis, antimicrobial stewardship, viral, bacterial, and fungal infections.
-  - Linked agent key `k: 'id'` with avatar SVG aliasing (`AVSVG.id = AVSVG.ob`).
-  - Added `INFECTIOUS_DISEASES_PROFILE` in `frontend/src/components/specialists/DoctorChatModal.tsx` with clinical starter prompts for Septic Shock & Empiric Regimens, Fever of Unknown Origin (FUO), Infective Endocarditis, and Hospital-Acquired Pneumonia (HAP).
-  - Updated department select in `frontend/src/components/management/StaffManagementSection.tsx` and mapped `'id'` / `'ob'` keys to `INFECTIOUS_DISEASES`.
-  - Registered `DR_MERCER` voice persona in `frontend/src/utils/speechSynthesis.ts`.
-  - Updated knowledge marquee ticker in `frontend/index.html` to reflect *Mandell's Infectious Diseases*.
-  - Verified with `npm run build` (0 errors, 1.80s) and `npm test` (38/38 tests passed).
+## 0. Current Session (2026-10-10) — Harrison's Infectious Diseases Full Ingestion & Infectious Diseases Specialist Agent Integration
+- **Textbook Ingestion & Vector Embedding (Harrison's Infectious Diseases)**:
+  - Source PDF: `C:\Users\PCD\Desktop\Med-books\INFECTIOUS DISEASE.pdf` copied to `Medical Books/Agent for (Infectious-diseases)/Harrisons_Infectious_Diseases.pdf` (1,313 pages, 182 TOC sections, 37.58 MB).
+  - Authors: Anthony S. Fauci, MD & Dennis L. Kasper, MD (McGraw-Hill).
+  - Ingestion script: `scripts/ingest_infectious_diseases.py` using `SpecialtyBookEmbedder` with sentence-transformers `all-MiniLM-L6-v2` on NVIDIA RTX 4060 GPU with CUDA acceleration in 30.47 seconds.
+  - Extracted 7,336 high-fidelity semantic chunks with TOC chapter hierarchy and page numbers.
+  - Generated float32 dense embedding matrix with exact shape `(7336, 384)` matching the 384-dimensional standard.
+  - Persisted to:
+    - `data/knowledge/infectious_diseases_collection.json` (10.99 MB, 7,336 chunk records).
+    - `data/knowledge/infectious_diseases_embeddings.npy` (11.27 MB, float32 matrix `[7336, 384]`).
+    - `data/knowledge/infectious_diseases_checkpoint.json` (1,313 pages processed checkpoint).
+    - SQLite database table `knowledge_chunks` in `data/aivh.db` (7,336 Infectious Diseases chunks).
+- **Infectious Diseases RAG Engine (`InfectiousDiseasesRAGAgent`)**:
+  - Implemented in `backend/rag/specialists/infectious_diseases_rag.py`.
+  - Dense cosine similarity retrieval with query expansion across 14 clinical domains (sepsis & septic shock, bacteremia & bloodstream infections, fever of unknown origin / FUO, infective endocarditis & Duke criteria, central nervous system / acute meningitis, pneumonia / HAP / VAP, antimicrobial resistance / MRSA / VRE / CRE / ESBL, Clostridioides difficile colitis, bone & joint / osteomyelitis, tuberculosis / mycobacterial infections, systemic fungal infections, viral infections, HIV/AIDS & opportunistic infections, zoonotic & vector-borne infections).
+  - Generates structured `EvidenceBrief` objects with chapter, page, verbatim evidence text, and relevance scores.
+- **Infectious Diseases Specialist Agent (`Dr. Anthony Mercer, MD, FIDSA`)**:
+  - Implemented in `backend/agents/specialists/infectious_diseases.py`.
+  - Personified as `Dr. Anthony Mercer, MD, FIDSA`, Attending Physician, Infectious Diseases & Antimicrobial Stewardship.
+  - Supports:
+    - Formal consultations (`conduct_specialist_consultation`) synthesizing Harrison's RAG citations and MedGemma 4B clinical reasoning.
+    - Direct specialist chat (`chat_with_specialist`) and real-time SSE token streaming (`stream_chat_with_specialist`).
+    - Standard infectious diseases diagnostic workup determination (`determine_diagnostic_workup`).
+    - Event bus telemetry with `HospitalEvent` emissions on RAG queries and evidence retrieval.
+- **Medical Specialty Router & Orchestrator Integration**:
+  - `backend/agents/router.py`: Configured `INFECTIOUS_DISEASES_KEYWORDS` and triage branch routing bacteremia, sepsis, FUO, endocarditis, and resistant pathogens to Infectious Diseases (`Dr. Anthony Mercer, MD, FIDSA`).
+  - `backend/simulation/orchestrator.py`: Integrated `self.id_rag_agent`, `self.id_specialist`, `conduct_infectious_diseases_consult`, `chat_with_dr_anthony_mercer`, and `stream_chat_with_dr_anthony_mercer`.
+  - `backend/api/router.py`: Exposed endpoints:
+    - `POST /api/specialists/infectious-diseases/consult`
+    - `POST /api/specialists/infectious-diseases/chat`
+    - `POST /api/specialists/infectious-diseases/chat/stream`
+- **Frontend Specialist Chat & UI Alignment**:
+  - `DoctorChatModal.tsx`: Updated `INFECTIOUS_DISEASES_PROFILE` with Harrison's Infectious Diseases citations and starter prompts.
+  - `StaffManagementSection.tsx`: Mapped `id` and `ob` to `INFECTIOUS_DISEASES` and `Dr. Anthony Mercer, MD, FIDSA`.
+  - `staff-roster.html`: Bound `id` card to *Harrison's Infectious Diseases*.
+  - `speechSynthesis.ts`: Bound `DR_MERCER` voice profile.
+- **Verification & Testing**:
+  - Automated test suite `backend/tests/test_infectious_diseases_embedding.py`: **8/8 tests passed** in 18.73s (file existence, 7,336 vector matrix `[7336, 384]`, SQLite chunk count, RAG initialization, endocarditis grounding, FUO grounding, meningitis grounding, consult generation, and triage routing).
+  - Production build: `npm run build` in `frontend/` completed with 0 errors in 1.83s.
+  - Unit tests: `npm test` passed 38/38 tests across 10 test files in 8.74s.
+  - Live API validation: Executed live query to `POST /api/specialists/infectious-diseases/chat` on running FastAPI server; returned 200 OK with `Dr. Anthony Mercer, MD, FIDSA`, MedGemma 4B GPU generation, and verbatim citations from Harrison's Infectious Diseases (*Chapter 19: Infective Endocarditis, Pages 232 & 236*).
 
-- **Textbook Ingestion & Vector Embedding (Tintinalli's Emergency Medicine)**:
+## 1. Previous Session (2026-10-09) — Tintinalli Ingestion & Emergency Medicine Integration
   - Full ingestion and dense embedding of *Tintinalli's Emergency Medicine Manual* (1,089 pages, 245 TOC sections, 22.60 MB PDF located in `Medical Books/Agent for (Emergency-medicine)/Tintinallis_Emergency_Medicine_Manual.pdf` and provided path `C:\Users\PCD\Desktop\Med-books\Tintinalli’s Emergency Medicine Manual ( PDFDrive ).pdf`).
   - Extracted 2,981 high-fidelity semantic chunks using `SpecialtyBookEmbedder` with sliding window chunking (500 tokens, 100 token overlap).
   - Generated dense vector embeddings using `all-MiniLM-L6-v2` on NVIDIA RTX 4060 GPU with CUDA acceleration in 16.88 seconds.
