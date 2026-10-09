@@ -1,36 +1,31 @@
 # AI Virtual Hospital (AI-VH) : Session Handoff
 
-## 0. Current Session (2026-10-09) — Virtual Hospital Case Room & MedGemma Router Integration
-- **Case Room Trajectory Architecture (`Virtual Hospital Case Room.md`)**:
-  - Replaced the legacy 4-node box diagram in the Trajectory Graph view (`HospitalFlowDiagram.tsx` & `PatientJourneyFlowPage.tsx`) with the comprehensive **Case Room** layout specified in `Virtual Hospital Case Room.md`.
-  - Added the canonical 4-step traversal header: `1. Triage` → `2. Attending exam` → `3. Case room` (Active highlight) → `4. Physician sign-off`.
-  - Added breadcrumb navigation links connecting `Virtual Hospital` (portal return) and `Staff Roster` (tab switcher via `onNavigateTab`).
-  - Implemented the synthetic demonstration case `VH-0417 · 31 F · 34 + 2 weeks pregnant` with complaint: `"Severe headache for 6 h, flashing lights, right upper abdominal pain."`
-  - High-acuity clinical metric highlights strip: `BP 168/112`, `HR 104`, `Platelets 88`, `AST / ALT 142 / 156`, `LDH 720`, `Urine protein 3+`, and `Clonus 2 beats`.
-  - Collapsible **All findings** clinical panel structured into 3 high-density columns:
-    - **Vitals**: Blood pressure 168/112 mmHg, Heart rate 104 bpm, SpO₂ 97 %, Resp. rate 18 /min, Temperature 37.0 °C, and Fetal HR 145 bpm (CTG Cat. I).
-    - **Labs · 14:13**: Platelets 88 ×10⁹/L, AST 142 U/L, ALT 156 U/L, LDH 720 U/L, Haemoglobin 10.9 g/dL, Creatinine 87 µmol/L, Glucose 5.1 mmol/L, Fibrinogen 3.4 g/L.
-    - **Examination**: Brisk reflexes (2 beats ankle clonus), RUQ/epigastric tenderness, GCS 15 (no focal deficit), Chest clear, G2 P1 (no prior steroids, no asthma).
-- **MedGemma Router & Specialist Assignment Percentages**:
-  - Integrated the **MedGemma router** component displaying real-time routing status (`Routing the case…` / `Multi-Agent Matrix`) with 98.4% confidence.
-  - Implemented the exact assignment percentage matrix across the 6 specialist agents:
-    - **Obstetrics**: 48% (Lead Maternal-Fetal Specialist, *Williams Obstetrics*)
-    - **Emergency Medicine**: 22% (Acuity & Resuscitation, *Tintinalli's EM*)
-    - **Internal Medicine**: 14% (Multisystem Diagnostics, *Harrison's 21st Ed*)
-    - **Neurology**: 8% (Neurovascular Assessment, *Adams & Victor's*)
-    - **Cardiology**: 5% (Hemodynamic Stabilization, *Braunwald's*)
-    - **General Surgery**: 3% (Acute Abdomen Exclusion, *Schwartz's*)
-  - Each specialist card features its newly branded AI doctor avatar, assignment percentage progress bar, evidence grounding textbook, and clinical rationale.
-  - Interactive agent filter pills allowing users to select any specialist in the router or header to read only their independent review and recommendations.
-- **Working Diagnosis & Multidisciplinary Consensus Gate**:
-  - Displayed working diagnosis **Preeclampsia with severe features** with agreement indicator (`Confidence 0.62 · 0 of 6 agree`), differential exclusions (`Less likely: acute fatty liver, acute cholecystitis, TTP / HUS`), and danger sign monitors (`Watch for: a focal deficit or seizure despite magnesium`).
-  - Added interactive multi-agent consensus synthesis simulation that transitions the case to consensus agreement (`Confidence 0.94 · 6 of 6 agree`), unlocking the 7-step agreed clinical order plan (`Plan 7 of 7 agreed`).
-  - Maintained the legal/regulatory disclaimer footnote: *"Synthetic case for demonstration. The physician confirms, edits or rejects every recommendation before it reaches the patient."*
+## 0. Current Session (2026-10-09) — Exact Virtual Hospital Case Room Replication
+- **Exact Replication of Virtual Hospital Case Room (`case-room.html`)**:
+  - Replaced the prior markdown card reinterpretation with the exact, 100% faithful replication of the 195 KB standalone HTML application provided in `Virtual Hospital Case Room.html`.
+  - Saved as `frontend/public/case-room.html` and served directly through Vite and production static routes.
+  - Retained all original Asklevia CSS custom properties, typography (Funnel Display, Inter), responsive layouts, and SVG definitions for all 8 agent doctors with dropshadow filters and gradient masks.
+  - Maintained the interactive canvas physics deliberation loop (real-time particle trajectories, avatar gaze tracking, eye animation, bobbing, acoustic waves, and deliberation timeline).
+  - Preserved the synthetic demonstration case `VH-0417 · 31 F · 34 + 2 weeks pregnant · G2 P1` with vitals highlights strip (`BP 168/112`, `HR 104`, `Platelets 88`, `AST/ALT 142/156`, `LDH 720`, `Urine protein 3+`, `Clonus 2 beats`), and the 3-column collapsible findings panel.
+  - Preserved the MedGemma router cards with live assignment percentages (Obstetrics 48%, Emergency Medicine 22%, Internal Medicine 14%, Neurology 8%, Cardiology 5%, General Surgery 3%).
+  - Retained the multi-agent consensus deliberation engine, speech bubbles, round timeline, working diagnosis (`Preeclampsia with severe features`), consensus meters, and agreed 7-step clinical orders.
+- **Bi-Directional Navigation Bridge**:
+  - Embedded non-invasive `postMessage` listeners into `case-room.html` connecting the application's header and action buttons to the host React SPA:
+    - Step 1 `[data-tab="triage"]` -> `onNavigateTab('INTAKE')`
+    - Step 2 `[data-tab="attending"]` -> `onNavigateTab('PATIENTS')`
+    - Step 4 `[data-tab="signoff"]` -> `onNavigateTab('REVIEWING')`
+    - Action `#b-send` ('Send to attending physician') -> `onNavigateTab('REVIEWING')`
+    - Logo `.vh` / 'Virtual Hospital' -> `onBackToPortal()`
+- **React Component Clean-up**:
+  - `HospitalFlowDiagram.tsx`: Streamlined to render an isolated, full-height iframe hosting `/case-room.html` with a message listener bridging navigation events into the SPA state.
+  - `PatientJourneyFlowPage.tsx`: Removed redundant `AppPage` header wrapper to eliminate duplicate headers, ensuring a seamless full-screen clinical experience. Removed unused imports.
 - **Verification & Quality**:
-  - `npm test -- --run`: **38/38 unit tests green** across 10 test files.
-  - `npm run build`: Production bundle built cleanly with 0 errors in 1.72s.
+  - Production build: `npm run build` completed with code 0 in 2.08s (0 TypeScript errors).
+  - Vitest test suite: **38/38 unit tests green** across 10 test files.
+  - Local endpoint verified: `http://localhost:5173/case-room.html` returns HTTP 200 with full asset availability and interactive canvas execution.
 
-## 1. Previous Session (2026-10-09) — AI Specialist Agent Doctor Avatars Migration (Commit `b770513`)
+## 1. Previous Session (2026-10-09) — Virtual Hospital Case Room & MedGemma Router Integration (Commit `cafe0e3`)
+ (2026-10-09) — AI Specialist Agent Doctor Avatars Migration (Commit `b770513`)
 - **Branded Specialist Agent Roster Migration**:
   - Integrated 7 newly generated, high-resolution AI specialist doctor agent avatars (`Internal Medicine`, `Cardiology`, `Neurology`, `Surgery`, `Emergency Medicine`, `Obstetrics`, and `Gynecology`) across all sizes (1024, 512, 256, 128, 64, compact, rounded) and vector SVGs into both `frontend/public/assets/` and `frontend/src/assets/`.
   - Added `vh-agents-overview.png` showcasing the cohesive multi-agent medical team.

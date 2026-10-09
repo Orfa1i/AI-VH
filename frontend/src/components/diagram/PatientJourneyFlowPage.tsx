@@ -1,11 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { HospitalFlowDiagram } from './HospitalFlowDiagram';
 import { DepartmentStationModal } from '../specialists/DepartmentStationModal';
-import { toggleGlobalMute, isGlobalMuted } from '../../utils/speechSynthesis';
 import type { HospitalEvent, BenchmarkCase, VitalSigns } from '../../types';
-import { Button } from '../ui/Button';
-import { Volume2, VolumeX, Play, RefreshCw } from 'lucide-react';
-import { AppPage } from '../layout/Templates';
 
 interface PatientJourneyFlowPageProps {
   onBackToPortal?: () => void;
@@ -21,7 +17,6 @@ export const PatientJourneyFlowPage: React.FC<PatientJourneyFlowPageProps> = ({
   const [isRunning, setIsRunning] = useState<boolean>(false);
   const [events, setEvents] = useState<HospitalEvent[]>([]);
   const [activeVitals, setActiveVitals] = useState<VitalSigns | null>(null);
-  const [isAudioMuted, setIsAudioMuted] = useState<boolean>(isGlobalMuted());
 
   // Modals
   const [departmentStationId, setDepartmentStationId] = useState<string | null>(null);
@@ -181,67 +176,22 @@ export const PatientJourneyFlowPage: React.FC<PatientJourneyFlowPageProps> = ({
     }
   };
 
-  const currentCase = cases.find((c) => c.id === selectedCaseId) || (cases.length > 0 ? cases[0] : null);
-
   return (
-    <AppPage
-      title="Virtual Hospital Case Room & Trajectory"
-      description="Autonomous MedGemma routing, multi-specialist independent reviews, and evidence-grounded clinical consensus."
-      actions={
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
-          <Button
-            variant={isRunning ? 'secondary' : 'primary'}
-            size="sm"
-            onClick={handleRunSimulation}
-            disabled={isRunning || !currentCase}
-            leadingIcon={
-              isRunning ? (
-                <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-              ) : (
-                <Play className="w-3.5 h-3.5 fill-current" />
-              )
-            }
-          >
-            {isRunning
-              ? 'Traversing pathway...'
-              : currentCase
-              ? 'Simulate selected case'
-              : 'Awaiting admission'}
-          </Button>
-
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsAudioMuted(toggleGlobalMute())}
-            title={isAudioMuted ? 'Unmute voice synthesis' : 'Mute voice synthesis'}
-            aria-label={isAudioMuted ? 'Unmute voice synthesis' : 'Mute voice synthesis'}
-          >
-            {isAudioMuted ? (
-              <VolumeX className="w-4 h-4" style={{ color: 'var(--text-muted)' }} />
-            ) : (
-              <Volume2 className="w-4 h-4" style={{ color: 'var(--color-primary)' }} />
-            )}
-          </Button>
-        </div>
-      }
-    >
-      {/* Case Room & Clinical Trajectory View */}
-      <div className="w-full flex flex-col">
-        <HospitalFlowDiagram
-          cases={cases}
-          selectedCaseId={selectedCaseId}
-          onSelectCase={(id) => setSelectedCaseId(id)}
-          onRunSimulation={handleRunSimulation}
-          isRunning={isRunning}
-          activeDepartment={activeDepartment}
-          doctorAction={doctorAction}
-          events={events}
-          activeVitals={activeVitals}
-          onOpenDepartmentStation={handleStationInteract}
-          onNavigateTab={onNavigateTab}
-          onBackToPortal={onBackToPortal}
-        />
-      </div>
+    <div className="w-full flex-1 flex flex-col h-full min-h-[920px] bg-[#F7F8FB] overflow-y-auto">
+      <HospitalFlowDiagram
+        cases={cases}
+        selectedCaseId={selectedCaseId}
+        onSelectCase={(id) => setSelectedCaseId(id)}
+        onRunSimulation={handleRunSimulation}
+        isRunning={isRunning}
+        activeDepartment={activeDepartment}
+        doctorAction={doctorAction}
+        events={events}
+        activeVitals={activeVitals}
+        onOpenDepartmentStation={handleStationInteract}
+        onNavigateTab={onNavigateTab}
+        onBackToPortal={onBackToPortal}
+      />
 
       {/* Modals */}
       <DepartmentStationModal
@@ -253,7 +203,7 @@ export const PatientJourneyFlowPage: React.FC<PatientJourneyFlowPageProps> = ({
         onRunEncounter={handleRunSimulation}
         isRunning={isRunning}
       />
-    </AppPage>
+    </div>
   );
 };
 
