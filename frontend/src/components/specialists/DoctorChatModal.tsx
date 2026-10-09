@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import type { DoctorChatMessage, DoctorChatResponse } from '../../types';
-import drMarcusPhoto from '../../assets/dr_marcus_vance.jpg';
+import agentInternalMed from '../../assets/vh-agent-internal-medicine-512.png';
 import {
   Send,
   Loader2,
@@ -284,7 +284,7 @@ export const DoctorChatModal: React.FC<DoctorChatModalProps> = ({
             {/* Dr. Vance Avatar */}
             <div className="relative shrink-0">
               <img
-                src={drMarcusPhoto}
+                src={agentInternalMed}
                 alt="Dr. Marcus Vance, MD"
                 className="w-12 h-12 rounded-xl object-cover object-top border border-[var(--ak-color-primary)] shadow-sm"
               />
@@ -371,7 +371,7 @@ export const DoctorChatModal: React.FC<DoctorChatModalProps> = ({
                 {/* Doctor Avatar on Left */}
                 {isDoc && (
                   <img
-                    src={drMarcusPhoto}
+                    src={agentInternalMed}
                     alt="Dr. Vance"
                     className="w-8 h-8 rounded-lg object-cover object-top border border-[var(--ak-color-border-subtle)] shrink-0 mt-1 shadow-xs"
                   />
@@ -546,7 +546,7 @@ export const DoctorChatModal: React.FC<DoctorChatModalProps> = ({
           {isLoading && (
             <div className="flex gap-3 items-start animate-in fade-in duration-150">
               <img
-                src={drMarcusPhoto}
+                src={agentInternalMed}
                 alt="Dr. Vance"
                 className="w-8 h-8 rounded-lg object-cover object-top border border-[var(--ak-color-border-subtle)] shrink-0 mt-1 shadow-xs"
               />

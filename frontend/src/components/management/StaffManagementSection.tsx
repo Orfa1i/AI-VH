@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import type { HospitalStaffRecord } from '../../types';
-import drMarcusPhoto from '../../assets/dr_marcus_vance.jpg';
+import agentInternalMed from '../../assets/vh-agent-internal-medicine-512.png';
+import agentCardiology from '../../assets/vh-agent-cardiology-512.png';
+import agentNeurology from '../../assets/vh-agent-neurology-512.png';
+import agentSurgery from '../../assets/vh-agent-surgery-512.png';
+import agentEmergency from '../../assets/vh-agent-emergency-512.png';
+import agentObstetrics from '../../assets/vh-agent-obstetrics-512.png';
+import agentGynecology from '../../assets/vh-agent-gynecology-512.png';
 import { DoctorChatModal } from '../specialists/DoctorChatModal';
 import {
   Stethoscope,
@@ -8,6 +14,8 @@ import {
   FlaskConical,
   FileScan,
   ClipboardList,
+  Bot,
+  Brain,
 } from 'lucide-react';
 import {
   Button,
@@ -24,6 +32,93 @@ import {
   EmptyState,
 } from '../ui';
 import { AppPage } from '../layout/Templates';
+
+const AI_SPECIALIST_AGENTS = [
+  {
+    name: 'Dr. Marcus Vance, MD',
+    specialty: 'Internal Medicine',
+    avatar: agentInternalMed,
+    evidence: "Harrison's 21st Ed.",
+    status: 'ACTIVE_CHIEF',
+    roleTag: 'Chief Attending',
+  },
+  {
+    name: 'Dr. Elena Rostova, MD',
+    specialty: 'Cardiology',
+    avatar: agentCardiology,
+    evidence: "Braunwald's Heart Dis.",
+    status: 'ON_DUTY',
+    roleTag: 'Cardiologist',
+  },
+  {
+    name: 'Dr. Julian Thorne, MD',
+    specialty: 'Neurology',
+    avatar: agentNeurology,
+    evidence: "Adams & Victor's Neuro",
+    status: 'ON_DUTY',
+    roleTag: 'Neurologist',
+  },
+  {
+    name: 'Dr. Sarah Lin, MD',
+    specialty: 'General Surgery',
+    avatar: agentSurgery,
+    evidence: "Schwartz's Surgery",
+    status: 'STANDBY',
+    roleTag: 'Lead Surgeon',
+  },
+  {
+    name: 'Dr. Malik Sterling, MD',
+    specialty: 'Emergency Medicine',
+    avatar: agentEmergency,
+    evidence: "Tintinalli's EM",
+    status: 'ON_DUTY',
+    roleTag: 'Trauma & Triage',
+  },
+  {
+    name: 'Dr. Claire Laurent, MD',
+    specialty: 'Obstetrics',
+    avatar: agentObstetrics,
+    evidence: 'Williams Obstetrics',
+    status: 'ON_DUTY',
+    roleTag: 'Perinatal Care',
+  },
+  {
+    name: 'Dr. Maya Patel, MD',
+    specialty: 'Gynecology',
+    avatar: agentGynecology,
+    evidence: 'Williams Gynecology',
+    status: 'ON_DUTY',
+    roleTag: 'Gynecology',
+  },
+];
+
+const SPECIALTY_AVATARS: Record<string, string> = {
+  INTERNAL_MEDICINE: agentInternalMed,
+  CARDIOLOGY: agentCardiology,
+  NEUROLOGY: agentNeurology,
+  SURGERY: agentSurgery,
+  EMERGENCY: agentEmergency,
+  OBSTETRICS: agentObstetrics,
+  GYNECOLOGY: agentGynecology,
+};
+
+const getStaffAvatar = (staff: HospitalStaffRecord): string | undefined => {
+  if (staff.id === 'STAFF-VANCE' || staff.name.includes('Marcus Vance')) {
+    return agentInternalMed;
+  }
+  if (staff.avatar_url && staff.avatar_url.trim()) {
+    if (staff.avatar_url.includes('internal-medicine') || staff.avatar_url.includes('dr_marcus_vance')) return agentInternalMed;
+    if (staff.avatar_url.includes('cardiology')) return agentCardiology;
+    if (staff.avatar_url.includes('neurology')) return agentNeurology;
+    if (staff.avatar_url.includes('surgery')) return agentSurgery;
+    if (staff.avatar_url.includes('emergency')) return agentEmergency;
+    if (staff.avatar_url.includes('obstetrics')) return agentObstetrics;
+    if (staff.avatar_url.includes('gynecology')) return agentGynecology;
+    return staff.avatar_url;
+  }
+  const specKey = (staff.specialty || staff.department || '').toUpperCase().replace(/\s+/g, '_');
+  return SPECIALTY_AVATARS[specKey];
+};
 
 interface StaffManagementSectionProps {}
 
@@ -177,6 +272,117 @@ export const StaffManagementSection: React.FC<StaffManagementSectionProps> = () 
         </Card>
       </div>
 
+      {/* AI Specialist Agent Roster Showcase */}
+      <Card style={{ marginBottom: 'var(--space-6)', overflow: 'hidden' }}>
+        <div style={{ padding: 'var(--space-5)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-4)', flexWrap: 'wrap', gap: 'var(--space-3)' }}>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+                <div style={{ padding: '4px 8px', borderRadius: 'var(--radius-sm)', background: 'var(--action-primary-subtle)', color: 'var(--action-primary)', display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 600 }}>
+                  <Bot style={{ width: 14, height: 14 }} />
+                  <span>AI CLINICAL AGENTS</span>
+                </div>
+                <Badge variant="primary">7 Specialty Departments</Badge>
+              </div>
+              <h3 style={{ fontSize: 18, fontWeight: 700, margin: '6px 0 2px', color: 'var(--text-primary)' }}>
+                Asklevia Autonomous Specialist Agents
+              </h3>
+              <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: 0 }}>
+                High-fidelity medical intelligence agents grounded in gold-standard reference textbooks and peer-reviewed clinical knowledge bases.
+              </p>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+              <Button
+                variant="secondary"
+                size="sm"
+                leadingIcon={<Brain style={{ width: 14, height: 14 }} />}
+                onClick={() => setIsDoctorChatOpen(true)}
+              >
+                <span>Consult Dr. Vance (Harrison's RAG)</span>
+              </Button>
+            </div>
+          </div>
+
+          {/* 7 Agent Doctor Cards Grid */}
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))',
+              gap: 'var(--space-3)',
+              marginTop: 'var(--space-3)',
+            }}
+          >
+            {AI_SPECIALIST_AGENTS.map((agent) => (
+              <div
+                key={agent.specialty}
+                onClick={() => {
+                  setSelectedPhoto({
+                    src: agent.avatar,
+                    name: agent.name,
+                    title: `${agent.specialty} Specialist`,
+                  });
+                }}
+                style={{
+                  background: 'var(--bg-subtle)',
+                  borderRadius: 'var(--radius-lg)',
+                  border: '1px solid var(--border-subtle)',
+                  padding: 'var(--space-3)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  textAlign: 'center',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--action-primary)';
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--border-subtle)';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                }}
+              >
+                <div style={{ position: 'relative', width: 64, height: 64, marginBottom: 'var(--space-2)' }}>
+                  <img
+                    src={agent.avatar}
+                    alt={agent.name}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      borderRadius: 'var(--radius-md)',
+                      objectFit: 'cover',
+                      border: '1px solid var(--border-default)',
+                    }}
+                  />
+                  <span
+                    style={{
+                      position: 'absolute',
+                      bottom: -2,
+                      right: -2,
+                      width: 10,
+                      height: 10,
+                      borderRadius: '50%',
+                      backgroundColor: 'var(--status-success)',
+                      border: '2px solid white',
+                    }}
+                  />
+                </div>
+                <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1.2 }}>
+                  {agent.specialty}
+                </span>
+                <span style={{ fontSize: 10, color: 'var(--action-primary)', marginTop: 2, fontWeight: 600 }}>
+                  {agent.roleTag}
+                </span>
+                <span style={{ fontSize: 9, color: 'var(--text-muted)', marginTop: 4, fontFamily: 'monospace' }}>
+                  {agent.evidence}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </Card>
+
       {/* Filter Row */}
       <Card style={{ marginBottom: 'var(--space-6)' }}>
         <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-4)' }}>
@@ -244,7 +450,7 @@ export const StaffManagementSection: React.FC<StaffManagementSectionProps> = () 
             const isVance = staff.id === 'STAFF-VANCE' || staff.name.includes('Marcus Vance');
             const isOnDuty = staff.status === 'ON_DUTY';
             const isInConsult = staff.status === 'IN_CONSULT';
-            const photoSrc = isVance ? (staff.avatar_url || drMarcusPhoto) : staff.avatar_url;
+            const photoSrc = getStaffAvatar(staff);
 
             return (
               <Card key={staff.id}>

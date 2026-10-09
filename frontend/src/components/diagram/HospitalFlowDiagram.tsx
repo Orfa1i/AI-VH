@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import type { BenchmarkCase, HospitalEvent, VitalSigns } from '../../types';
-import drMarcusPhoto from '../../assets/dr_marcus_vance.jpg';
+import agentInternalMed from '../../assets/vh-agent-internal-medicine-512.png';
 import { ActiveTrajectoryStepper } from './ActiveTrajectoryStepper';
 import { Card } from '../ui/Card';
 import { Badge } from '../ui/Badge';
@@ -332,7 +332,7 @@ export const HospitalFlowDiagram: React.FC<HospitalFlowDiagramProps> = ({
               <div className="p-3 rounded-lg bg-[var(--ak-color-bg-subtle)] border border-[var(--ak-color-border-subtle)] flex items-center gap-3">
                 <div className="relative shrink-0">
                   <img
-                    src={drMarcusPhoto}
+                    src={agentInternalMed}
                     alt="Dr. Marcus Vance, MD, FACP"
                     className="w-14 h-14 rounded-lg object-cover border border-[var(--ak-color-border-subtle)]"
                   />
