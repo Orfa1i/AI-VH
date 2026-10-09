@@ -61,6 +61,14 @@ export const AGENT_VOICE_PERSONAS: Record<string, VoicePersona> = {
     lang: 'en-US',
     preferredVoiceGender: 'female',
   },
+  DR_RACHEL_VANCE: {
+    name: 'Dr. Rachel Vance, MD, FACC',
+    role: 'Attending Cardiologist',
+    pitch: 1.05,
+    rate: 1.0,
+    lang: 'en-US',
+    preferredVoiceGender: 'female',
+  },
 };
 
 let isMuted = false;

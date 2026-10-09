@@ -218,7 +218,7 @@ export const StaffManagementSection: React.FC<StaffManagementSectionProps> = ({
           activeDoctorContext.key === 'su'
             ? 'Dr. Sarah Lin, MD, FACS'
             : activeDoctorContext.key === 'ca'
-            ? 'Dr. Elena Rostova, MD, FACC'
+            ? 'Dr. Rachel Vance, MD, FACC'
             : 'Dr. Marcus Vance, MD, FACP'
         }
         patientContext={activeDoctorContext.name ? { attendingDoctor: activeDoctorContext.name } : undefined}

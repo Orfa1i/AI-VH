@@ -143,6 +143,10 @@ class CardiologySpecialistAgent(DoctorAgent):
             rag_context=citations,
             patient_context=patient_context,
         )
+        response["doctor"] = self.name
+        response["title"] = "Attending Cardiologist, Cardiovascular Medicine"
+        if "telemetry" in response and isinstance(response["telemetry"], dict):
+            response["telemetry"]["knowledge_source"] = "Braunwald's Heart Disease (12th Ed)"
         return response
 
     async def stream_chat_with_specialist(
@@ -166,6 +170,8 @@ class CardiologySpecialistAgent(DoctorAgent):
             rag_context=citations,
             patient_context=patient_context,
         ):
+            if chunk.get("done") and "telemetry" in chunk and isinstance(chunk["telemetry"], dict):
+                chunk["telemetry"]["knowledge_source"] = "Braunwald's Heart Disease (12th Ed)"
             yield chunk
 
     def determine_diagnostic_workup(

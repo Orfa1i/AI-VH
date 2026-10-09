@@ -84,38 +84,38 @@ const SURGERY_PROFILE: SpecialtyProfile = {
 };
 
 const CARDIOLOGY_PROFILE: SpecialtyProfile = {
-  name: 'Dr. Elena Rostova',
+  name: 'Dr. Rachel Vance',
   postNominals: 'MD, FACC',
-  shortName: 'Dr. Rostova',
-  roleTitle: 'Attending Cardiologist',
-  bookTitle: "Braunwald's Heart Disease",
+  shortName: 'Dr. Rachel Vance',
+  roleTitle: 'Attending Cardiologist, Cardiovascular Medicine',
+  bookTitle: "Braunwald's Heart Disease (12th Ed)",
   avatar: agentCardiology,
-  voiceKey: 'DR_ROSTOVA',
+  voiceKey: 'DR_RACHEL_VANCE',
   streamEndpoint: '/api/specialists/cardiology/chat/stream',
   syncEndpoint: '/api/specialists/cardiology/chat',
   starterPrompts: [
     {
       title: 'NSTEMI Protocol',
-      prompt: 'What is the emergent diagnostic workup and initial guideline-directed medical therapy for acute retrosternal chest pressure and elevated troponin?',
+      prompt: 'What is the emergent diagnostic workup and initial guideline-directed medical therapy for acute retrosternal chest pressure and elevated troponin in Braunwald?',
     },
     {
       title: 'Atrial Fibrillation RVR',
-      prompt: 'For hemodynamically stable new-onset AF with rapid ventricular response (HR 145), what are the rate control and anticoagulation protocols?',
+      prompt: 'For hemodynamically stable new-onset AF with rapid ventricular response (HR 145), what are the rate control and anticoagulation protocols according to Braunwald?',
     },
     {
       title: 'Acute Decompensated HF',
-      prompt: 'What are the volume assessment, loop diuretic escalation, and vasodilator titration guidelines for acute pulmonary edema?',
+      prompt: 'What are the volume assessment, loop diuretic escalation, and vasodilator titration guidelines in Braunwald for acute pulmonary edema?',
     },
     {
       title: 'Cardiogenic Shock',
-      prompt: 'How do you differentiate SCAI shock stages and initiate inotrope versus mechanical circulatory support?',
+      prompt: 'How do you differentiate SCAI shock stages and initiate inotrope versus mechanical circulatory support according to Braunwald?',
     },
   ],
   greetingText:
-    "Greetings. I am Dr. Elena Rostova, Attending Cardiologist. My cardiovascular reasoning is grounded in Braunwald's Heart Disease and cardiology clinical guidance models.\n\nHow may I assist you with acute coronary syndromes, arrhythmias, heart failure, or hemodynamic management today?",
+    "Greetings. I am Dr. Rachel Vance, MD, FACC, Attending Cardiologist. My cardiovascular reasoning is grounded directly in Braunwald's Heart Disease: A Textbook of Cardiovascular Medicine (12th Edition).\n\nHow may I assist you with acute coronary syndromes, arrhythmias, heart failure, hemodynamic management, or valvular disease today?",
   placeholderText:
-    "Ask Dr. Rostova about cardiac presentations, ECG patterns, hemodynamic goals, or Braunwald's guidance... (Press Enter to send)",
-  analyzingText: "Dr. Rostova is analyzing Braunwald's cardiovascular knowledge and guidelines...",
+    "Ask Dr. Rachel Vance about cardiac presentations, ECG patterns, hemodynamic goals, or Braunwald's guidance... (Press Enter to send)",
+  analyzingText: "Dr. Rachel Vance is analyzing Braunwald's cardiovascular knowledge and guidelines...",
 };
 
 const INTERNAL_MEDICINE_PROFILE: SpecialtyProfile = {
