@@ -162,7 +162,7 @@ export const StaffManagementSection: React.FC<StaffManagementSectionProps> = ({
               <option value="NEUROLOGY">Neurology</option>
               <option value="SURGERY">General Surgery</option>
               <option value="EMERGENCY">Emergency Medicine</option>
-              <option value="OBSTETRICS">Obstetrics</option>
+              <option value="INFECTIOUS_DISEASES">Infectious Diseases</option>
               <option value="GYNECOLOGY">Gynecology</option>
               <option value="INTENSIVE_CARE">Intensive Care (ICU)</option>
             </Select>
@@ -214,6 +214,8 @@ export const StaffManagementSection: React.FC<StaffManagementSectionProps> = ({
             ? 'CARDIOLOGY'
             : activeDoctorContext.key === 'em'
             ? 'EMERGENCY'
+            : activeDoctorContext.key === 'id' || activeDoctorContext.key === 'ob'
+            ? 'INFECTIOUS_DISEASES'
             : 'INTERNAL_MEDICINE'
         }
         doctorName={
@@ -223,6 +225,8 @@ export const StaffManagementSection: React.FC<StaffManagementSectionProps> = ({
             ? 'Dr. Rachel Vance, MD, FACC'
             : activeDoctorContext.key === 'em'
             ? 'Dr. David Kim, MD, FACEP'
+            : activeDoctorContext.key === 'id' || activeDoctorContext.key === 'ob'
+            ? 'Dr. Anthony Mercer, MD, FIDSA'
             : 'Dr. Marcus Vance, MD, FACP'
         }
         patientContext={activeDoctorContext.name ? { attendingDoctor: activeDoctorContext.name } : undefined}

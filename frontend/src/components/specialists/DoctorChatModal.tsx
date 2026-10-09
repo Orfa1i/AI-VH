@@ -189,6 +189,41 @@ const EMERGENCY_PROFILE: SpecialtyProfile = {
   analyzingText: "Dr. David Kim is analyzing Tintinalli's Emergency Medicine resuscitation protocols and guidelines...",
 };
 
+const INFECTIOUS_DISEASES_PROFILE: SpecialtyProfile = {
+  name: 'Dr. Anthony Mercer',
+  postNominals: 'MD, FIDSA',
+  shortName: 'Dr. Mercer',
+  roleTitle: 'Attending Physician, Infectious Diseases & Antimicrobial Stewardship',
+  bookTitle: "Mandell's Principles and Practice of Infectious Diseases / Harrison's (21st Ed)",
+  avatar: agentInternalMed,
+  voiceKey: 'DR_MERCER',
+  streamEndpoint: '/api/specialists/internal-medicine/chat/stream',
+  syncEndpoint: '/api/specialists/internal-medicine/chat',
+  starterPrompts: [
+    {
+      title: 'Septic Shock & Empiric Regimen',
+      prompt: 'What is the guideline-directed empiric antimicrobial regimen for suspected gram-negative bacteremia and septic shock with unknown source in a neutropenic host?',
+    },
+    {
+      title: 'Fever of Unknown Origin (FUO)',
+      prompt: 'What are the diagnostic criteria, initial diagnostic workup (blood cultures, imaging, inflammatory markers), and rules regarding empiric antibiotics in classical FUO?',
+    },
+    {
+      title: 'Infective Endocarditis',
+      prompt: 'For suspected native-valve subacute bacterial endocarditis meeting modified Duke criteria, what are the blood culture protocols and empiric antibiotic combinations before MIC returns?',
+    },
+    {
+      title: 'Hospital-Acquired Pneumonia (HAP)',
+      prompt: 'What are the empiric coverage guidelines for MRSA and Pseudomonas aeruginosa in hospital-acquired pneumonia according to IDSA/ATS guidelines?',
+    },
+  ],
+  greetingText:
+    "Greetings. I am Dr. Anthony Mercer, MD, FIDSA, Attending Physician in Infectious Diseases and Antimicrobial Stewardship. My clinical reasoning is grounded in Mandell's Principles and Practice of Infectious Diseases and evidence-based antimicrobial therapy.\n\nHow may I assist you with diagnostic workup, targeted antimicrobial selection, fever of unknown origin, sepsis protocols, or pathogen identification today?",
+  placeholderText:
+    "Ask Dr. Mercer about antimicrobial therapy, sepsis protocols, pathogen resistance, or ID guidance... (Press Enter to send)",
+  analyzingText: "Dr. Anthony Mercer is analyzing infectious disease evidence and antimicrobial regimens...",
+};
+
 const getSpecialistProfile = (specialty?: string, agentKey?: string): SpecialtyProfile => {
   const normKey = (agentKey || '').toLowerCase();
   const normSpec = (specialty || '').toUpperCase();
@@ -201,6 +236,9 @@ const getSpecialistProfile = (specialty?: string, agentKey?: string): SpecialtyP
   }
   if (normKey === 'em' || normSpec === 'EMERGENCY' || normSpec === 'EMERGENCY_MEDICINE') {
     return EMERGENCY_PROFILE;
+  }
+  if (normKey === 'id' || normKey === 'ob' || normSpec === 'INFECTIOUS_DISEASES' || normSpec === 'INFECTIOUS DISEASES') {
+    return INFECTIOUS_DISEASES_PROFILE;
   }
   return INTERNAL_MEDICINE_PROFILE;
 };

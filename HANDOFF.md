@@ -1,7 +1,17 @@
 # AI Virtual Hospital (AI-VH) : Session Handoff
 
-## 0. Current Session (2026-10-09) — Tintinalli's Emergency Medicine Manual Ingestion & Emergency Specialist Agent Integration
-- **Textbook Ingestion & Vector Embedding**:
+## 0. Current Session (2026-10-09) — Infectious Diseases Specialist Agent Transition & Tintinalli Ingestion
+- **Obstetrics AI Agent Renamed to Infectious Diseases**:
+  - Renamed the 6th AI specialist agent in `frontend/public/staff-roster.html` from Obstetrics to **Infectious Diseases** (`Dr. Anthony Mercer, MD, FIDSA`).
+  - Reference literature updated to *Mandell's Principles and Practice of Infectious Diseases* with clinical coverage spanning sepsis, antimicrobial stewardship, viral, bacterial, and fungal infections.
+  - Linked agent key `k: 'id'` with avatar SVG aliasing (`AVSVG.id = AVSVG.ob`).
+  - Added `INFECTIOUS_DISEASES_PROFILE` in `frontend/src/components/specialists/DoctorChatModal.tsx` with clinical starter prompts for Septic Shock & Empiric Regimens, Fever of Unknown Origin (FUO), Infective Endocarditis, and Hospital-Acquired Pneumonia (HAP).
+  - Updated department select in `frontend/src/components/management/StaffManagementSection.tsx` and mapped `'id'` / `'ob'` keys to `INFECTIOUS_DISEASES`.
+  - Registered `DR_MERCER` voice persona in `frontend/src/utils/speechSynthesis.ts`.
+  - Updated knowledge marquee ticker in `frontend/index.html` to reflect *Mandell's Infectious Diseases*.
+  - Verified with `npm run build` (0 errors, 1.80s) and `npm test` (38/38 tests passed).
+
+- **Textbook Ingestion & Vector Embedding (Tintinalli's Emergency Medicine)**:
   - Full ingestion and dense embedding of *Tintinalli's Emergency Medicine Manual* (1,089 pages, 245 TOC sections, 22.60 MB PDF located in `Medical Books/Agent for (Emergency-medicine)/Tintinallis_Emergency_Medicine_Manual.pdf` and provided path `C:\Users\PCD\Desktop\Med-books\Tintinalli’s Emergency Medicine Manual ( PDFDrive ).pdf`).
   - Extracted 2,981 high-fidelity semantic chunks using `SpecialtyBookEmbedder` with sliding window chunking (500 tokens, 100 token overlap).
   - Generated dense vector embeddings using `all-MiniLM-L6-v2` on NVIDIA RTX 4060 GPU with CUDA acceleration in 16.88 seconds.

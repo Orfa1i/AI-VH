@@ -170,9 +170,10 @@ button { font: inherit; color: inherit; }
     { k: 'ne', name: 'Neurology', c: '#5B3DF5', book: "Adams and Victor's Principles of Neurology", covers: 'Stroke, seizure, headache and altered consciousness.', status: 'consult' },
     { k: 'su', name: 'Surgery', c: '#13A06B', book: "Schwartz's Principles of Surgery", covers: 'Acute abdomen, trauma and operative risk.', status: 'consult' },
     { k: 'em', name: 'Emergency Medicine', c: '#0E9AA7', book: "Tintinalli's Emergency Medicine", covers: 'Triage, resuscitation and time-critical care.', status: 'consult' },
-    { k: 'ob', name: 'Obstetrics', c: '#2E9FE6', book: 'Williams Obstetrics', covers: 'Pregnancy, labour, delivery and postpartum care.', status: 'consult', lead: true },
+    { k: 'id', name: 'Infectious Diseases', c: '#2E9FE6', book: "Mandell's Principles and Practice of Infectious Diseases", covers: 'Sepsis, antimicrobial stewardship, viral, bacterial and fungal infections.', status: 'consult', lead: true },
     { k: 'gy', name: 'Gynecology', c: '#0FA88A', book: 'Williams Gynecology', covers: 'Pelvic pain, abnormal bleeding and gynecologic surgery.', status: 'duty' },
   ];
+  AVSVG.id = AVSVG.ob;
   const ST = { consult: 'In consult', duty: 'On duty', off: 'Off duty' };
   const DOT = { consult: '#2B2FD9', duty: '#13A06B', off: '#B9BFCD' };
   const CHEV = '<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4.5l3 3 3-3"/></svg>';

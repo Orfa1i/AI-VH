@@ -77,6 +77,14 @@ export const AGENT_VOICE_PERSONAS: Record<string, VoicePersona> = {
     lang: 'en-US',
     preferredVoiceGender: 'male',
   },
+  DR_MERCER: {
+    name: 'Dr. Anthony Mercer, MD, FIDSA',
+    role: 'Attending Physician, Infectious Diseases',
+    pitch: 0.98,
+    rate: 1.0,
+    lang: 'en-US',
+    preferredVoiceGender: 'male',
+  },
 };
 
 let isMuted = false;
