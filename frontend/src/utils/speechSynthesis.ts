@@ -85,6 +85,14 @@ export const AGENT_VOICE_PERSONAS: Record<string, VoicePersona> = {
     lang: 'en-US',
     preferredVoiceGender: 'male',
   },
+  DR_REED: {
+    name: 'Dr. Evelyn Reed, MD, FACOG',
+    role: 'Attending Physician, Gynecology & Pelvic Surgery',
+    pitch: 1.04,
+    rate: 1.0,
+    lang: 'en-US',
+    preferredVoiceGender: 'female',
+  },
 };
 
 let isMuted = false;

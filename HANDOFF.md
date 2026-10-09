@@ -1,6 +1,48 @@
 # AI Virtual Hospital (AI-VH) : Session Handoff
 
-## 0. Current Session (2026-10-10) — Harrison's Infectious Diseases Full Ingestion & Infectious Diseases Specialist Agent Integration
+## 0. Current Session (2026-10-10) — Williams Gynecology Full Ingestion & Gynecology Specialist Agent Integration (Dr. Evelyn Reed, MD, FACOG)
+- **Textbook Ingestion & Vector Embedding (Williams Gynecology)**:
+  - Source PDF: `C:\Users\PCD\Desktop\Med-books\Williams gynecology.pdf` copied to `Medical Books/Agent for (Gynecology)/Williams_Gynecology.pdf` (278 pages, 77 TOC sections, 14.59 MB).
+  - Authors: F. Gary Cunningham, MD; Kenneth J. Leveno, MD; Steven L. Bloom, MD; Catherine Y. Spong, MD; Jodi S. Dashe, MD; Barbara L. Hoffman, MD; Brian M. Casey, MD; Jeanne S. Sheffield, MD (McGraw-Hill).
+  - Ingestion script: `scripts/ingest_williams_gynecology.py` using `SpecialtyBookEmbedder` with sentence-transformers `all-MiniLM-L6-v2` on NVIDIA RTX 4060 GPU with CUDA acceleration in 28.63 seconds.
+  - Extracted 571 high-fidelity semantic chunks with TOC chapter hierarchy and page numbers.
+  - Generated float32 dense embedding matrix with exact shape `(571, 384)` matching the 384-dimensional standard.
+  - Persisted to:
+    - `data/knowledge/gynecology_collection.json` (571 chunk records).
+    - `data/knowledge/gynecology_embeddings.npy` (float32 matrix `[571, 384]`).
+    - `data/knowledge/gynecology_checkpoint.json` (278 pages processed checkpoint).
+    - SQLite database table `knowledge_chunks` in `data/aivh.db` (571 Gynecology chunks).
+- **Gynecology RAG Engine (`GynecologyRAGAgent`)**:
+  - Implemented in `backend/rag/specialists/gynecology_rag.py`.
+  - Dense cosine similarity retrieval with query expansion across 12 clinical domains (abnormal uterine bleeding / PALM-COEIN, ectopic pregnancy & tubal rupture, pelvic inflammatory disease & tubo-ovarian abscess, endometriosis & adenomyosis, adnexal masses & ovarian cyst torsion, uterine leiomyomas / fibroids, polycystic ovary syndrome / PCOS, cervical dysplasia & cytology, menopause & hormone therapy, pelvic organ prolapse, vulvovaginitis, endometrial hyperplasia).
+  - Generates structured `EvidenceBrief` objects with chapter, page, verbatim evidence text, and relevance scores.
+- **Gynecology Specialist Agent (`Dr. Evelyn Reed, MD, FACOG`)**:
+  - Implemented in `backend/agents/specialists/gynecology.py`.
+  - Personified as `Dr. Evelyn Reed, MD, FACOG`, Attending Physician, Gynecology & Minimally Invasive Pelvic Surgery.
+  - Supports:
+    - Formal consultations (`conduct_specialist_consultation`) synthesizing Williams Gynecology RAG citations and MedGemma 4B clinical reasoning.
+    - Direct specialist chat (`chat_with_specialist`) and real-time SSE token streaming (`stream_chat_with_specialist`).
+    - Standard gynecologic diagnostic workup determination (`determine_diagnostic_workup`).
+    - Event bus telemetry with `HospitalEvent` emissions on RAG queries and evidence retrieval.
+- **Medical Specialty Router & Orchestrator Integration**:
+  - `backend/agents/router.py`: Configured `GYNECOLOGY_KEYWORDS` and triage branch routing pelvic pain, AUB, adnexal mass, and ectopic pregnancy to Gynecology (`Dr. Evelyn Reed, MD, FACOG`).
+  - `backend/simulation/orchestrator.py`: Integrated `self.gynecology_rag_agent`, `self.gynecology_specialist`, `conduct_gynecology_consult`, `chat_with_dr_evelyn_reed`, and `stream_chat_with_dr_evelyn_reed`.
+  - `backend/api/router.py`: Exposed endpoints:
+    - `POST /api/specialists/gynecology/consult`
+    - `POST /api/specialists/gynecology/chat`
+    - `POST /api/specialists/gynecology/chat/stream`
+- **Frontend Specialist Chat & UI Alignment**:
+  - `DoctorChatModal.tsx`: Added `GYNECOLOGY_PROFILE` with Williams Gynecology citations and starter prompts.
+  - `StaffManagementSection.tsx`: Mapped `gy` to `GYNECOLOGY` and `Dr. Evelyn Reed, MD, FACOG`.
+  - `staff-roster.html`: Bound `gy` card to *Williams Gynecology*.
+  - `speechSynthesis.ts`: Bound `DR_REED` voice profile.
+- **Verification & Testing**:
+  - Automated test suite `backend/tests/test_gynecology_embedding.py`: **8/8 tests passed** in 21.38s (file existence, 571 vector matrix `[571, 384]`, SQLite chunk count, RAG initialization, ectopic grounding, AUB grounding, PID grounding, consult generation, and triage routing).
+  - Production build: `npm run build` in `frontend/` completed with 0 errors in 2.06s.
+  - Unit tests: `npm test` passed 38/38 tests across 10 test files in 10.62s.
+  - Live API validation: Executed live query to `POST /api/specialists/gynecology/chat` on running FastAPI server; returned 200 OK with `Dr. Evelyn Reed, MD, FACOG`, live inference, and verbatim citations from Williams Gynecology (*Chapter 7: Ectopic Pregnancy*).
+
+## 1. Previous Session (2026-10-10) — Harrison's Infectious Diseases Full Ingestion & Infectious Diseases Specialist Agent Integration
 - **Textbook Ingestion & Vector Embedding (Harrison's Infectious Diseases)**:
   - Source PDF: `C:\Users\PCD\Desktop\Med-books\INFECTIOUS DISEASE.pdf` copied to `Medical Books/Agent for (Infectious-diseases)/Harrisons_Infectious_Diseases.pdf` (1,313 pages, 182 TOC sections, 37.58 MB).
   - Authors: Anthony S. Fauci, MD & Dennis L. Kasper, MD (McGraw-Hill).

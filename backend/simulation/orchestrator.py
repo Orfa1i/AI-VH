@@ -43,6 +43,8 @@ from ..agents.specialists.emergency import EmergencySpecialistAgent
 from ..rag.specialists.emergency_rag import EmergencyMedicineRAGAgent
 from ..agents.specialists.infectious_diseases import InfectiousDiseasesSpecialistAgent
 from ..rag.specialists.infectious_diseases_rag import InfectiousDiseasesRAGAgent
+from ..agents.specialists.gynecology import GynecologySpecialistAgent
+from ..rag.specialists.gynecology_rag import GynecologyRAGAgent
 from ..agents.router import MedicalSpecialtyRouter
 from ..rl.dpo_generator import DPOPreferenceGenerator, DPOPreferencePair
 from ..rl.dataset_curator import dataset_curator
@@ -134,6 +136,11 @@ class HospitalOrchestrator:
         self.id_specialist = InfectiousDiseasesSpecialistAgent(
             medgemma_service=self.medgemma,
             rag_agent=self.id_rag_agent
+        )
+        self.gynecology_rag_agent = GynecologyRAGAgent()
+        self.gynecology_specialist = GynecologySpecialistAgent(
+            medgemma_service=self.medgemma,
+            rag_agent=self.gynecology_rag_agent
         )
         self.pharmacist = PharmacistAgent()
         self.evaluation_pipeline = evaluation_pipeline
@@ -342,6 +349,48 @@ class HospitalOrchestrator:
     ):
         """Streams real-time clinical consultation tokens from Dr. Anthony Mercer (Infectious Diseases)."""
         async for chunk in self.id_specialist.stream_chat_with_specialist(
+            user_message=user_message,
+            conversation_history=conversation_history,
+            patient_context=patient_context,
+        ):
+            yield chunk
+
+    async def conduct_gynecology_consult(
+        self,
+        clinical_scenario: str,
+        abnormal_labs: Optional[List[str]] = None,
+        patient_id: str = "PAT-GYN-CONSULT",
+    ) -> Dict[str, Any]:
+        """Provides an on-demand clinical consultation with Dr. Evelyn Reed, MD, FACOG (Gynecology)."""
+        encounter_id = f"CON-GYN-{uuid.uuid4().hex[:6].upper()}"
+        return await self.gynecology_specialist.conduct_specialist_consultation(
+            encounter_id=encounter_id,
+            patient_id=patient_id,
+            clinical_scenario=clinical_scenario,
+            abnormal_labs=abnormal_labs,
+        )
+
+    async def chat_with_dr_evelyn_reed(
+        self,
+        user_message: str,
+        conversation_history: Optional[List[Dict[str, str]]] = None,
+        patient_context: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
+        """Provides direct conversational communication with Dr. Evelyn Reed, MD, FACOG (Gynecology)."""
+        return await self.gynecology_specialist.chat_with_specialist(
+            user_message=user_message,
+            conversation_history=conversation_history,
+            patient_context=patient_context,
+        )
+
+    async def stream_chat_with_dr_evelyn_reed(
+        self,
+        user_message: str,
+        conversation_history: Optional[List[Dict[str, str]]] = None,
+        patient_context: Optional[Dict[str, Any]] = None,
+    ):
+        """Streams real-time clinical consultation tokens from Dr. Evelyn Reed (Gynecology)."""
+        async for chunk in self.gynecology_specialist.stream_chat_with_specialist(
             user_message=user_message,
             conversation_history=conversation_history,
             patient_context=patient_context,

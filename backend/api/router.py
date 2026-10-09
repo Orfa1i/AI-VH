@@ -347,6 +347,51 @@ async def chat_infectious_diseases_stream(req: DoctorChatRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@api_router.post("/specialists/gynecology/consult")
+async def consult_gynecology(req: SpecialistConsultRequest):
+    """Consult Dr. Evelyn Reed, MD, FACOG (Gynecology) powered by Williams Gynecology RAG."""
+    try:
+        result = await orchestrator.conduct_gynecology_consult(
+            clinical_scenario=req.clinical_scenario,
+            abnormal_labs=req.abnormal_labs,
+            patient_id=req.patient_id or "PAT-GYN-CONSULT",
+        )
+        return result
+    except Exception as e:
+        logger.error(f"Gynecology consult error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.post("/specialists/gynecology/chat")
+async def chat_gynecology(req: DoctorChatRequest):
+    """Direct conversational clinical consultation with Dr. Evelyn Reed, MD, FACOG (Gynecology)."""
+    try:
+        result = await orchestrator.chat_with_dr_evelyn_reed(
+            user_message=req.message,
+            conversation_history=req.conversation_history,
+            patient_context=req.patient_context,
+        )
+        return result
+    except Exception as e:
+        logger.error(f"Doctor Evelyn Reed chat error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.post("/specialists/gynecology/chat/stream")
+async def chat_gynecology_stream(req: DoctorChatRequest):
+    """Streams real-time clinical diagnostic consultation tokens with Dr. Evelyn Reed, MD, FACOG (Gynecology)."""
+    try:
+        generator = orchestrator.stream_chat_with_dr_evelyn_reed(
+            user_message=req.message,
+            conversation_history=req.conversation_history,
+            patient_context=req.patient_context,
+        )
+        return StreamingResponse(generator, media_type="text/event-stream")
+    except Exception as e:
+        logger.error(f"Doctor Evelyn Reed streaming error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @api_router.post("/router/route")
 async def route_clinical_case(req: SpecialistConsultRequest):
     """Evaluates clinical presentation through MedicalSpecialtyRouter without altering models."""

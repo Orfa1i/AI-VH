@@ -224,6 +224,41 @@ const INFECTIOUS_DISEASES_PROFILE: SpecialtyProfile = {
   analyzingText: "Dr. Anthony Mercer is analyzing Harrison's Infectious Diseases protocols and antimicrobial regimens...",
 };
 
+const GYNECOLOGY_PROFILE: SpecialtyProfile = {
+  name: 'Dr. Evelyn Reed',
+  postNominals: 'MD, FACOG',
+  shortName: 'Dr. Reed',
+  roleTitle: 'Attending Physician, Gynecology & Minimally Invasive Pelvic Surgery',
+  bookTitle: 'Williams Gynecology',
+  avatar: agentSurgery,
+  voiceKey: 'DR_REED',
+  streamEndpoint: '/api/specialists/gynecology/chat/stream',
+  syncEndpoint: '/api/specialists/gynecology/chat',
+  starterPrompts: [
+    {
+      title: 'AUB & FIGO PALM-COEIN',
+      prompt: 'For a 42yo woman with heavy menstrual bleeding and iron deficiency anemia, how should we systematically evaluate structural vs non-structural causes using PALM-COEIN and when is endometrial biopsy indicated in Williams Gynecology?',
+    },
+    {
+      title: 'Ectopic Pregnancy & hCG Triage',
+      prompt: 'What are the beta-hCG discriminatory zone rules, ultrasound criteria, and contraindications for medical management with methotrexate in suspected ectopic pregnancy according to Williams Gynecology?',
+    },
+    {
+      title: 'Acute PID & Inpatient Criteria',
+      prompt: 'What are the diagnostic thresholds for acute pelvic inflammatory disease (PID), and what clinical presentations mandate immediate inpatient admission and parenteral antibiotics?',
+    },
+    {
+      title: 'Endometriosis Management',
+      prompt: 'What is the recommended stepwise medical and surgical management algorithm for severe cyclic dysmenorrhea and suspected deep infiltrating endometriosis in Williams Gynecology?',
+    },
+  ],
+  greetingText:
+    "Greetings. I am Dr. Evelyn Reed, MD, FACOG, Attending Gynecologist. My clinical and surgical reasoning is grounded directly in Williams Gynecology.\n\nHow may I assist you with abnormal uterine bleeding, pelvic pain, ectopic pregnancy, adnexal masses, or gynecologic surgical planning today?",
+  placeholderText:
+    "Ask Dr. Evelyn Reed about gynecologic conditions, PALM-COEIN, pelvic pain, or Williams Gynecology guidelines... (Press Enter to send)",
+  analyzingText: "Dr. Evelyn Reed is analyzing Williams Gynecology evidence and clinical algorithms...",
+};
+
 const getSpecialistProfile = (specialty?: string, agentKey?: string): SpecialtyProfile => {
   const normKey = (agentKey || '').toLowerCase();
   const normSpec = (specialty || '').toUpperCase();
@@ -239,6 +274,9 @@ const getSpecialistProfile = (specialty?: string, agentKey?: string): SpecialtyP
   }
   if (normKey === 'id' || normKey === 'ob' || normSpec === 'INFECTIOUS_DISEASES' || normSpec === 'INFECTIOUS DISEASES') {
     return INFECTIOUS_DISEASES_PROFILE;
+  }
+  if (normKey === 'gy' || normSpec === 'GYNECOLOGY' || normSpec === 'GYN') {
+    return GYNECOLOGY_PROFILE;
   }
   return INTERNAL_MEDICINE_PROFILE;
 };
