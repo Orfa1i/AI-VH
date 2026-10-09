@@ -1,6 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import type { DoctorChatMessage, DoctorChatResponse } from '../../types';
 import agentInternalMed from '../../assets/vh-agent-internal-medicine-512.png';
+import agentSurgery from '../../assets/vh-agent-surgery-512.png';
+import agentCardiology from '../../assets/vh-agent-cardiology-512.png';
 import {
   Send,
   Loader2,
@@ -21,51 +23,173 @@ import { speakClinicalMessage, stopClinicalSpeech } from '../../utils/speechSynt
 import { Button } from '../ui/Button';
 import { Badge, Chip } from '../ui/Badge';
 
-interface DoctorChatModalProps {
+export interface DoctorChatModalProps {
   isOpen: boolean;
   onClose: () => void;
   patientContext?: Record<string, any>;
+  specialty?: string;
+  doctorName?: string;
+  agentKey?: string;
 }
 
-const STARTER_PROMPTS = [
-  {
-    title: 'NSTEMI Protocol',
-    prompt: 'Doctor Vance, what is the emergent diagnostic workup and initial guideline-directed medical therapy for a 62yo male with acute retrosternal chest pressure and elevated troponin?',
-  },
-  {
-    title: 'DKA & Potassium Safety',
-    prompt: '24-year-old with Type 1 Diabetes presents with severe DKA, anion gap 29, and pH 7.14. What are the strict rules for initiating intravenous insulin with respect to serum potassium?',
-  },
-  {
-    title: 'PE Thrombolysis Contraindications',
-    prompt: 'What are the absolute and relative contraindications to systemic thrombolysis (tPA) in submassive PE, particularly regarding recent gastrointestinal bleeding?',
-  },
-  {
-    title: 'Acute Kidney Injury',
-    prompt: 'Patient with dehydration on ACE inhibitor presents with acute oliguria and potassium 5.6 mEq/L. How should I categorize and manage this acute kidney injury?',
-  },
-];
+interface SpecialtyProfile {
+  name: string;
+  postNominals: string;
+  shortName: string;
+  roleTitle: string;
+  bookTitle: string;
+  avatar: string;
+  voiceKey: string;
+  streamEndpoint: string;
+  syncEndpoint: string;
+  starterPrompts: { title: string; prompt: string }[];
+  greetingText: string;
+  placeholderText: string;
+  analyzingText: string;
+}
 
-const INITIAL_GREETING: DoctorChatMessage = {
-  id: 'msg-welcome',
+const SURGERY_PROFILE: SpecialtyProfile = {
+  name: 'Dr. Sarah Lin',
+  postNominals: 'MD, FACS',
+  shortName: 'Dr. Lin',
+  roleTitle: 'Lead Attending Surgeon, General & Acute Care Surgery',
+  bookTitle: "Schwartz's Principles of Surgery (10th Ed)",
+  avatar: agentSurgery,
+  voiceKey: 'DR_LIN',
+  streamEndpoint: '/api/specialists/surgery/chat/stream',
+  syncEndpoint: '/api/specialists/surgery/chat',
+  starterPrompts: [
+    {
+      title: 'Acute Appendicitis',
+      prompt: 'Dr. Lin, for a 28yo with acute RLQ pain, migratory periumbilical pain, and leukocytosis (14,500), what are the diagnostic criteria, ultrasound/CT indications, and operative timing in Schwartz?',
+    },
+    {
+      title: 'Small Bowel Obstruction',
+      prompt: 'What are the clinical, radiographic, and laboratory signs in Schwartz that mandate immediate exploratory laparotomy vs conservative decompression in small bowel obstruction?',
+    },
+    {
+      title: 'Acute Cholecystitis',
+      prompt: 'According to Schwartz and Tokyo guidelines, what is the optimal surgical timing for acute calculous cholecystitis, and how are high-risk or delayed presentations handled?',
+    },
+    {
+      title: 'Strangulated Hernia',
+      prompt: 'A 67-year-old male presents with tender, irreducible groin swelling with overlying erythema and fever. What are the urgent surgical management steps and contraindications to forceful taxis?',
+    },
+  ],
+  greetingText:
+    "Greetings. I am Dr. Sarah Lin, MD, FACS, Lead Attending Surgeon. My surgical decision-making and operative guidance are grounded directly in Schwartz's Principles of Surgery (10th Edition).\n\nHow may I assist you with acute abdominal evaluations, operative indications, surgical contraindications, or perioperative management today?",
+  placeholderText:
+    "Ask Dr. Lin about acute surgical cases, operative indications, Schwartz's guidelines, or surgical contraindications... (Press Enter to send)",
+  analyzingText: "Dr. Lin is analyzing Schwartz's Principles of Surgery and operative indications...",
+};
+
+const CARDIOLOGY_PROFILE: SpecialtyProfile = {
+  name: 'Dr. Elena Rostova',
+  postNominals: 'MD, FACC',
+  shortName: 'Dr. Rostova',
+  roleTitle: 'Attending Cardiologist',
+  bookTitle: "Braunwald's Heart Disease",
+  avatar: agentCardiology,
+  voiceKey: 'DR_ROSTOVA',
+  streamEndpoint: '/api/specialists/cardiology/chat/stream',
+  syncEndpoint: '/api/specialists/cardiology/chat',
+  starterPrompts: [
+    {
+      title: 'NSTEMI Protocol',
+      prompt: 'What is the emergent diagnostic workup and initial guideline-directed medical therapy for acute retrosternal chest pressure and elevated troponin?',
+    },
+    {
+      title: 'Atrial Fibrillation RVR',
+      prompt: 'For hemodynamically stable new-onset AF with rapid ventricular response (HR 145), what are the rate control and anticoagulation protocols?',
+    },
+    {
+      title: 'Acute Decompensated HF',
+      prompt: 'What are the volume assessment, loop diuretic escalation, and vasodilator titration guidelines for acute pulmonary edema?',
+    },
+    {
+      title: 'Cardiogenic Shock',
+      prompt: 'How do you differentiate SCAI shock stages and initiate inotrope versus mechanical circulatory support?',
+    },
+  ],
+  greetingText:
+    "Greetings. I am Dr. Elena Rostova, Attending Cardiologist. My cardiovascular reasoning is grounded in Braunwald's Heart Disease and cardiology clinical guidance models.\n\nHow may I assist you with acute coronary syndromes, arrhythmias, heart failure, or hemodynamic management today?",
+  placeholderText:
+    "Ask Dr. Rostova about cardiac presentations, ECG patterns, hemodynamic goals, or Braunwald's guidance... (Press Enter to send)",
+  analyzingText: "Dr. Rostova is analyzing Braunwald's cardiovascular knowledge and guidelines...",
+};
+
+const INTERNAL_MEDICINE_PROFILE: SpecialtyProfile = {
+  name: 'Dr. Marcus Vance',
+  postNominals: 'MD, FACP',
+  shortName: 'Dr. Vance',
+  roleTitle: 'Chief Attending Physician, Internal Medicine',
+  bookTitle: "Harrison's Principles of Internal Medicine (21st Ed)",
+  avatar: agentInternalMed,
+  voiceKey: 'DR_VANCE',
+  streamEndpoint: '/api/specialists/internal-medicine/chat/stream',
+  syncEndpoint: '/api/specialists/internal-medicine/chat',
+  starterPrompts: [
+    {
+      title: 'NSTEMI Protocol',
+      prompt: 'Doctor Vance, what is the emergent diagnostic workup and initial guideline-directed medical therapy for a 62yo male with acute retrosternal chest pressure and elevated troponin?',
+    },
+    {
+      title: 'DKA & Potassium Safety',
+      prompt: '24-year-old with Type 1 Diabetes presents with severe DKA, anion gap 29, and pH 7.14. What are the strict rules for initiating intravenous insulin with respect to serum potassium?',
+    },
+    {
+      title: 'PE Thrombolysis Contraindications',
+      prompt: 'What are the absolute and relative contraindications to systemic thrombolysis (tPA) in submassive PE, particularly regarding recent gastrointestinal bleeding?',
+    },
+    {
+      title: 'Acute Kidney Injury',
+      prompt: 'Patient with dehydration on ACE inhibitor presents with acute oliguria and potassium 5.6 mEq/L. How should I categorize and manage this acute kidney injury?',
+    },
+  ],
+  greetingText:
+    "Greetings. I am Dr. Marcus Vance, Chief Attending Physician of Internal Medicine. My clinical reasoning is grounded in Harrison's Principles of Internal Medicine (21st Edition) and internal medicine clinical guidance models.\n\nHow may I assist you with clinical cases, differential diagnoses, evidence-based therapies, or medication contraindications today?",
+  placeholderText:
+    "Ask Dr. Vance about clinical cases, differential diagnoses, therapies, or Harrison's guidelines... (Press Enter to send)",
+  analyzingText: "Dr. Vance is analyzing Harrison's clinical knowledge and guidelines...",
+};
+
+const getSpecialistProfile = (specialty?: string, agentKey?: string): SpecialtyProfile => {
+  const normKey = (agentKey || '').toLowerCase();
+  const normSpec = (specialty || '').toUpperCase();
+
+  if (normKey === 'su' || normSpec === 'SURGERY') {
+    return SURGERY_PROFILE;
+  }
+  if (normKey === 'ca' || normSpec === 'CARDIOLOGY') {
+    return CARDIOLOGY_PROFILE;
+  }
+  return INTERNAL_MEDICINE_PROFILE;
+};
+
+const buildInitialGreeting = (profile: SpecialtyProfile): DoctorChatMessage => ({
+  id: `msg-welcome-${profile.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}`,
   sender: 'DOCTOR',
-  content:
-    'Greetings. I am Dr. Marcus Vance, Chief Attending Physician of Internal Medicine. My clinical reasoning is grounded in Harrison\'s Principles of Internal Medicine (21st Edition) and internal medicine clinical guidance models.\n\nHow may I assist you with clinical cases, differential diagnoses, evidence-based therapies, or medication contraindications today?',
+  content: profile.greetingText,
   timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
   telemetry: {
     live_gpu_inference: true,
     model: 'Clinical AI 4B (NF4 LoRA Aligned)',
-    knowledge_source: "Harrison's Principles of Internal Medicine (21st Ed)",
+    knowledge_source: profile.bookTitle,
     latency_ms: 0,
   },
-};
+});
 
 export const DoctorChatModal: React.FC<DoctorChatModalProps> = ({
   isOpen,
   onClose,
   patientContext,
+  specialty,
+  doctorName,
+  agentKey,
 }) => {
-  const [messages, setMessages] = useState<DoctorChatMessage[]>([INITIAL_GREETING]);
+  const profile = useMemo(() => getSpecialistProfile(specialty, agentKey), [specialty, agentKey]);
+
+  const [messages, setMessages] = useState<DoctorChatMessage[]>([buildInitialGreeting(profile)]);
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [speakingMessageId, setSpeakingMessageId] = useState<string | null>(null);
@@ -76,12 +200,13 @@ export const DoctorChatModal: React.FC<DoctorChatModalProps> = ({
 
   useEffect(() => {
     if (isOpen) {
+      setMessages([buildInitialGreeting(profile)]);
       setTimeout(() => inputRef.current?.focus(), 150);
     } else {
       stopClinicalSpeech();
       setSpeakingMessageId(null);
     }
-  }, [isOpen]);
+  }, [isOpen, profile]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -102,7 +227,7 @@ export const DoctorChatModal: React.FC<DoctorChatModalProps> = ({
       setSpeakingMessageId(msg.id);
       speakClinicalMessage(
         msg.content,
-        'DR_VANCE',
+        profile.voiceKey,
         () => setSpeakingMessageId(msg.id),
         () => setSpeakingMessageId(null)
       );
@@ -112,7 +237,7 @@ export const DoctorChatModal: React.FC<DoctorChatModalProps> = ({
   const handleClearHistory = () => {
     stopClinicalSpeech();
     setSpeakingMessageId(null);
-    setMessages([INITIAL_GREETING]);
+    setMessages([buildInitialGreeting(profile)]);
   };
 
   const handleSendMessage = async (textToSend?: string) => {
@@ -135,7 +260,7 @@ export const DoctorChatModal: React.FC<DoctorChatModalProps> = ({
 
     try {
       const historyForApi = messages
-        .filter((m) => m.id !== 'msg-welcome')
+        .filter((m) => !m.id.startsWith('msg-welcome'))
         .slice(-6)
         .map((m) => ({
           role: m.sender === 'USER' ? 'user' : 'assistant',
@@ -156,7 +281,7 @@ export const DoctorChatModal: React.FC<DoctorChatModalProps> = ({
       // Attempt high-speed streaming endpoint
       let streamedSuccess = false;
       try {
-        const streamRes = await fetch('/api/specialists/internal-medicine/chat/stream', {
+        const streamRes = await fetch(profile.streamEndpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -220,7 +345,7 @@ export const DoctorChatModal: React.FC<DoctorChatModalProps> = ({
 
       // If streaming didn't complete, fallback to standard synchronous endpoint
       if (!streamedSuccess) {
-        const res = await fetch('/api/specialists/internal-medicine/chat', {
+        const res = await fetch(profile.syncEndpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -281,11 +406,11 @@ export const DoctorChatModal: React.FC<DoctorChatModalProps> = ({
         {/* Header */}
         <div className="p-4 sm:p-5 border-b border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-subtle)] flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3.5">
-            {/* Dr. Vance Avatar */}
+            {/* Specialist Avatar */}
             <div className="relative shrink-0">
               <img
-                src={agentInternalMed}
-                alt="Dr. Marcus Vance, MD"
+                src={profile.avatar}
+                alt={`${profile.name}, ${profile.postNominals}`}
                 className="w-12 h-12 rounded-xl object-cover object-top border border-[var(--ak-color-primary)] shadow-sm"
               />
               <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full bg-[var(--ak-color-success)] border-2 border-white animate-pulse" />
@@ -294,14 +419,14 @@ export const DoctorChatModal: React.FC<DoctorChatModalProps> = ({
             <div>
               <div className="flex flex-wrap items-center gap-2">
                 <h2 className="text-base font-semibold text-[var(--ak-color-text-primary)] flex items-center gap-1.5">
-                  <span>Dr. Marcus Vance, MD, FACP</span>
+                  <span>{doctorName || `${profile.name}, ${profile.postNominals}`}</span>
                 </h2>
                 <Badge variant="success" size="sm">
                   On duty
                 </Badge>
               </div>
               <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--ak-color-text-muted)] mt-0.5">
-                <span className="text-[var(--ak-color-primary)] font-medium">Chief Attending Physician, Internal Medicine</span>
+                <span className="text-[var(--ak-color-primary)] font-medium">{profile.roleTitle}</span>
                 <span className="text-[var(--ak-color-border-subtle)]">•</span>
                 <span className="flex items-center gap-1 font-mono text-[11px] text-[var(--ak-color-text-secondary)]">
                   <BookOpen className="w-3 h-3 text-[var(--ak-color-primary)]" />
@@ -310,7 +435,7 @@ export const DoctorChatModal: React.FC<DoctorChatModalProps> = ({
                 <span className="text-[var(--ak-color-border-subtle)]">•</span>
                 <span className="flex items-center gap-1 font-mono text-[11px] text-[var(--ak-color-text-secondary)]">
                   <Cpu className="w-3 h-3 text-[var(--ak-color-primary)]" />
-                  <span>AI-assisted internal medicine</span>
+                  <span>AI-assisted specialty guidance</span>
                 </span>
               </div>
             </div>
@@ -344,7 +469,7 @@ export const DoctorChatModal: React.FC<DoctorChatModalProps> = ({
             <Sparkles className="w-3.5 h-3.5 text-[var(--ak-color-primary)]" />
             <span>Presets:</span>
           </span>
-          {STARTER_PROMPTS.map((item, idx) => (
+          {profile.starterPrompts.map((item, idx) => (
             <Chip
               key={idx}
               clickable
@@ -371,8 +496,8 @@ export const DoctorChatModal: React.FC<DoctorChatModalProps> = ({
                 {/* Doctor Avatar on Left */}
                 {isDoc && (
                   <img
-                    src={agentInternalMed}
-                    alt="Dr. Vance"
+                    src={profile.avatar}
+                    alt={profile.shortName}
                     className="w-8 h-8 rounded-lg object-cover object-top border border-[var(--ak-color-border-subtle)] shrink-0 mt-1 shadow-xs"
                   />
                 )}
@@ -391,7 +516,7 @@ export const DoctorChatModal: React.FC<DoctorChatModalProps> = ({
                     <div className="flex items-center gap-1.5 font-semibold tracking-wide">
                       {isDoc ? (
                         <>
-                          <span className="text-[var(--ak-color-primary)]">Dr. Marcus Vance, MD</span>
+                          <span className="text-[var(--ak-color-primary)]">{profile.name}, {profile.postNominals}</span>
                           <Badge variant="primary" size="sm">
                             Attending
                           </Badge>
@@ -408,7 +533,7 @@ export const DoctorChatModal: React.FC<DoctorChatModalProps> = ({
                         <button
                           onClick={() => handleToggleSpeech(msg)}
                           className="p-1 rounded transition hover:bg-[var(--ak-color-bg-subtle)] cursor-pointer text-[var(--ak-color-text-muted)] hover:text-[var(--ak-color-text-primary)]"
-                          title={isSpeaking ? 'Stop voice readout' : 'Listen to Dr. Vance read response'}
+                          title={isSpeaking ? 'Stop voice readout' : `Listen to ${profile.shortName} read response`}
                         >
                           {isSpeaking ? (
                             <VolumeX className="w-3.5 h-3.5 text-[var(--ak-color-danger)] animate-pulse" />
@@ -472,6 +597,21 @@ export const DoctorChatModal: React.FC<DoctorChatModalProps> = ({
                         </div>
                       )}
 
+                      {/* Immediate Workup */}
+                      {msg.immediate_workup && msg.immediate_workup.length > 0 && (
+                        <div className="mt-3 p-3 rounded-xl bg-[var(--ak-color-bg-subtle)] border border-[var(--ak-color-border-subtle)]">
+                          <div className="flex items-center gap-1.5 text-xs font-semibold text-[var(--ak-color-primary)] mb-1.5">
+                            <Activity className="w-3.5 h-3.5" />
+                            <span>Recommended diagnostic workup:</span>
+                          </div>
+                          <ul className="list-disc list-inside text-xs space-y-0.5 text-[var(--ak-color-text-secondary)] pl-1">
+                            {msg.immediate_workup.map((wk, wkIdx) => (
+                              <li key={wkIdx}>{wk}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
                       {/* Guideline Therapy & Workup */}
                       {msg.guideline_therapy && msg.guideline_therapy.length > 0 && (
                         <div className="mt-3 p-3 rounded-xl bg-[var(--ak-color-bg-subtle)] border border-[var(--ak-color-border-subtle)]">
@@ -487,7 +627,7 @@ export const DoctorChatModal: React.FC<DoctorChatModalProps> = ({
                         </div>
                       )}
 
-                      {/* Expandable Harrison's Citations */}
+                      {/* Expandable Citations */}
                       {msg.citations && msg.citations.length > 0 && (
                         <div className="mt-3 pt-2">
                           <button
@@ -496,7 +636,7 @@ export const DoctorChatModal: React.FC<DoctorChatModalProps> = ({
                           >
                             <BookOpen className="w-3.5 h-3.5" />
                             <span>
-                              {citationsOpen ? 'Hide' : 'View'} {msg.citations.length} Harrison's textbook citations
+                              {citationsOpen ? 'Hide' : 'View'} {msg.citations.length} textbook citations ({profile.bookTitle})
                             </span>
                             {citationsOpen ? (
                               <ChevronUp className="w-3 h-3" />
@@ -546,13 +686,13 @@ export const DoctorChatModal: React.FC<DoctorChatModalProps> = ({
           {isLoading && (
             <div className="flex gap-3 items-start animate-in fade-in duration-150">
               <img
-                src={agentInternalMed}
-                alt="Dr. Vance"
+                src={profile.avatar}
+                alt={profile.shortName}
                 className="w-8 h-8 rounded-lg object-cover object-top border border-[var(--ak-color-border-subtle)] shrink-0 mt-1 shadow-xs"
               />
               <div className="bg-[var(--ak-color-bg-surface)] border border-[var(--ak-color-border-subtle)] rounded-2xl p-4 flex items-center gap-3 text-xs text-[var(--ak-color-text-secondary)] shadow-xs">
                 <Loader2 className="w-4 h-4 text-[var(--ak-color-primary)] animate-spin" />
-                <span>Dr. Vance is analyzing Harrison's clinical knowledge and guidelines...</span>
+                <span>{profile.analyzingText}</span>
               </div>
             </div>
           )}
@@ -575,7 +715,7 @@ export const DoctorChatModal: React.FC<DoctorChatModalProps> = ({
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Ask Dr. Vance about clinical cases, differential diagnoses, therapies, or Harrison's guidelines... (Press Enter to send)"
+                placeholder={profile.placeholderText}
                 rows={2}
                 className="w-full bg-transparent text-[var(--ak-color-text-primary)] placeholder-[var(--ak-color-text-muted)] text-xs sm:text-sm focus:outline-none resize-none font-sans"
               />
@@ -592,7 +732,7 @@ export const DoctorChatModal: React.FC<DoctorChatModalProps> = ({
           </form>
           <div className="flex items-center justify-between text-[10px] text-[var(--ak-color-text-muted)] mt-2 px-1 font-mono">
             <span>Press Enter to send, Shift+Enter for newline</span>
-            <span>Grounding: Harrison's Principles of Internal Medicine 21st Ed</span>
+            <span>Grounding: {profile.bookTitle}</span>
           </div>
         </div>
       </div>

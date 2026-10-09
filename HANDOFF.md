@@ -1,6 +1,44 @@
 # AI Virtual Hospital (AI-VH) : Session Handoff
 
-## 0. Current Session (2026-10-09) — Virtual Hospital Staff Roster Implementation
+## 0. Current Session (2026-10-09) — Schwartz's Principles of Surgery (10th Ed) Ingestion & Surgery Agent Integration
+- **Textbook Ingestion & Vector Embedding**:
+  - Full ingestion and dense embedding of *Schwartz's Principles of Surgery (10th Edition)* (2,098 pages, 89 TOC chapters, 62.95 MB PDF located in `Medical Books/Agent for (Surgery)/Schwartz's_Principles_of_Surgery_10th_Edition.pdf`).
+  - Extracted 11,983 high-fidelity semantic chunks using `SpecialtyBookEmbedder` with sliding window chunking (500 tokens, 100 token overlap).
+  - Generated dense vector embeddings using `all-MiniLM-L6-v2` on NVIDIA RTX 4060 GPU with CUDA acceleration in 101.61 seconds (1.69 minutes).
+  - Persisted embeddings to:
+    - `data/knowledge/schwartz_collection.json` (15.68 MB, 11,983 chunk records with TOC chapter metadata and page numbers).
+    - `data/knowledge/schwartz_embeddings.npy` (18.41 MB, float32 matrix of shape `[11983, 384]`).
+    - SQLite database table `knowledge_chunks` in `data/aivh.db`.
+- **Surgery RAG Engine (`SurgeryRAGAgent`)**:
+  - Implemented in `backend/rag/specialists/surgery_rag.py`.
+  - Dense cosine similarity retrieval with query expansion across 12 acute surgical domains (appendicitis, cholecystitis, small bowel obstruction, incarcerated hernia, diverticulitis, pancreatitis, mesenteric ischemia, trauma/hemoperitoneum, peritonitis, etc.).
+  - Generates structured `EvidenceBrief` objects with chapter, page, verbatim evidence text, and relevance scores.
+- **Surgery Specialist Agent (`Dr. Sarah Lin, MD, FACS`)**:
+  - Implemented in `backend/agents/specialists/surgery.py`.
+  - Personified as `Dr. Sarah Lin, MD, FACS`, Lead Attending Surgeon, General & Acute Care Surgery.
+  - Supports:
+    - On-demand formal surgical consultations (`conduct_specialist_consultation`).
+    - Direct specialist chat (`chat_with_specialist`).
+    - Real-time token streaming (`stream_chat_with_specialist`).
+    - Grounding in Schwartz's Principles of Surgery combined with shared MedGemma 4B GPU clinical decision reasoning.
+- **Medical Specialty Router & Orchestrator Integration**:
+  - `backend/agents/router.py`: Added `SURGERY_KEYWORDS` and surgical emergency triage branch routing acute surgical presentations directly to Surgery (`Dr. Sarah Lin, MD, FACS`).
+  - `backend/simulation/orchestrator.py`: Integrated `self.surgery_rag_agent` and `self.surgery_specialist`, with helper methods `conduct_surgery_consult`, `chat_with_dr_sarah_lin`, and `stream_chat_with_dr_sarah_lin`.
+  - `backend/api/router.py`: Exposed endpoints:
+    - `POST /api/specialists/surgery/consult`
+    - `POST /api/specialists/surgery/chat`
+    - `POST /api/specialists/surgery/chat/stream`
+- **Frontend Specialist Chat & Roster Updates**:
+  - `DoctorChatModal.tsx`: Parameterized to dynamically render specialist profiles (Surgery, Cardiology, Internal Medicine) with corresponding avatar (`agentSurgery`), titles, Schwartz textbook citations, starter scenario prompts, and dedicated API endpoints.
+  - `StaffManagementSection.tsx`: Wired staff roster message listener to pass `specialty`, `doctorName`, and `agentKey` into `DoctorChatModal`.
+  - `speechSynthesis.ts`: Added `DR_LIN` voice persona for Dr. Sarah Lin with tailored vocal attributes.
+- **Verification & Testing**:
+  - Automated test suite `backend/tests/test_schwartz_embedding.py`: **7/7 tests passed** (file existence, vector dimensions 11983x384, initialization, appendicitis grounding, bowel obstruction grounding, cholecystitis grounding, consult generation, and triage routing).
+  - Production build: `npm run build` completed with 0 errors in 2.36s.
+  - Unit tests: `npm test` passed 38/38 tests across 10 test files.
+  - Live API validation: Executed live query to `/api/specialists/surgery/chat` returning 200 OK with Dr. Sarah Lin and exact citations from Schwartz Chapter 30 (The Appendix) and Chapter 27 (Surgical Management).
+
+## 1. Previous Session (2026-10-09) — Virtual Hospital Staff Roster Implementation
 - **Staff Roster Page (`frontend/public/staff-roster.html` & `StaffManagementSection.tsx`)**:
   - Replicated and integrated `Virtual Hospital Staff Roster.html` into the application's `STAFF` tab.
   - Eliminated redundant top header inside the embedded roster view to integrate seamlessly with the main platform navigation.

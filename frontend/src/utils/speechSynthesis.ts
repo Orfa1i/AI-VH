@@ -53,6 +53,14 @@ export const AGENT_VOICE_PERSONAS: Record<string, VoicePersona> = {
     lang: 'en-US',
     preferredVoiceGender: 'male',
   },
+  DR_LIN: {
+    name: 'Dr. Sarah Lin, MD, FACS',
+    role: 'Lead Attending Surgeon',
+    pitch: 1.02,
+    rate: 1.0,
+    lang: 'en-US',
+    preferredVoiceGender: 'female',
+  },
 };
 
 let isMuted = false;

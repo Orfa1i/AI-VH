@@ -212,6 +212,51 @@ async def chat_cardiology_stream(req: DoctorChatRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@api_router.post("/specialists/surgery/consult")
+async def consult_surgery(req: SpecialistConsultRequest):
+    """Consult Dr. Sarah Lin, MD, FACS (Surgery) powered by Schwartz's Principles of Surgery RAG."""
+    try:
+        result = await orchestrator.conduct_surgery_consult(
+            clinical_scenario=req.clinical_scenario,
+            abnormal_labs=req.abnormal_labs,
+            patient_id=req.patient_id or "PAT-SURGERY-CONSULT",
+        )
+        return result
+    except Exception as e:
+        logger.error(f"Surgery consult error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.post("/specialists/surgery/chat")
+async def chat_surgery(req: DoctorChatRequest):
+    """Direct conversational clinical consultation with Dr. Sarah Lin, MD, FACS (Surgery)."""
+    try:
+        result = await orchestrator.chat_with_dr_sarah_lin(
+            user_message=req.message,
+            conversation_history=req.conversation_history,
+            patient_context=req.patient_context,
+        )
+        return result
+    except Exception as e:
+        logger.error(f"Doctor Sarah Lin chat error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.post("/specialists/surgery/chat/stream")
+async def chat_surgery_stream(req: DoctorChatRequest):
+    """Streams real-time clinical diagnostic consultation tokens with Dr. Sarah Lin, MD, FACS (Surgery)."""
+    try:
+        generator = orchestrator.stream_chat_with_dr_sarah_lin(
+            user_message=req.message,
+            conversation_history=req.conversation_history,
+            patient_context=req.patient_context,
+        )
+        return StreamingResponse(generator, media_type="text/event-stream")
+    except Exception as e:
+        logger.error(f"Doctor Sarah Lin streaming error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @api_router.post("/router/route")
 async def route_clinical_case(req: SpecialistConsultRequest):
     """Evaluates clinical presentation through MedicalSpecialtyRouter without altering models."""

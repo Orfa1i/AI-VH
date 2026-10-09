@@ -41,9 +41,19 @@ class MedicalSpecialtyRouter:
     INTERNAL_MEDICINE_KEYWORDS = [
         "fever", "cough", "sputum", "pneumonia", "shortness of breath", "dyspnea",
         "ketoacidosis", "dka", "hyperglycemia", "diabetes", "kidney", "creatinine",
-        "aki", "oliguria", "sepsis", "bacteremia", "abdominal pain", "nausea",
-        "vomiting", "diarrhea", "jaundice", "pancreatitis", "rash", "malaise",
+        "aki", "oliguria", "sepsis", "bacteremia", "nausea",
+        "vomiting", "diarrhea", "jaundice", "rash", "malaise",
         "fatigue", "weight loss", "anemia", "hyponatremia", "hyperkalemia"
+    ]
+
+    SURGERY_KEYWORDS = [
+        "acute abdomen", "appendicitis", "peritonitis", "rebound tenderness", "guarding",
+        "cholecystitis", "gallbladder", "bowel obstruction", "obstipation", "hernia",
+        "incarcerated", "strangulated", "laparotomy", "appendectomy", "cholecystectomy",
+        "trauma", "splenic laceration", "hemoperitoneum", "mesenteric ischemia",
+        "perforation", "pneumoperitoneum", "surgical exploration", "surgical consult",
+        "operative", "right lower quadrant pain", "mcburney", "murphy sign",
+        "diverticulitis", "wound dehiscence", "anastomotic leak"
     ]
 
     @classmethod
@@ -68,24 +78,39 @@ class MedicalSpecialtyRouter:
         combined_text = f"{complaint.lower()} {hpi.lower()} {' '.join(str(p).lower() for p in pmh)}"
 
         cardio_hits = [k for k in cls.CARDIOLOGY_KEYWORDS if k in combined_text]
+        surgery_hits = [k for k in cls.SURGERY_KEYWORDS if k in combined_text]
         im_hits = [k for k in cls.INTERNAL_MEDICINE_KEYWORDS if k in combined_text]
 
         # Score weights: complaint hits count for 2, HPI/PMH hits count for 1
         cardio_score = sum(2 if k in complaint.lower() else 1 for k in cardio_hits)
+        surgery_score = sum(2 if k in complaint.lower() else 1 for k in surgery_hits)
         im_score = sum(2 if k in complaint.lower() else 1 for k in im_hits)
 
         # High-acuity cardiac triggers take precedent in emergency routing
         is_cardiac_emergency = any(
             k in complaint.lower() for k in ["chest pain", "angina", "infarction", "stemi", "nstemi", "substernal", "troponin"]
         )
+        is_surgical_emergency = any(
+            k in complaint.lower() for k in [
+                "acute abdomen", "appendicitis", "peritonitis", "bowel obstruction",
+                "strangulated", "incarcerated hernia", "perforation", "pneumoperitoneum"
+            ]
+        )
 
-        if is_cardiac_emergency or cardio_score > im_score:
+        if is_cardiac_emergency or (cardio_score > surgery_score and cardio_score > im_score):
             specialty = "CARDIOLOGY"
             specialist_name = "Dr. Rachel Vance, MD, FACC"
             book = "Braunwald's Heart Disease: A Textbook of Cardiovascular Medicine (12th Ed)"
             confidence = min(0.98, max(0.75, 0.70 + 0.05 * len(cardio_hits)))
             rationale = f"Primary cardiovascular presentation identified ({', '.join(cardio_hits[:3]) or 'cardiac symptoms'}). Routed to Cardiology."
             hits = cardio_hits
+        elif is_surgical_emergency or (surgery_score > im_score):
+            specialty = "SURGERY"
+            specialist_name = "Dr. Sarah Lin, MD, FACS"
+            book = "Schwartz's Principles of Surgery (10th Ed)"
+            confidence = min(0.98, max(0.75, 0.70 + 0.05 * len(surgery_hits)))
+            rationale = f"Surgical pathology / acute abdomen identified ({', '.join(surgery_hits[:3]) or 'surgical symptoms'}). Routed to Surgery."
+            hits = surgery_hits
         else:
             specialty = "INTERNAL_MEDICINE"
             specialist_name = "Dr. Marcus Vance, MD, FACP"

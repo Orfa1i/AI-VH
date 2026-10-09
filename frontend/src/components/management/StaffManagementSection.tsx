@@ -206,6 +206,21 @@ export const StaffManagementSection: React.FC<StaffManagementSectionProps> = ({
       <DoctorChatModal
         isOpen={isDoctorChatOpen}
         onClose={() => setIsDoctorChatOpen(false)}
+        agentKey={activeDoctorContext.key}
+        specialty={
+          activeDoctorContext.key === 'su'
+            ? 'SURGERY'
+            : activeDoctorContext.key === 'ca'
+            ? 'CARDIOLOGY'
+            : 'INTERNAL_MEDICINE'
+        }
+        doctorName={
+          activeDoctorContext.key === 'su'
+            ? 'Dr. Sarah Lin, MD, FACS'
+            : activeDoctorContext.key === 'ca'
+            ? 'Dr. Elena Rostova, MD, FACC'
+            : 'Dr. Marcus Vance, MD, FACP'
+        }
         patientContext={activeDoctorContext.name ? { attendingDoctor: activeDoctorContext.name } : undefined}
       />
     </div>
