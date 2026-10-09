@@ -93,6 +93,14 @@ export const AGENT_VOICE_PERSONAS: Record<string, VoicePersona> = {
     lang: 'en-US',
     preferredVoiceGender: 'female',
   },
+  DR_ALEXANDER_HAYES: {
+    name: 'Dr. Alexander Hayes, MD, PhD, FAAN',
+    role: 'Attending Neurologist, Stroke & Neurophysiology',
+    pitch: 0.95,
+    rate: 0.98,
+    lang: 'en-US',
+    preferredVoiceGender: 'male',
+  },
 };
 
 let isMuted = false;

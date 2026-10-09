@@ -84,6 +84,17 @@ class MedicalSpecialtyRouter:
         "cervical dysplasia", "pap smear", "postmenopausal bleeding", "cervical motion tenderness"
     ]
 
+    NEUROLOGY_KEYWORDS = [
+        "stroke", "ischemic stroke", "cva", "tpa", "thrombectomy", "nihss",
+        "hemiparesis", "facial droop", "aphasia", "dysarthria", "ataxia",
+        "seizure", "status epilepticus", "epilepsy", "convulsion", "postictal",
+        "myasthenia", "myasthenic crisis", "guillain-barre", "gbs", "ascending paralysis",
+        "multiple sclerosis", "optic neuritis", "demyelinating", "parkinson",
+        "resting tremor", "chorea", "dystonia", "coma", "brain death", "altered mental status",
+        "subarachnoid hemorrhage", "thunderclap headache", "intracranial hemorrhage", "ich",
+        "cauda equina", "spinal cord compression", "neuropathy"
+    ]
+
     @classmethod
     def route_case(cls, case_data: Any) -> RoutingDecision:
         """
@@ -108,6 +119,7 @@ class MedicalSpecialtyRouter:
         em_hits = [k for k in cls.EMERGENCY_KEYWORDS if k in combined_text]
         cardio_hits = [k for k in cls.CARDIOLOGY_KEYWORDS if k in combined_text]
         surgery_hits = [k for k in cls.SURGERY_KEYWORDS if k in combined_text]
+        neuro_hits = [k for k in cls.NEUROLOGY_KEYWORDS if k in combined_text]
         gyn_hits = [k for k in cls.GYNECOLOGY_KEYWORDS if k in combined_text]
         id_hits = [k for k in cls.INFECTIOUS_DISEASES_KEYWORDS if k in combined_text]
         im_hits = [k for k in cls.INTERNAL_MEDICINE_KEYWORDS if k in combined_text]
@@ -116,6 +128,7 @@ class MedicalSpecialtyRouter:
         em_score = sum(2 if k in complaint.lower() else 1 for k in em_hits)
         cardio_score = sum(2 if k in complaint.lower() else 1 for k in cardio_hits)
         surgery_score = sum(2 if k in complaint.lower() else 1 for k in surgery_hits)
+        neuro_score = sum(2 if k in complaint.lower() else 1 for k in neuro_hits)
         gyn_score = sum(2 if k in complaint.lower() else 1 for k in gyn_hits)
         id_score = sum(2 if k in complaint.lower() else 1 for k in id_hits)
         im_score = sum(2 if k in complaint.lower() else 1 for k in im_hits)
@@ -137,6 +150,14 @@ class MedicalSpecialtyRouter:
                 "strangulated", "incarcerated hernia", "perforation", "pneumoperitoneum"
             ]
         )
+        is_neurologic_primary = any(
+            k in complaint.lower() for k in [
+                "stroke", "ischemic stroke", "cva", "tpa", "thrombectomy", "nihss",
+                "hemiparesis", "aphasia", "facial droop", "seizure", "convulsion",
+                "myasthenia", "guillain-barre", "multiple sclerosis",
+                "subarachnoid hemorrhage", "thunderclap headache", "parkinson", "cauda equina"
+            ]
+        )
         is_gynecologic_primary = any(
             k in complaint.lower() for k in [
                 "ectopic pregnancy", "vaginal bleeding", "abnormal uterine bleeding", "aub",
@@ -152,27 +173,34 @@ class MedicalSpecialtyRouter:
             ]
         )
 
-        if is_immediate_resuscitation or (em_score > cardio_score and em_score > surgery_score and em_score > gyn_score and em_score > id_score and em_score > im_score):
+        if is_immediate_resuscitation or (em_score > cardio_score and em_score > surgery_score and em_score > neuro_score and em_score > gyn_score and em_score > id_score and em_score > im_score):
             specialty = "EMERGENCY"
             specialist_name = "Dr. David Kim, MD, FACEP"
             book = "Tintinalli's Emergency Medicine Manual"
             confidence = min(0.98, max(0.75, 0.70 + 0.05 * len(em_hits)))
             rationale = f"Acute resuscitation / emergency pathology identified ({', '.join(em_hits[:3]) or 'emergency symptoms'}). Routed to Emergency Medicine."
             hits = em_hits
-        elif is_cardiac_emergency or (cardio_score > surgery_score and cardio_score > gyn_score and cardio_score > id_score and cardio_score > im_score):
+        elif is_cardiac_emergency or (cardio_score > surgery_score and cardio_score > neuro_score and cardio_score > gyn_score and cardio_score > id_score and cardio_score > im_score):
             specialty = "CARDIOLOGY"
             specialist_name = "Dr. Rachel Vance, MD, FACC"
             book = "Braunwald's Heart Disease: A Textbook of Cardiovascular Medicine (12th Ed)"
             confidence = min(0.98, max(0.75, 0.70 + 0.05 * len(cardio_hits)))
             rationale = f"Primary cardiovascular presentation identified ({', '.join(cardio_hits[:3]) or 'cardiac symptoms'}). Routed to Cardiology."
             hits = cardio_hits
-        elif is_surgical_emergency or (surgery_score > gyn_score and surgery_score > id_score and surgery_score > im_score):
+        elif is_surgical_emergency or (surgery_score > neuro_score and surgery_score > gyn_score and surgery_score > id_score and surgery_score > im_score):
             specialty = "SURGERY"
             specialist_name = "Dr. Sarah Lin, MD, FACS"
             book = "Schwartz's Principles of Surgery (10th Ed)"
             confidence = min(0.98, max(0.75, 0.70 + 0.05 * len(surgery_hits)))
             rationale = f"Surgical pathology / acute abdomen identified ({', '.join(surgery_hits[:3]) or 'surgical symptoms'}). Routed to Surgery."
             hits = surgery_hits
+        elif is_neurologic_primary or (neuro_score > gyn_score and neuro_score > id_score and neuro_score > im_score):
+            specialty = "NEUROLOGY"
+            specialist_name = "Dr. Alexander Hayes, MD, PhD, FAAN"
+            book = "Adams and Victor's Principles of Neurology (8th Ed)"
+            confidence = min(0.98, max(0.75, 0.70 + 0.05 * len(neuro_hits)))
+            rationale = f"Primary neurologic / neurovascular presentation identified ({', '.join(neuro_hits[:3]) or 'neurologic symptoms'}). Routed to Neurology."
+            hits = neuro_hits
         elif is_gynecologic_primary or (gyn_score > id_score and gyn_score > im_score):
             specialty = "GYNECOLOGY"
             specialist_name = "Dr. Evelyn Reed, MD, FACOG"

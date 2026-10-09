@@ -259,6 +259,41 @@ const GYNECOLOGY_PROFILE: SpecialtyProfile = {
   analyzingText: "Dr. Evelyn Reed is analyzing Williams Gynecology evidence and clinical algorithms...",
 };
 
+const NEUROLOGY_PROFILE: SpecialtyProfile = {
+  name: 'Dr. Alexander Hayes',
+  postNominals: 'MD, PhD, FAAN',
+  shortName: 'Dr. Hayes',
+  roleTitle: 'Attending Neurologist, Comprehensive Stroke Center & Clinical Neurophysiology',
+  bookTitle: "Adams and Victor's Principles of Neurology (8th Edition)",
+  avatar: agentInternalMed,
+  voiceKey: 'DR_ALEXANDER_HAYES',
+  streamEndpoint: '/api/specialists/neurology/chat/stream',
+  syncEndpoint: '/api/specialists/neurology/chat',
+  starterPrompts: [
+    {
+      title: 'Acute Ischemic Stroke & tPA / EVT',
+      prompt: 'For a 64yo patient presenting with sudden right hemiparesis and aphasia (NIHSS 16, last known normal 2.5 hours ago), outline the emergency neuroimaging protocol, thrombolytic criteria, and indications for mechanical thrombectomy according to Adams and Victor\'s Principles of Neurology.',
+    },
+    {
+      title: 'Status Epilepticus Escalation',
+      prompt: 'What is the staged pharmacological escalation algorithm for generalized convulsive status epilepticus refractory to initial IV benzodiazepines according to Adams and Victor\'s Principles of Neurology?',
+    },
+    {
+      title: 'Myasthenic Crisis vs Cholinergic Crisis',
+      prompt: 'How do you differentiate a myasthenic crisis from a cholinergic crisis, what bedside respiratory parameters (FVC/NIF) mandate mechanical ventilation, and what medications are strictly contraindicated?',
+    },
+    {
+      title: 'Subarachnoid Hemorrhage & LP Timing',
+      prompt: 'When evaluating a thunderclap headache with a normal non-contrast head CT, what is the optimal timing and diagnostic criteria for lumbar puncture and CSF xanthochromia in Adams and Victor\'s Principles of Neurology?',
+    },
+  ],
+  greetingText:
+    "Greetings. I am Dr. Alexander Hayes, MD, PhD, FAAN, Attending Neurologist. My clinical and diagnostic reasoning is grounded directly in Adams and Victor's Principles of Neurology (8th Edition).\n\nHow may I assist you with acute stroke evaluation, seizures and status epilepticus, neuromuscular emergencies, coma assessment, or complex neuro-critical care today?",
+  placeholderText:
+    "Ask Dr. Alexander Hayes about acute stroke, seizures, neuromuscular disorders, or Adams and Victor's guidance... (Press Enter to send)",
+  analyzingText: "Dr. Alexander Hayes is analyzing Adams and Victor's Principles of Neurology and clinical neurophysiology...",
+};
+
 const getSpecialistProfile = (specialty?: string, agentKey?: string): SpecialtyProfile => {
   const normKey = (agentKey || '').toLowerCase();
   const normSpec = (specialty || '').toUpperCase();
@@ -277,6 +312,9 @@ const getSpecialistProfile = (specialty?: string, agentKey?: string): SpecialtyP
   }
   if (normKey === 'gy' || normSpec === 'GYNECOLOGY' || normSpec === 'GYN') {
     return GYNECOLOGY_PROFILE;
+  }
+  if (normKey === 'ne' || normSpec === 'NEUROLOGY' || normSpec === 'NEURO') {
+    return NEUROLOGY_PROFILE;
   }
   return INTERNAL_MEDICINE_PROFILE;
 };

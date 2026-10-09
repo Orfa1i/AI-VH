@@ -45,6 +45,8 @@ from ..agents.specialists.infectious_diseases import InfectiousDiseasesSpecialis
 from ..rag.specialists.infectious_diseases_rag import InfectiousDiseasesRAGAgent
 from ..agents.specialists.gynecology import GynecologySpecialistAgent
 from ..rag.specialists.gynecology_rag import GynecologyRAGAgent
+from ..agents.specialists.neurology import NeurologySpecialistAgent
+from ..rag.specialists.neurology_rag import NeurologyRAGAgent
 from ..agents.router import MedicalSpecialtyRouter
 from ..rl.dpo_generator import DPOPreferenceGenerator, DPOPreferencePair
 from ..rl.dataset_curator import dataset_curator
@@ -141,6 +143,11 @@ class HospitalOrchestrator:
         self.gynecology_specialist = GynecologySpecialistAgent(
             medgemma_service=self.medgemma,
             rag_agent=self.gynecology_rag_agent
+        )
+        self.neurology_rag_agent = NeurologyRAGAgent()
+        self.neurology_specialist = NeurologySpecialistAgent(
+            medgemma_service=self.medgemma,
+            rag_agent=self.neurology_rag_agent
         )
         self.pharmacist = PharmacistAgent()
         self.evaluation_pipeline = evaluation_pipeline
@@ -391,6 +398,48 @@ class HospitalOrchestrator:
     ):
         """Streams real-time clinical consultation tokens from Dr. Evelyn Reed (Gynecology)."""
         async for chunk in self.gynecology_specialist.stream_chat_with_specialist(
+            user_message=user_message,
+            conversation_history=conversation_history,
+            patient_context=patient_context,
+        ):
+            yield chunk
+
+    async def conduct_neurology_consult(
+        self,
+        clinical_scenario: str,
+        abnormal_labs: Optional[List[str]] = None,
+        patient_id: str = "PAT-NEURO-CONSULT",
+    ) -> Dict[str, Any]:
+        """Provides an on-demand clinical consultation with Dr. Alexander Hayes, MD, PhD, FAAN (Neurology)."""
+        encounter_id = f"CON-NEURO-{uuid.uuid4().hex[:6].upper()}"
+        return await self.neurology_specialist.conduct_specialist_consultation(
+            encounter_id=encounter_id,
+            patient_id=patient_id,
+            clinical_scenario=clinical_scenario,
+            abnormal_labs=abnormal_labs,
+        )
+
+    async def chat_with_dr_alexander_hayes(
+        self,
+        user_message: str,
+        conversation_history: Optional[List[Dict[str, str]]] = None,
+        patient_context: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
+        """Provides direct conversational communication with Dr. Alexander Hayes, MD, PhD, FAAN (Neurology)."""
+        return await self.neurology_specialist.chat_with_specialist(
+            user_message=user_message,
+            conversation_history=conversation_history,
+            patient_context=patient_context,
+        )
+
+    async def stream_chat_with_dr_alexander_hayes(
+        self,
+        user_message: str,
+        conversation_history: Optional[List[Dict[str, str]]] = None,
+        patient_context: Optional[Dict[str, Any]] = None,
+    ):
+        """Streams real-time clinical consultation tokens from Dr. Alexander Hayes (Neurology)."""
+        async for chunk in self.neurology_specialist.stream_chat_with_specialist(
             user_message=user_message,
             conversation_history=conversation_history,
             patient_context=patient_context,

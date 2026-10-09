@@ -392,6 +392,51 @@ async def chat_gynecology_stream(req: DoctorChatRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@api_router.post("/specialists/neurology/consult")
+async def consult_neurology(req: SpecialistConsultRequest):
+    """Consult Dr. Alexander Hayes, MD, PhD, FAAN (Neurology) powered by Adams and Victor's Principles of Neurology RAG."""
+    try:
+        result = await orchestrator.conduct_neurology_consult(
+            clinical_scenario=req.clinical_scenario,
+            abnormal_labs=req.abnormal_labs,
+            patient_id=req.patient_id or "PAT-NEURO-CONSULT",
+        )
+        return result
+    except Exception as e:
+        logger.error(f"Neurology consult error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.post("/specialists/neurology/chat")
+async def chat_neurology(req: DoctorChatRequest):
+    """Direct conversational clinical consultation with Dr. Alexander Hayes, MD, PhD, FAAN (Neurology)."""
+    try:
+        result = await orchestrator.chat_with_dr_alexander_hayes(
+            user_message=req.message,
+            conversation_history=req.conversation_history,
+            patient_context=req.patient_context,
+        )
+        return result
+    except Exception as e:
+        logger.error(f"Doctor Alexander Hayes chat error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.post("/specialists/neurology/chat/stream")
+async def chat_neurology_stream(req: DoctorChatRequest):
+    """Streams real-time clinical diagnostic consultation tokens with Dr. Alexander Hayes, MD, PhD, FAAN (Neurology)."""
+    try:
+        generator = orchestrator.stream_chat_with_dr_alexander_hayes(
+            user_message=req.message,
+            conversation_history=req.conversation_history,
+            patient_context=req.patient_context,
+        )
+        return StreamingResponse(generator, media_type="text/event-stream")
+    except Exception as e:
+        logger.error(f"Doctor Alexander Hayes streaming error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @api_router.post("/router/route")
 async def route_clinical_case(req: SpecialistConsultRequest):
     """Evaluates clinical presentation through MedicalSpecialtyRouter without altering models."""

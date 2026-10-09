@@ -218,6 +218,8 @@ export const StaffManagementSection: React.FC<StaffManagementSectionProps> = ({
             ? 'INFECTIOUS_DISEASES'
             : activeDoctorContext.key === 'gy'
             ? 'GYNECOLOGY'
+            : activeDoctorContext.key === 'ne'
+            ? 'NEUROLOGY'
             : 'INTERNAL_MEDICINE'
         }
         doctorName={
@@ -231,6 +233,8 @@ export const StaffManagementSection: React.FC<StaffManagementSectionProps> = ({
             ? 'Dr. Anthony Mercer, MD, FIDSA'
             : activeDoctorContext.key === 'gy'
             ? 'Dr. Evelyn Reed, MD, FACOG'
+            : activeDoctorContext.key === 'ne'
+            ? 'Dr. Alexander Hayes, MD, PhD, FAAN'
             : 'Dr. Marcus Vance, MD, FACP'
         }
         patientContext={activeDoctorContext.name ? { attendingDoctor: activeDoctorContext.name } : undefined}

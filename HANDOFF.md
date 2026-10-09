@@ -1,6 +1,47 @@
 # AI Virtual Hospital (AI-VH) : Session Handoff
 
-## 0. Current Session (2026-10-10) — Williams Gynecology Full Ingestion & Gynecology Specialist Agent Integration (Dr. Evelyn Reed, MD, FACOG)
+## 0. Current Session (2026-10-10) — Adams & Victor's Principles of Neurology Full Ingestion & Neurology Specialist Agent Integration (Dr. Alexander Hayes, MD, PhD, FAAN)
+- **Textbook Ingestion & Vector Embedding (Adams and Victor's Principles of Neurology, 8th Edition)**:
+  - Source PDF: `C:\Users\PCD\Desktop\Med-books\adams-and-victors-principles-of-neurology-8th.pdf` copied to `Medical Books/Agent for (Neurology)/Adams_and_Victors_Principles_of_Neurology.pdf` (1,398 pages, 58 chapters, 6 parts, 32.21 MB).
+  - Authors: Allan H. Ropper, MD & Robert H. Brown, DPhil, MD (McGraw-Hill).
+  - Ingestion script: `scripts/ingest_adams_neurology.py` using `SpecialtyBookEmbedder` with sentence-transformers `all-MiniLM-L6-v2` on NVIDIA RTX 4060 GPU with CUDA acceleration in 88.05 seconds.
+  - Extracted 9,721 high-fidelity semantic chunks with TOC chapter hierarchy and page numbers.
+  - Generated float32 dense embedding matrix with exact shape `(9721, 384)` matching the 384-dimensional standard.
+  - Persisted to:
+    - `data/knowledge/neurology_collection.json` (9,721 chunk records).
+    - `data/knowledge/neurology_embeddings.npy` (float32 matrix `[9721, 384]`).
+    - `data/knowledge/neurology_checkpoint.json` (1,398 pages processed checkpoint).
+    - SQLite database table `knowledge_chunks` in `data/aivh.db` (9,721 Neurology chunks).
+- **Neurology RAG Engine (`NeurologyRAGAgent`)**:
+  - Implemented in `backend/rag/specialists/neurology_rag.py`.
+  - Dense cosine similarity retrieval with query expansion across 14 clinical domains (acute ischemic stroke / tPA / thrombectomy, intracranial hemorrhage, status epilepticus, coma & brain death, Guillain-Barré & CIDP, myasthenia gravis crisis, multiple sclerosis & optic neuritis, bacterial meningitis / encephalitis, subarachnoid hemorrhage, Parkinson's & movement disorders, dementia & cognitive decline, headache / migraine, traumatic brain injury, spinal cord compression).
+  - Generates structured `EvidenceBrief` objects with chapter, page, verbatim evidence text, and relevance scores.
+- **Neurology Specialist Agent (`Dr. Alexander Hayes, MD, PhD, FAAN`)**:
+  - Implemented in `backend/agents/specialists/neurology.py`.
+  - Personified as `Dr. Alexander Hayes, MD, PhD, FAAN`, Attending Neurologist, Comprehensive Stroke Center & Clinical Neurophysiology.
+  - Supports:
+    - Formal consultations (`conduct_specialist_consultation`) synthesizing Adams and Victor's RAG citations and MedGemma 4B clinical reasoning.
+    - Direct specialist chat (`chat_with_specialist`) and real-time SSE token streaming (`stream_chat_with_specialist`).
+    - Standard neurologic diagnostic workup determination (`determine_diagnostic_workup`).
+    - Event bus telemetry with `HospitalEvent` emissions on RAG queries and evidence retrieval.
+- **Medical Specialty Router & Orchestrator Integration**:
+  - `backend/agents/router.py`: Configured `NEUROLOGY_KEYWORDS` and triage branch routing acute ischemic stroke, seizures, status epilepticus, myasthenia, multiple sclerosis, and coma to Neurology (`Dr. Alexander Hayes, MD, PhD, FAAN`).
+  - `backend/simulation/orchestrator.py`: Integrated `self.neurology_rag_agent`, `self.neurology_specialist`, `conduct_neurology_consult`, `chat_with_dr_alexander_hayes`, and `stream_chat_with_dr_alexander_hayes`.
+  - `backend/api/router.py`: Exposed endpoints:
+    - `POST /api/specialists/neurology/consult`
+    - `POST /api/specialists/neurology/chat`
+    - `POST /api/specialists/neurology/chat/stream`
+- **Frontend Specialist Chat & UI Alignment**:
+  - `DoctorChatModal.tsx`: Added `NEUROLOGY_PROFILE` with Adams and Victor's starter prompts and mapped `ne` / `NEUROLOGY`.
+  - `StaffManagementSection.tsx`: Mapped `ne` to `NEUROLOGY` and `Dr. Alexander Hayes, MD, PhD, FAAN`.
+  - `speechSynthesis.ts`: Bound `DR_ALEXANDER_HAYES` voice persona.
+- **Verification & Testing**:
+  - Automated test suite `backend/tests/test_neurology_embedding.py`: **8/8 tests passed** in 36.15s (file existence, 9,721 vector matrix `[9721, 384]`, SQLite chunk count, RAG initialization, ischemic stroke grounding, status epilepticus grounding, myasthenia gravis grounding, consult generation, and triage routing).
+  - Production build: `npm run build` in `frontend/` completed with 0 errors in 2.17s.
+  - Unit tests: `npm test` passed 38/38 tests across 10 test files in 12.29s.
+  - Live API validation: Executed live query to `POST /api/specialists/neurology/chat` on running FastAPI server; returned 200 OK with `Dr. Alexander Hayes, MD, PhD, FAAN`, live MedGemma inference, and verbatim citations from *Adams and Victor's Principles of Neurology* (*Chapter 34: Cerebrovascular Diseases*).
+
+## 1. Previous Session (2026-10-10) — Williams Gynecology Full Ingestion & Gynecology Specialist Agent Integration (Dr. Evelyn Reed, MD, FACOG)
 - **Textbook Ingestion & Vector Embedding (Williams Gynecology)**:
   - Source PDF: `C:\Users\PCD\Desktop\Med-books\Williams gynecology.pdf` copied to `Medical Books/Agent for (Gynecology)/Williams_Gynecology.pdf` (278 pages, 77 TOC sections, 14.59 MB).
   - Authors: F. Gary Cunningham, MD; Kenneth J. Leveno, MD; Steven L. Bloom, MD; Catherine Y. Spong, MD; Jodi S. Dashe, MD; Barbara L. Hoffman, MD; Brian M. Casey, MD; Jeanne S. Sheffield, MD (McGraw-Hill).
