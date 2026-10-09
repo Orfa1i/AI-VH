@@ -257,6 +257,51 @@ async def chat_surgery_stream(req: DoctorChatRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@api_router.post("/specialists/emergency/consult")
+async def consult_emergency(req: SpecialistConsultRequest):
+    """Consult Dr. David Kim, MD, FACEP (Emergency Medicine) powered by Tintinalli's RAG."""
+    try:
+        result = await orchestrator.conduct_emergency_consult(
+            clinical_scenario=req.clinical_scenario,
+            abnormal_labs=req.abnormal_labs,
+            patient_id=req.patient_id or "PAT-EMERGENCY-CONSULT",
+        )
+        return result
+    except Exception as e:
+        logger.error(f"Emergency Medicine consult error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.post("/specialists/emergency/chat")
+async def chat_emergency(req: DoctorChatRequest):
+    """Direct conversational clinical consultation with Dr. David Kim, MD, FACEP (Emergency Medicine)."""
+    try:
+        result = await orchestrator.chat_with_dr_david_kim(
+            user_message=req.message,
+            conversation_history=req.conversation_history,
+            patient_context=req.patient_context,
+        )
+        return result
+    except Exception as e:
+        logger.error(f"Doctor David Kim chat error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.post("/specialists/emergency/chat/stream")
+async def chat_emergency_stream(req: DoctorChatRequest):
+    """Streams real-time clinical diagnostic consultation tokens with Dr. David Kim, MD, FACEP (Emergency Medicine)."""
+    try:
+        generator = orchestrator.stream_chat_with_dr_david_kim(
+            user_message=req.message,
+            conversation_history=req.conversation_history,
+            patient_context=req.patient_context,
+        )
+        return StreamingResponse(generator, media_type="text/event-stream")
+    except Exception as e:
+        logger.error(f"Doctor David Kim streaming error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @api_router.post("/router/route")
 async def route_clinical_case(req: SpecialistConsultRequest):
     """Evaluates clinical presentation through MedicalSpecialtyRouter without altering models."""

@@ -39,6 +39,8 @@ from ..agents.specialists.cardiology import CardiologySpecialistAgent
 from ..rag.specialists.cardiology_rag import CardiologyRAGAgent
 from ..agents.specialists.surgery import SurgerySpecialistAgent
 from ..rag.specialists.surgery_rag import SurgeryRAGAgent
+from ..agents.specialists.emergency import EmergencySpecialistAgent
+from ..rag.specialists.emergency_rag import EmergencyMedicineRAGAgent
 from ..agents.router import MedicalSpecialtyRouter
 from ..rl.dpo_generator import DPOPreferenceGenerator, DPOPreferencePair
 from ..rl.dataset_curator import dataset_curator
@@ -120,6 +122,11 @@ class HospitalOrchestrator:
         self.surgery_specialist = SurgerySpecialistAgent(
             medgemma_service=self.medgemma,
             rag_agent=self.surgery_rag_agent
+        )
+        self.emergency_rag_agent = EmergencyMedicineRAGAgent()
+        self.emergency_specialist = EmergencySpecialistAgent(
+            medgemma_service=self.medgemma,
+            rag_agent=self.emergency_rag_agent
         )
         self.pharmacist = PharmacistAgent()
         self.evaluation_pipeline = evaluation_pipeline
@@ -244,6 +251,48 @@ class HospitalOrchestrator:
     ):
         """Streams real-time clinical consultation tokens from Dr. Sarah Lin (Surgery)."""
         async for chunk in self.surgery_specialist.stream_chat_with_specialist(
+            user_message=user_message,
+            conversation_history=conversation_history,
+            patient_context=patient_context,
+        ):
+            yield chunk
+
+    async def conduct_emergency_consult(
+        self,
+        clinical_scenario: str,
+        abnormal_labs: Optional[List[str]] = None,
+        patient_id: str = "PAT-EMERGENCY-CONSULT",
+    ) -> Dict[str, Any]:
+        """Provides an on-demand clinical consultation with Dr. David Kim, MD, FACEP (Emergency Medicine)."""
+        encounter_id = f"CON-EMERGENCY-{uuid.uuid4().hex[:6].upper()}"
+        return await self.emergency_specialist.conduct_specialist_consultation(
+            encounter_id=encounter_id,
+            patient_id=patient_id,
+            clinical_scenario=clinical_scenario,
+            abnormal_labs=abnormal_labs,
+        )
+
+    async def chat_with_dr_david_kim(
+        self,
+        user_message: str,
+        conversation_history: Optional[List[Dict[str, str]]] = None,
+        patient_context: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
+        """Provides direct conversational communication with Dr. David Kim, MD, FACEP (Emergency Medicine)."""
+        return await self.emergency_specialist.chat_with_specialist(
+            user_message=user_message,
+            conversation_history=conversation_history,
+            patient_context=patient_context,
+        )
+
+    async def stream_chat_with_dr_david_kim(
+        self,
+        user_message: str,
+        conversation_history: Optional[List[Dict[str, str]]] = None,
+        patient_context: Optional[Dict[str, Any]] = None,
+    ):
+        """Streams real-time clinical consultation tokens from Dr. David Kim (Emergency Medicine)."""
+        async for chunk in self.emergency_specialist.stream_chat_with_specialist(
             user_message=user_message,
             conversation_history=conversation_history,
             patient_context=patient_context,

@@ -1,6 +1,44 @@
 # AI Virtual Hospital (AI-VH) : Session Handoff
 
-## 0. Current Session (2026-10-09) — Braunwald's Heart Disease (12th Ed) Embedding & Cardiology Agent Integration
+## 0. Current Session (2026-10-09) — Tintinalli's Emergency Medicine Manual Ingestion & Emergency Specialist Agent Integration
+- **Textbook Ingestion & Vector Embedding**:
+  - Full ingestion and dense embedding of *Tintinalli's Emergency Medicine Manual* (1,089 pages, 245 TOC sections, 22.60 MB PDF located in `Medical Books/Agent for (Emergency-medicine)/Tintinallis_Emergency_Medicine_Manual.pdf` and provided path `C:\Users\PCD\Desktop\Med-books\Tintinalli’s Emergency Medicine Manual ( PDFDrive ).pdf`).
+  - Extracted 2,981 high-fidelity semantic chunks using `SpecialtyBookEmbedder` with sliding window chunking (500 tokens, 100 token overlap).
+  - Generated dense vector embeddings using `all-MiniLM-L6-v2` on NVIDIA RTX 4060 GPU with CUDA acceleration in 16.88 seconds.
+  - Persisted embeddings to:
+    - `data/knowledge/tintinalli_collection.json` (4.45 MB, 2,981 chunk records with TOC chapter metadata and page numbers).
+    - `data/knowledge/tintinalli_embeddings.npy` (4.58 MB, float32 matrix of shape `[2981, 384]`).
+    - SQLite database table `knowledge_chunks` in `data/aivh.db` (2,981 Emergency Medicine chunks).
+- **Emergency Medicine RAG Engine (`EmergencyMedicineRAGAgent`)**:
+  - Implemented in `backend/rag/specialists/emergency_rag.py`.
+  - Dense cosine similarity retrieval with query expansion across 14 acute resuscitation domains (anaphylaxis, airway/RSI, cardiac arrest, tension pneumothorax, polytrauma/hemorrhagic shock, septic shock, toxicology/overdose, status epilepticus, acute pulmonary edema, hyperkalemia, acute stroke/tPA, hypertensive emergency, thermal burns/CO poisoning, diabetic ketoacidosis/HHS).
+  - Generates structured `EvidenceBrief` objects with chapter, page, verbatim evidence text, and relevance scores.
+- **Emergency Specialist Agent (`Dr. David Kim, MD, FACEP`)**:
+  - Implemented in `backend/agents/specialists/emergency.py`.
+  - Personified as `Dr. David Kim, MD, FACEP`, Lead Attending Physician, Emergency Medicine & Trauma Resuscitation.
+  - Supports:
+    - Formal emergency medicine consults (`conduct_specialist_consultation`).
+    - Direct specialist chat (`chat_with_specialist`) and token streaming (`stream_chat_with_specialist`).
+    - Exact doctor metadata attribution (`Dr. David Kim, MD, FACEP`) and Tintinalli knowledge source telemetry.
+    - Grounding in Tintinalli's Emergency Medicine Manual combined with shared MedGemma 4B GPU clinical decision reasoning.
+- **Medical Specialty Router & Orchestrator Integration**:
+  - `backend/agents/router.py`: Added `EMERGENCY_KEYWORDS` and acute resuscitation triage branch routing emergent presentations directly to Emergency Medicine (`Dr. David Kim, MD, FACEP`).
+  - `backend/simulation/orchestrator.py`: Integrated `self.emergency_rag_agent` and `self.emergency_specialist`, with helper methods `conduct_emergency_consult`, `chat_with_dr_david_kim`, and `stream_chat_with_dr_david_kim`.
+  - `backend/api/router.py`: Exposed endpoints:
+    - `POST /api/specialists/emergency/consult`
+    - `POST /api/specialists/emergency/chat`
+    - `POST /api/specialists/emergency/chat/stream`
+- **Frontend Specialist Chat & Roster Updates**:
+  - `DoctorChatModal.tsx`: Added `EMERGENCY_PROFILE` for `Dr. David Kim, MD, FACEP` with avatar (`agentEmergency` from `vh-agent-emergency-512.png`), Tintinalli starter prompts (Acute Anaphylaxis, Airway RSI, Tension Pneumothorax, Septic Shock Resuscitation), and wired `em` / `EMERGENCY` in `getSpecialistProfile`.
+  - `StaffManagementSection.tsx`: Wired staff roster doctor click for key `'em'` to `EMERGENCY` and `Dr. David Kim, MD, FACEP`.
+  - `speechSynthesis.ts`: Added `DR_KIM` voice persona for Dr. David Kim with tailored resuscitation briefing vocal attributes (`pitch: 0.96`, `rate: 1.0`).
+- **Verification & Testing**:
+  - Automated test suite `backend/tests/test_tintinalli_embedding.py`: **8/8 tests passed** (file existence, 2,981 vector matrix `[2981, 384]`, SQLite chunk count, RAG initialization, anaphylaxis grounding, airway RSI grounding, tension pneumothorax grounding, consult generation, and triage routing).
+  - Production build: `npm run build` completed with 0 errors in 2.02s.
+  - Unit tests: `npm test` passed 38/38 tests across 10 test files.
+  - Live API validation: Executed live query to `POST /api/specialists/emergency/chat` returning 200 OK with Dr. David Kim, MD, FACEP, live MedGemma 4B GPU inference (latency 17.2s), and exact citations from Tintinalli (*Chapter 6: Anaphylaxis, Acute Allergic Reactions, and Angioedema, Page: 85, Score: 7.674*).
+
+## 1. Previous Session (2026-10-09) — Braunwald's Heart Disease (12th Ed) Embedding & Cardiology Agent Integration
 - **Textbook Ingestion & Vector Embedding**:
   - Validated and linked *Braunwald's Heart Disease: A Textbook of Cardiovascular Medicine (12th Edition)* (2,350 pages, 283.88 MB PDF at `Medical Books/Agent for (Cardiology)/Braunwalds_Heart_Disease_Cardiovascular_Medicine.pdf` and provided path `C:\Users\PCD\Desktop\Med-books\toaz.info-braunwaldx27s-heart-disease-a-textbook-of-cardiovascular-medicine-single-v-pr_b38e0fd6d9056dec90344a1485d9f4fb.pdf`).
   - Created standalone ingestion script `scripts/ingest_braunwald_cardiology.py` leveraging `SpecialtyBookEmbedder` with all-MiniLM-L6-v2 on NVIDIA RTX 4060 GPU.

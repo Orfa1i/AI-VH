@@ -56,6 +56,16 @@ class MedicalSpecialtyRouter:
         "diverticulitis", "wound dehiscence", "anastomotic leak"
     ]
 
+    EMERGENCY_KEYWORDS = [
+        "anaphylaxis", "allergic reaction", "stridor", "angioedema", "airway", "intubation",
+        "rapid sequence intubation", "rsi", "choking", "foreign body", "aspiration",
+        "resuscitation", "cardiac arrest", "code blue", "pea", "asystole", "defibrillation",
+        "tension pneumothorax", "needle decompression", "polytrauma", "massive transfusion",
+        "toxicology", "overdose", "poisoning", "ingestion", "naloxone",
+        "status epilepticus", "burn", "inhalation injury", "hypothermia", "hyperthermia",
+        "heat stroke", "emergency stabilization", "unresponsive"
+    ]
+
     @classmethod
     def route_case(cls, case_data: Any) -> RoutingDecision:
         """
@@ -77,16 +87,25 @@ class MedicalSpecialtyRouter:
 
         combined_text = f"{complaint.lower()} {hpi.lower()} {' '.join(str(p).lower() for p in pmh)}"
 
+        em_hits = [k for k in cls.EMERGENCY_KEYWORDS if k in combined_text]
         cardio_hits = [k for k in cls.CARDIOLOGY_KEYWORDS if k in combined_text]
         surgery_hits = [k for k in cls.SURGERY_KEYWORDS if k in combined_text]
         im_hits = [k for k in cls.INTERNAL_MEDICINE_KEYWORDS if k in combined_text]
 
         # Score weights: complaint hits count for 2, HPI/PMH hits count for 1
+        em_score = sum(2 if k in complaint.lower() else 1 for k in em_hits)
         cardio_score = sum(2 if k in complaint.lower() else 1 for k in cardio_hits)
         surgery_score = sum(2 if k in complaint.lower() else 1 for k in surgery_hits)
         im_score = sum(2 if k in complaint.lower() else 1 for k in im_hits)
 
-        # High-acuity cardiac triggers take precedent in emergency routing
+        # High-acuity resuscitation triggers take precedence
+        is_immediate_resuscitation = any(
+            k in complaint.lower() for k in [
+                "anaphylaxis", "stridor", "angioedema", "cardiac arrest", "code blue",
+                "tension pneumothorax", "polytrauma", "overdose", "poisoning", "status epilepticus",
+                "unresponsive", "resuscitation", "aspiration", "rapid sequence intubation"
+            ]
+        )
         is_cardiac_emergency = any(
             k in complaint.lower() for k in ["chest pain", "angina", "infarction", "stemi", "nstemi", "substernal", "troponin"]
         )
@@ -97,7 +116,14 @@ class MedicalSpecialtyRouter:
             ]
         )
 
-        if is_cardiac_emergency or (cardio_score > surgery_score and cardio_score > im_score):
+        if is_immediate_resuscitation or (em_score > cardio_score and em_score > surgery_score and em_score > im_score):
+            specialty = "EMERGENCY"
+            specialist_name = "Dr. David Kim, MD, FACEP"
+            book = "Tintinalli's Emergency Medicine Manual"
+            confidence = min(0.98, max(0.75, 0.70 + 0.05 * len(em_hits)))
+            rationale = f"Acute resuscitation / emergency pathology identified ({', '.join(em_hits[:3]) or 'emergency symptoms'}). Routed to Emergency Medicine."
+            hits = em_hits
+        elif is_cardiac_emergency or (cardio_score > surgery_score and cardio_score > im_score):
             specialty = "CARDIOLOGY"
             specialist_name = "Dr. Rachel Vance, MD, FACC"
             book = "Braunwald's Heart Disease: A Textbook of Cardiovascular Medicine (12th Ed)"

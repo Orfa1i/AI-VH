@@ -69,6 +69,14 @@ export const AGENT_VOICE_PERSONAS: Record<string, VoicePersona> = {
     lang: 'en-US',
     preferredVoiceGender: 'female',
   },
+  DR_KIM: {
+    name: 'Dr. David Kim, MD, FACEP',
+    role: 'Lead Attending Physician, Emergency Medicine',
+    pitch: 0.96,
+    rate: 1.0,
+    lang: 'en-US',
+    preferredVoiceGender: 'male',
+  },
 };
 
 let isMuted = false;

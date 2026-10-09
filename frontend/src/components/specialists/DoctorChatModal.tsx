@@ -3,6 +3,7 @@ import type { DoctorChatMessage, DoctorChatResponse } from '../../types';
 import agentInternalMed from '../../assets/vh-agent-internal-medicine-512.png';
 import agentSurgery from '../../assets/vh-agent-surgery-512.png';
 import agentCardiology from '../../assets/vh-agent-cardiology-512.png';
+import agentEmergency from '../../assets/vh-agent-emergency-512.png';
 import {
   Send,
   Loader2,
@@ -153,6 +154,41 @@ const INTERNAL_MEDICINE_PROFILE: SpecialtyProfile = {
   analyzingText: "Dr. Vance is analyzing Harrison's clinical knowledge and guidelines...",
 };
 
+const EMERGENCY_PROFILE: SpecialtyProfile = {
+  name: 'Dr. David Kim',
+  postNominals: 'MD, FACEP',
+  shortName: 'Dr. David Kim',
+  roleTitle: 'Lead Attending Physician, Emergency Medicine & Trauma Resuscitation',
+  bookTitle: "Tintinalli's Emergency Medicine Manual",
+  avatar: agentEmergency,
+  voiceKey: 'DR_KIM',
+  streamEndpoint: '/api/specialists/emergency/chat/stream',
+  syncEndpoint: '/api/specialists/emergency/chat',
+  starterPrompts: [
+    {
+      title: 'Acute Anaphylaxis',
+      prompt: 'Dr. Kim, for severe acute anaphylaxis with stridor, hypotension (BP 82/50), and diffuse urticaria, what is the exact intramuscular epinephrine dose, concentration, injection site, and refractory escalation protocol in Tintinalli?',
+    },
+    {
+      title: 'Airway RSI & Pre-oxygenation',
+      prompt: 'What is the rapid sequence intubation (RSI) protocol, preoxygenation strategy, and induction/paralytic dosing in Tintinalli for a critically hypoxic patient with acute respiratory failure?',
+    },
+    {
+      title: 'Tension Pneumothorax',
+      prompt: 'For a patient with acute hypotension, absent breath sounds on the right, and tracheal deviation, what is the immediate needle decompression landmark and definitive tube thoracostomy management in Tintinalli?',
+    },
+    {
+      title: 'Septic Shock Resuscitation',
+      prompt: 'According to Tintinalli, what are the initial crystalloid resuscitation volume (30 mL/kg), target MAP goals, and first-line vasopressor selection in septic shock refractory to fluid administration?',
+    },
+  ],
+  greetingText:
+    "Greetings. I am Dr. David Kim, MD, FACEP, Lead Attending Physician in Emergency Medicine and Trauma Resuscitation. My clinical management and critical intervention protocols are grounded directly in Tintinalli's Emergency Medicine Manual.\n\nHow may I assist you with acute resuscitation, airway emergencies, anaphylaxis, trauma stabilization, toxicology, or emergent clinical decision-making today?",
+  placeholderText:
+    "Ask Dr. Kim about resuscitation protocols, rapid sequence intubation, anaphylaxis, or Tintinalli's emergency guidelines... (Press Enter to send)",
+  analyzingText: "Dr. David Kim is analyzing Tintinalli's Emergency Medicine resuscitation protocols and guidelines...",
+};
+
 const getSpecialistProfile = (specialty?: string, agentKey?: string): SpecialtyProfile => {
   const normKey = (agentKey || '').toLowerCase();
   const normSpec = (specialty || '').toUpperCase();
@@ -162,6 +198,9 @@ const getSpecialistProfile = (specialty?: string, agentKey?: string): SpecialtyP
   }
   if (normKey === 'ca' || normSpec === 'CARDIOLOGY') {
     return CARDIOLOGY_PROFILE;
+  }
+  if (normKey === 'em' || normSpec === 'EMERGENCY' || normSpec === 'EMERGENCY_MEDICINE') {
+    return EMERGENCY_PROFILE;
   }
   return INTERNAL_MEDICINE_PROFILE;
 };
