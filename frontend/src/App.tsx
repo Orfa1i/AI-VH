@@ -180,9 +180,9 @@ export const App: React.FC = () => {
       </a>
       {/* Asklevia Clinical App Bar */}
       {/* Header */}
-      <header className="ak-appbar shrink-0">
+      <header className="ak-appbar shrink-0" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         {/* Official Logo Lockup */}
-        <div style={{ display: 'flex', alignItems: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
           <a
             href="#"
             className="ak-appbar__logo"
@@ -200,6 +200,35 @@ export const App: React.FC = () => {
               }}
             />
           </a>
+          <button
+            type="button"
+            onClick={() => {
+              window.location.hash = '';
+              const landing = document.getElementById('landing-view');
+              const root = document.getElementById('root');
+              if (landing && root) {
+                root.style.display = 'none';
+                landing.style.display = 'block';
+                window.scrollTo(0, 0);
+              }
+            }}
+            className="ak-button ak-button--subtle"
+            style={{
+              fontSize: 12,
+              padding: '3px 10px',
+              height: 24,
+              borderRadius: 6,
+              border: '1px solid var(--border-default)',
+              color: 'var(--text-secondary)',
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 4
+            }}
+            title="Return to Landing Page"
+          >
+            ← Landing Page
+          </button>
         </div>
       </header>
 

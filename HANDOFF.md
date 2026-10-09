@@ -1,18 +1,32 @@
 # AI Virtual Hospital (AI-VH) : Session Handoff
 
-## 0. Current Session (2026-10-09) — Exact Virtual Hospital HTML Set as Root Landing Page (Commit `90ee56e`)
-- **Main Landing Page Implemented at Root**:
-  - Replaced `frontend/index.html` with the exact contents of `C:\Users\PCD\Downloads\Virtual Hospital.html`.
-  - When accessing the local URL (`http://localhost:5173/`), Vite serves this landing page with full interactive capabilities:
-    - Spectrum cloud shader (WebGL domain-warped noise background).
-    - Diagnostic synthesis engine SVG animation (MedGemma router, 5 specialist agents, Nemotron synthesis).
-    - Animated patient journey rail and interactive ESI / evidence stations.
-    - Semantic retrieval field canvas animation and live knowledge statistics.
-    - Physician feedback loop network graph canvas with interactive draggable nodes.
-    - 9-department platform modules grid and early access walkthrough demo form.
+## 0. Current Session (2026-10-09) — Immediate Demo Workspace Access & Landing Page De-cluttering
+- **Immediate Portal Access via "Request a demo"**:
+  - Wired all "Request a demo" buttons (`#btn-top-demo`, `#btn-hero-demo`, `#btn-enter-hospital`, and `#demo-form`) to instantly transition the user into the full Virtual Hospital clinical workspace (`#root`).
+  - Added a dedicated "Immediate Access" action card in the `#demo` section featuring a primary button: `Enter Virtual Hospital Demo`.
+  - Added a responsive "← Landing Page" button in the clinical application header (`App.tsx`) to allow seamless, two-way toggling between the landing page and the clinical OS at any time.
+- **Removed Targeted Sections & Mentions**:
+  - Removed "Social Media" and verified no external social media links or widgets exist.
+  - Removed "Collaboration" section and wording.
+  - Removed "Example Cases":
+    - Cleared "Example cases." from the hero engine SVG `aria-label`.
+    - Deleted the bottom caption line from the diagnosis engine SVG that displayed `'Example cases'`.
+    - Updated physician loop graph references: changed "preferred examples" to "preferred reference standards" and "examples to avoid" to "patterns to avoid".
+  - Removed "Physician signs every report":
+    - Removed the explicit `'Example cases · physician signs every report'` caption from the diagnosis engine SVG.
+    - Updated graph review node description from `'A physician reads, grades and signs every report.'` to `'A physician reads and evaluates clinical reports.'`.
+    - Updated hero trust badges to `Physician-reviewed`.
+    - Updated patient journey disposition step 04 to emphasize clinical verification rather than signing every report.
 - **Verification & Quality**:
-  - Real browser verification via Playwright confirmed the title is `"Virtual Hospital"` and captured screenshot at [`site-scan/root-landing-verified.png`](file:///C:/Users/PCD/Desktop/AI-VH/site-scan/root-landing-verified.png).
-  - Test suite verified: **38/38 unit tests green** across 10 test files.
+  - Automated Selenium end-to-end verification (`scripts/verify_landing_and_demo.py`) executed and confirmed:
+    - Landing page loads with full fidelity.
+    - All removed strings are 100% absent from the page source.
+    - Clicking "Request a demo" in top nav immediately mounts and displays `#root` (Intake & Triage, bed board, etc.).
+    - Clicking "← Landing Page" returns immediately to the landing page.
+    - Clicking "Enter Virtual Hospital Demo" inside the `#demo` section also enters `#root` immediately.
+  - Screenshots captured and verified: `Screenshots/landing_page_updated.png`, `Screenshots/workspace_entered_from_demo.png`, and `Screenshots/demo_section_updated.png`.
+  - Production build: `npm run build` completed with 0 errors.
+  - Vitest test suite: **38/38 unit tests green** across 10 test files.
 
 ## 1. Previous Session (2026-10-09) — Comprehensive Site Scan & Visual Design Audit
 
