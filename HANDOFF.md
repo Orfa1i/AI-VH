@@ -1,6 +1,19 @@
 # AI Virtual Hospital (AI-VH) : Session Handoff
 
-## 0. Current Session (2026-10-09) — Exact Virtual Hospital Case Room Replication
+## 0. Current Session (2026-10-09) — Case Room Layout Streamlining & Header Removal
+- **Streamlining Case Room (`frontend/public/case-room.html`)**:
+  - Removed duplicate top navigation bar (`<header class="top">`) including redundant logo, tabs, and notifications bell, preventing stacking with the parent portal header.
+  - Removed entire patient header block (`<section class="pt wrap">`): patient ID (`VH-0417`), gestational age/pregnancy status, chief complaint/symptoms, vital signs pills strip, and collapsible "All findings" panel.
+  - Repositioned simulation playback controls (`#b-play` pause/play and `#b-replay` restart) directly into the "Specialist agents" card header alongside the "Independent review" phase indicator.
+  - Guarded JavaScript DOM queries (`#trail-sign`) to prevent null reference errors.
+  - Maintained complete visual fidelity of the MedGemma router cards, interactive circular agent table, real-time deliberation canvas, and draft/discussion panel.
+- **Verification & Visual QA**:
+  - `npm run build`: Production build succeeded with 0 errors in 1.72s.
+  - `npm test -- --run`: All 38 tests passing across 10 test files.
+  - Headless Chrome visual verification: Captured `Screenshots/caseroom_updated_view.png` confirming the cleaned-up layout.
+
+## 1. Previous Session (2026-10-09) — Exact Virtual Hospital Case Room Replication (Commit `4c3b408`)
+(2026-10-09) — Exact Virtual Hospital Case Room Replication
 - **Exact Replication of Virtual Hospital Case Room (`case-room.html`)**:
   - Replaced the prior markdown card reinterpretation with the exact, 100% faithful replication of the 195 KB standalone HTML application provided in `Virtual Hospital Case Room.html`.
   - Saved as `frontend/public/case-room.html` and served directly through Vite and production static routes.
@@ -24,7 +37,7 @@
   - Vitest test suite: **38/38 unit tests green** across 10 test files.
   - Local endpoint verified: `http://localhost:5173/case-room.html` returns HTTP 200 with full asset availability and interactive canvas execution.
 
-## 1. Previous Session (2026-10-09) — Virtual Hospital Case Room & MedGemma Router Integration (Commit `cafe0e3`)
+## 2. Previous Sessionl Hospital Case Room & MedGemma Router Integration (Commit `cafe0e3`)
  (2026-10-09) — AI Specialist Agent Doctor Avatars Migration (Commit `b770513`)
 - **Branded Specialist Agent Roster Migration**:
   - Integrated 7 newly generated, high-resolution AI specialist doctor agent avatars (`Internal Medicine`, `Cardiology`, `Neurology`, `Surgery`, `Emergency Medicine`, `Obstetrics`, and `Gynecology`) across all sizes (1024, 512, 256, 128, 64, compact, rounded) and vector SVGs into both `frontend/public/assets/` and `frontend/src/assets/`.
