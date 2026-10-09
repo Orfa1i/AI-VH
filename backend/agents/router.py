@@ -81,7 +81,8 @@ class MedicalSpecialtyRouter:
         "adnexal mass", "ovarian torsion", "pelvic inflammatory disease", "pid",
         "tubo-ovarian abscess", "endometriosis", "adenomyosis", "uterine fibroid",
         "leiomyoma", "dysmenorrhea", "dyspareunia", "pcos", "polycystic ovary",
-        "cervical dysplasia", "pap smear", "postmenopausal bleeding", "cervical motion tenderness"
+        "cervical dysplasia", "pap smear", "postmenopausal bleeding", "cervical motion tenderness",
+        "pregnancy", "pregnant", "preeclampsia", "eclampsia", "hellp", "gestation"
     ]
 
     NEUROLOGY_KEYWORDS = [
@@ -162,7 +163,8 @@ class MedicalSpecialtyRouter:
             k in complaint.lower() for k in [
                 "ectopic pregnancy", "vaginal bleeding", "abnormal uterine bleeding", "aub",
                 "adnexal mass", "ovarian cyst", "ovarian torsion", "pelvic inflammatory disease",
-                "pid", "tubo-ovarian abscess", "endometriosis", "uterine fibroid", "postmenopausal bleeding"
+                "pid", "tubo-ovarian abscess", "endometriosis", "uterine fibroid", "postmenopausal bleeding",
+                "preeclampsia", "eclampsia", "hellp", "pregnancy", "pregnant"
             ]
         )
         is_infectious_primary = any(

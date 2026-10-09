@@ -21,10 +21,12 @@ from ..rl.evaluator import PolicyEvaluator
 from ..rl.pre_training_validator import pre_training_validator
 from ..rl.lifecycle import model_lifecycle_manager
 from .demo_patients import router as demo_patients_router
+from .tts import router as tts_router
 
 logger = logging.getLogger("APIRouter")
 api_router = APIRouter(prefix="/api")
 api_router.include_router(demo_patients_router)
+api_router.include_router(tts_router)
 
 
 class ManualTrainingRequest(BaseModel):
@@ -41,7 +43,11 @@ class SimulationRequest(BaseModel):
 
 
 class SpecialistConsultRequest(BaseModel):
-    clinical_scenario: str
+    clinical_scenario: Optional[str] = None
+    chief_complaint: Optional[str] = None
+    patient_history: Optional[str] = None
+    vitals: Optional[Any] = None
+    diagnostic_data: Optional[Any] = None
     abnormal_labs: Optional[List[str]] = None
     patient_id: Optional[str] = "PAT-CONSULT"
 
@@ -442,11 +448,20 @@ async def route_clinical_case(req: SpecialistConsultRequest):
     """Evaluates clinical presentation through MedicalSpecialtyRouter without altering models."""
     try:
         from ..agents.router import MedicalSpecialtyRouter
+        scenario = req.clinical_scenario or req.chief_complaint or ""
+        hpi = req.patient_history or ""
         decision = MedicalSpecialtyRouter.route_case({
-            "chief_complaint": req.clinical_scenario,
+            "chief_complaint": scenario,
+            "history_of_present_illness": hpi,
             "abnormal_labs": req.abnormal_labs or []
         })
-        return decision.model_dump()
+        res = decision.model_dump()
+        spec_lower = decision.specialty.lower()
+        res["specialty"] = spec_lower
+        res["primary_agent"] = spec_lower
+        res["assigned_agents"] = [spec_lower, "emergency_medicine", "internal_medicine", "surgery"]
+        res["consult_agent"] = "surgery" if spec_lower in ["gynecology", "cardiology", "neurology"] else "infectious_diseases"
+        return res
     except Exception as e:
         logger.error(f"Specialty routing error: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
