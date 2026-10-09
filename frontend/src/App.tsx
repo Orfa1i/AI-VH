@@ -378,7 +378,7 @@ export const App: React.FC = () => {
         )}
 
         {activeTab === 'STAFF' && (
-          <StaffManagementSection />
+          <StaffManagementSection onNavigateTab={(tab) => setActiveTab(tab as any)} />
         )}
 
         {activeTab === 'REPORTS' && (

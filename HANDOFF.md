@@ -1,18 +1,23 @@
 # AI Virtual Hospital (AI-VH) : Session Handoff
 
-## 0. Current Session (2026-10-09) — Case Room Layout Streamlining & Header Removal
-- **Streamlining Case Room (`frontend/public/case-room.html`)**:
-  - Removed duplicate top navigation bar (`<header class="top">`) including redundant logo, tabs, and notifications bell, preventing stacking with the parent portal header.
-  - Removed entire patient header block (`<section class="pt wrap">`): patient ID (`VH-0417`), gestational age/pregnancy status, chief complaint/symptoms, vital signs pills strip, and collapsible "All findings" panel.
-  - Repositioned simulation playback controls (`#b-play` pause/play and `#b-replay` restart) directly into the "Specialist agents" card header alongside the "Independent review" phase indicator.
-  - Guarded JavaScript DOM queries (`#trail-sign`) to prevent null reference errors.
-  - Maintained complete visual fidelity of the MedGemma router cards, interactive circular agent table, real-time deliberation canvas, and draft/discussion panel.
+## 0. Current Session (2026-10-09) — Virtual Hospital Staff Roster Implementation
+- **Staff Roster Page (`frontend/public/staff-roster.html` & `StaffManagementSection.tsx`)**:
+  - Replicated and integrated `Virtual Hospital Staff Roster.html` into the application's `STAFF` tab.
+  - Eliminated redundant top header inside the embedded roster view to integrate seamlessly with the main platform navigation.
+  - Rendered all 7 AI specialist doctor cards (Internal Medicine, Cardiology, Neurology, Surgery, Emergency Medicine, Obstetrics, Gynecology) complete with their alive vector SVG avatars, eye-gaze tracking, blinking, LED indicators, reference book tags, and active status indicators.
+  - Rendered the interactive "+ Add a specialist agent" dashed card.
+  - Added live status pill dropdowns ("In consult", "On duty", "Off duty") and category filter buttons with real-time count badges.
+  - Integrated bi-directional communication via `window.postMessage`:
+    - Clicking "Case VH-0417" switches tabs directly to the Case Room (`JOURNEY`).
+    - Clicking "Chat" on any specialist opens the `DoctorChatModal` for live clinical dialogue.
+    - Clicking "+ Add a specialist agent" opens the React `Dialog` to register a new healthcare professional.
 - **Verification & Visual QA**:
-  - `npm run build`: Production build succeeded with 0 errors in 1.72s.
+  - `npm run build`: Production bundle built cleanly with 0 errors in 2.58s.
   - `npm test -- --run`: All 38 tests passing across 10 test files.
-  - Headless Chrome visual verification: Captured `Screenshots/caseroom_updated_view.png` confirming the cleaned-up layout.
+  - Automated Selenium browser testing (`scripts/verify_staff_roster.py` and `scripts/test_roster_interactions.py`): Verified card rendering, DOM structure, modal opening, and case room navigation.
+  - Visual verification: Captured and inspected `Screenshots/staff_roster_verified.png`.
 
-## 1. Previous Session (2026-10-09) — Exact Virtual Hospital Case Room Replication (Commit `4c3b408`)
+## 1. Previous Session (2026-10-09) — Case Room Layout Streamlining & Header Removal
 (2026-10-09) — Exact Virtual Hospital Case Room Replication
 - **Exact Replication of Virtual Hospital Case Room (`case-room.html`)**:
   - Replaced the prior markdown card reinterpretation with the exact, 100% faithful replication of the 195 KB standalone HTML application provided in `Virtual Hospital Case Room.html`.
