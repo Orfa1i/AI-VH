@@ -1,19 +1,20 @@
 # AI Virtual Hospital (AI-VH) : Session Handoff
 
-## 0. Current Session (2026-10-09) — Comprehensive Site Scan & Visual Design Audit
-- **Full-Screen Capture & Architectural Extraction**:
-  - Captured full-height, 1600px desktop screenshots across all 9 primary platform views into `brain/.../site-scan/`:
-    1. `01-intake-triage.png` — Case intake, ESI 1–5 scoring, vitals telemetry.
-    2. `02-patient-directory.png` — Inpatient census, bed board, occupancy.
-    3. `03-staff-roster.png` — Clinical staff roster, Dr. Vance profile, duty status.
-    4. `04-clinical-reports.png` — Review queue and pending clinical reports.
-    5. `05-reviewing.png` — Ground truth archive, 5-star doctor ratings, DPO feedback.
-    6. `06-knowledge-books.png` — Semantic vector store (`bge-small-en`, 47.8k chunks) & RAG search.
-    7. `07-knowledge-sources.png` — Shared clinical pipeline endpoints (PubMed, OpenFDA, RxNorm).
-    8. `08-policy-benchmark.png` — RL DPO policy vs. baseline foundation model evaluation.
-    9. `09-trajectory-graph.png` — 4-stage encounter trajectory, ECG rhythm strip, patient state.
-  - Authored comprehensive design language and architectural blueprint artifact: `site-scan-analysis.md`.
-  - Detailed color tokens (`--bg-page: #F7F8FB`, `--indigo-500: #2B2FD9`), typography (`Funnel Display`, `Host Grotesk`, `Geist Mono`), geometry, and core hospital simulation concepts.
+## 0. Current Session (2026-10-09) — Exact Virtual Hospital HTML Set as Root Landing Page (Commit `90ee56e`)
+- **Main Landing Page Implemented at Root**:
+  - Replaced `frontend/index.html` with the exact contents of `C:\Users\PCD\Downloads\Virtual Hospital.html`.
+  - When accessing the local URL (`http://localhost:5173/`), Vite serves this landing page with full interactive capabilities:
+    - Spectrum cloud shader (WebGL domain-warped noise background).
+    - Diagnostic synthesis engine SVG animation (MedGemma router, 5 specialist agents, Nemotron synthesis).
+    - Animated patient journey rail and interactive ESI / evidence stations.
+    - Semantic retrieval field canvas animation and live knowledge statistics.
+    - Physician feedback loop network graph canvas with interactive draggable nodes.
+    - 9-department platform modules grid and early access walkthrough demo form.
+- **Verification & Quality**:
+  - Real browser verification via Playwright confirmed the title is `"Virtual Hospital"` and captured screenshot at [`site-scan/root-landing-verified.png`](file:///C:/Users/PCD/Desktop/AI-VH/site-scan/root-landing-verified.png).
+  - Test suite verified: **38/38 unit tests green** across 10 test files.
+
+## 1. Previous Session (2026-10-09) — Comprehensive Site Scan & Visual Design Audit
 
 ## 1. Previous Session (2026-10-09) — Cloudflare Quick Tunnel Activation (Commit `04b0ef6`)
 
