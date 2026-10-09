@@ -1,6 +1,27 @@
 # AI Virtual Hospital (AI-VH) : Session Handoff
 
-## 0. Current Session (2026-10-09) — Immediate Demo Workspace Access & Landing Page De-cluttering
+## 0. Current Session (2026-10-09) — AI Specialist Agent Doctor Avatars Migration (Commit `b770513`)
+- **Branded Specialist Agent Roster Migration**:
+  - Integrated 7 newly generated, high-resolution AI specialist doctor agent avatars (`Internal Medicine`, `Cardiology`, `Neurology`, `Surgery`, `Emergency Medicine`, `Obstetrics`, and `Gynecology`) across all sizes (1024, 512, 256, 128, 64, compact, rounded) and vector SVGs into both `frontend/public/assets/` and `frontend/src/assets/`.
+  - Added `vh-agents-overview.png` showcasing the cohesive multi-agent medical team.
+  - Fully replaced the legacy human photograph of Dr. Marcus Vance (`dr_marcus_vance.jpg`) across the physical files, frontend components, and backend database.
+- **Frontend Component Updates**:
+  - `StaffManagementSection.tsx`:
+    - Added an "Asklevia Autonomous Specialist Agents" showcase banner featuring all 7 department agents with their respective specialty tags, evidence base literature (Harrison's, Braunwald's, Adams & Victor's, Schwartz's, Tintinalli's, Williams Obstetrics & Gynecology), and instant avatar preview modal trigger.
+    - Added specialty-to-avatar mapping (`SPECIALTY_AVATARS` & `getStaffAvatar`) dynamically binding staff cards to their departmental AI avatar.
+  - `HospitalFlowDiagram.tsx`:
+    - Replaced Dr. Marcus Vance attending node avatar in Stage 2 (Attending Examination) with the new AI internal medicine avatar (`agentInternalMed`).
+  - `DoctorChatModal.tsx`:
+    - Replaced all header, message bubble, and streaming/loading indicator instances of `drMarcusPhoto` with `agentInternalMed`.
+- **Backend & Database Updates**:
+  - In `backend/database/repository.py`: updated default seeded roster avatar URL for `STAFF-VANCE` to `/assets/png/vh-agent-internal-medicine-512.png`.
+  - In SQLite database `data/aivh.db`: updated `hospital_staff` table record for `STAFF-VANCE` JSON payload with the new avatar path.
+- **Verification & Quality**:
+  - `npm test -- --run`: **38/38 unit tests green** across 10 test files.
+  - `npm run build`: Production bundle built cleanly with 0 errors in 2.00s.
+  - Changes committed to git branch `redesign/phase-7`.
+
+## 1. Previous Session (2026-10-09) — Immediate Demo Workspace Access & Landing Page De-cluttering
 - **Immediate Portal Access via "Request a demo"**:
   - Wired all "Request a demo" buttons (`#btn-top-demo`, `#btn-hero-demo`, `#btn-enter-hospital`, and `#demo-form`) to instantly transition the user into the full Virtual Hospital clinical workspace (`#root`).
   - Added a dedicated "Immediate Access" action card in the `#demo` section featuring a primary button: `Enter Virtual Hospital Demo`.
