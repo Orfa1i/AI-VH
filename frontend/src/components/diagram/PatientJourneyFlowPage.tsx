@@ -9,11 +9,15 @@ import { AppPage } from '../layout/Templates';
 
 interface PatientJourneyFlowPageProps {
   onBackToPortal?: () => void;
+  onNavigateTab?: (tab: string) => void;
 }
 
-export const PatientJourneyFlowPage: React.FC<PatientJourneyFlowPageProps> = () => {
+export const PatientJourneyFlowPage: React.FC<PatientJourneyFlowPageProps> = ({
+  onBackToPortal,
+  onNavigateTab,
+}) => {
   const [cases, setCases] = useState<BenchmarkCase[]>([]);
-  const [selectedCaseId, setSelectedCaseId] = useState<string>('CASE-101');
+  const [selectedCaseId, setSelectedCaseId] = useState<string>('VH-0417');
   const [isRunning, setIsRunning] = useState<boolean>(false);
   const [events, setEvents] = useState<HospitalEvent[]>([]);
   const [activeVitals, setActiveVitals] = useState<VitalSigns | null>(null);
@@ -181,8 +185,8 @@ export const PatientJourneyFlowPage: React.FC<PatientJourneyFlowPageProps> = () 
 
   return (
     <AppPage
-      title="Patient Journey & Clinical Flow"
-      description="Real-time encounter trajectory, department transitions, and interactive clinical simulation stations."
+      title="Virtual Hospital Case Room & Trajectory"
+      description="Autonomous MedGemma routing, multi-specialist independent reviews, and evidence-grounded clinical consensus."
       actions={
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
           <Button
@@ -221,7 +225,7 @@ export const PatientJourneyFlowPage: React.FC<PatientJourneyFlowPageProps> = () 
         </div>
       }
     >
-      {/* 2D Clinical Flow Diagram & Encounter Trajectory */}
+      {/* Case Room & Clinical Trajectory View */}
       <div className="w-full flex flex-col">
         <HospitalFlowDiagram
           cases={cases}
@@ -234,6 +238,8 @@ export const PatientJourneyFlowPage: React.FC<PatientJourneyFlowPageProps> = () 
           events={events}
           activeVitals={activeVitals}
           onOpenDepartmentStation={handleStationInteract}
+          onNavigateTab={onNavigateTab}
+          onBackToPortal={onBackToPortal}
         />
       </div>
 

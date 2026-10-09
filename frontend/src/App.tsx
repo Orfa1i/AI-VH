@@ -398,7 +398,10 @@ export const App: React.FC = () => {
         {activeTab === 'KNOWLEDGE_SOURCES' && <KnowledgeSourcesSection />}
         {activeTab === 'JOURNEY' && (
           <div className="flex-1 w-full h-full overflow-hidden flex flex-col">
-            <PatientJourneyFlowPage onBackToPortal={() => setActiveTab('INTAKE')} />
+            <PatientJourneyFlowPage
+              onBackToPortal={() => setActiveTab('INTAKE')}
+              onNavigateTab={(tab) => setActiveTab(tab as any)}
+            />
           </div>
         )}
 

@@ -1,6 +1,36 @@
 # AI Virtual Hospital (AI-VH) : Session Handoff
 
-## 0. Current Session (2026-10-09) — AI Specialist Agent Doctor Avatars Migration (Commit `b770513`)
+## 0. Current Session (2026-10-09) — Virtual Hospital Case Room & MedGemma Router Integration
+- **Case Room Trajectory Architecture (`Virtual Hospital Case Room.md`)**:
+  - Replaced the legacy 4-node box diagram in the Trajectory Graph view (`HospitalFlowDiagram.tsx` & `PatientJourneyFlowPage.tsx`) with the comprehensive **Case Room** layout specified in `Virtual Hospital Case Room.md`.
+  - Added the canonical 4-step traversal header: `1. Triage` → `2. Attending exam` → `3. Case room` (Active highlight) → `4. Physician sign-off`.
+  - Added breadcrumb navigation links connecting `Virtual Hospital` (portal return) and `Staff Roster` (tab switcher via `onNavigateTab`).
+  - Implemented the synthetic demonstration case `VH-0417 · 31 F · 34 + 2 weeks pregnant` with complaint: `"Severe headache for 6 h, flashing lights, right upper abdominal pain."`
+  - High-acuity clinical metric highlights strip: `BP 168/112`, `HR 104`, `Platelets 88`, `AST / ALT 142 / 156`, `LDH 720`, `Urine protein 3+`, and `Clonus 2 beats`.
+  - Collapsible **All findings** clinical panel structured into 3 high-density columns:
+    - **Vitals**: Blood pressure 168/112 mmHg, Heart rate 104 bpm, SpO₂ 97 %, Resp. rate 18 /min, Temperature 37.0 °C, and Fetal HR 145 bpm (CTG Cat. I).
+    - **Labs · 14:13**: Platelets 88 ×10⁹/L, AST 142 U/L, ALT 156 U/L, LDH 720 U/L, Haemoglobin 10.9 g/dL, Creatinine 87 µmol/L, Glucose 5.1 mmol/L, Fibrinogen 3.4 g/L.
+    - **Examination**: Brisk reflexes (2 beats ankle clonus), RUQ/epigastric tenderness, GCS 15 (no focal deficit), Chest clear, G2 P1 (no prior steroids, no asthma).
+- **MedGemma Router & Specialist Assignment Percentages**:
+  - Integrated the **MedGemma router** component displaying real-time routing status (`Routing the case…` / `Multi-Agent Matrix`) with 98.4% confidence.
+  - Implemented the exact assignment percentage matrix across the 6 specialist agents:
+    - **Obstetrics**: 48% (Lead Maternal-Fetal Specialist, *Williams Obstetrics*)
+    - **Emergency Medicine**: 22% (Acuity & Resuscitation, *Tintinalli's EM*)
+    - **Internal Medicine**: 14% (Multisystem Diagnostics, *Harrison's 21st Ed*)
+    - **Neurology**: 8% (Neurovascular Assessment, *Adams & Victor's*)
+    - **Cardiology**: 5% (Hemodynamic Stabilization, *Braunwald's*)
+    - **General Surgery**: 3% (Acute Abdomen Exclusion, *Schwartz's*)
+  - Each specialist card features its newly branded AI doctor avatar, assignment percentage progress bar, evidence grounding textbook, and clinical rationale.
+  - Interactive agent filter pills allowing users to select any specialist in the router or header to read only their independent review and recommendations.
+- **Working Diagnosis & Multidisciplinary Consensus Gate**:
+  - Displayed working diagnosis **Preeclampsia with severe features** with agreement indicator (`Confidence 0.62 · 0 of 6 agree`), differential exclusions (`Less likely: acute fatty liver, acute cholecystitis, TTP / HUS`), and danger sign monitors (`Watch for: a focal deficit or seizure despite magnesium`).
+  - Added interactive multi-agent consensus synthesis simulation that transitions the case to consensus agreement (`Confidence 0.94 · 6 of 6 agree`), unlocking the 7-step agreed clinical order plan (`Plan 7 of 7 agreed`).
+  - Maintained the legal/regulatory disclaimer footnote: *"Synthetic case for demonstration. The physician confirms, edits or rejects every recommendation before it reaches the patient."*
+- **Verification & Quality**:
+  - `npm test -- --run`: **38/38 unit tests green** across 10 test files.
+  - `npm run build`: Production bundle built cleanly with 0 errors in 1.72s.
+
+## 1. Previous Session (2026-10-09) — AI Specialist Agent Doctor Avatars Migration (Commit `b770513`)
 - **Branded Specialist Agent Roster Migration**:
   - Integrated 7 newly generated, high-resolution AI specialist doctor agent avatars (`Internal Medicine`, `Cardiology`, `Neurology`, `Surgery`, `Emergency Medicine`, `Obstetrics`, and `Gynecology`) across all sizes (1024, 512, 256, 128, 64, compact, rounded) and vector SVGs into both `frontend/public/assets/` and `frontend/src/assets/`.
   - Added `vh-agents-overview.png` showcasing the cohesive multi-agent medical team.
