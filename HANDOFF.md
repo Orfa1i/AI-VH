@@ -2,7 +2,7 @@
 
 **Date:** 2026-10-10  
 **Git Branch:** `redesign/phase-7`  
-**Latest Commit:** `ff8de0b` ("feat(triage): filter patient case dropdown to officially admitted patients from database")  
+**Latest Commit:** `49c2b0d` ("feat(case): create modern PatientCaseSidebar component with accordion sections and telemetry grid")  
 **Environment Status:**
 - Frontend Dev Server: Running on `http://localhost:5173` (Vite, task-7004)
 - Backend API Server: Running on `http://127.0.0.1:8000` (FastAPI / Uvicorn, task-7002)
@@ -11,63 +11,59 @@
 
 ## 1. Accomplished This Session
 
-### Dynamic Admitted Patient Case Selection & Database Synchronization
-Updated the "SELECT PATIENT CASE" dropdown across the Case Room and Virtual Hospital platform to strictly filter and display only patients with an active `ADMITTED` status from the live database:
+### Modern Patient Case Sidebar Component (`frontend/src/components/case/PatientCaseSidebar.tsx`)
+Designed and built a modern, clean, production-grade React component for the Patient Case sidebar in the Virtual Hospital project adhering strictly to high-end medical UI/UX standards:
 
-1. **Database-Driven Case Selection (`frontend/public/case-room.html`)**:
-   - Replaced static, hardcoded `CASES` loop with asynchronous `loadAdmittedPatients()` querying `GET /api/patients?status=ADMITTED`.
-   - Strictly filters for `admission_status === 'ADMITTED'`, eliminating unadmitted pool cases, discharged patients, and synthetic/placeholder cases.
-   - Formats dropdown options with real bed assignments and acuity indicators: `[Bed 04] Elena Vance — Preeclampsia (ESI 2 · Emergent)`.
-   - Handles empty ward states gracefully: renders an informative empty state option (`No admitted patients in wards (Admit via Intake)`) and updates the clinical dossier with clear instructions to admit a patient via Intake.
+1. **Fixed Sticky Patient Summary Header**:
+   - Patient avatar with initials, full name, MRN chip with one-click clipboard copy (with animated checkmark feedback).
+   - Real-time admission status badge (`ADMITTED` with pulsing emerald dot).
+   - Triage acuity badge with level-specific styling (`RESUSCITATION`, `EMERGENT`, `URGENT`, `SEMI-URGENT`, `NON-URGENT`).
+   - Demographics & location strip (`Age/Sex`, bed assignment, department/ward).
+   - Global multi-section toggle button ("Expand all" / "Collapse all") to rapidly alternate between high-level and granular review.
 
-2. **Full Clinical EHR Patient Mapper**:
-   - Implemented `findCanonicalCaseMatch` and `mapDynamicPatientRecord` in `case-room.html`.
-   - Dynamically parses database `case_data`, demographics, acuity levels, baseline vitals, lab panels, and imaging studies into the active Case Room dossier.
-   - Replaces synthetic placeholders with officially admitted patient charts (`synthetic: false`).
+2. **Collapsible Accordion Hierarchy**:
+   - **Chief Complaint (`complaint`)**: Elevated clinical callout card highlighting the acute presenting symptomatology and onset.
+   - **Vital Signs & Telemetry (`vitals`)**: Responsive 2-to-3 column grid featuring soft status indicator background tints (emerald for normal, amber for abnormal, rose for critical), monospace tabular figures, reference range chips, and vital trend indicators.
+   - **Clinical History (`history`)**: Comprehensive clinical background containing HPI narrative, past medical history (PMHx) bullet chips, current active medication list with pill indicators, and drug allergies & adverse reaction alerts with warning callouts (or NKDA confirmation).
+   - **Labs & Diagnostic Workup (`labs`)**: Tabular lab panels with abnormal/critical low/high badges and bedside diagnostic imaging cards (POCUS, CTG, etc.).
+   - **Active Clinical Plan (`plan`)**: Interactive plan checklist with toggleable action items and clinical specialty owner badges (`OB`, `EM`, `IM`, `SU`).
 
-3. **Real-Time Cross-Frame Synchronization**:
-   - Added event listeners for `PATIENT_ADMITTED`, `REFRESH_PATIENTS`, and `CASE_ADMITTED` messages in `case-room.html`.
-   - Updated `frontend/src/App.tsx` and `frontend/src/components/diagram/HospitalFlowDiagram.tsx` to forward admission events directly to the embedded Case Room iframe.
-   - Added dropdown `focus`, window `visibilitychange`, and periodic idle polling to ensure admissions or discharges in another window/tab update the dropdown immediately.
+3. **Custom Thin Scrollbar Styling (`frontend/src/index.css`)**:
+   - Added cross-browser `.custom-thin-scrollbar` class with `scrollbar-width: thin;`, `scrollbar-color: var(--neutral-300, #cbd5e1) transparent;`, 5px width/height, transparent gutter track, and subtle hover thumb darkening without causing layout shift.
 
-4. **Canonical Inpatient Repository Seeding (`backend/database/repository.py`)**:
-   - Added `seed_default_admitted_patients()` to `DatabaseRepository`, which seeds 5 canonical admitted patients (`PAT-8921-OB`, `PAT-3391-CCU`, `PAT-4102-ICU`, `PAT-7742-NEURO`, `PAT-1904-SURG`) with complete EHR charts, bed numbers, and department assignments if the database has zero active admissions.
-   - Called on singleton initialization (`db_repo.seed_default_admitted_patients()`).
-
-5. **Production Multi-Agent Architecture & Live AI Integration (Prior Stage)**:
-   - Steps 1–5 clinical workflow (Patient Intake $\rightarrow$ MedGemma Router $\rightarrow$ Specialist RAG $\rightarrow$ Consultation & Disagreements $\rightarrow$ Nemotron Synthesis).
-   - 5-tier clinical provenance and fail-safe degradation telemetry (`status="DEGRADED"`).
-   - Verified live Nebius Nemotron API call (`nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B`) with thinking trace.
+4. **Design System Showcase Integration & Unit Tests**:
+   - Integrated live interactive preview tab (`Patient Case Sidebar`) into `frontend/src/pages/DesignSystemShowcase.tsx`.
+   - Built comprehensive Vitest unit test suite (`frontend/src/components/case/__tests__/PatientCaseSidebar.test.tsx`) covering header rendering, accordion toggles, expand/collapse all, vital sign status color-coding, custom scrollbar styling, interactive plan item completion, MRN copy feedback, and discharge button triggers.
 
 ---
 
 ## 2. Key Decisions & Rationale
 
-- **Live Database Grounding Over Hardcoded Fixtures**: Grounding the dropdown directly in `/api/patients?status=ADMITTED` ensures that clinical triage workflows strictly reflect real ward admissions, preventing testers from evaluating unadmitted or discharged cases.
-- **Cross-Frame Message Bus & Focus Re-Sync**: Combining `window.postMessage` from the Intake tab with dropdown `focus` triggers ensures instant UI updates without requiring manual browser page refreshes.
-- **Idempotent Inpatient Seeding**: Seeding canonical patients when `count_patients(status='ADMITTED') == 0` guarantees that newly initialized developer or CI/CD test environments always have valid admitted patients ready for testing.
+- **Subtle Background Tints for Vitals**: Full-saturation backgrounds cause visual fatigue and vibration in clinical telemetry views. Using soft opacity tints (`bg-emerald-50/50 dark:bg-emerald-950/20`, `bg-amber-50/70 dark:bg-amber-950/30`, `bg-rose-50/70 dark:bg-rose-950/30`) with border accents provides rapid triage recognition with clean aesthetic restraint.
+- **Global Multi-Accordion Toggle**: While individual accordion sections save vertical screen real estate, physicians need rapid transitions between high-level overviews and exhaustive chart review. Providing an "Expand all / Collapse all" toggle in the sticky header prevents tedious repetitive accordion clicks.
+- **Dual Support for Database Records and Case Fallbacks**: Component accepts either a live `PatientRecord` from `/api/patients` or an `activeCase` fallback, ensuring seamless compatibility across live EHR and legacy demo views.
 
 ---
 
 ## 3. Current State & Verification Proof
 
-- **Live API Verification**:
-  - `GET http://127.0.0.1:8000/api/patients?status=ADMITTED`: Returns 200 OK with all 5 active admitted patients with bed numbers and clinical data.
-  - `POST /api/patients/PAT-1904-SURG/discharge`: Successfully discharges patient; immediate subsequent query to `status=ADMITTED` returned only the 4 remaining active patients.
-- **Backend Test Suite**:
-  - `py -3.13 -m pytest backend/tests/test_patients_and_staff.py`: 5/5 tests passed (100% green).
-  - Regression suite (`test_production_multi_agent_workflow.py`, `test_specialty_router.py`, `test_specialist_diagnostic_workflow.py`, `test_patients_and_staff.py`): 29 passed, 1 skipped (live Nebius verified separately).
-- **Frontend Test & Build Suite**:
-  - `pnpm test`: 10 passed test files, 38/38 unit tests passing.
-  - `pnpm build`: 0 errors, clean production build in 1.76s.
-- **Git Commits**:
-  - `ff8de0b`: `feat(triage): filter patient case dropdown to officially admitted patients from database`
-  - `bf65eba`: `feat(multi-agent): implement production 5-step clinical architecture and live Nebius integration`
+- **Frontend Unit Tests (Vitest)**:
+  - 11/11 test files passed (100% green).
+  - 46/46 unit tests passed, including all 8 `PatientCaseSidebar` tests.
+- **Frontend Production Build**:
+  - `tsc -b && vite build` built cleanly in 1.33s with 0 TypeScript or bundling errors.
+- **Linter & Code Quality**:
+  - Oxlint passed with 0 errors and 0 warnings in `PatientCaseSidebar.tsx`.
+- **Backend API & Regression Tests**:
+  - `test_trajectory_graph_suite.py`: 4/4 passed.
+  - Overall backend regression tests: 29 passed, 1 skipped.
+- **Active Git Commit**:
+  - `49c2b0d`: `feat(case): create modern PatientCaseSidebar component with accordion sections and telemetry grid`
 
 ---
 
 ## 4. Next Steps
 
-- Add quick-discharge and transfer actions directly in the Case Room dossier.
-- Add patient bed occupancy visualizer on the hospital floor plan.
-- Integrate real-time FHIR subscription webhooks for automated intake ingestion.
+- Integrate `PatientCaseSidebar` into the primary Case Room view replacing the legacy side panel.
+- Wire the sidebar's interactive checklist toggles to the backend clinical tasks API.
+- Add live telemetry polling / WebSocket stream for real-time vitals updates in the sidebar.
