@@ -91,11 +91,6 @@
     .repo .mark svg { width: 20px; height: 20px; }
     .repo b { display: block; font: 600 16px var(--display); letter-spacing: -.01em; }
     .repo span { font-size: 13px; color: var(--mute); }
-    .search { position: relative; }
-    .search svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: var(--mute); pointer-events: none; }
-    .search input { height: 38px; width: 300px; max-width: 100%; padding: 0 12px 0 36px; border-radius: 10px; border: 1px solid var(--hair); background: var(--white); font-size: 14px; transition: border-color .2s; }
-    .search input::placeholder { color: #9AA0B4; }
-    .search input:focus { outline: 2px solid var(--indigo); outline-offset: 0; border-color: transparent; }
     .seg { display: inline-flex; background: var(--white); border: 1px solid var(--hair); border-radius: 10px; padding: 3px; gap: 2px; }
     .seg button { height: 30px; padding: 0 11px; border: 0; border-radius: 7px; background: none; cursor: pointer; font-size: 13.5px; font-weight: 500; color: var(--graphite); display: inline-flex; gap: 6px; align-items: center; }
     .seg button[aria-pressed="true"] { background: var(--paper); color: var(--ink); box-shadow: inset 0 0 0 1px var(--hair); }
@@ -103,8 +98,97 @@
     .btn { height: 38px; padding: 0 14px; border-radius: 10px; border: 1px solid var(--hair); background: var(--white); display: inline-flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 500; cursor: pointer; color: var(--ink); white-space: nowrap; transition: all .2s; }
     .btn:hover { background: var(--paper); }
     .btn svg { width: 15px; height: 15px; }
-    .btn.spin svg { animation: rot .8s var(--ease); }
+    .btn.spin svg { animation: rot .8s var(--ease) infinite; }
     @keyframes rot { to { transform: rotate(360deg); } }
+
+    /* ---------- manual intake view ---------- */
+    #view-manual { display: grid; gap: 20px; padding-block: 16px 36px; }
+    #view-synthetic { padding-block: 6px 20px; }
+    #view-manual[hidden], #view-synthetic[hidden] { display: none !important; }
+
+    .m-card { background: var(--white); border: 1px solid var(--hair); border-radius: 18px; box-shadow: var(--shadow); padding: 22px 24px; display: grid; gap: 18px; }
+    .m-card-head { display: flex; flex-direction: column; gap: 3px; border-bottom: 1px solid var(--hair-2); padding-bottom: 14px; }
+    .m-card-head h2 { margin: 0; font: 600 17.5px/1.25 var(--display); letter-spacing: -.01em; color: var(--ink); }
+    .m-card-head span { font-size: 13px; color: var(--mute); }
+
+    .f-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; }
+    .f-field { display: flex; flex-direction: column; gap: 6px; }
+    .f-label { font-size: 13px; font-weight: 500; color: var(--graphite); }
+    .f-label em { color: #DC2626; font-style: normal; margin-left: 2px; }
+    .f-input, .f-select, .f-textarea {
+      height: 38px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--hair);
+      background: var(--white); font: 400 14px/1.4 var(--body); color: var(--ink);
+      transition: border-color .2s, box-shadow .2s; outline: none;
+    }
+    .f-textarea { height: auto; min-height: 74px; padding: 10px 12px; resize: vertical; }
+    .f-input:focus, .f-select:focus, .f-textarea:focus { border-color: var(--indigo); box-shadow: 0 0 0 3px var(--indigo-50); }
+    .f-help { font-size: 12px; color: var(--mute); }
+
+    /* ESI Acuity Selector */
+    .esi-group { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+    .esi-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
+    .esi-btn {
+      border: 1px solid var(--hair); border-radius: 12px; background: var(--white);
+      padding: 12px 14px; text-align: left; cursor: pointer; transition: all .18s var(--ease);
+      display: flex; flex-direction: column; gap: 4px; outline: none;
+    }
+    .esi-btn:hover { border-color: #CBD0E1; transform: translateY(-1px); }
+    .esi-badge {
+      display: inline-flex; align-items: center; justify-content: space-between;
+      font: 600 11.5px var(--mono); letter-spacing: .02em; padding: 2px 7px;
+      border-radius: 6px; width: fit-content;
+    }
+    .esi-title { font: 600 14px var(--display); color: var(--ink); margin-top: 4px; }
+    .esi-desc { font-size: 11.5px; color: var(--mute); line-height: 1.3; }
+
+    .esi-btn[data-esi="RESUSCITATION"] .esi-badge { background: #FEF2F2; color: #991B1B; }
+    .esi-btn[data-esi="EMERGENT"] .esi-badge { background: #FEF2F2; color: #DC2626; }
+    .esi-btn[data-esi="URGENT"] .esi-badge { background: #FFFBEB; color: #B45309; }
+    .esi-btn[data-esi="LESS_URGENT"] .esi-badge { background: #EFF6FF; color: #1D4ED8; }
+    .esi-btn[data-esi="NON_URGENT"] .esi-badge { background: #F0FDF4; color: #15803D; }
+
+    .esi-btn[aria-pressed="true"] { border-width: 2px; }
+    .esi-btn[data-esi="RESUSCITATION"][aria-pressed="true"] { border-color: var(--color-emergency-dark, #991B1B); background: #FEF2F2; }
+    .esi-btn[data-esi="EMERGENT"][aria-pressed="true"] { border-color: var(--color-emergency, #DC2626); background: #FEF2F2; }
+    .esi-btn[data-esi="URGENT"][aria-pressed="true"] { border-color: #D97706; background: #FFFBEB; }
+    .esi-btn[data-esi="LESS_URGENT"][aria-pressed="true"] { border-color: #2563EB; background: #EFF6FF; }
+    .esi-btn[data-esi="NON_URGENT"][aria-pressed="true"] { border-color: #16A34A; background: #F0FDF4; }
+
+    /* Vitals grid */
+    .vitals-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 10px; }
+    .v-tile {
+      background: var(--paper); border: 1px solid var(--hair-2); border-radius: 12px;
+      padding: 10px 12px; display: flex; flex-direction: column; gap: 4px;
+    }
+    .v-label { font-size: 12px; color: var(--mute); font-weight: 500; display: flex; align-items: center; gap: 5px; }
+    .v-label svg { width: 14px; height: 14px; }
+    .v-input-row { display: flex; align-items: baseline; gap: 4px; }
+    .v-input {
+      width: 100%; border: none; background: transparent; font: 700 18px var(--mono);
+      color: var(--ink); outline: none; padding: 0;
+    }
+    .v-unit { font: 500 12px var(--mono); color: var(--mute); }
+
+    /* Form actions */
+    .f-actions { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 6px; }
+    .btn-reset { height: 40px; padding: 0 16px; border-radius: 10px; border: 1px solid var(--hair); background: var(--white); color: var(--graphite); font-weight: 500; cursor: pointer; transition: all .2s; }
+    .btn-reset:hover { background: var(--paper); color: var(--ink); }
+    .btn-admit {
+      height: 42px; padding: 0 20px; border-radius: 10px; border: 0; background: var(--indigo);
+      color: #fff; font-weight: 600; font-size: 14.5px; cursor: pointer; display: inline-flex;
+      align-items: center; gap: 8px; transition: all .2s;
+    }
+    .btn-admit:hover { opacity: .92; transform: translateY(-1px); }
+    .btn-admit:disabled { opacity: .6; cursor: not-allowed; }
+
+    /* Success alert */
+    .m-success {
+      background: var(--verdant-50); border: 1px solid #BFE6D2; border-radius: 14px;
+      padding: 14px 18px; color: #0C6B47; display: flex; flex-direction: column; gap: 6px;
+    }
+    .m-success b { font-weight: 600; font-size: 14.5px; display: flex; align-items: center; gap: 6px; }
+    .m-success-badges { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+    .m-success-badge { font: 600 12px var(--mono); background: #fff; border: 1px solid #BFE6D2; padding: 3px 8px; border-radius: 6px; color: #0E7F55; }
 
     /* ---------- patient grid ---------- */
     .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; padding-block: 18px 22px; }
@@ -134,7 +218,6 @@
     .acts .admit:disabled { background: var(--verdant-50); color: #0E7F55; cursor: default; }
     .empty { grid-column: 1 / -1; text-align: center; padding: 48px 0; color: var(--mute); }
     .empty b { display: block; color: var(--ink); font: 600 17px var(--display); margin-bottom: 4px; }
-    .empty button { margin-top: 10px; border: 0; background: none; color: var(--indigo); font-weight: 500; cursor: pointer; text-decoration: underline; }
     .foot { padding-bottom: 28px; font-size: 12.5px; color: var(--mute); }
 
     /* ---------- details drawer ---------- */
@@ -165,17 +248,22 @@
     .toast { position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 20px); transform: translate(-50%, 20px); background: var(--ink); color: #fff; padding: 10px 16px; border-radius: 12px; font-size: 13.5px; opacity: 0; pointer-events: none; transition: all .3s var(--ease); z-index: 40; max-width: calc(100% - 32px); }
     .toast.on { opacity: 1; transform: translate(-50%, 0); }
 
-    @media (max-width: 1180px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (max-width: 1180px) {
+      .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .esi-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .vitals-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    }
     @media (max-width: 760px) {
       .wrap { width: calc(100% - 32px); }
       .bar { padding: 10px 16px 2px; }
       .head h1 { font-size: 25px; }
       .grid { grid-template-columns: minmax(0, 1fr); gap: 12px; }
       .notice .tags { margin-left: 0; }
-      .search, .search input { width: 100%; }
       .tools .seg, .tools .btn { flex: 1; justify-content: center; }
       .tools .seg button { flex: 1; justify-content: center; }
       .subtabs { width: 100%; } .subtabs button { flex: 1; white-space: normal; line-height: 1.2; }
+      .esi-grid { grid-template-columns: minmax(0, 1fr); }
+      .vitals-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
     @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
   </style>
@@ -221,6 +309,10 @@
         <button type="button" id="subtab-synthetic" role="tab" aria-selected="true">Synthetic patients</button>
       </div>
     </div>
+  </section>
+
+  <!-- VIEW: SYNTHETIC PATIENT REPOSITORY -->
+  <div id="view-synthetic" class="wrap">
     <div class="notice" role="note">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l9.5 17h-19z"/><path d="M12 10v4M12 17.2v.3"/></svg>
       <span><b>Synthetic data only.</b> Every profile is generated with Synthea (FHIR R4) for development, testing and agent simulation. Never use it for real clinical care.</span>
@@ -231,9 +323,6 @@
         <span class="mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#2B2FD9" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3 19a6 6 0 0 1 12 0"/><path d="M17 4.5v5M14.5 7h5" stroke="#13A06B"/></svg></span>
         <div><b>Synthea patient repository</b><span id="count">18 patients loaded</span></div>
       </div>
-      <label class="search"><span class="sr" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Search patients</span>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4-4"/></svg>
-        <input id="q" type="search" placeholder="Search name, condition or ID" autocomplete="off"></label>
       <div class="seg" role="group" aria-label="Filter by sex" id="sex">
         <button type="button" data-s="all" aria-pressed="true">All <em id="n-all">18</em></button>
         <button type="button" data-s="F" aria-pressed="false">Female <em id="n-F">8</em></button>
@@ -241,10 +330,222 @@
       </div>
       <button type="button" class="btn" id="regen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.4-5.7"/><path d="M20 4v5h-5"/></svg>Regenerate cohort</button>
     </div>
-  </section>
 
-  <section class="grid wrap" id="grid" aria-label="Synthetic patients" aria-live="polite"></section>
-  <p class="foot wrap">Counts come from each patient's FHIR bundle: encounters, active medications, lab observations and recorded allergies.</p>
+    <section class="grid" id="grid" aria-label="Synthetic patients" aria-live="polite"></section>
+    <p class="foot">Counts come from each patient's FHIR bundle: encounters, active medications, lab observations and recorded allergies.</p>
+  </div>
+
+  <!-- VIEW: MANUAL INTAKE AND BEDS -->
+  <div id="view-manual" class="wrap" hidden>
+    <!-- SUCCESS ALERT CONTAINER -->
+    <div id="m-success-box" class="m-success" style="display: none;" role="status">
+      <b>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>
+        <span id="m-success-title">Patient Admitted to Hospital Ledger</span>
+      </b>
+      <div id="m-success-msg">Patient successfully admitted to record system.</div>
+      <div class="m-success-badges">
+        <span class="m-success-badge" id="m-success-mrn">MRN: -</span>
+        <span class="m-success-badge" id="m-success-acuity">Acuity: -</span>
+        <span class="m-success-badge" id="m-success-bed">Bed: -</span>
+      </div>
+    </div>
+
+    <!-- MAIN MANUAL INTAKE FORM -->
+    <form id="m-form">
+      <!-- Section 1: Demographics & ESI Acuity -->
+      <article class="m-card">
+        <div class="m-card-head">
+          <h2>1. Patient Demographics &amp; Bed Allocation</h2>
+          <span>Mandatory admission credentials and initial unit placement</span>
+        </div>
+
+        <div class="f-grid">
+          <div class="f-field">
+            <label class="f-label" for="m-name">Patient Full Name <em>*</em></label>
+            <input class="f-input" id="m-name" type="text" placeholder="e.g. Jane Smith" required autocomplete="off">
+          </div>
+          <div class="f-field">
+            <label class="f-label" for="m-age">Age <em>*</em></label>
+            <input class="f-input" id="m-age" type="number" min="1" max="120" placeholder="Years" required>
+          </div>
+          <div class="f-field">
+            <label class="f-label" for="m-sex">Biological Sex</label>
+            <select class="f-select" id="m-sex">
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div class="f-field">
+            <label class="f-label" for="m-dept">Assigned Department</label>
+            <select class="f-select" id="m-dept">
+              <option value="EMERGENCY">Emergency Department</option>
+              <option value="CARDIOLOGY">Cardiology / CCU</option>
+              <option value="ICU">Medical ICU (MICU)</option>
+              <option value="INTERNAL_MEDICINE">Internal Medicine</option>
+              <option value="STEP_DOWN">Inpatient Step-Down Wing</option>
+            </select>
+          </div>
+          <div class="f-field">
+            <label class="f-label" for="m-bed">Bed Allocation</label>
+            <input class="f-input" id="m-bed" type="text" placeholder="e.g. ED-04 or AUTO" autocomplete="off">
+          </div>
+        </div>
+
+        <!-- Triage Acuity Options -->
+        <div class="esi-group">
+          <label class="f-label">Emergency Severity Index (ESI) Triage Rating</label>
+          <div class="esi-grid" role="radiogroup" aria-label="ESI Triage Rating">
+            <button type="button" class="esi-btn" data-esi="RESUSCITATION" aria-pressed="false">
+              <span class="esi-badge">ESI 1</span>
+              <span class="esi-title">Resuscitation</span>
+              <span class="esi-desc">Immediate life threat</span>
+            </button>
+            <button type="button" class="esi-btn" data-esi="EMERGENT" aria-pressed="true">
+              <span class="esi-badge">ESI 2</span>
+              <span class="esi-title">Emergent</span>
+              <span class="esi-desc">High-risk / Severe vitals</span>
+            </button>
+            <button type="button" class="esi-btn" data-esi="URGENT" aria-pressed="false">
+              <span class="esi-badge">ESI 3</span>
+              <span class="esi-title">Urgent</span>
+              <span class="esi-desc">Multiple resources needed</span>
+            </button>
+            <button type="button" class="esi-btn" data-esi="LESS_URGENT" aria-pressed="false">
+              <span class="esi-badge">ESI 4</span>
+              <span class="esi-title">Less Urgent</span>
+              <span class="esi-desc">One resource needed</span>
+            </button>
+            <button type="button" class="esi-btn" data-esi="NON_URGENT" aria-pressed="false">
+              <span class="esi-badge">ESI 5</span>
+              <span class="esi-title">Non-Urgent</span>
+              <span class="esi-desc">Clinical evaluation only</span>
+            </button>
+          </div>
+        </div>
+      </article>
+
+      <!-- Section 2: Clinical Presentation & Medical History -->
+      <article class="m-card">
+        <div class="m-card-head">
+          <h2>2. Clinical Presentation &amp; Medical History</h2>
+          <span>Diagnostic evidence baseline and patient history profile</span>
+        </div>
+
+        <div style="display: grid; gap: 14px;">
+          <div class="f-field">
+            <label class="f-label" for="m-complaint">Chief Complaint (Presenting Problem) <em>*</em></label>
+            <input class="f-input" id="m-complaint" type="text" placeholder="e.g. Acute substernal crushing chest pressure radiating to jaw and left arm" required autocomplete="off">
+          </div>
+          <div class="f-field">
+            <label class="f-label" for="m-hpi">History of Present Illness (HPI)</label>
+            <textarea class="f-textarea" id="m-hpi" rows="2" placeholder="Onset, character, severity, radiation, aggravating or alleviating factors, associated symptoms..."></textarea>
+          </div>
+          <div class="f-grid">
+            <div class="f-field">
+              <label class="f-label" for="m-pmh">Past Medical History (comma-separated)</label>
+              <input class="f-input" id="m-pmh" type="text" placeholder="e.g. Hypertension, Type 2 DM, Hyperlipidemia" autocomplete="off">
+            </div>
+            <div class="f-field">
+              <label class="f-label" for="m-meds">Active Medications (comma-separated)</label>
+              <input class="f-input" id="m-meds" type="text" placeholder="e.g. Metformin 1000mg BID, Atorvastatin 40mg QHS" autocomplete="off">
+            </div>
+          </div>
+          <div class="f-field">
+            <label class="f-label" for="m-allergies">Drug Allergies &amp; Adverse Reactions</label>
+            <input class="f-input" id="m-allergies" type="text" placeholder="e.g. Penicillin (Anaphylaxis), Sulfa (Rash), or NKDA" autocomplete="off">
+            <span class="f-help">Critical patient safety profile. Enter NKDA if no known drug allergies.</span>
+          </div>
+        </div>
+      </article>
+
+      <!-- Section 3: Baseline Intake Vitals -->
+      <article class="m-card">
+        <div class="m-card-head">
+          <h2>3. Baseline Triage Vitals</h2>
+          <span>Initial telemetry measurements recorded upon presentation</span>
+        </div>
+
+        <div class="vitals-grid">
+          <div class="v-tile">
+            <label class="v-label" for="v-hr">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#13A06B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+              Heart Rate
+            </label>
+            <div class="v-input-row">
+              <input class="v-input" id="v-hr" type="number" value="75" min="20" max="250">
+              <span class="v-unit">BPM</span>
+            </div>
+          </div>
+
+          <div class="v-tile">
+            <label class="v-label" for="v-sbp">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#2B2FD9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+              Systolic BP
+            </label>
+            <div class="v-input-row">
+              <input class="v-input" id="v-sbp" type="number" value="120" min="40" max="300">
+              <span class="v-unit">mmHg</span>
+            </div>
+          </div>
+
+          <div class="v-tile">
+            <label class="v-label" for="v-dbp">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#2B2FD9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+              Diastolic BP
+            </label>
+            <div class="v-input-row">
+              <input class="v-input" id="v-dbp" type="number" value="80" min="20" max="200">
+              <span class="v-unit">mmHg</span>
+            </div>
+          </div>
+
+          <div class="v-tile">
+            <label class="v-label" for="v-rr">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#6B7189" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 2 10 6-10 6-10-6Z"/><path d="m2 12 10 6 10-6"/><path d="m2 17 10 6 10-6"/></svg>
+              Resp Rate
+            </label>
+            <div class="v-input-row">
+              <input class="v-input" id="v-rr" type="number" value="16" min="4" max="80">
+              <span class="v-unit">bpm</span>
+            </div>
+          </div>
+
+          <div class="v-tile">
+            <label class="v-label" for="v-spo2">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#0E9AA7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z"/></svg>
+              SpO2
+            </label>
+            <div class="v-input-row">
+              <input class="v-input" id="v-spo2" type="number" step="0.1" value="98.0" min="50" max="100">
+              <span class="v-unit">%</span>
+            </div>
+          </div>
+
+          <div class="v-tile">
+            <label class="v-label" for="v-temp">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#9A5B00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z"/></svg>
+              Core Temp
+            </label>
+            <div class="v-input-row">
+              <input class="v-input" id="v-temp" type="number" step="0.1" value="37.0" min="30" max="45">
+              <span class="v-unit">°C</span>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- Form Actions -->
+      <div class="f-actions">
+        <button type="button" class="btn-reset" id="m-reset">Reset fields</button>
+        <button type="submit" class="btn-admit" id="m-submit">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+          Admit patient to record system
+        </button>
+      </div>
+    </form>
+  </div>
 </main>
 
 <div class="scrim" id="scrim"></div>
@@ -294,9 +595,9 @@
   const ICON_IN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
   const ICON_OK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
 
-  let sex = 'all', q = '';
+  let sex = 'all';
   const grid = $('#grid');
-  const match = p => (sex === 'all' || p.sex === sex) && (!q || [p.name, p.id, p.city, ...p.dx].join(' ').toLowerCase().includes(q));
+  const match = p => sex === 'all' || p.sex === sex;
 
   const card = p => {
     const el = document.createElement('article'); el.className = 'pt' + (p.admitted ? ' admitted' : '');
@@ -324,8 +625,7 @@
     list.forEach(p => grid.appendChild(card(p)));
     if (!list.length) {
       const e = document.createElement('div'); e.className = 'empty';
-      e.innerHTML = `<b>No patients match "${esc(q)}"</b>Try a name, a condition such as "asthma", or an ID.<br><button type="button">Clear search</button>`;
-      e.querySelector('button').addEventListener('click', () => { $('#q').value = ''; q = ''; render(); $('#q').focus(); });
+      e.innerHTML = `<b>No patients match the selected filter</b>Choose another sex filter above.`;
       grid.appendChild(e);
     }
     const nAdm = P.filter(p => p.admitted).length;
@@ -394,14 +694,20 @@
   $('#d-admit').addEventListener('click', () => current && admit(current));
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && current) closeDrawer(); });
 
-  /* toolbar search and filters */
-  let qt; $('#q').addEventListener('input', e => { clearTimeout(qt); qt = setTimeout(() => { q = e.target.value.trim().toLowerCase(); render(); }, 120); });
-  $('#sex').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; sex = b.dataset.s;
-    document.querySelectorAll('#sex button').forEach(x => x.setAttribute('aria-pressed', String(x === b))); render(); });
+  /* toolbar sex filters */
+  $('#sex').addEventListener('click', e => {
+    const b = e.target.closest('button');
+    if (!b) return;
+    sex = b.dataset.s;
+    document.querySelectorAll('#sex button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+    render();
+  });
 
-  /* Regenerate cohort */
+  /* Regenerate cohort via Synthea generator */
   $('#regen').addEventListener('click', async e => {
     const b = e.currentTarget;
+    if (b.disabled) return;
+    b.disabled = true;
     b.classList.remove('spin');
     void b.offsetWidth;
     b.classList.add('spin');
@@ -411,18 +717,18 @@
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          population: 3,
-          seed: Math.floor(Math.random() * 1000) + 1
+          population: 6,
+          seed: Math.floor(Math.random() * 10000) + 1
         })
       });
       if (resp.ok) {
         const data = await resp.json();
         if (data.patients && data.patients.length) {
-          data.patients.forEach(newP => {
+          const freshCases = data.patients.map((newP, idx) => {
             const dxList = Array.isArray(newP.primary_diagnoses)
               ? newP.primary_diagnoses
               : [newP.primary_diagnoses || 'Evaluation'];
-            P.unshift({
+            return {
               name: newP.name,
               age: newP.age,
               sex: (newP.gender === 'male' || newP.gender === 'M') ? 'M' : 'F',
@@ -433,30 +739,165 @@
               meds: newP.medication_count || 0,
               labs: newP.observation_count || 2,
               allergies: newP.allergy_count || 0,
-              i: P.length,
+              i: P.length + idx,
               admitted: false
-            });
+            };
           });
+          P.unshift(...freshCases);
           render();
-          say(`Generated ${data.patients.length} new synthetic patients into repository.`);
+          say(`Generated ${freshCases.length} new Synthea patient cases.`);
           return;
         }
+      } else {
+        say('Cohort generation returned status ' + resp.status);
       }
     } catch (err) {
       console.warn('Generate API error:', err);
+      say('Network error contacting Synthea generator.');
+    } finally {
+      b.disabled = false;
+      b.classList.remove('spin');
     }
-    say('Synthea cohort refreshed.');
   });
 
   const toast = $('#toast'); let tt;
   const say = m => { toast.textContent = m; toast.classList.add('on'); clearTimeout(tt); tt = setTimeout(() => toast.classList.remove('on'), 3200); };
 
-  /* Subtabs switching (Manual intake vs Synthetic patients) */
-  $('#subtab-manual').addEventListener('click', () => {
-    if (window.parent && window.parent !== window) {
-      window.parent.postMessage({ type: 'SET_INTAKE_MODE', mode: 'MANUAL' }, '*');
+  /* Subtabs switching (Manual intake & beds vs Synthetic patients) */
+  const subtabManual = $('#subtab-manual');
+  const subtabSynthetic = $('#subtab-synthetic');
+  const viewManual = $('#view-manual');
+  const viewSynthetic = $('#view-synthetic');
+
+  const switchMode = mode => {
+    if (mode === 'MANUAL') {
+      subtabManual.setAttribute('aria-selected', 'true');
+      subtabSynthetic.setAttribute('aria-selected', 'false');
+      viewSynthetic.hidden = true;
+      viewManual.hidden = false;
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({ type: 'INTAKE_SUBTAB_CHANGED', mode: 'MANUAL' }, '*');
+      }
     } else {
-      say('Switched to manual intake mode.');
+      subtabSynthetic.setAttribute('aria-selected', 'true');
+      subtabManual.setAttribute('aria-selected', 'false');
+      viewManual.hidden = true;
+      viewSynthetic.hidden = false;
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({ type: 'INTAKE_SUBTAB_CHANGED', mode: 'SYNTHETIC' }, '*');
+      }
+    }
+  };
+
+  subtabManual.addEventListener('click', () => switchMode('MANUAL'));
+  subtabSynthetic.addEventListener('click', () => switchMode('SYNTHETIC'));
+
+  /* Manual Intake Form: ESI Triage Selector */
+  let manualAcuity = 'EMERGENT';
+  const esiButtons = document.querySelectorAll('.esi-btn');
+  esiButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      manualAcuity = btn.dataset.esi;
+      esiButtons.forEach(b => b.setAttribute('aria-pressed', String(b === btn)));
+    });
+  });
+
+  /* Manual Intake Form: Reset */
+  const resetManualForm = () => {
+    $('#m-name').value = '';
+    $('#m-age').value = '';
+    $('#m-sex').value = 'Male';
+    $('#m-dept').value = 'EMERGENCY';
+    $('#m-bed').value = '';
+    $('#m-complaint').value = '';
+    $('#m-hpi').value = '';
+    $('#m-pmh').value = '';
+    $('#m-meds').value = '';
+    $('#m-allergies').value = '';
+    $('#v-hr').value = '75';
+    $('#v-sbp').value = '120';
+    $('#v-dbp').value = '80';
+    $('#v-rr').value = '16';
+    $('#v-spo2').value = '98.0';
+    $('#v-temp').value = '37.0';
+    manualAcuity = 'EMERGENT';
+    esiButtons.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.esi === 'EMERGENT')));
+    $('#m-success-box').style.display = 'none';
+  };
+  $('#m-reset').addEventListener('click', resetManualForm);
+
+  /* Manual Intake Form: Submit to /api/patients/admit */
+  $('#m-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const nameVal = $('#m-name').value.trim();
+    const complaintVal = $('#m-complaint').value.trim();
+    if (!nameVal || !complaintVal) {
+      say('Please enter patient name and chief complaint.');
+      return;
+    }
+
+    const deptVal = $('#m-dept').value;
+    const bedVal = $('#m-bed').value.trim() || `${deptVal.substring(0, 3)}-01`;
+    const submitBtn = $('#m-submit');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Admitting patient...';
+
+    const payload = {
+      name: nameVal,
+      age: Number($('#m-age').value) || 0,
+      sex: $('#m-sex').value,
+      triage_acuity: manualAcuity,
+      assigned_department: deptVal,
+      bed_number: bedVal,
+      chief_complaint: complaintVal,
+      history_of_present_illness: $('#m-hpi').value.trim(),
+      past_medical_history: $('#m-pmh').value.split(',').map(s => s.trim()).filter(Boolean),
+      medications: $('#m-meds').value.split(',').map(s => s.trim()).filter(Boolean),
+      allergies: $('#m-allergies').value.split(',').map(s => s.trim()).filter(Boolean),
+      baseline_vitals: {
+        heart_rate: Number($('#v-hr').value) || 75,
+        systolic_bp: Number($('#v-sbp').value) || 120,
+        diastolic_bp: Number($('#v-dbp').value) || 80,
+        respiratory_rate: Number($('#v-rr').value) || 16,
+        spo2: Number($('#v-spo2').value) || 98.0,
+        temperature_c: Number($('#v-temp').value) || 37.0
+      }
+    };
+
+    try {
+      const res = await fetch('/api/patients/admit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) {
+        const errText = await res.text();
+        throw new Error(errText || 'Failed to admit patient');
+      }
+      const admitted = await res.json();
+      
+      // Update success banner
+      const box = $('#m-success-box');
+      $('#m-success-title').textContent = `Patient ${admitted.name} Admitted to Hospital Ledger`;
+      $('#m-success-msg').textContent = `Successfully admitted and registered into system. Department: ${admitted.assigned_department}.`;
+      $('#m-success-mrn').textContent = `MRN: ${admitted.mrn}`;
+      $('#m-success-acuity').textContent = `Acuity: ${admitted.triage_acuity}`;
+      $('#m-success-bed').textContent = `Bed: ${admitted.bed_number}`;
+      box.style.display = 'flex';
+      box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+      // Notify parent app
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({ type: 'PATIENT_ADMITTED', patient: admitted }, '*');
+      }
+
+      say(`Patient ${admitted.name} admitted successfully.`);
+    } catch (err) {
+      console.error('Admission failed:', err);
+      say(`Admission Error: ${err.message}`);
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18M9 21V9"/></svg> Admit patient to record system';
     }
   });
 

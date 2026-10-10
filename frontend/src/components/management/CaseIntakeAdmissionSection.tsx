@@ -51,7 +51,9 @@ export const CaseIntakeAdmissionSection: React.FC<CaseIntakeAdmissionSectionProp
       if (e.data.type === 'NAVIGATE' && e.data.tab) {
         onNavigateTab?.(e.data.tab);
       } else if (e.data.type === 'SET_INTAKE_MODE' && e.data.mode) {
-        setIntakeMode(e.data.mode);
+        if (initialMode !== 'SYNTHETIC') {
+          setIntakeMode(e.data.mode);
+        }
       } else if (e.data.type === 'PATIENT_ADMITTED' && e.data.patient) {
         onPatientAdmitted(e.data.patient);
       }
@@ -59,7 +61,7 @@ export const CaseIntakeAdmissionSection: React.FC<CaseIntakeAdmissionSectionProp
 
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
-  }, [onNavigateTab, onPatientAdmitted]);
+  }, [onNavigateTab, onPatientAdmitted, initialMode]);
 
   // Form fields
   const [name, setName] = useState('');
@@ -222,7 +224,7 @@ export const CaseIntakeAdmissionSection: React.FC<CaseIntakeAdmissionSectionProp
     },
   ];
 
-  if (intakeMode === 'SYNTHETIC') {
+  if (initialMode === 'SYNTHETIC' || intakeMode === 'SYNTHETIC') {
     return (
       <div className="w-full h-full flex flex-1 flex-col relative overflow-hidden" style={{ minHeight: 'calc(100vh - 120px)' }}>
         <iframe
