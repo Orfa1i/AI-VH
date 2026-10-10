@@ -2,59 +2,93 @@
 
 **Date:** 2026-10-10  
 **Git Branch:** `redesign/phase-7`  
-**Latest Commit:** `6a3e14c` ("feat(caseroom): set Gynecology agent to ready state across all cases and router configs")  
+**Latest Commit:** `bf65eba` ("feat(multi-agent): implement production 5-step clinical architecture and live Nebius integration")  
 **Environment Status:**
-- Frontend Dev Server: Running on `http://localhost:5173` (Vite, task-91)
-- Backend API Server: Running on `http://127.0.0.1:8000` (FastAPI / Uvicorn, task-6947)
+- Frontend Dev Server: Running on `http://localhost:5173` (Vite, task-7004)
+- Backend API Server: Running on `http://127.0.0.1:8000` (FastAPI / Uvicorn, task-7002)
 
 ---
 
 ## 1. Accomplished This Session
 
-### Set Gynecology Specialist Agent (`gy` / Dr. Evelyn Reed) to Ready State
-1. **Case Room Page (`frontend/public/case-room.html`)**:
-   - Updated `CASES.preeclampsia_hellp`:
-     - Router score set to `gy: 62` (relevant maternal-fetal and adnexal clinical relevance).
-     - Router status updated from `gy: 'standby'` to `gy: 'assigned'`.
-     - Router `assigned` array updated to include `'gy'` (`['ob', 'em', 'im', 'ca', 'ne', 'su', 'gy']`).
-     - Router `standby` array set to empty `[]`.
-     - Co-assigned Gynecology to delivery plan item (`id: 'delivery', own: ['ob', 'gy']`).
-     - Added active clinical evaluation event by Dr. Evelyn Reed (`who: 'gy'`) citing *Williams Gynecology, Ch. 2* regarding bedside pelvic ultrasound evaluation ruling out adnexal pathology.
-     - Included Gynecology in final consensus event (`agreeWith: ['ob', 'ca', 'ne', 'su', 'im', 'em', 'gy']`) reaching full 7/7 specialist consensus.
-   - Updated `CASES.septic_shock_mrsa`, `CASES.stemi_cardiogenic`, `CASES.ischemic_stroke_lvo`, and `CASES.acute_appendicitis`:
-     - Router status updated from `'standby'` to `'assigned'`.
-     - Removed `'gy'` from `standby` arrays (`standby: ['ob']`).
-     - Added `'gy'` to `assigned` specialist lists and consensus agreement lists.
-   - Initial Table & Avatar State:
-     - On load and reset (`resetToInitialState()`), `nodes['gy']` is cleanly initialized with `NODE_STATUS.idle` ("Ready") instead of "Standby".
-     - Removed grayscale and sleep styles; enabled glowing cyan-green LED, full animated eyes, and active pupil gaze-tracking toward the speaker during deliberation.
-     - Router card in right-hand column renders active `<span class="tag">Assigned</span>` status with relevance bar instead of dimmed "Standby" tag.
+### Production Multi-Agent Architecture & Live AI Integration
+Implemented and verified the end-to-end 5-step clinical workflow across all 7 hospital specialties:
 
-2. **Frontend Config (`frontend/src/config/agents.ts`)**:
-   - Updated `DEMO_ROUTING`: `scores.gy: 62`, `status.gy: 'assigned'`.
+1. **Step 1 — Patient Intake & Clinical Data Integrity**:
+   - Ingestion of patient clinical data (demographics, chief complaint, vitals, labs, imaging, past medical history).
+   - Distinguishes real clinical data from synthetic/demo data via `data_origin` metadata (`real_patient`, `synthetic_fixture`, `demo_intake`).
+   - Immutable preservation of original clinical findings throughout downstream processing.
 
-3. **Backend Router & Test Suite (`backend/agents/router.py` & `backend/tests/test_gynecology_embedding.py`)**:
-   - Fixed `MedicalSpecialtyRouter` GYNECOLOGY route to suggest `Gynecology AI agent (Dr. Evelyn Reed)`.
-   - Verified that all 8 Williams Gynecology RAG embedding tests pass (100% green).
+2. **Step 2 — MedGemma Specialty Router**:
+   - Analyzes intake presentation and routes cases to the appropriate specialist across 7 core specialties:
+     - Internal Medicine (Dr. Harrison)
+     - Cardiology (Dr. Braunwald)
+     - Neurology (Dr. Adams)
+     - Emergency Medicine (Dr. Tintinalli)
+     - Obstetrics (Dr. Evelyn Reed, OB)
+     - Gynecology (Dr. Evelyn Reed, GYN)
+     - Surgery (Dr. Schwartz)
+   - Generates structured routing decision with clinical rationale and secondary candidate indications.
+   - Refined keyword/regex safeguards to prevent misrouting of non-pregnant acute pelvic pain to obstetrics.
+
+3. **Step 3 — Specialist Agent Execution & Evidence Retrieval**:
+   - Specialist agents grounded in foundational clinical textbooks (Harrison's, Braunwald, Tintinalli, Adams & Victor, Schwartz, Williams Obstetrics & Gynecology).
+   - Added `ObstetricsRAGAgent` (`backend/rag/specialists/obstetrics_rag.py`) and `ObstetricsSpecialistAgent` (`backend/agents/specialists/obstetrics.py`).
+   - Integrated active shared knowledge sources (PubMed, OpenFDA, RxNorm) with strict retrieval status verification and source provenance.
+
+4. **Step 4 — Dynamic Multi-Agent Consultation Engine (`backend/agents/consultation.py`)**:
+   - `coordinate_consultations()` evaluates primary specialist assessment for secondary consultation indications.
+   - **Safety & Guardrails**:
+     - Configurable consultation limit (`max_consultations=2`, default).
+     - DAG cycle breaker preventing circular referrals (`A -> B -> A` blocked).
+     - Duplicate consultation protection.
+     - Async timeout protection (`asyncio.wait_for(..., timeout=30.0)`).
+     - Stopword-filtered clinical disagreement detection (`DIAGNOSTIC_DISAGREEMENT`).
+     - Immutable emergency red flag escalation: flags detected by any specialist are locked and cannot be overridden.
+
+5. **Step 5 — Evidence-Grounded Nemotron Synthesis Engine (`backend/llm/nemotron_synthesis.py`)**:
+   - Synthesizes findings using NVIDIA Nemotron-3-Nano-30B-A3B via Nebius AI Studio API (`https://api.studio.nebius.ai/v1/`).
+   - Enforces a 9-section structured diagnostic report with thinking trace and explicit uncertainty statement.
+   - **5-Tier Clinical Provenance Tracking**:
+     - Tier 1: Patient Observed Data (demographics, vitals, labs, imaging, origin)
+     - Tier 2: Model Hypotheses (router decision, specialist differentials)
+     - Tier 3: Retrieved Medical Evidence (textbook & external sources, chapters, relevance scores)
+     - Tier 4: Specialist Consult Findings (doctor persona, assessment, emergency flags)
+     - Tier 5: Synthesized Conclusions (final diagnosis, certainty, escalation status)
+   - **Strict No-Silent-Mock Rule**: When the live model call fails or is unconfigured, marks case as `status="DEGRADED"` with failure telemetry rather than fabricating mock outputs.
+
+6. **End-to-End Orchestration & API Delivery**:
+   - Orchestrator (`backend/simulation/orchestrator.py`): Implemented `execute_production_clinical_workflow()`, unifying steps 1 through 5.
+   - REST API (`backend/api/router.py`):
+     - Added `POST /clinical/execute-case` for production end-to-end execution.
+     - Added `POST /specialists/obstetrics/consult`, `/chat`, and `/chat/stream`.
 
 ---
 
 ## 2. Key Decisions & Rationale
-- **Coherent Ready State Across All Clinical Cases**: Rather than only altering the default case, Gynecology was updated across all 5 case definitions in `case-room.html` so switching cases never forces Dr. Evelyn Reed back into the sleeping/standby state.
-- **Active Deliberation Participation**: In the preeclampsia/HELLP case, added a pelvic evaluation event grounded in *Williams Gynecology, Ch. 2*, allowing Dr. Evelyn Reed to share clinical findings, update the diagnostic board, and join the consensus agreement (7/7 agreement counter).
-- **Backend Harmony**: Aligned `MedicalSpecialtyRouter` specialist naming with Dr. Evelyn Reed, guaranteeing that end-to-end routing queries, tests, and UI displays refer consistently to the attending gynecologist.
+
+- **Stopword-Filtered Disagreement Detection**: Raw word overlap between specialist diagnoses produced false positives on shared prepositions (e.g., "with" in preeclampsia vs abruption). Tokenizing after stripping clinical stopwords ensures genuine divergence is detected.
+- **Fail-Safe Degradation Telemetry**: In production clinical environments, silent mock fallbacks conceal upstream service failures and risk patient safety. Enforcing `status="DEGRADED"` and surfacing raw error codes provides true operational transparency.
+- **Cycle-Breaking Directed Referral Graph**: Specialist referrals are tracked in a visited set per consultation chain, preventing infinite referral loops while allowing multi-specialist team deliberation.
 
 ---
 
 ## 3. Current State & Verification Proof
-- `pnpm build`: Succeeded (0 TS errors, clean Vite production build in 2.08s).
-- `pnpm test`: Succeeded (10/10 test files, 38/38 unit tests passing in 10.43s).
-- `pytest backend/tests/test_gynecology_embedding.py`: Succeeded (8/8 tests passing in 16.93s).
-- `GET http://127.0.0.1:8000/api/health`: Succeeded (`{"status":"healthy","service":"AI Virtual Hospital Platform"}`).
-- Latest Git Commit: `6a3e14c` ("feat(caseroom): set Gynecology agent to ready state across all cases and router configs").
+
+- **Backend Multi-Agent Test Suite**: 29 passed, 1 skipped (live Nebius verified separately in 27s) in 36.48s:
+  - `backend/tests/test_production_multi_agent_workflow.py` (9 passed, 1 skipped)
+  - `backend/tests/test_specialty_router.py` (4 passed)
+  - `backend/tests/test_specialist_diagnostic_workflow.py` (11 passed)
+  - `backend/tests/test_nemotron_synthesis.py` (5 passed)
+- **Frontend Unit & Component Tests**: 10 passed test files, 38/38 tests passing in 8.59s (`vitest run`).
+- **Live Model Verification**:
+  - Nebius AI Studio Nemotron API (`nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B`): Verified live with real 27s call, thinking trace, and 5-tier provenance output.
+- **Git Commit**: `bf65eba` ("feat(multi-agent): implement production 5-step clinical architecture and live Nebius integration").
 
 ---
 
 ## 4. Next Steps
-- Verify live visual appearance of Dr. Evelyn Reed (Gynecology node) in the Case Room (`http://localhost:5173/case-room.html`).
-- Run a live deliberation round to watch Gynecology speak and reach consensus with the team.
+
+- Expose multi-agent consultation stepper and disagreement cards in the Case Intake and Case Room frontend UI.
+- Implement streaming tokens for the Nemotron synthesis stage over SSE / WebSocket.
+- Add live telemetry dashboard showing latency, token usage, and provenance breakdowns per specialist.
