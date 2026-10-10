@@ -2,7 +2,7 @@
 
 **Date:** 2026-10-10  
 **Git Branch:** `redesign/phase-7`  
-**Latest Commit:** `bf65eba` ("feat(multi-agent): implement production 5-step clinical architecture and live Nebius integration")  
+**Latest Commit:** `ff8de0b` ("feat(triage): filter patient case dropdown to officially admitted patients from database")  
 **Environment Status:**
 - Frontend Dev Server: Running on `http://localhost:5173` (Vite, task-7004)
 - Backend API Server: Running on `http://127.0.0.1:8000` (FastAPI / Uvicorn, task-7002)
@@ -11,84 +11,63 @@
 
 ## 1. Accomplished This Session
 
-### Production Multi-Agent Architecture & Live AI Integration
-Implemented and verified the end-to-end 5-step clinical workflow across all 7 hospital specialties:
+### Dynamic Admitted Patient Case Selection & Database Synchronization
+Updated the "SELECT PATIENT CASE" dropdown across the Case Room and Virtual Hospital platform to strictly filter and display only patients with an active `ADMITTED` status from the live database:
 
-1. **Step 1 — Patient Intake & Clinical Data Integrity**:
-   - Ingestion of patient clinical data (demographics, chief complaint, vitals, labs, imaging, past medical history).
-   - Distinguishes real clinical data from synthetic/demo data via `data_origin` metadata (`real_patient`, `synthetic_fixture`, `demo_intake`).
-   - Immutable preservation of original clinical findings throughout downstream processing.
+1. **Database-Driven Case Selection (`frontend/public/case-room.html`)**:
+   - Replaced static, hardcoded `CASES` loop with asynchronous `loadAdmittedPatients()` querying `GET /api/patients?status=ADMITTED`.
+   - Strictly filters for `admission_status === 'ADMITTED'`, eliminating unadmitted pool cases, discharged patients, and synthetic/placeholder cases.
+   - Formats dropdown options with real bed assignments and acuity indicators: `[Bed 04] Elena Vance — Preeclampsia (ESI 2 · Emergent)`.
+   - Handles empty ward states gracefully: renders an informative empty state option (`No admitted patients in wards (Admit via Intake)`) and updates the clinical dossier with clear instructions to admit a patient via Intake.
 
-2. **Step 2 — MedGemma Specialty Router**:
-   - Analyzes intake presentation and routes cases to the appropriate specialist across 7 core specialties:
-     - Internal Medicine (Dr. Harrison)
-     - Cardiology (Dr. Braunwald)
-     - Neurology (Dr. Adams)
-     - Emergency Medicine (Dr. Tintinalli)
-     - Obstetrics (Dr. Evelyn Reed, OB)
-     - Gynecology (Dr. Evelyn Reed, GYN)
-     - Surgery (Dr. Schwartz)
-   - Generates structured routing decision with clinical rationale and secondary candidate indications.
-   - Refined keyword/regex safeguards to prevent misrouting of non-pregnant acute pelvic pain to obstetrics.
+2. **Full Clinical EHR Patient Mapper**:
+   - Implemented `findCanonicalCaseMatch` and `mapDynamicPatientRecord` in `case-room.html`.
+   - Dynamically parses database `case_data`, demographics, acuity levels, baseline vitals, lab panels, and imaging studies into the active Case Room dossier.
+   - Replaces synthetic placeholders with officially admitted patient charts (`synthetic: false`).
 
-3. **Step 3 — Specialist Agent Execution & Evidence Retrieval**:
-   - Specialist agents grounded in foundational clinical textbooks (Harrison's, Braunwald, Tintinalli, Adams & Victor, Schwartz, Williams Obstetrics & Gynecology).
-   - Added `ObstetricsRAGAgent` (`backend/rag/specialists/obstetrics_rag.py`) and `ObstetricsSpecialistAgent` (`backend/agents/specialists/obstetrics.py`).
-   - Integrated active shared knowledge sources (PubMed, OpenFDA, RxNorm) with strict retrieval status verification and source provenance.
+3. **Real-Time Cross-Frame Synchronization**:
+   - Added event listeners for `PATIENT_ADMITTED`, `REFRESH_PATIENTS`, and `CASE_ADMITTED` messages in `case-room.html`.
+   - Updated `frontend/src/App.tsx` and `frontend/src/components/diagram/HospitalFlowDiagram.tsx` to forward admission events directly to the embedded Case Room iframe.
+   - Added dropdown `focus`, window `visibilitychange`, and periodic idle polling to ensure admissions or discharges in another window/tab update the dropdown immediately.
 
-4. **Step 4 — Dynamic Multi-Agent Consultation Engine (`backend/agents/consultation.py`)**:
-   - `coordinate_consultations()` evaluates primary specialist assessment for secondary consultation indications.
-   - **Safety & Guardrails**:
-     - Configurable consultation limit (`max_consultations=2`, default).
-     - DAG cycle breaker preventing circular referrals (`A -> B -> A` blocked).
-     - Duplicate consultation protection.
-     - Async timeout protection (`asyncio.wait_for(..., timeout=30.0)`).
-     - Stopword-filtered clinical disagreement detection (`DIAGNOSTIC_DISAGREEMENT`).
-     - Immutable emergency red flag escalation: flags detected by any specialist are locked and cannot be overridden.
+4. **Canonical Inpatient Repository Seeding (`backend/database/repository.py`)**:
+   - Added `seed_default_admitted_patients()` to `DatabaseRepository`, which seeds 5 canonical admitted patients (`PAT-8921-OB`, `PAT-3391-CCU`, `PAT-4102-ICU`, `PAT-7742-NEURO`, `PAT-1904-SURG`) with complete EHR charts, bed numbers, and department assignments if the database has zero active admissions.
+   - Called on singleton initialization (`db_repo.seed_default_admitted_patients()`).
 
-5. **Step 5 — Evidence-Grounded Nemotron Synthesis Engine (`backend/llm/nemotron_synthesis.py`)**:
-   - Synthesizes findings using NVIDIA Nemotron-3-Nano-30B-A3B via Nebius AI Studio API (`https://api.studio.nebius.ai/v1/`).
-   - Enforces a 9-section structured diagnostic report with thinking trace and explicit uncertainty statement.
-   - **5-Tier Clinical Provenance Tracking**:
-     - Tier 1: Patient Observed Data (demographics, vitals, labs, imaging, origin)
-     - Tier 2: Model Hypotheses (router decision, specialist differentials)
-     - Tier 3: Retrieved Medical Evidence (textbook & external sources, chapters, relevance scores)
-     - Tier 4: Specialist Consult Findings (doctor persona, assessment, emergency flags)
-     - Tier 5: Synthesized Conclusions (final diagnosis, certainty, escalation status)
-   - **Strict No-Silent-Mock Rule**: When the live model call fails or is unconfigured, marks case as `status="DEGRADED"` with failure telemetry rather than fabricating mock outputs.
-
-6. **End-to-End Orchestration & API Delivery**:
-   - Orchestrator (`backend/simulation/orchestrator.py`): Implemented `execute_production_clinical_workflow()`, unifying steps 1 through 5.
-   - REST API (`backend/api/router.py`):
-     - Added `POST /clinical/execute-case` for production end-to-end execution.
-     - Added `POST /specialists/obstetrics/consult`, `/chat`, and `/chat/stream`.
+5. **Production Multi-Agent Architecture & Live AI Integration (Prior Stage)**:
+   - Steps 1–5 clinical workflow (Patient Intake $\rightarrow$ MedGemma Router $\rightarrow$ Specialist RAG $\rightarrow$ Consultation & Disagreements $\rightarrow$ Nemotron Synthesis).
+   - 5-tier clinical provenance and fail-safe degradation telemetry (`status="DEGRADED"`).
+   - Verified live Nebius Nemotron API call (`nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B`) with thinking trace.
 
 ---
 
 ## 2. Key Decisions & Rationale
 
-- **Stopword-Filtered Disagreement Detection**: Raw word overlap between specialist diagnoses produced false positives on shared prepositions (e.g., "with" in preeclampsia vs abruption). Tokenizing after stripping clinical stopwords ensures genuine divergence is detected.
-- **Fail-Safe Degradation Telemetry**: In production clinical environments, silent mock fallbacks conceal upstream service failures and risk patient safety. Enforcing `status="DEGRADED"` and surfacing raw error codes provides true operational transparency.
-- **Cycle-Breaking Directed Referral Graph**: Specialist referrals are tracked in a visited set per consultation chain, preventing infinite referral loops while allowing multi-specialist team deliberation.
+- **Live Database Grounding Over Hardcoded Fixtures**: Grounding the dropdown directly in `/api/patients?status=ADMITTED` ensures that clinical triage workflows strictly reflect real ward admissions, preventing testers from evaluating unadmitted or discharged cases.
+- **Cross-Frame Message Bus & Focus Re-Sync**: Combining `window.postMessage` from the Intake tab with dropdown `focus` triggers ensures instant UI updates without requiring manual browser page refreshes.
+- **Idempotent Inpatient Seeding**: Seeding canonical patients when `count_patients(status='ADMITTED') == 0` guarantees that newly initialized developer or CI/CD test environments always have valid admitted patients ready for testing.
 
 ---
 
 ## 3. Current State & Verification Proof
 
-- **Backend Multi-Agent Test Suite**: 29 passed, 1 skipped (live Nebius verified separately in 27s) in 36.48s:
-  - `backend/tests/test_production_multi_agent_workflow.py` (9 passed, 1 skipped)
-  - `backend/tests/test_specialty_router.py` (4 passed)
-  - `backend/tests/test_specialist_diagnostic_workflow.py` (11 passed)
-  - `backend/tests/test_nemotron_synthesis.py` (5 passed)
-- **Frontend Unit & Component Tests**: 10 passed test files, 38/38 tests passing in 8.59s (`vitest run`).
-- **Live Model Verification**:
-  - Nebius AI Studio Nemotron API (`nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B`): Verified live with real 27s call, thinking trace, and 5-tier provenance output.
-- **Git Commit**: `bf65eba` ("feat(multi-agent): implement production 5-step clinical architecture and live Nebius integration").
+- **Live API Verification**:
+  - `GET http://127.0.0.1:8000/api/patients?status=ADMITTED`: Returns 200 OK with all 5 active admitted patients with bed numbers and clinical data.
+  - `POST /api/patients/PAT-1904-SURG/discharge`: Successfully discharges patient; immediate subsequent query to `status=ADMITTED` returned only the 4 remaining active patients.
+- **Backend Test Suite**:
+  - `py -3.13 -m pytest backend/tests/test_patients_and_staff.py`: 5/5 tests passed (100% green).
+  - Regression suite (`test_production_multi_agent_workflow.py`, `test_specialty_router.py`, `test_specialist_diagnostic_workflow.py`, `test_patients_and_staff.py`): 29 passed, 1 skipped (live Nebius verified separately).
+- **Frontend Test & Build Suite**:
+  - `pnpm test`: 10 passed test files, 38/38 unit tests passing.
+  - `pnpm build`: 0 errors, clean production build in 1.76s.
+- **Git Commits**:
+  - `ff8de0b`: `feat(triage): filter patient case dropdown to officially admitted patients from database`
+  - `bf65eba`: `feat(multi-agent): implement production 5-step clinical architecture and live Nebius integration`
 
 ---
 
 ## 4. Next Steps
 
-- Expose multi-agent consultation stepper and disagreement cards in the Case Intake and Case Room frontend UI.
-- Implement streaming tokens for the Nemotron synthesis stage over SSE / WebSocket.
-- Add live telemetry dashboard showing latency, token usage, and provenance breakdowns per specialist.
+- Add quick-discharge and transfer actions directly in the Case Room dossier.
+- Add patient bed occupancy visualizer on the hospital floor plan.
+- Integrate real-time FHIR subscription webhooks for automated intake ingestion.
