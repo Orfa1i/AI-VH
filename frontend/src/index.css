@@ -84,6 +84,27 @@
   background: var(--neutral-300);
 }
 
+/* Custom sleek thin scrollbar for sidebar and dense clinical views */
+.custom-thin-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--neutral-300, #cbd5e1) transparent;
+}
+.custom-thin-scrollbar::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+.custom-thin-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-thin-scrollbar::-webkit-scrollbar-thumb {
+  background-color: var(--neutral-300, #cbd5e1);
+  border-radius: 9999px;
+  transition: background-color 0.2s ease;
+}
+.custom-thin-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: var(--neutral-400, #94a3b8);
+}
+
 /* Backward-compatible transition helpers for existing glass panels */
 .glass-panel {
   background-color: var(--bg-surface);

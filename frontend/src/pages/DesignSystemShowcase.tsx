@@ -24,6 +24,7 @@ import {
   Search,
   ShieldCheck,
 } from 'lucide-react';
+import { PatientCaseSidebar } from '../components/case';
 
 export const DesignSystemShowcase: React.FC = () => {
   const [activeTab, setActiveTab] = useState('primitives');
@@ -57,6 +58,7 @@ export const DesignSystemShowcase: React.FC = () => {
           { id: 'primitives', label: 'Actions & Inputs' },
           { id: 'status', label: 'Badges, Progress & Feedback' },
           { id: 'surfaces', label: 'Cards, Modals & Data Tables' },
+          { id: 'case-sidebar', label: 'Patient Case Sidebar' },
           { id: 'brand', label: 'Brand Identity & Assets' },
         ]}
       />
@@ -324,6 +326,40 @@ export const DesignSystemShowcase: React.FC = () => {
               description="All autonomous diagnosis reports have been reviewed and finalized by attending staff."
               action={<Button variant="secondary">Ingest new case</Button>}
             />
+          </Card>
+        </div>
+      )}
+
+      {/* SECTION: Patient Case Sidebar */}
+      {activeTab === 'case-sidebar' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+          <Card>
+            <CardHead>
+              <div>
+                <CardTitle>Patient Case Sidebar Component</CardTitle>
+                <CardMeta>Fixed header, collapsible accordion sections, vital signs telemetry grid with status indicator tinting, and custom thin scrollbar.</CardMeta>
+              </div>
+            </CardHead>
+            <div style={{ display: 'flex', gap: 32, flexWrap: 'wrap', alignItems: 'flex-start', marginTop: 16 }}>
+              <div style={{ height: 680, width: 380, border: '1px solid var(--border-default)', borderRadius: 'var(--radius-lg)', overflow: 'hidden', boxShadow: 'var(--shadow-sm)' }}>
+                <PatientCaseSidebar />
+              </div>
+              <div style={{ flex: 1, minWidth: 280, display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <Alert variant="info" title="Clinical Design Specifications">
+                  Designed for multidisciplinary hospital rounds, inpatient triage, and case simulation.
+                  Telemetry values feature calibrated background tints for rapid visual triaging (normal, abnormal, critical).
+                </Alert>
+                <div style={{ padding: 16, background: 'var(--bg-app)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)', fontSize: 13 }}>
+                  <h4 style={{ fontWeight: 600, marginBottom: 8 }}>Component Architecture & Features</h4>
+                  <ul style={{ listStyleType: 'disc', paddingLeft: 20, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <li><strong>Fixed Summary Header:</strong> Retains patient name, MRN (copyable), acuity, and bed assignment while scrolling.</li>
+                    <li><strong>Space-Saving Accordion:</strong> Expandable Chief Complaint, History, Vitals, Labs, and Orders with bulk toggle.</li>
+                    <li><strong>Status Indicator Grid:</strong> Responsive multi-column vitals grid with green/amber/red subtle alerts.</li>
+                    <li><strong>Custom Thin Scrollbar:</strong> Styled with 5px non-intrusive track and smooth hover thumb.</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
           </Card>
         </div>
       )}
