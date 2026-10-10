@@ -4,6 +4,9 @@ import agentInternalMed from '../../assets/vh-agent-internal-medicine-512.png';
 import agentSurgery from '../../assets/vh-agent-surgery-512.png';
 import agentCardiology from '../../assets/vh-agent-cardiology-512.png';
 import agentEmergency from '../../assets/vh-agent-emergency-512.png';
+import agentNeurology from '../../assets/vh-agent-neurology-512.png';
+import agentGynecology from '../../assets/vh-agent-gynecology-512.png';
+import agentObstetrics from '../../assets/vh-agent-obstetrics-512.png';
 import {
   Send,
   Loader2,
@@ -80,7 +83,7 @@ const SURGERY_PROFILE: SpecialtyProfile = {
   greetingText:
     "Greetings. I am Dr. Sarah Lin, MD, FACS, Lead Attending Surgeon. My surgical decision-making and operative guidance are grounded directly in Schwartz's Principles of Surgery (10th Edition).\n\nHow may I assist you with acute abdominal evaluations, operative indications, surgical contraindications, or perioperative management today?",
   placeholderText:
-    "Ask Dr. Lin about acute surgical cases, operative indications, Schwartz's guidelines, or surgical contraindications... (Press Enter to send)",
+    "Ask Dr. Lin about acute surgical cases, operative indications, or Schwartz's guidelines...",
   analyzingText: "Dr. Lin is analyzing Schwartz's Principles of Surgery and operative indications...",
 };
 
@@ -115,7 +118,7 @@ const CARDIOLOGY_PROFILE: SpecialtyProfile = {
   greetingText:
     "Greetings. I am Dr. Rachel Vance, MD, FACC, Attending Cardiologist. My cardiovascular reasoning is grounded directly in Braunwald's Heart Disease: A Textbook of Cardiovascular Medicine (12th Edition).\n\nHow may I assist you with acute coronary syndromes, arrhythmias, heart failure, hemodynamic management, or valvular disease today?",
   placeholderText:
-    "Ask Dr. Rachel Vance about cardiac presentations, ECG patterns, hemodynamic goals, or Braunwald's guidance... (Press Enter to send)",
+    "Ask Dr. Rachel Vance about cardiac cases, ECG findings, or Braunwald's guidelines...",
   analyzingText: "Dr. Rachel Vance is analyzing Braunwald's cardiovascular knowledge and guidelines...",
 };
 
@@ -150,7 +153,7 @@ const INTERNAL_MEDICINE_PROFILE: SpecialtyProfile = {
   greetingText:
     "Greetings. I am Dr. Marcus Vance, Chief Attending Physician of Internal Medicine. My clinical reasoning is grounded in Harrison's Principles of Internal Medicine (21st Edition) and internal medicine clinical guidance models.\n\nHow may I assist you with clinical cases, differential diagnoses, evidence-based therapies, or medication contraindications today?",
   placeholderText:
-    "Ask Dr. Vance about clinical cases, differential diagnoses, therapies, or Harrison's guidelines... (Press Enter to send)",
+    "Ask Dr. Vance about clinical cases, differential diagnoses, or Harrison's guidelines...",
   analyzingText: "Dr. Vance is analyzing Harrison's clinical knowledge and guidelines...",
 };
 
@@ -185,7 +188,7 @@ const EMERGENCY_PROFILE: SpecialtyProfile = {
   greetingText:
     "Greetings. I am Dr. David Kim, MD, FACEP, Lead Attending Physician in Emergency Medicine and Trauma Resuscitation. My clinical management and critical intervention protocols are grounded directly in Tintinalli's Emergency Medicine Manual.\n\nHow may I assist you with acute resuscitation, airway emergencies, anaphylaxis, trauma stabilization, toxicology, or emergent clinical decision-making today?",
   placeholderText:
-    "Ask Dr. Kim about resuscitation protocols, rapid sequence intubation, anaphylaxis, or Tintinalli's emergency guidelines... (Press Enter to send)",
+    "Ask Dr. Kim about resuscitation protocols, airway, or Tintinalli's guidelines...",
   analyzingText: "Dr. David Kim is analyzing Tintinalli's Emergency Medicine resuscitation protocols and guidelines...",
 };
 
@@ -220,7 +223,7 @@ const INFECTIOUS_DISEASES_PROFILE: SpecialtyProfile = {
   greetingText:
     "Greetings. I am Dr. Anthony Mercer, MD, FIDSA, Attending Physician in Infectious Diseases and Antimicrobial Stewardship. My clinical reasoning and antimicrobial guidance are grounded directly in Harrison's Infectious Diseases (Fauci & Kasper).\n\nHow may I assist you with diagnostic workup, targeted antimicrobial selection, fever of unknown origin, sepsis protocols, or pathogen resistance today?",
   placeholderText:
-    "Ask Dr. Mercer about antimicrobial therapy, sepsis protocols, pathogen resistance, or Harrison's ID guidance... (Press Enter to send)",
+    "Ask Dr. Mercer about antimicrobial therapy, sepsis protocols, or Harrison's ID guidance...",
   analyzingText: "Dr. Anthony Mercer is analyzing Harrison's Infectious Diseases protocols and antimicrobial regimens...",
 };
 
@@ -230,7 +233,7 @@ const GYNECOLOGY_PROFILE: SpecialtyProfile = {
   shortName: 'Dr. Reed',
   roleTitle: 'Attending Physician, Gynecology & Minimally Invasive Pelvic Surgery',
   bookTitle: 'Williams Gynecology',
-  avatar: agentSurgery,
+  avatar: agentGynecology,
   voiceKey: 'DR_REED',
   streamEndpoint: '/api/specialists/gynecology/chat/stream',
   syncEndpoint: '/api/specialists/gynecology/chat',
@@ -255,7 +258,7 @@ const GYNECOLOGY_PROFILE: SpecialtyProfile = {
   greetingText:
     "Greetings. I am Dr. Evelyn Reed, MD, FACOG, Attending Gynecologist. My clinical and surgical reasoning is grounded directly in Williams Gynecology.\n\nHow may I assist you with abnormal uterine bleeding, pelvic pain, ectopic pregnancy, adnexal masses, or gynecologic surgical planning today?",
   placeholderText:
-    "Ask Dr. Evelyn Reed about gynecologic conditions, PALM-COEIN, pelvic pain, or Williams Gynecology guidelines... (Press Enter to send)",
+    "Ask Dr. Evelyn Reed about gynecologic conditions, PALM-COEIN, or Williams Gynecology...",
   analyzingText: "Dr. Evelyn Reed is analyzing Williams Gynecology evidence and clinical algorithms...",
 };
 
@@ -265,7 +268,7 @@ const NEUROLOGY_PROFILE: SpecialtyProfile = {
   shortName: 'Dr. Hayes',
   roleTitle: 'Attending Neurologist, Comprehensive Stroke Center & Clinical Neurophysiology',
   bookTitle: "Adams and Victor's Principles of Neurology (8th Edition)",
-  avatar: agentInternalMed,
+  avatar: agentNeurology,
   voiceKey: 'DR_ALEXANDER_HAYES',
   streamEndpoint: '/api/specialists/neurology/chat/stream',
   syncEndpoint: '/api/specialists/neurology/chat',
@@ -290,8 +293,43 @@ const NEUROLOGY_PROFILE: SpecialtyProfile = {
   greetingText:
     "Greetings. I am Dr. Alexander Hayes, MD, PhD, FAAN, Attending Neurologist. My clinical and diagnostic reasoning is grounded directly in Adams and Victor's Principles of Neurology (8th Edition).\n\nHow may I assist you with acute stroke evaluation, seizures and status epilepticus, neuromuscular emergencies, coma assessment, or complex neuro-critical care today?",
   placeholderText:
-    "Ask Dr. Alexander Hayes about acute stroke, seizures, neuromuscular disorders, or Adams and Victor's guidance... (Press Enter to send)",
+    "Ask Dr. Alexander Hayes about acute stroke, seizures, or Adams and Victor's guidelines...",
   analyzingText: "Dr. Alexander Hayes is analyzing Adams and Victor's Principles of Neurology and clinical neurophysiology...",
+};
+
+const OBSTETRICS_PROFILE: SpecialtyProfile = {
+  name: 'Dr. Evelyn Reed',
+  postNominals: 'MD, FACOG',
+  shortName: 'Dr. Reed',
+  roleTitle: 'Attending Physician, Maternal-Fetal Medicine & Obstetrics',
+  bookTitle: 'Williams Obstetrics (26th Ed)',
+  avatar: agentObstetrics,
+  voiceKey: 'DR_REED',
+  streamEndpoint: '/api/specialists/obstetrics/chat/stream',
+  syncEndpoint: '/api/specialists/obstetrics/chat',
+  starterPrompts: [
+    {
+      title: 'Preeclampsia with Severe Features',
+      prompt: 'For a 34-week gestation patient with BP 168/112 and severe persistent headache, what is the emergent magnesium sulfate neuroprotection protocol and antihypertensive titration in Williams Obstetrics?',
+    },
+    {
+      title: 'Postpartum Hemorrhage (PPH)',
+      prompt: 'What are the stepwise uterotonic escalation steps (oxytocin, methergine, carboprost, misoprostol) and intrauterine balloon tamponade indications in Williams Obstetrics?',
+    },
+    {
+      title: 'Premature Rupture of Membranes',
+      prompt: 'What are the latency antibiotic regimens, GBS prophylaxis criteria, and delivery timing thresholds for preterm PROM according to Williams Obstetrics?',
+    },
+    {
+      title: 'Gestational Diabetes Mellitus',
+      prompt: 'What are the diagnostic thresholds for the 3-hour 100g OGTT and first-line glycemic targets in Williams Obstetrics?',
+    },
+  ],
+  greetingText:
+    "Greetings. I am Dr. Evelyn Reed, MD, FACOG, Attending Obstetrician. My clinical and obstetrical management protocols are grounded directly in Williams Obstetrics (26th Edition).\n\nHow may I assist you with high-risk pregnancy, preeclampsia, fetal monitoring, or postpartum complications today?",
+  placeholderText:
+    "Ask Dr. Reed about obstetrical conditions, preeclampsia, or Williams Obstetrics...",
+  analyzingText: "Dr. Evelyn Reed is analyzing Williams Obstetrics evidence and maternal-fetal algorithms...",
 };
 
 const getSpecialistProfile = (specialty?: string, agentKey?: string): SpecialtyProfile => {
@@ -307,7 +345,10 @@ const getSpecialistProfile = (specialty?: string, agentKey?: string): SpecialtyP
   if (normKey === 'em' || normSpec === 'EMERGENCY' || normSpec === 'EMERGENCY_MEDICINE') {
     return EMERGENCY_PROFILE;
   }
-  if (normKey === 'id' || normKey === 'ob' || normSpec === 'INFECTIOUS_DISEASES' || normSpec === 'INFECTIOUS DISEASES') {
+  if (normKey === 'ob' || normSpec === 'OBSTETRICS' || normSpec === 'OB') {
+    return OBSTETRICS_PROFILE;
+  }
+  if (normKey === 'id' || normSpec === 'INFECTIOUS_DISEASES' || normSpec === 'INFECTIOUS DISEASES') {
     return INFECTIOUS_DISEASES_PROFILE;
   }
   if (normKey === 'gy' || normSpec === 'GYNECOLOGY' || normSpec === 'GYN') {
@@ -554,55 +595,56 @@ export const DoctorChatModal: React.FC<DoctorChatModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-[var(--ak-color-text-primary)]/40 backdrop-blur-xs animate-in fade-in duration-200">
-      <div className="bg-[var(--ak-color-bg-surface)] border border-[var(--ak-color-border-subtle)] w-full max-w-4xl h-[90vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden text-[var(--ak-color-text-primary)]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-[var(--scrim)] backdrop-blur-xs animate-in fade-in duration-200">
+      <div className="bg-[var(--bg-surface)] border border-[var(--border-default)] w-full max-w-3xl h-[72vh] min-h-[500px] max-h-[640px] rounded-2xl shadow-xl flex flex-col overflow-hidden text-[var(--text-primary)] my-auto transition-all">
         {/* Header */}
-        <div className="p-4 sm:p-5 border-b border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-subtle)] flex items-center justify-between shrink-0">
-          <div className="flex items-center gap-3.5">
+        <div className="px-4 sm:px-5 py-2.5 sm:py-3 border-b border-[var(--border-default)] bg-[var(--bg-surface)] flex items-center justify-between shrink-0">
+          <div className="flex items-center gap-3">
             {/* Specialist Avatar */}
             <div className="relative shrink-0">
               <img
                 src={profile.avatar}
                 alt={`${profile.name}, ${profile.postNominals}`}
-                className="w-12 h-12 rounded-xl object-cover object-top border border-[var(--ak-color-primary)] shadow-sm"
+                className="w-10 h-10 rounded-xl object-cover object-top border border-[var(--indigo-500)]/30 shadow-xs"
               />
-              <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full bg-[var(--ak-color-success)] border-2 border-white animate-pulse" />
+              <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-[var(--success-600)] border-2 border-white animate-pulse" />
             </div>
 
             <div>
               <div className="flex flex-wrap items-center gap-2">
-                <h2 className="text-base font-semibold text-[var(--ak-color-text-primary)] flex items-center gap-1.5">
+                <h2 className="text-sm sm:text-base font-semibold text-[var(--text-primary)] flex items-center gap-1.5">
                   <span>{doctorName || `${profile.name}, ${profile.postNominals}`}</span>
                 </h2>
                 <Badge variant="success" size="sm">
                   On duty
                 </Badge>
               </div>
-              <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--ak-color-text-muted)] mt-0.5">
-                <span className="text-[var(--ak-color-primary)] font-medium">{profile.roleTitle}</span>
-                <span className="text-[var(--ak-color-border-subtle)]">•</span>
-                <span className="flex items-center gap-1 font-mono text-[11px] text-[var(--ak-color-text-secondary)]">
-                  <BookOpen className="w-3 h-3 text-[var(--ak-color-primary)]" />
+              <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--text-secondary)] mt-0.5">
+                <span className="text-[var(--indigo-600)] font-medium text-[11px] sm:text-xs">{profile.roleTitle}</span>
+                <span className="text-[var(--border-default)]">•</span>
+                <span className="flex items-center gap-1 font-mono text-[10px] sm:text-[11px] text-[var(--text-tertiary)]">
+                  <BookOpen className="w-3 h-3 text-[var(--indigo-500)]" />
                   <span>Clinical Evidence RAG</span>
                 </span>
-                <span className="text-[var(--ak-color-border-subtle)]">•</span>
-                <span className="flex items-center gap-1 font-mono text-[11px] text-[var(--ak-color-text-secondary)]">
-                  <Cpu className="w-3 h-3 text-[var(--ak-color-primary)]" />
-                  <span>AI-assisted specialty guidance</span>
+                <span className="text-[var(--border-default)] hidden sm:inline">•</span>
+                <span className="hidden sm:flex items-center gap-1 font-mono text-[10px] sm:text-[11px] text-[var(--text-tertiary)]">
+                  <Cpu className="w-3 h-3 text-[var(--indigo-500)]" />
+                  <span>AI guidance</span>
                 </span>
               </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
             <Button
               variant="secondary"
               size="sm"
               onClick={handleClearHistory}
               leadingIcon={<Trash2 className="w-3.5 h-3.5" />}
               title="Reset conversation"
+              className="text-xs py-1 h-7 sm:h-8"
             >
-              Reset conversation
+              <span className="hidden sm:inline">Reset</span>
             </Button>
             <Button
               variant="ghost"
@@ -610,6 +652,7 @@ export const DoctorChatModal: React.FC<DoctorChatModalProps> = ({
               onClick={onClose}
               title="Close modal"
               aria-label="Close modal"
+              className="h-7 w-7 sm:h-8 sm:w-8 p-0"
             >
               <X className="w-4 h-4" />
             </Button>
@@ -617,9 +660,9 @@ export const DoctorChatModal: React.FC<DoctorChatModalProps> = ({
         </div>
 
         {/* Quick Scenario Starter Chips */}
-        <div className="px-4 py-2.5 bg-[var(--ak-color-bg-subtle)] border-b border-[var(--ak-color-border-subtle)] flex items-center gap-2 overflow-x-auto text-xs shrink-0">
-          <span className="text-[var(--ak-color-text-muted)] font-medium shrink-0 flex items-center gap-1">
-            <Sparkles className="w-3.5 h-3.5 text-[var(--ak-color-primary)]" />
+        <div className="px-4 py-1.5 bg-[var(--bg-subtle)] border-b border-[var(--border-default)] flex items-center gap-1.5 overflow-x-auto text-xs shrink-0">
+          <span className="text-[var(--text-tertiary)] font-medium shrink-0 flex items-center gap-1 text-[11px]">
+            <Sparkles className="w-3 h-3 text-[var(--indigo-500)]" />
             <span>Presets:</span>
           </span>
           {profile.starterPrompts.map((item, idx) => (
@@ -627,7 +670,7 @@ export const DoctorChatModal: React.FC<DoctorChatModalProps> = ({
               key={idx}
               clickable
               onClick={() => handleSendMessage(item.prompt)}
-              className="whitespace-nowrap"
+              className="whitespace-nowrap text-[11px] py-0.5 px-2 bg-[var(--bg-surface)] hover:bg-[var(--indigo-50)] border border-[var(--border-default)] text-[var(--text-secondary)] hover:text-[var(--indigo-600)] transition"
             >
               {item.title}
             </Chip>
@@ -635,7 +678,7 @@ export const DoctorChatModal: React.FC<DoctorChatModalProps> = ({
         </div>
 
         {/* Message Thread */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5 bg-[var(--ak-color-bg-app)]">
+        <div className="flex-1 overflow-y-auto p-3.5 sm:p-4 space-y-3 bg-[var(--bg-page)]">
           {messages.map((msg) => {
             const isDoc = msg.sender === 'DOCTOR';
             const citationsOpen = !!expandedCitations[msg.id];
@@ -644,32 +687,32 @@ export const DoctorChatModal: React.FC<DoctorChatModalProps> = ({
             return (
               <div
                 key={msg.id}
-                className={`flex gap-3 ${isDoc ? 'items-start' : 'items-end justify-end'}`}
+                className={`flex gap-2.5 ${isDoc ? 'items-start' : 'items-end justify-end'}`}
               >
                 {/* Doctor Avatar on Left */}
                 {isDoc && (
                   <img
                     src={profile.avatar}
                     alt={profile.shortName}
-                    className="w-8 h-8 rounded-lg object-cover object-top border border-[var(--ak-color-border-subtle)] shrink-0 mt-1 shadow-xs"
+                    className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg object-cover object-top border border-[var(--border-default)] shrink-0 mt-0.5 shadow-xs"
                   />
                 )}
 
                 <div
-                  className={`max-w-2xl rounded-2xl p-4 sm:p-5 shadow-xs transition-all ${
+                  className={`max-w-xl rounded-xl p-3 sm:p-3.5 shadow-xs transition-all ${
                     isDoc
-                      ? 'bg-[var(--ak-color-bg-surface)] border border-[var(--ak-color-border-subtle)] text-[var(--ak-color-text-primary)]'
-                      : 'bg-[var(--ak-color-primary)] border border-[var(--ak-color-primary)] text-white'
+                      ? 'bg-[var(--bg-surface)] border border-[var(--border-default)] text-[var(--text-primary)]'
+                      : 'bg-[var(--indigo-500)] border border-[var(--indigo-500)] text-white'
                   }`}
                 >
                   {/* Sender & Timestamp Header */}
-                  <div className={`flex items-center justify-between gap-3 mb-2 pb-1.5 border-b text-[11px] ${
-                    isDoc ? 'border-[var(--ak-color-border-subtle)]' : 'border-white/20'
+                  <div className={`flex items-center justify-between gap-2.5 mb-1.5 pb-1 border-b text-[11px] ${
+                    isDoc ? 'border-[var(--border-default)]' : 'border-white/20'
                   }`}>
                     <div className="flex items-center gap-1.5 font-semibold tracking-wide">
                       {isDoc ? (
                         <>
-                          <span className="text-[var(--ak-color-primary)]">{profile.name}, {profile.postNominals}</span>
+                          <span className="text-[var(--indigo-600)]">{profile.name}, {profile.postNominals}</span>
                           <Badge variant="primary" size="sm">
                             Attending
                           </Badge>
@@ -678,18 +721,18 @@ export const DoctorChatModal: React.FC<DoctorChatModalProps> = ({
                         <span className="text-white font-medium">Clinician</span>
                       )}
                     </div>
-                    <div className={`flex items-center gap-2 text-[10px] ${
-                      isDoc ? 'text-[var(--ak-color-text-muted)]' : 'text-white/80'
+                    <div className={`flex items-center gap-1.5 text-[10px] ${
+                      isDoc ? 'text-[var(--text-tertiary)]' : 'text-white/80'
                     }`}>
                       <span>{msg.timestamp}</span>
                       {isDoc && (
                         <button
                           onClick={() => handleToggleSpeech(msg)}
-                          className="p-1 rounded transition hover:bg-[var(--ak-color-bg-subtle)] cursor-pointer text-[var(--ak-color-text-muted)] hover:text-[var(--ak-color-text-primary)]"
+                          className="p-0.5 rounded transition hover:bg-[var(--bg-subtle)] cursor-pointer text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"
                           title={isSpeaking ? 'Stop voice readout' : `Listen to ${profile.shortName} read response`}
                         >
                           {isSpeaking ? (
-                            <VolumeX className="w-3.5 h-3.5 text-[var(--ak-color-danger)] animate-pulse" />
+                            <VolumeX className="w-3.5 h-3.5 text-[var(--danger-600)] animate-pulse" />
                           ) : (
                             <Volume2 className="w-3.5 h-3.5" />
                           )}
@@ -699,7 +742,7 @@ export const DoctorChatModal: React.FC<DoctorChatModalProps> = ({
                   </div>
 
                   {/* Body Text */}
-                  <div className="text-xs sm:text-sm leading-relaxed whitespace-pre-wrap font-sans">
+                  <div className="text-xs sm:text-[13px] leading-relaxed whitespace-pre-wrap font-sans">
                     {msg.content}
                   </div>
 
@@ -708,20 +751,20 @@ export const DoctorChatModal: React.FC<DoctorChatModalProps> = ({
                     <>
                       {/* Differential Diagnosis Tags */}
                       {msg.differential && msg.differential.length > 0 && (
-                        <div className="mt-4 pt-3 border-t border-[var(--ak-color-border-subtle)]">
-                          <span className="text-[10px] font-semibold text-[var(--ak-color-text-muted)] uppercase tracking-wider block mb-2 font-mono">
+                        <div className="mt-2.5 pt-2 border-t border-[var(--border-default)]">
+                          <span className="text-[10px] font-semibold text-[var(--text-tertiary)] uppercase tracking-wider block mb-1.5 font-mono">
                             Differential diagnosis:
                           </span>
-                          <div className="space-y-1.5">
+                          <div className="space-y-1">
                             {msg.differential.map((diff, dIdx) => (
                               <div
                                 key={dIdx}
-                                className="flex items-center justify-between gap-2 p-2 rounded-lg bg-[var(--ak-color-bg-subtle)] border border-[var(--ak-color-border-subtle)] text-xs"
+                                className="flex items-center justify-between gap-2 px-2.5 py-1 rounded-md bg-[var(--bg-subtle)] border border-[var(--border-default)] text-xs"
                               >
-                                <span className="font-medium text-[var(--ak-color-text-primary)]">{diff.condition}</span>
+                                <span className="font-medium text-[var(--text-primary)]">{diff.condition}</span>
                                 <div className="flex items-center gap-2 shrink-0">
                                   {diff.notes && (
-                                    <span className="text-[10px] text-[var(--ak-color-text-muted)] hidden sm:inline">
+                                    <span className="text-[10px] text-[var(--text-tertiary)] hidden sm:inline">
                                       {diff.notes}
                                     </span>
                                   )}
@@ -737,12 +780,12 @@ export const DoctorChatModal: React.FC<DoctorChatModalProps> = ({
 
                       {/* Safety Alerts / Contraindications */}
                       {msg.contraindications && msg.contraindications.length > 0 && (
-                        <div className="mt-3 p-3 rounded-xl bg-[var(--ak-color-warning-soft)] border border-[var(--ak-color-border-subtle)] text-[var(--ak-color-text-primary)]">
-                          <div className="flex items-center gap-1.5 text-xs font-semibold text-[var(--ak-color-warning)] mb-1">
-                            <AlertTriangle className="w-4 h-4 shrink-0" />
-                            <span>Clinical safety and contraindications:</span>
+                        <div className="mt-2 p-2 rounded-lg bg-[var(--warning-50)] border border-[var(--warning-600)]/20 text-[var(--text-primary)]">
+                          <div className="flex items-center gap-1.5 text-xs font-semibold text-[var(--warning-600)] mb-0.5">
+                            <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                            <span>Clinical safety & contraindications:</span>
                           </div>
-                          <ul className="list-disc list-inside text-xs space-y-0.5 text-[var(--ak-color-text-secondary)] pl-1">
+                          <ul className="list-disc list-inside text-[11px] sm:text-xs space-y-0.5 text-[var(--text-secondary)] pl-1">
                             {msg.contraindications.map((c, cIdx) => (
                               <li key={cIdx}>{c}</li>
                             ))}
@@ -752,12 +795,12 @@ export const DoctorChatModal: React.FC<DoctorChatModalProps> = ({
 
                       {/* Immediate Workup */}
                       {msg.immediate_workup && msg.immediate_workup.length > 0 && (
-                        <div className="mt-3 p-3 rounded-xl bg-[var(--ak-color-bg-subtle)] border border-[var(--ak-color-border-subtle)]">
-                          <div className="flex items-center gap-1.5 text-xs font-semibold text-[var(--ak-color-primary)] mb-1.5">
+                        <div className="mt-2 p-2 rounded-lg bg-[var(--bg-subtle)] border border-[var(--border-default)]">
+                          <div className="flex items-center gap-1.5 text-xs font-semibold text-[var(--indigo-600)] mb-1">
                             <Activity className="w-3.5 h-3.5" />
                             <span>Recommended diagnostic workup:</span>
                           </div>
-                          <ul className="list-disc list-inside text-xs space-y-0.5 text-[var(--ak-color-text-secondary)] pl-1">
+                          <ul className="list-disc list-inside text-[11px] sm:text-xs space-y-0.5 text-[var(--text-secondary)] pl-1">
                             {msg.immediate_workup.map((wk, wkIdx) => (
                               <li key={wkIdx}>{wk}</li>
                             ))}
@@ -767,12 +810,12 @@ export const DoctorChatModal: React.FC<DoctorChatModalProps> = ({
 
                       {/* Guideline Therapy & Workup */}
                       {msg.guideline_therapy && msg.guideline_therapy.length > 0 && (
-                        <div className="mt-3 p-3 rounded-xl bg-[var(--ak-color-bg-subtle)] border border-[var(--ak-color-border-subtle)]">
-                          <div className="flex items-center gap-1.5 text-xs font-semibold text-[var(--ak-color-success)] mb-1.5">
+                        <div className="mt-2 p-2 rounded-lg bg-[var(--bg-subtle)] border border-[var(--border-default)]">
+                          <div className="flex items-center gap-1.5 text-xs font-semibold text-[var(--success-600)] mb-1">
                             <Stethoscope className="w-3.5 h-3.5" />
                             <span>Guideline-directed management:</span>
                           </div>
-                          <ul className="list-disc list-inside text-xs space-y-0.5 text-[var(--ak-color-text-secondary)] pl-1">
+                          <ul className="list-disc list-inside text-[11px] sm:text-xs space-y-0.5 text-[var(--text-secondary)] pl-1">
                             {msg.guideline_therapy.map((rx, rxIdx) => (
                               <li key={rxIdx}>{rx}</li>
                             ))}
@@ -782,10 +825,10 @@ export const DoctorChatModal: React.FC<DoctorChatModalProps> = ({
 
                       {/* Expandable Citations */}
                       {msg.citations && msg.citations.length > 0 && (
-                        <div className="mt-3 pt-2">
+                        <div className="mt-2 pt-1.5">
                           <button
                             onClick={() => toggleCitations(msg.id)}
-                            className="text-[11px] text-[var(--ak-color-primary)] hover:underline flex items-center gap-1 transition cursor-pointer font-medium"
+                            className="text-[11px] text-[var(--indigo-600)] hover:underline flex items-center gap-1 transition cursor-pointer font-medium"
                           >
                             <BookOpen className="w-3.5 h-3.5" />
                             <span>
@@ -799,16 +842,16 @@ export const DoctorChatModal: React.FC<DoctorChatModalProps> = ({
                           </button>
 
                           {citationsOpen && (
-                            <div className="mt-2 space-y-2 animate-in fade-in duration-150">
+                            <div className="mt-1.5 space-y-1.5 animate-in fade-in duration-150">
                               {msg.citations.map((cite, cIdx) => (
                                 <div
                                   key={cIdx}
-                                  className="p-2.5 rounded-lg bg-[var(--ak-color-bg-subtle)] border border-[var(--ak-color-border-subtle)] text-xs"
+                                  className="p-2 rounded-md bg-[var(--bg-subtle)] border border-[var(--border-default)] text-xs"
                                 >
-                                  <div className="font-semibold text-[var(--ak-color-text-primary)] text-[11px] mb-1">
+                                  <div className="font-semibold text-[var(--text-primary)] text-[11px] mb-0.5">
                                     {cite.chapter} {cite.page ? `(Page ${cite.page})` : ''}
                                   </div>
-                                  <p className="text-[11px] text-[var(--ak-color-text-secondary)] italic leading-relaxed">
+                                  <p className="text-[11px] text-[var(--text-secondary)] italic leading-relaxed">
                                     "{cite.text}"
                                   </p>
                                 </div>
@@ -820,9 +863,9 @@ export const DoctorChatModal: React.FC<DoctorChatModalProps> = ({
 
                       {/* Telemetry pill */}
                       {msg.telemetry && (
-                        <div className="mt-3 pt-2 border-t border-[var(--ak-color-border-subtle)] flex flex-wrap items-center justify-between text-[10px] text-[var(--ak-color-text-muted)] font-mono">
+                        <div className="mt-2 pt-1.5 border-t border-[var(--border-default)] flex flex-wrap items-center justify-between text-[10px] text-[var(--text-tertiary)] font-mono">
                           <span className="flex items-center gap-1">
-                            <Activity className="w-3 h-3 text-[var(--ak-color-primary)]" />
+                            <Activity className="w-3 h-3 text-[var(--indigo-500)]" />
                             <span>{msg.telemetry.model}</span>
                           </span>
                           <span>{msg.telemetry.latency_ms > 0 ? `${msg.telemetry.latency_ms} ms` : 'Cached'}</span>
@@ -837,14 +880,14 @@ export const DoctorChatModal: React.FC<DoctorChatModalProps> = ({
 
           {/* Typing / Loading indicator */}
           {isLoading && (
-            <div className="flex gap-3 items-start animate-in fade-in duration-150">
+            <div className="flex gap-2.5 items-start animate-in fade-in duration-150">
               <img
                 src={profile.avatar}
                 alt={profile.shortName}
-                className="w-8 h-8 rounded-lg object-cover object-top border border-[var(--ak-color-border-subtle)] shrink-0 mt-1 shadow-xs"
+                className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg object-cover object-top border border-[var(--border-default)] shrink-0 mt-0.5 shadow-xs"
               />
-              <div className="bg-[var(--ak-color-bg-surface)] border border-[var(--ak-color-border-subtle)] rounded-2xl p-4 flex items-center gap-3 text-xs text-[var(--ak-color-text-secondary)] shadow-xs">
-                <Loader2 className="w-4 h-4 text-[var(--ak-color-primary)] animate-spin" />
+              <div className="bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-xl px-3 py-2 flex items-center gap-2.5 text-xs text-[var(--text-secondary)] shadow-xs">
+                <Loader2 className="w-3.5 h-3.5 text-[var(--indigo-500)] animate-spin" />
                 <span>{profile.analyzingText}</span>
               </div>
             </div>
@@ -854,38 +897,40 @@ export const DoctorChatModal: React.FC<DoctorChatModalProps> = ({
         </div>
 
         {/* Input Bar */}
-        <div className="p-4 bg-[var(--ak-color-bg-surface)] border-t border-[var(--ak-color-border-subtle)] shrink-0">
+        <div className="px-3.5 sm:px-4 py-2.5 bg-[var(--bg-surface)] border-t border-[var(--border-default)] shrink-0">
           <form
             onSubmit={(e) => {
               e.preventDefault();
               handleSendMessage();
             }}
-            className="flex items-end gap-3"
+            className="flex items-end gap-2.5"
           >
-            <div className="flex-1 bg-[var(--ak-color-bg-subtle)] border border-[var(--ak-color-border-subtle)] focus-within:border-[var(--ak-color-primary)] rounded-xl px-3.5 py-2.5 shadow-xs transition">
+            <div className="flex-1 bg-[var(--bg-subtle)] border border-[var(--border-default)] focus-within:border-[var(--indigo-500)] focus-within:ring-1 focus-within:ring-[var(--indigo-500)]/20 rounded-xl px-3 py-2 shadow-xs transition">
               <textarea
                 ref={inputRef}
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder={profile.placeholderText}
-                rows={2}
-                className="w-full bg-transparent text-[var(--ak-color-text-primary)] placeholder-[var(--ak-color-text-muted)] text-xs sm:text-sm focus:outline-none resize-none font-sans"
+                rows={1}
+                className="w-full bg-transparent text-[var(--text-primary)] placeholder-[var(--text-tertiary)] text-xs sm:text-[13px] leading-5 focus:outline-none resize-none font-sans min-h-[28px] max-h-[80px]"
               />
             </div>
 
             <Button
               type="submit"
               variant="primary"
+              size="sm"
               disabled={!inputText.trim() || isLoading}
-              leadingIcon={isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+              leadingIcon={isLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+              className="h-9 sm:h-10 px-3.5 shrink-0"
             >
               Send
             </Button>
           </form>
-          <div className="flex items-center justify-between text-[10px] text-[var(--ak-color-text-muted)] mt-2 px-1 font-mono">
-            <span>Press Enter to send, Shift+Enter for newline</span>
-            <span>Grounding: {profile.bookTitle}</span>
+          <div className="flex items-center justify-between text-[10px] text-[var(--text-tertiary)] mt-1.5 px-1 font-mono">
+            <span>Enter to send · Shift+Enter for newline</span>
+            <span className="hidden sm:inline">Grounding: {profile.bookTitle}</span>
           </div>
         </div>
       </div>
