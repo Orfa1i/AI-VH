@@ -602,12 +602,13 @@ class DatabaseRepository:
         self,
         query: str,
         specialty: Optional[str] = None,
-        top_k: int = 3,
+        book_title: Optional[str] = None,
+        top_k: int = 5,
         query_vector: Optional[List[float]] = None,
     ) -> List[Dict[str, Any]]:
         """
-        Performs semantic cosine similarity search over medical knowledge chunks.
-        Supports native pgvector on PostgreSQL and fast cosine dot-product on SQLite.
+        Performs high-performance semantic vector and lexical retrieval over medical knowledge chunks.
+        Supports native pgvector on PostgreSQL and fast candidate pre-filtering on SQLite.
         """
         import math
         import re
@@ -619,29 +620,27 @@ class DatabaseRepository:
             cur = conn.cursor()
             if is_pg and self.manager.pgvector_enabled:
                 emb_str = f"[{','.join(str(x) for x in q_vec)}]"
-                if specialty:
-                    cur.execute(
-                        """
-                        SELECT id, specialty, book_title, chapter, topic, content, metadata,
-                               (1.0 - (embedding <=> %s::vector)) AS score
-                        FROM knowledge_chunks
-                        WHERE specialty = %s
-                        ORDER BY embedding <=> %s::vector
-                        LIMIT %s;
-                        """,
-                        (emb_str, specialty, emb_str, top_k)
-                    )
-                else:
-                    cur.execute(
-                        """
-                        SELECT id, specialty, book_title, chapter, topic, content, metadata,
-                               (1.0 - (embedding <=> %s::vector)) AS score
-                        FROM knowledge_chunks
-                        ORDER BY embedding <=> %s::vector
-                        LIMIT %s;
-                        """,
-                        (emb_str, emb_str, top_k)
-                    )
+                where_pg = []
+                params_pg = [emb_str]
+                if specialty and specialty.strip() and specialty.upper() != "ALL":
+                    where_pg.append("specialty = %s")
+                    params_pg.append(specialty.strip())
+                if book_title and book_title.strip() and book_title.upper() != "ALL":
+                    where_pg.append("book_title ILIKE %s")
+                    params_pg.append(f"%{book_title.strip()}%")
+
+                where_sql = f"WHERE {' AND '.join(where_pg)}" if where_pg else ""
+                cur.execute(
+                    f"""
+                    SELECT id, specialty, book_title, chapter, topic, content, metadata,
+                           (1.0 - (embedding <=> %s::vector)) AS score
+                    FROM knowledge_chunks
+                    {where_sql}
+                    ORDER BY embedding <=> %s::vector
+                    LIMIT %s;
+                    """,
+                    tuple(params_pg + [emb_str, top_k])
+                )
                 rows = cur.fetchall()
                 results = []
                 for r in rows:
@@ -654,41 +653,75 @@ class DatabaseRepository:
                     results.append(item)
                 return results
 
-            # SQLite or standard fallback
-            if specialty:
-                cur.execute("SELECT id, specialty, book_title, chapter, topic, content, embedding, metadata FROM knowledge_chunks WHERE specialty = ?;", (specialty,))
-            else:
-                cur.execute("SELECT id, specialty, book_title, chapter, topic, content, embedding, metadata FROM knowledge_chunks;")
-            rows = cur.fetchall()
+            # SQLite or standard fallback with fast candidate retrieval
+            where_base = []
+            params_base = []
+            if specialty and specialty.strip() and specialty.upper() != "ALL":
+                where_base.append("specialty = ?")
+                params_base.append(specialty.strip())
+            if book_title and book_title.strip() and book_title.upper() != "ALL":
+                where_base.append("book_title LIKE ?")
+                params_base.append(f"%{book_title.strip()}%")
+
+            # Extract significant query words for candidate matching
+            sig_words = [w for w in q_tokens if len(w) > 2]
+            candidate_rows = []
+            
+            if sig_words:
+                like_clauses = []
+                candidate_params = list(params_base)
+                for w in sig_words[:6]:
+                    like_clauses.append("(topic LIKE ? OR content LIKE ? OR chapter LIKE ?)")
+                    candidate_params.extend([f"%{w}%", f"%{w}%", f"%{w}%"])
+                
+                comb_where = list(where_base)
+                if like_clauses:
+                    comb_where.append(f"({' OR '.join(like_clauses)})")
+                
+                where_str = f"WHERE {' AND '.join(comb_where)}" if comb_where else ""
+                cur.execute(
+                    f"SELECT id, specialty, book_title, chapter, topic, content, embedding, metadata FROM knowledge_chunks {where_str} LIMIT 300;",
+                    tuple(candidate_params)
+                )
+                candidate_rows = cur.fetchall()
+
+            # Fallback if no lexical candidate match found (e.g. abbreviations/synonyms)
+            if not candidate_rows:
+                where_str = f"WHERE {' AND '.join(where_base)}" if where_base else ""
+                cur.execute(
+                    f"SELECT id, specialty, book_title, chapter, topic, content, embedding, metadata FROM knowledge_chunks {where_str} LIMIT 250;",
+                    tuple(params_base)
+                )
+                candidate_rows = cur.fetchall()
 
             scored = []
-            for r in rows:
+            for r in candidate_rows:
                 row_dict = dict(r)
                 emb_raw = row_dict.pop("embedding", None)
                 chunk_emb = json.loads(emb_raw) if isinstance(emb_raw, str) else emb_raw
-                
+
                 # Cosine similarity (dot product of L2 normalized vectors)
                 sim = 0.0
                 if chunk_emb and len(chunk_emb) == len(q_vec):
                     sim = sum(a * b for a, b in zip(q_vec, chunk_emb))
 
                 # Topic token matching boost
-                topic_tokens = set(re.findall(r"[a-z0-9]+(?:-[a-z0-9]+)?", row_dict["topic"].lower()))
+                topic_tokens = set(re.findall(r"[a-z0-9]+(?:-[a-z0-9]+)?", row_dict.get("topic", "").lower()))
                 topic_overlap = len(q_tokens.intersection(topic_tokens)) / max(len(topic_tokens), 1) if topic_tokens else 0.0
 
                 # Keyword lexical overlap boost in chapter and content
-                content_tokens = set(re.findall(r"[a-z0-9]+(?:-[a-z0-9]+)?", (row_dict["chapter"] + " " + row_dict["content"]).lower()))
+                content_tokens = set(re.findall(r"[a-z0-9]+(?:-[a-z0-9]+)?", (row_dict.get("chapter", "") + " " + row_dict.get("content", "")).lower()))
                 content_overlap = len(q_tokens.intersection(content_tokens)) / max(len(q_tokens), 1) if q_tokens else 0.0
 
                 composite_score = round(0.40 * max(sim, 0.0) + 0.35 * topic_overlap + 0.25 * content_overlap, 4)
-                
+
                 meta = row_dict.get("metadata")
                 if isinstance(meta, str):
                     try:
                         row_dict["metadata"] = json.loads(meta)
                     except Exception:
                         pass
-                        
+
                 row_dict["score"] = composite_score
                 scored.append(row_dict)
 
@@ -701,6 +734,138 @@ class DatabaseRepository:
             cur.execute("SELECT COUNT(*) FROM knowledge_chunks;")
             res = cur.fetchone()
             return res[0] if res else 0
+
+    def get_knowledge_books_summary(self) -> Dict[str, Any]:
+        """Returns statistics and metadata breakdown for all medical knowledge textbooks."""
+        with self.manager.get_connection() as conn:
+            cur = conn.cursor()
+            cur.execute("""
+                SELECT book_title, specialty, COUNT(*) as total_chunks, COUNT(DISTINCT chapter) as total_chapters
+                FROM knowledge_chunks
+                GROUP BY book_title, specialty
+                ORDER BY total_chunks DESC;
+            """)
+            rows = cur.fetchall()
+            books = []
+            total_chunks = 0
+            for r in rows:
+                row_dict = dict(r)
+                cnt = row_dict["total_chunks"]
+                total_chunks += cnt
+                title = row_dict["book_title"]
+                spec = row_dict["specialty"]
+
+                # Fetch 2 sample chunks for preview
+                cur.execute("""
+                    SELECT id, chapter, topic, substr(content, 1, 280) as excerpt
+                    FROM knowledge_chunks
+                    WHERE book_title = ?
+                    LIMIT 2;
+                """, (title,))
+                samples = [dict(s) for s in cur.fetchall()]
+
+                # Generate clean identifier
+                slug = (
+                    title.lower()
+                    .replace(" ", "-")
+                    .replace("'", "")
+                    .replace("(", "")
+                    .replace(")", "")
+                    .replace(":", "")
+                    .replace(",", "")
+                )
+
+                books.append({
+                    "id": slug,
+                    "title": title,
+                    "specialty": spec,
+                    "chunk_count": cnt,
+                    "chapter_count": row_dict.get("total_chapters", 0),
+                    "status": "ACTIVE",
+                    "embedding_model": "all-MiniLM-L6-v2",
+                    "embedding_dim": 384,
+                    "sample_chunks": samples,
+                })
+
+            return {
+                "total_chunks": total_chunks,
+                "total_books": len(books),
+                "embedding_model": "all-MiniLM-L6-v2",
+                "embedding_dim": 384,
+                "books": books,
+            }
+
+    def list_knowledge_chunks(
+        self,
+        book_title: Optional[str] = None,
+        specialty: Optional[str] = None,
+        limit: int = 20,
+        offset: int = 0,
+        search_query: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Lists vector chunks with metadata and preview vector values for inspection."""
+        with self.manager.get_connection() as conn:
+            cur = conn.cursor()
+            where_clauses = []
+            params = []
+            if book_title and book_title.strip() and book_title.upper() != "ALL":
+                where_clauses.append("book_title LIKE ?")
+                params.append(f"%{book_title.strip()}%")
+            if specialty and specialty.strip() and specialty.upper() != "ALL":
+                where_clauses.append("specialty = ?")
+                params.append(specialty.strip())
+            if search_query and search_query.strip():
+                where_clauses.append("(topic LIKE ? OR content LIKE ? OR chapter LIKE ?)")
+                sq = f"%{search_query.strip()}%"
+                params.extend([sq, sq, sq])
+
+            where_sql = f"WHERE {' AND '.join(where_clauses)}" if where_clauses else ""
+
+            # Count total matching
+            cur.execute(f"SELECT COUNT(*) FROM knowledge_chunks {where_sql};", tuple(params))
+            cnt_row = cur.fetchone()
+            total = cnt_row[0] if cnt_row else 0
+
+            # Fetch paginated rows
+            cur.execute(
+                f"""
+                SELECT id, specialty, book_title, chapter, topic, content, embedding, metadata
+                FROM knowledge_chunks
+                {where_sql}
+                ORDER BY id ASC
+                LIMIT ? OFFSET ?;
+                """,
+                tuple(params + [min(max(limit, 1), 100), max(offset, 0)])
+            )
+            rows = cur.fetchall()
+
+            chunks = []
+            for r in rows:
+                row_dict = dict(r)
+                emb_raw = row_dict.pop("embedding", None)
+                chunk_emb = json.loads(emb_raw) if isinstance(emb_raw, str) else emb_raw
+                vector_preview = []
+                if isinstance(chunk_emb, list) and len(chunk_emb) > 0:
+                    vector_preview = [round(float(v), 4) for v in chunk_emb[:5]]
+
+                meta = row_dict.get("metadata")
+                if isinstance(meta, str):
+                    try:
+                        row_dict["metadata"] = json.loads(meta)
+                    except Exception:
+                        pass
+
+                row_dict["vector_preview"] = vector_preview
+                row_dict["vector_dim"] = len(chunk_emb) if isinstance(chunk_emb, list) else 384
+                row_dict["char_length"] = len(row_dict.get("content", ""))
+                chunks.append(row_dict)
+
+            return {
+                "total": total,
+                "limit": limit,
+                "offset": offset,
+                "chunks": chunks,
+            }
 
     # =========================================================================
     # Patient Case Intake & Admission Repository

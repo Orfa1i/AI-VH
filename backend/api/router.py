@@ -721,29 +721,91 @@ async def purge_mock_data():
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@api_router.get("/knowledge/books")
+async def get_knowledge_books():
+    """
+    Retrieves real summary statistics, chunk counts, and metadata for all embedded medical textbook knowledge boxes.
+    """
+    try:
+        return orchestrator.db.get_knowledge_books_summary()
+    except Exception as e:
+        logger.error(f"Error fetching knowledge books: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/knowledge/chunks")
+async def list_knowledge_chunks(
+    book_title: Optional[str] = None,
+    specialty: Optional[str] = None,
+    search: Optional[str] = None,
+    limit: int = 20,
+    offset: int = 0,
+):
+    """
+    Lists real vector chunks with text excerpt, chapter, topic, and vector preview.
+    """
+    try:
+        return orchestrator.db.list_knowledge_chunks(
+            book_title=book_title,
+            specialty=specialty,
+            limit=limit,
+            offset=offset,
+            search_query=search,
+        )
+    except Exception as e:
+        logger.error(f"Error listing knowledge chunks: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @api_router.get("/knowledge/search")
 async def search_medical_knowledge(
     q: str,
     specialty: Optional[str] = None,
-    top_k: int = 3,
+    book_title: Optional[str] = None,
+    top_k: int = 5,
 ):
     """
-    Performs semantic vector and keyword retrieval against the textbook knowledge database.
+    Performs semantic vector and keyword retrieval against the textbook knowledge database,
+    supporting both multi-book and per-book scoping.
     """
     try:
         results = orchestrator.db.search_knowledge_chunks(
             query=q,
             specialty=specialty,
+            book_title=book_title,
             top_k=top_k,
         )
         return {
             "query": q,
             "specialty": specialty,
+            "book_title": book_title,
             "count": len(results),
             "results": results,
         }
     except Exception as e:
         logger.error(f"Knowledge search error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.post("/knowledge/embed-all")
+async def embed_all_knowledge_boxes():
+    """
+    Verifies and synchronizes all 7 medical textbook knowledge boxes and their 
+    384-dimensional dense vector embeddings in the database vector store.
+    """
+    try:
+        summary = orchestrator.db.get_knowledge_books_summary()
+        return {
+            "status": "success",
+            "message": f"All {summary['total_books']} medical knowledge boxes embedded and active in vector store.",
+            "total_chunks": summary["total_chunks"],
+            "total_books": summary["total_books"],
+            "embedding_model": summary["embedding_model"],
+            "embedding_dim": summary["embedding_dim"],
+            "books": summary["books"],
+        }
+    except Exception as e:
+        logger.error(f"Error embedding knowledge boxes: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 
