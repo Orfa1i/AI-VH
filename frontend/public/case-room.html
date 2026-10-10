@@ -181,11 +181,11 @@ button { font: inherit; color: inherit; }
 .btn-triage svg { width: 16px; height: 16px; }
 
 .toggles-panel {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   background: var(--paper);
-  padding: 8px 10px;
+  padding: 8px 12px;
   border-radius: 10px;
   border: 1px solid var(--hair-2);
 }
@@ -1177,10 +1177,6 @@ button { font: inherit; color: inherit; }
         <span>Start Triage</span>
       </button>
       <div class="toggles-panel">
-        <label class="toggle-btn" title="Automatically route when selecting a case">
-          <input type="checkbox" id="toggle-auto" checked>
-          <span>Auto-Triage</span>
-        </label>
         <label class="toggle-btn" title="Synthesize brief voice updates from specialists (Fish Audio)">
           <input type="checkbox" id="toggle-voice" checked>
           <span>Voice Audio</span>
@@ -2657,13 +2653,8 @@ const CASES = {
     populateSidebar(activeCase);
     setupPlanAndDraft();
     reset();
-
-    if ($('#toggle-auto').checked) {
-      startTriage();
-    } else {
-      renderRouterCards(activeCase.router);
-      $('#r-sum').textContent = 'Ready for MedGemma routing';
-    }
+    renderRouterCards(activeCase.router);
+    $('#r-sum').textContent = 'Ready for MedGemma routing';
   });
 
   async function startTriage() {
@@ -2742,18 +2733,14 @@ const CASES = {
     });
   }
 
-  // Initial Boot
+  // Initial Boot: populate case dossier and await manual Start
   populateSidebar(activeCase);
   setupPlanAndDraft();
   renderRouterCards(activeCase.router);
   reset();
   layout();
   requestAnimationFrame(tick);
-
-  // Auto-start on load
-  setTimeout(() => {
-    startTriage();
-  }, 400);
+  $('#r-sum').textContent = 'Ready for MedGemma routing';
 
 })();
 

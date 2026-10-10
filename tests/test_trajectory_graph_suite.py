@@ -44,7 +44,8 @@ def test_case_room_html_cleanliness():
     assert 'id="case-sidebar"' in content, "Case sidebar must exist"
     assert 'id="case-select"' in content, "Case selector dropdown must exist"
     assert 'id="b-start-triage"' in content, "Start Triage button must exist"
-    assert 'id="toggle-auto"' in content, "Auto-Triage toggle must exist"
+    assert 'id="toggle-auto"' not in content, "Auto-Triage toggle must be removed"
+    assert 'Auto-Triage' not in content, "Auto-Triage text must be removed"
     assert 'id="toggle-voice"' in content, "Voice Audio toggle must exist"
     assert 'id="imaging-modal"' in content, "Imaging modal must exist"
 
