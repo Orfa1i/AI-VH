@@ -31,6 +31,6 @@ export interface RoutingResult {
 // Demo values for the preeclampsia case until the live router is wired:
 export const DEMO_ROUTING: RoutingResult = {
   routedAt: '2026-10-09T14:17:00',
-  scores: { ob: 97, em: 92, im: 88, ca: 81, ne: 79, su: 64, gy: 18 },
-  status: { ob: 'lead', em: 'assigned', im: 'assigned', ca: 'assigned', ne: 'assigned', su: 'assigned', gy: 'standby' },
+  scores: { ob: 97, em: 92, im: 88, ca: 81, ne: 79, su: 64, gy: 62 },
+  status: { ob: 'lead', em: 'assigned', im: 'assigned', ca: 'assigned', ne: 'assigned', su: 'assigned', gy: 'assigned' },
 };

@@ -1553,16 +1553,16 @@ const CASES = {
       { id: 'antihypertensive', own: ['ob', 'ca'], t: '<b>Severe BP Control:</b> IV labetalol 20 mg bolus, titrate every 10 min. Target BP 140–150 / 90–100 mmHg.' },
       { id: 'mgso4', own: ['ob', 'ne'], t: '<b>Eclampsia Prophylaxis:</b> Magnesium sulfate 4 g IV over 20 min, then 1 g/h continuous infusion.' },
       { id: 'surgical_eval', own: ['su'], t: '<b>Surgical Clearance:</b> Emergency bedside ultrasound ruled out subcapsular hepatic hematoma.' },
-      { id: 'delivery', own: ['ob'], t: '<b>Expedited Delivery:</b> Maternal stabilization followed by urgent induction/cesarean section once platelet transfusion available.' }
+      { id: 'delivery', own: ['ob', 'gy'], t: '<b>Expedited Delivery:</b> Maternal stabilization followed by urgent induction/cesarean section once platelet transfusion available.' }
     ],
     router: {
       routedAt: '14:17',
       primary: 'ob',
       consult: 'su',
-      scores: { ob: 97, em: 92, im: 88, ca: 81, ne: 79, su: 64, gy: 18 },
-      status: { ob: 'lead', em: 'assigned', im: 'assigned', ca: 'assigned', ne: 'assigned', su: 'assigned', gy: 'standby' },
-      assigned: ['ob', 'em', 'im', 'ca', 'ne', 'su'],
-      standby: ['gy'],
+      scores: { ob: 97, em: 92, im: 88, ca: 81, ne: 79, su: 64, gy: 62 },
+      status: { ob: 'lead', em: 'assigned', im: 'assigned', ca: 'assigned', ne: 'assigned', su: 'assigned', gy: 'assigned' },
+      assigned: ['ob', 'em', 'im', 'ca', 'ne', 'su', 'gy'],
+      standby: [],
       rationale: 'Severe preeclampsia with HELLP features at 34 weeks gestation requires Obstetrics lead with multidisciplinary stabilization.'
     },
     events: [
@@ -1644,13 +1644,24 @@ const CASES = {
         dxDelta: {}
       },
       {
+        who: 'gy',
+        to: 'ob',
+        kind: 'assess',
+        short: "Pelvic ultrasound verifies no adnexal pathology; cervical status assessed",
+        detail: "Pelvic evaluation per <em>Williams Gynecology, Ch. 2</em> confirms no adnexal torsion or retroplacental hematoma. Recommends immediate stabilization and operative delivery pathway.",
+        voice: "Pelvic ultrasound confirms no adnexal pathology. Ready to assist with operative delivery pathway.",
+        agreeWith: ['ob', 'ca', 'ne', 'su', 'im', 'em', 'gy'],
+        planAgrees: ['delivery'],
+        dxDelta: {}
+      },
+      {
         who: 'ob',
         to: 'board',
         kind: 'consensus',
         short: "Consensus reached: Maternal stabilization followed by expedited delivery",
-        detail: "Obstetrics, Cardiology, Neurology, Surgery, Internal Medicine, and Emergency Medicine agree on definitive protocol: antihypertensive control, neuroprotection, and delivery upon maternal stabilization.",
+        detail: "Obstetrics, Gynecology, Cardiology, Neurology, Surgery, Internal Medicine, and Emergency Medicine agree on definitive protocol: antihypertensive control, neuroprotection, and delivery upon maternal stabilization.",
         voice: "Consensus finalized: maternal stabilization followed by expedited delivery.",
-        agreeWith: ['ob', 'ca', 'ne', 'su', 'im', 'em'],
+        agreeWith: ['ob', 'ca', 'ne', 'su', 'im', 'em', 'gy'],
         planAgrees: ['delivery'],
         dxDelta: { aflp: 0.01, ttp: 0.01, chole: 0.01 }
       }
@@ -1725,10 +1736,10 @@ const CASES = {
       routedAt: '09:24',
       primary: 'im',
       consult: 'su',
-      scores: { im: 96, em: 93, su: 89, ca: 78, ne: 65, ob: 12, gy: 12 },
-      status: { im: 'lead', em: 'assigned', su: 'assigned', ca: 'assigned', ne: 'assigned', ob: 'standby', gy: 'standby' },
-      assigned: ['im', 'em', 'su', 'ca', 'ne'],
-      standby: ['ob', 'gy'],
+      scores: { im: 96, em: 93, su: 89, ca: 78, ne: 65, gy: 35, ob: 12 },
+      status: { im: 'lead', em: 'assigned', su: 'assigned', ca: 'assigned', ne: 'assigned', gy: 'assigned', ob: 'standby' },
+      assigned: ['im', 'em', 'su', 'ca', 'ne', 'gy'],
+      standby: ['ob'],
       rationale: 'MRSA bacteremia with refractory septic shock and prosthetic joint infection requires Internal Medicine lead with immediate Surgery consult.'
     },
     events: [
@@ -1794,7 +1805,7 @@ const CASES = {
         short: "Consensus reached: Dual medical resuscitation and emergent surgical source control",
         detail: "Full agreement across Internal Medicine, Emergency Medicine, Surgery, and Cardiology. Protocol synchronized for OR transfer under continuous pressor support.",
         voice: "Consensus reached: aggressive antimicrobial coverage with immediate surgical source control.",
-        agreeWith: ['im', 'em', 'su', 'ca', 'ne'],
+        agreeWith: ['im', 'em', 'su', 'ca', 'ne', 'gy'],
         planAgrees: ['pressors', 'antimicrobial', 'arthrocentesis', 'tee_echo', 'renal_support'],
         dxDelta: { strep: 0.02, gout: 0.01, endocarditis: 0.08 }
       }
@@ -1869,10 +1880,10 @@ const CASES = {
       routedAt: '11:05',
       primary: 'ca',
       consult: 'su',
-      scores: { ca: 98, em: 94, su: 88, im: 82, ne: 60, ob: 10, gy: 10 },
-      status: { ca: 'lead', em: 'assigned', su: 'assigned', im: 'assigned', ne: 'assigned', ob: 'standby', gy: 'standby' },
-      assigned: ['ca', 'em', 'su', 'im', 'ne'],
-      standby: ['ob', 'gy'],
+      scores: { ca: 98, em: 94, su: 88, im: 82, ne: 60, gy: 32, ob: 10 },
+      status: { ca: 'lead', em: 'assigned', su: 'assigned', im: 'assigned', ne: 'assigned', gy: 'assigned', ob: 'standby' },
+      assigned: ['ca', 'em', 'su', 'im', 'ne', 'gy'],
+      standby: ['ob'],
       rationale: 'ECG ST elevation in V1-V4 with cardiogenic shock mandates immediate Cardiology lead with Cardiovascular Surgery/Cath lab activation.'
     },
     events: [
@@ -1927,7 +1938,7 @@ const CASES = {
         short: "Consensus reached: Immediate transfer to Cath Lab with mechanical support",
         detail: "Unanimous specialist agreement: Emergency stabilization, upfront Impella placement, and primary PCI to restore LAD patency.",
         voice: "Consensus finalized: immediate transfer to cath lab with mechanical circulatory support.",
-        agreeWith: ['ca', 'em', 'su', 'im', 'ne'],
+        agreeWith: ['ca', 'em', 'su', 'im', 'ne', 'gy'],
         planAgrees: ['cath_lab', 'circulatory', 'inotropes', 'antiplatelet', 'airway'],
         dxDelta: { dissection: 0.01, pe: 0.01, tamponade: 0.01 }
       }
@@ -2001,10 +2012,10 @@ const CASES = {
       routedAt: '08:12',
       primary: 'ne',
       consult: 'su',
-      scores: { ne: 98, em: 93, su: 91, ca: 76, im: 72, ob: 10, gy: 10 },
-      status: { ne: 'lead', em: 'assigned', su: 'assigned', ca: 'assigned', im: 'assigned', ob: 'standby', gy: 'standby' },
-      assigned: ['ne', 'em', 'su', 'ca', 'im'],
-      standby: ['ob', 'gy'],
+      scores: { ne: 98, em: 93, su: 91, ca: 76, im: 72, gy: 34, ob: 10 },
+      status: { ne: 'lead', em: 'assigned', su: 'assigned', ca: 'assigned', im: 'assigned', gy: 'assigned', ob: 'standby' },
+      assigned: ['ne', 'em', 'su', 'ca', 'im', 'gy'],
+      standby: ['ob'],
       rationale: 'Acute focal neurological deficit with NIHSS 18 within thrombolytic window requires Neurology lead with Neurointerventional Surgery consult.'
     },
     events: [
@@ -2059,7 +2070,7 @@ const CASES = {
         short: "Consensus reached: Dual bridging thrombolysis and endovascular thrombectomy",
         detail: "Unanimous clinical consensus: IV TNK bolus followed immediately by groin puncture for mechanical recanalization.",
         voice: "Consensus finalized: immediate bridging tenecteplase and mechanical thrombectomy.",
-        agreeWith: ['ne', 'em', 'su', 'ca', 'im'],
+        agreeWith: ['ne', 'em', 'su', 'ca', 'im', 'gy'],
         planAgrees: ['bp_target', 'thrombolysis', 'thrombectomy', 'neuro_checks'],
         dxDelta: { ich: 0.00, todd: 0.01, migraine: 0.00 }
       }
@@ -2126,10 +2137,10 @@ const CASES = {
       routedAt: '16:40',
       primary: 'su',
       consult: 'im',
-      scores: { su: 98, em: 90, im: 84, ca: 52, ne: 40, ob: 10, gy: 10 },
-      status: { su: 'lead', em: 'assigned', im: 'assigned', ca: 'assigned', ne: 'assigned', ob: 'standby', gy: 'standby' },
-      assigned: ['su', 'em', 'im', 'ca', 'ne'],
-      standby: ['ob', 'gy'],
+      scores: { su: 98, em: 90, im: 84, gy: 58, ca: 52, ne: 40, ob: 10 },
+      status: { su: 'lead', em: 'assigned', im: 'assigned', gy: 'assigned', ca: 'assigned', ne: 'assigned', ob: 'standby' },
+      assigned: ['su', 'em', 'im', 'gy', 'ca', 'ne'],
+      standby: ['ob'],
       rationale: 'Migratory RLQ pain, leukocytosis, and CT imaging confirming dilated 9.5mm appendix with appendicolith requires Surgery lead with Internal Medicine antibiotic consultation.'
     },
     events: [
@@ -2184,7 +2195,7 @@ const CASES = {
         short: "Consensus reached: Proceed to OR for laparoscopic appendectomy",
         detail: "Surgery, Internal Medicine, and Emergency Medicine aligned. Patient prepped for laparoscopic intervention.",
         voice: "Consensus reached: proceeding directly to operating room for laparoscopic appendectomy.",
-        agreeWith: ['su', 'em', 'im'],
+        agreeWith: ['su', 'em', 'im', 'gy'],
         planAgrees: ['npo', 'antibiotics', 'lap_app', 'dvt_ppx'],
         dxDelta: { mesenteric: 0.01, crohn: 0.01, colic: 0.00 }
       }

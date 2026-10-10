@@ -228,7 +228,7 @@ class MedicalSpecialtyRouter:
             hits = neuro_hits
         elif is_gynecologic_primary or (gyn_score > id_score and gyn_score > im_score):
             specialty = "GYNECOLOGY"
-            specialist_name = "Gynecology AI agent"
+            specialist_name = "Gynecology AI agent (Dr. Evelyn Reed)"
             book = "Williams Gynecology"
             confidence = min(0.98, max(0.75, 0.70 + 0.05 * len(gyn_hits)))
             rationale = f"Primary gynecologic / pelvic pathology identified ({', '.join(gyn_hits[:3]) or 'gynecologic symptoms'}). Routed to Gynecology."
