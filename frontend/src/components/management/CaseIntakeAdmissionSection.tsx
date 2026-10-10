@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import type { BenchmarkCase, PatientRecord } from '../../types';
 import {
   RotateCcw,
@@ -11,7 +11,6 @@ import {
 } from 'lucide-react';
 
 
-import { DemoPatientsSection } from '../synthea/DemoPatientsSection';
 import {
   Button,
   Badge,
@@ -26,18 +25,41 @@ import {
 } from '../ui';
 import { AppPage } from '../layout/Templates';
 
-interface CaseIntakeAdmissionSectionProps {
+export interface CaseIntakeAdmissionSectionProps {
   cases?: BenchmarkCase[];
   onPatientAdmitted: (patient: PatientRecord) => void;
   onAdmitAndSimulate?: (caseId: string, patientName?: string) => void;
+  onNavigateTab?: (tab: string) => void;
+  initialMode?: 'MANUAL' | 'SYNTHETIC';
 }
 
 export const CaseIntakeAdmissionSection: React.FC<CaseIntakeAdmissionSectionProps> = ({
+  cases: _cases,
   onPatientAdmitted,
   onAdmitAndSimulate,
+  onNavigateTab,
+  initialMode = 'MANUAL',
 }) => {
+  const iframeRef = useRef<HTMLIFrameElement>(null);
   // Mode switcher: Manual admission form vs. Synthetic Synthea patient library
-  const [intakeMode, setIntakeMode] = useState<string>('MANUAL');
+  const [intakeMode, setIntakeMode] = useState<string>(initialMode);
+
+  useEffect(() => {
+    const handleMessage = (e: MessageEvent) => {
+      if (!e.data || typeof e.data !== 'object') return;
+
+      if (e.data.type === 'NAVIGATE' && e.data.tab) {
+        onNavigateTab?.(e.data.tab);
+      } else if (e.data.type === 'SET_INTAKE_MODE' && e.data.mode) {
+        setIntakeMode(e.data.mode);
+      } else if (e.data.type === 'PATIENT_ADMITTED' && e.data.patient) {
+        onPatientAdmitted(e.data.patient);
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [onNavigateTab, onPatientAdmitted]);
 
   // Form fields
   const [name, setName] = useState('');
@@ -200,6 +222,27 @@ export const CaseIntakeAdmissionSection: React.FC<CaseIntakeAdmissionSectionProp
     },
   ];
 
+  if (intakeMode === 'SYNTHETIC') {
+    return (
+      <div className="w-full h-full flex flex-1 flex-col relative overflow-hidden" style={{ minHeight: 'calc(100vh - 120px)' }}>
+        <iframe
+          ref={iframeRef}
+          src="/case-intake.html"
+          title="Virtual Hospital Case Intake"
+          className="w-full flex-1 border-0"
+          style={{
+            width: '100%',
+            height: '100%',
+            minHeight: 'calc(100vh - 120px)',
+            border: 'none',
+            display: 'block',
+            background: '#F7F8FB',
+          }}
+        />
+      </div>
+    );
+  }
+
   return (
     <AppPage
       title="Case Intake & Triage Admission"
@@ -208,18 +251,16 @@ export const CaseIntakeAdmissionSection: React.FC<CaseIntakeAdmissionSectionProp
         { label: 'Case Intake & Triage', isCurrent: true },
       ]}
       actions={
-        intakeMode === 'MANUAL' && (
-          <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
-            <Button
-              variant="ghost"
-              size="md"
-              onClick={handleResetForm}
-              leadingIcon={<RotateCcw className="w-3.5 h-3.5" />}
-            >
-              Reset form
-            </Button>
-          </div>
-        )
+        <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+          <Button
+            variant="ghost"
+            size="md"
+            onClick={handleResetForm}
+            leadingIcon={<RotateCcw className="w-3.5 h-3.5" />}
+          >
+            Reset form
+          </Button>
+        </div>
       }
     >
       {/* MODE TABS SWITCHER */}
@@ -234,16 +275,7 @@ export const CaseIntakeAdmissionSection: React.FC<CaseIntakeAdmissionSectionProp
         />
       </div>
 
-      {intakeMode === 'SYNTHETIC' ? (
-        <Card style={{ padding: 0, overflow: 'hidden' }}>
-          <DemoPatientsSection
-            onAdmitSuccess={() => {
-              onPatientAdmitted({} as any);
-            }}
-          />
-        </Card>
-      ) : (
-        <>
+      <>
           {/* SUCCESS NOTIFICATION */}
           {successMessage && lastAdmitted && (
             <div style={{ marginBottom: 'var(--space-6)' }}>
@@ -711,7 +743,6 @@ export const CaseIntakeAdmissionSection: React.FC<CaseIntakeAdmissionSectionProp
             </div>
           </form>
         </>
-      )}
     </AppPage>
   );
 };

@@ -368,6 +368,8 @@ export const App: React.FC = () => {
             cases={cases}
             onPatientAdmitted={handlePatientAdmitted}
             onAdmitAndSimulate={handleAdmitAndSimulate}
+            onNavigateTab={(tab) => setActiveTab(tab as any)}
+            initialMode="SYNTHETIC"
           />
         )}
 
