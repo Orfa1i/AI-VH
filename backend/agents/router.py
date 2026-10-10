@@ -75,14 +75,22 @@ class MedicalSpecialtyRouter:
         "prolonged fever", "gram-negative bacteremia", "staphylococcus aureus bacteremia"
     ]
 
+    OBSTETRICS_KEYWORDS = [
+        "pregnancy", "pregnant", "preeclampsia", "eclampsia", "hellp", "gestation",
+        "gestational", "labor", "delivery", "fetal", "amniotic", "placenta",
+        "abruptio placentae", "placenta previa", "postpartum hemorrhage", "pph",
+        "chorioamnionitis", "braxton hicks", "c-section", "cesarean", "obstetric",
+        "obstetrics", "antepartum", "postpartum", "gravida", "para", "trimester",
+        "oligohydramnios", "polyhydramnios", "fetal distress", "uterine rupture"
+    ]
+
     GYNECOLOGY_KEYWORDS = [
         "pelvic pain", "vaginal bleeding", "abnormal uterine bleeding", "aub",
         "menorrhagia", "metrorrhagia", "ectopic pregnancy", "ovarian cyst",
         "adnexal mass", "ovarian torsion", "pelvic inflammatory disease", "pid",
         "tubo-ovarian abscess", "endometriosis", "adenomyosis", "uterine fibroid",
         "leiomyoma", "dysmenorrhea", "dyspareunia", "pcos", "polycystic ovary",
-        "cervical dysplasia", "pap smear", "postmenopausal bleeding", "cervical motion tenderness",
-        "pregnancy", "pregnant", "preeclampsia", "eclampsia", "hellp", "gestation"
+        "cervical dysplasia", "pap smear", "postmenopausal bleeding", "cervical motion tenderness"
     ]
 
     NEUROLOGY_KEYWORDS = [
@@ -117,6 +125,7 @@ class MedicalSpecialtyRouter:
 
         combined_text = f"{complaint.lower()} {hpi.lower()} {' '.join(str(p).lower() for p in pmh)}"
 
+        ob_hits = [k for k in cls.OBSTETRICS_KEYWORDS if k in combined_text]
         em_hits = [k for k in cls.EMERGENCY_KEYWORDS if k in combined_text]
         cardio_hits = [k for k in cls.CARDIOLOGY_KEYWORDS if k in combined_text]
         surgery_hits = [k for k in cls.SURGERY_KEYWORDS if k in combined_text]
@@ -126,6 +135,7 @@ class MedicalSpecialtyRouter:
         im_hits = [k for k in cls.INTERNAL_MEDICINE_KEYWORDS if k in combined_text]
 
         # Score weights: complaint hits count for 2, HPI/PMH hits count for 1
+        ob_score = sum(2 if k in complaint.lower() else 1 for k in ob_hits)
         em_score = sum(2 if k in complaint.lower() else 1 for k in em_hits)
         cardio_score = sum(2 if k in complaint.lower() else 1 for k in cardio_hits)
         surgery_score = sum(2 if k in complaint.lower() else 1 for k in surgery_hits)
@@ -140,6 +150,13 @@ class MedicalSpecialtyRouter:
                 "anaphylaxis", "stridor", "angioedema", "cardiac arrest", "code blue",
                 "tension pneumothorax", "polytrauma", "overdose", "poisoning", "status epilepticus",
                 "unresponsive", "resuscitation", "aspiration", "rapid sequence intubation"
+            ]
+        )
+        is_obstetric_primary = any(
+            k in complaint.lower() for k in [
+                "preeclampsia", "eclampsia", "hellp", "pregnancy", "pregnant",
+                "gestation", "gestational", "labor", "delivery", "fetal",
+                "amniotic", "placenta", "abruptio placentae", "c-section", "cesarean"
             ]
         )
         is_cardiac_emergency = any(
@@ -163,8 +180,7 @@ class MedicalSpecialtyRouter:
             k in complaint.lower() for k in [
                 "ectopic pregnancy", "vaginal bleeding", "abnormal uterine bleeding", "aub",
                 "adnexal mass", "ovarian cyst", "ovarian torsion", "pelvic inflammatory disease",
-                "pid", "tubo-ovarian abscess", "endometriosis", "uterine fibroid", "postmenopausal bleeding",
-                "preeclampsia", "eclampsia", "hellp", "pregnancy", "pregnant"
+                "pid", "tubo-ovarian abscess", "endometriosis", "uterine fibroid", "postmenopausal bleeding"
             ]
         )
         is_infectious_primary = any(
@@ -175,51 +191,58 @@ class MedicalSpecialtyRouter:
             ]
         )
 
-        if is_immediate_resuscitation or (em_score > cardio_score and em_score > surgery_score and em_score > neuro_score and em_score > gyn_score and em_score > id_score and em_score > im_score):
+        if is_immediate_resuscitation or (em_score > ob_score and em_score > cardio_score and em_score > surgery_score and em_score > neuro_score and em_score > gyn_score and em_score > id_score and em_score > im_score):
             specialty = "EMERGENCY"
-            specialist_name = "Dr. David Kim, MD, FACEP"
+            specialist_name = "Emergency Medicine AI agent"
             book = "Tintinalli's Emergency Medicine Manual"
             confidence = min(0.98, max(0.75, 0.70 + 0.05 * len(em_hits)))
             rationale = f"Acute resuscitation / emergency pathology identified ({', '.join(em_hits[:3]) or 'emergency symptoms'}). Routed to Emergency Medicine."
             hits = em_hits
+        elif is_obstetric_primary or (ob_score > cardio_score and ob_score > surgery_score and ob_score > neuro_score and ob_score > gyn_score and ob_score > id_score and ob_score > im_score):
+            specialty = "OBSTETRICS"
+            specialist_name = "Obstetrics AI agent"
+            book = "Williams Obstetrics"
+            confidence = min(0.98, max(0.75, 0.70 + 0.05 * len(ob_hits)))
+            rationale = f"Primary obstetric pathology identified ({', '.join(ob_hits[:3]) or 'obstetric symptoms'}). Routed to Obstetrics."
+            hits = ob_hits
         elif is_cardiac_emergency or (cardio_score > surgery_score and cardio_score > neuro_score and cardio_score > gyn_score and cardio_score > id_score and cardio_score > im_score):
             specialty = "CARDIOLOGY"
-            specialist_name = "Dr. Rachel Vance, MD, FACC"
+            specialist_name = "Cardiology AI agent"
             book = "Braunwald's Heart Disease: A Textbook of Cardiovascular Medicine (12th Ed)"
             confidence = min(0.98, max(0.75, 0.70 + 0.05 * len(cardio_hits)))
             rationale = f"Primary cardiovascular presentation identified ({', '.join(cardio_hits[:3]) or 'cardiac symptoms'}). Routed to Cardiology."
             hits = cardio_hits
         elif is_surgical_emergency or (surgery_score > neuro_score and surgery_score > gyn_score and surgery_score > id_score and surgery_score > im_score):
             specialty = "SURGERY"
-            specialist_name = "Dr. Sarah Lin, MD, FACS"
+            specialist_name = "Surgery AI agent"
             book = "Schwartz's Principles of Surgery (10th Ed)"
             confidence = min(0.98, max(0.75, 0.70 + 0.05 * len(surgery_hits)))
             rationale = f"Surgical pathology / acute abdomen identified ({', '.join(surgery_hits[:3]) or 'surgical symptoms'}). Routed to Surgery."
             hits = surgery_hits
         elif is_neurologic_primary or (neuro_score > gyn_score and neuro_score > id_score and neuro_score > im_score):
             specialty = "NEUROLOGY"
-            specialist_name = "Dr. Alexander Hayes, MD, PhD, FAAN"
+            specialist_name = "Neurology AI agent"
             book = "Adams and Victor's Principles of Neurology (8th Ed)"
             confidence = min(0.98, max(0.75, 0.70 + 0.05 * len(neuro_hits)))
             rationale = f"Primary neurologic / neurovascular presentation identified ({', '.join(neuro_hits[:3]) or 'neurologic symptoms'}). Routed to Neurology."
             hits = neuro_hits
         elif is_gynecologic_primary or (gyn_score > id_score and gyn_score > im_score):
             specialty = "GYNECOLOGY"
-            specialist_name = "Dr. Evelyn Reed, MD, FACOG"
+            specialist_name = "Gynecology AI agent"
             book = "Williams Gynecology"
             confidence = min(0.98, max(0.75, 0.70 + 0.05 * len(gyn_hits)))
             rationale = f"Primary gynecologic / pelvic pathology identified ({', '.join(gyn_hits[:3]) or 'gynecologic symptoms'}). Routed to Gynecology."
             hits = gyn_hits
         elif is_infectious_primary or (id_score > im_score):
             specialty = "INFECTIOUS_DISEASES"
-            specialist_name = "Dr. Anthony Mercer, MD, FIDSA"
+            specialist_name = "Infectious Diseases AI agent"
             book = "Harrison's Infectious Diseases (Fauci & Kasper)"
             confidence = min(0.98, max(0.75, 0.70 + 0.05 * len(id_hits)))
             rationale = f"Primary infectious / microbiological pathology identified ({', '.join(id_hits[:3]) or 'infectious symptoms'}). Routed to Infectious Diseases."
             hits = id_hits
         else:
             specialty = "INTERNAL_MEDICINE"
-            specialist_name = "Dr. Marcus Vance, MD, FACP"
+            specialist_name = "Internal Medicine AI agent"
             book = "Harrison's Principles of Internal Medicine (21st Ed)"
             confidence = min(0.98, max(0.75, 0.70 + 0.05 * len(im_hits)))
             rationale = f"Multisystem / internal medicine pathology identified ({', '.join(im_hits[:3]) or 'general medical symptoms'}). Routed to Internal Medicine."

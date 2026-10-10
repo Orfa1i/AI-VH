@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Virtual Hospital Case Room - Multidisciplinary AI Triage</title>
+<title>Virtual Hospital Case Room — Multidisciplinary AI Deliberation</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Funnel+Display:wght@500;600;700&family=Host+Grotesk:wght@400;500;600;700&display=swap">
@@ -30,7 +30,7 @@
   --warn-50: #FBF1E2;
   --amber: #D97706;
   --amber-50: #FEF3C7;
-  --display: "Funnel Display", "Host Grotesk", -apple-system, BlinkMacSystemFont, sans-serif;
+  --display: "Funnel Display", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --body: "Host Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --shadow: 0 1px 3px rgba(15,18,34,.05), 0 10px 28px rgba(31,36,90,.06);
   --shadow-lg: 0 12px 36px rgba(15,18,34,.12);
@@ -49,43 +49,63 @@ button { font: inherit; color: inherit; }
 .num { font-variant-numeric: tabular-nums; }
 [hidden] { display: none !important; }
 
-/* ---------- Main Layout ---------- */
-.app-layout {
+/* ---------- Page Layout (Grid) ---------- */
+.case-room {
   display: grid;
-  grid-template-columns: 370px minmax(0, 1fr);
-  gap: 16px;
-  width: min(1700px, calc(100% - 32px));
+  grid-template-columns: 300px minmax(0, 1fr);
+  gap: 18px;
+  width: min(1680px, calc(100% - 32px));
   margin: 16px auto 32px;
   align-items: start;
 }
+.case-main {
+  display: grid;
+  gap: 18px;
+  min-width: 0;
+}
+.case-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(340px, .85fr);
+  gap: 18px;
+  align-items: stretch;
+}
 
-/* ---------- Left Sidebar: Case Dossier ---------- */
-.case-sidebar {
+/* ---------- Cards Base ---------- */
+.card {
+  background: var(--white);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--hair);
+  position: relative;
+}
+
+/* ---------- Left Panel: Clinical Dossier ---------- */
+.dossier {
   background: var(--white);
   border: 1px solid var(--hair);
   border-radius: 16px;
   box-shadow: var(--shadow);
-  padding: 16px;
+  padding: 18px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 16px;
   position: sticky;
   top: 16px;
   max-height: calc(100vh - 32px);
   overflow-y: auto;
   scrollbar-width: thin;
 }
-.case-sidebar::-webkit-scrollbar { width: 6px; }
-.case-sidebar::-webkit-scrollbar-thumb { background: #D1D5DB; border-radius: 4px; }
+.dossier::-webkit-scrollbar { width: 6px; }
+.dossier::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 4px; }
 
-.sidebar-header {
+.dossier-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   border-bottom: 1px solid var(--hair-2);
-  padding-bottom: 10px;
+  padding-bottom: 12px;
 }
-.sidebar-header h2 {
+.dossier-header h2 {
   margin: 0;
   font: 600 15px var(--display);
   color: var(--ink);
@@ -93,7 +113,21 @@ button { font: inherit; color: inherit; }
   align-items: center;
   gap: 8px;
 }
-.sidebar-header .live-badge {
+.dossier-badges {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.badge-synthetic {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--warn);
+  background: var(--warn-50);
+  border: 1px solid #FDE68A;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+.badge-status {
   font-size: 11px;
   font-weight: 600;
   color: var(--verdant);
@@ -105,12 +139,17 @@ button { font: inherit; color: inherit; }
   align-items: center;
   gap: 5px;
 }
-.sidebar-header .live-badge::before {
+.badge-status.awaiting {
+  color: var(--indigo);
+  background: var(--indigo-50);
+  border-color: #C7D2FE;
+}
+.badge-status::before {
   content: "";
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--verdant);
+  background: currentColor;
   animation: pulse-dot 1.8s infinite;
 }
 @keyframes pulse-dot {
@@ -118,6 +157,7 @@ button { font: inherit; color: inherit; }
   50% { opacity: 0.4; transform: scale(0.85); }
 }
 
+/* Patient Case Selector */
 .case-select-group {
   display: flex;
   flex-direction: column;
@@ -148,136 +188,83 @@ button { font: inherit; color: inherit; }
   box-shadow: 0 0 0 3px var(--indigo-50);
 }
 
-.action-row {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.btn-triage {
-  width: 100%;
-  height: 40px;
-  border-radius: 10px;
-  background: var(--indigo);
-  color: var(--white);
-  border: none;
-  font: 600 13.5px var(--body);
+/* Clean Voice Audio Switch */
+.switch {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
-  cursor: pointer;
-  transition: all .2s;
-  box-shadow: 0 2px 10px rgba(43,47,217,.25);
-}
-.btn-triage:hover:not(:disabled) {
-  background: var(--indigo-600);
-  transform: translateY(-1px);
-}
-.btn-triage:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-}
-.btn-triage svg { width: 16px; height: 16px; }
-
-.toggles-panel {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: var(--paper);
-  padding: 8px 12px;
-  border-radius: 10px;
-  border: 1px solid var(--hair-2);
-}
-.toggle-btn {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  font-size: 12px;
-  font-weight: 500;
+  gap: 10px;
+  font-size: 13px;
   color: var(--graphite);
-  cursor: pointer;
+  padding: 4px 0;
   user-select: none;
 }
-.toggle-btn input[type="checkbox"] {
-  width: 15px;
-  height: 15px;
-  accent-color: var(--indigo);
+.switch input {
+  appearance: none;
+  width: 34px;
+  height: 20px;
+  border-radius: 999px;
+  background: #E3E6EE;
+  position: relative;
   cursor: pointer;
+  transition: background .2s;
+  flex: none;
+  margin: 0;
 }
-.audio-wave {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  height: 12px;
-  margin-left: 2px;
+.switch input::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(15,18,34,.2);
+  transition: transform .2s;
 }
-.audio-wave span {
-  display: inline-block;
-  width: 2.5px;
-  height: 4px;
-  background: var(--indigo);
-  border-radius: 2px;
-  transition: height .2s;
-}
-.audio-wave.active span {
-  animation: wave-bar 0.9s infinite alternate;
-}
-.audio-wave.active span:nth-child(1) { animation-delay: 0.1s; }
-.audio-wave.active span:nth-child(2) { animation-delay: 0.3s; }
-.audio-wave.active span:nth-child(3) { animation-delay: 0.2s; }
-.audio-wave.active span:nth-child(4) { animation-delay: 0.4s; }
-@keyframes wave-bar {
-  0% { height: 3px; }
-  100% { height: 12px; }
-}
+.switch input:checked { background: var(--indigo); }
+.switch input:checked::after { transform: translateX(14px); }
+.switch input:focus-visible { outline: 2px solid var(--indigo); outline-offset: 2px; }
 
-/* Patient summary card */
+/* Patient Card */
 .patient-card {
   background: var(--paper);
   border: 1px solid var(--hair-2);
   border-radius: 12px;
-  padding: 11px 13px;
+  padding: 12px 14px;
   display: flex;
   flex-direction: column;
   gap: 4px;
-}
-.patient-card-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
 }
 .patient-card-name {
   font: 700 15px var(--display);
   color: var(--ink);
 }
-.patient-card-mrn {
+.patient-card-id {
   font-size: 11.5px;
-  font-weight: 600;
-  color: var(--mute);
   font-family: monospace;
+  color: var(--mute);
+  font-weight: 600;
 }
-.patient-card-sub {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 12px;
+.patient-card-demog {
+  font-size: 12.5px;
   color: var(--graphite);
 }
-.badge-acuity {
-  font-size: 10.5px;
+.badge-esi {
+  display: inline-block;
+  align-self: flex-start;
+  font-size: 11px;
   font-weight: 700;
-  text-transform: uppercase;
-  padding: 2px 7px;
+  padding: 2px 8px;
   border-radius: 999px;
-  letter-spacing: 0.04em;
+  margin-top: 4px;
 }
-.badge-esi1 { background: var(--crit-50); color: var(--crit); border: 1px solid #F5C2C7; }
-.badge-esi2 { background: var(--amber-50); color: var(--amber); border: 1px solid #FDE68A; }
-.badge-esi3 { background: var(--verdant-50); color: var(--verdant); border: 1px solid #A7F3D0; }
+.badge-esi.esi1 { background: var(--crit-50); color: var(--crit); border: 1px solid #F5C2C7; }
+.badge-esi.esi2 { background: var(--amber-50); color: var(--warn); border: 1px solid #FDE68A; }
+.badge-esi.esi3 { background: var(--verdant-50); color: var(--verdant); border: 1px solid #A7F3D0; }
 
-/* Dossier sections */
-.dossier-section {
+/* Dossier Text Sections */
+.dossier-sec {
   display: flex;
   flex-direction: column;
   gap: 5px;
@@ -288,11 +275,8 @@ button { font: inherit; color: inherit; }
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--mute);
-  display: flex;
-  align-items: center;
-  gap: 6px;
 }
-.dossier-box {
+.dossier-text {
   background: var(--paper);
   border: 1px solid var(--hair-2);
   border-radius: 10px;
@@ -301,14 +285,8 @@ button { font: inherit; color: inherit; }
   line-height: 1.45;
   color: var(--graphite);
 }
-.dossier-box.hpi {
-  max-height: 100px;
-  overflow-y: auto;
-  font-size: 12px;
-  scrollbar-width: thin;
-}
 
-/* Vitals Grid */
+/* Vitals Grid (3x2) */
 .vitals-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -332,9 +310,10 @@ button { font: inherit; color: inherit; }
 .vital-val {
   font: 700 13px/1.2 var(--display);
   color: var(--ink);
+  font-variant-numeric: tabular-nums;
   display: flex;
   align-items: baseline;
-  gap: 3px;
+  gap: 2px;
 }
 .vital-val small { font-size: 10px; font-weight: 400; color: var(--mute); }
 .vital-item.abnormal {
@@ -342,20 +321,17 @@ button { font: inherit; color: inherit; }
   background: #FEF2F2;
 }
 .vital-item.abnormal .vital-val { color: var(--crit); }
-.vital-item.warn {
-  border-color: #FBBF24;
-  background: #FFFBEB;
-}
-.vital-item.warn .vital-val { color: var(--warn); }
 
-/* Diagnostic Labs */
-.labs-container {
+/* Labs: No Nested Scrollbar! Natural Height */
+.labs-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.labs-list {
   display: flex;
   flex-direction: column;
   gap: 5px;
-  max-height: 160px;
-  overflow-y: auto;
-  scrollbar-width: thin;
 }
 .lab-row {
   display: flex;
@@ -364,91 +340,97 @@ button { font: inherit; color: inherit; }
   background: var(--paper);
   border: 1px solid var(--hair-2);
   border-radius: 7px;
-  padding: 5px 8px;
+  padding: 5px 9px;
   font-size: 11.5px;
 }
-.lab-row .lab-name { font-weight: 600; color: var(--ink); }
-.lab-row .lab-val {
-  font-weight: 700;
-  color: var(--graphite);
+.lab-name { font-weight: 600; color: var(--ink); }
+.lab-right {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
+}
+.lab-val {
+  font-weight: 700;
+  color: var(--graphite);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
 }
 .lab-flag {
-  font-size: 9.5px;
+  font-size: 10.5px;
   font-weight: 700;
-  padding: 1px 5px;
-  border-radius: 4px;
+  text-align: right;
+  min-width: 32px;
+}
+.lab-flag.low, .lab-flag.high {
+  color: var(--crit);
+}
+.lab-flag.critical {
+  background: var(--crit);
+  color: var(--white);
+  padding: 1px 6px;
+  border-radius: 999px;
+  font-size: 9.5px;
   text-transform: uppercase;
 }
-.lab-flag.crit { background: var(--crit-50); color: var(--crit); }
-.lab-flag.high { background: var(--amber-50); color: var(--amber); }
-.lab-flag.norm { background: var(--verdant-50); color: var(--verdant); }
+.show-all-labs-btn {
+  background: none;
+  border: none;
+  padding: 4px 0;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--indigo);
+  cursor: pointer;
+  text-align: left;
+}
+.show-all-labs-btn:hover { text-decoration: underline; }
 
-/* Imaging & Studies */
-.imaging-container {
+/* Imaging Studies */
+.imaging-list {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 .imaging-card {
   display: flex;
-  align-items: center;
-  gap: 9px;
+  align-items: flex-start;
+  gap: 8px;
   background: var(--paper);
   border: 1px solid var(--hair-2);
   border-radius: 9px;
-  padding: 7px 9px;
-  cursor: pointer;
-  transition: all .2s;
+  padding: 8px 10px;
 }
-.imaging-card:hover {
-  border-color: var(--indigo);
-  background: var(--white);
-  box-shadow: 0 2px 8px rgba(43,47,217,.08);
-}
-.imaging-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 7px;
-  background: var(--indigo-50);
-  color: var(--indigo);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex: none;
-}
-.imaging-icon svg { width: 17px; height: 17px; }
 .imaging-info {
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  gap: 2px;
   flex: 1;
+  min-width: 0;
 }
 .imaging-title {
   font: 600 12px var(--body);
   color: var(--ink);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
-.imaging-desc {
+.imaging-findings {
   font-size: 11px;
+  line-height: 1.4;
   color: var(--mute);
-  white-space: nowrap;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   overflow: hidden;
-  text-overflow: ellipsis;
 }
-.imaging-badge {
-  font-size: 10px;
-  font-weight: 600;
-  color: var(--indigo);
+.imaging-btn {
   background: var(--indigo-50);
-  padding: 2px 6px;
+  border: 1px solid #C7D2FE;
+  color: var(--indigo);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 7px;
   border-radius: 5px;
+  cursor: pointer;
   flex: none;
 }
+.imaging-btn:hover { background: #E0E7FF; }
 
 /* Modal for Imaging */
 .modal-overlay {
@@ -508,11 +490,7 @@ button { font: inherit; color: inherit; }
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 220px;
-}
-.modal-preview-box svg {
-  max-width: 100%;
-  max-height: 200px;
+  min-height: 200px;
 }
 .modal-report {
   background: var(--paper);
@@ -524,24 +502,7 @@ button { font: inherit; color: inherit; }
   border: 1px solid var(--hair-2);
 }
 
-/* ---------- Workspace (Right) ---------- */
-.case-workspace {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  min-width: 0;
-}
-
-/* Cards base */
-.card {
-  background: var(--white);
-  border-radius: 16px;
-  box-shadow: var(--shadow);
-  border: 1px solid var(--hair);
-  position: relative;
-}
-
-/* Router Header (NO PERCENTAGES) */
+/* ---------- MedGemma Router Card ---------- */
 .router { padding: 16px 18px; }
 .router .rh {
   display: flex;
@@ -568,131 +529,96 @@ button { font: inherit; color: inherit; }
   margin-left: 2px;
 }
 
-/* Router Cards Grid (CLEAN: NO PERCENTAGES) */
+/* Router Columns & Tiles */
 .rcols {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(150px, 1fr);
   gap: 10px;
+  overflow-x: auto;
+  scrollbar-width: none;
 }
 .rc {
-  display: flex;
-  flex-direction: column;
+  display: grid;
   gap: 6px;
   padding: 10px 12px;
   border-radius: 12px;
-  border: 1.5px solid var(--hair);
-  background: var(--white);
+  border: 1px solid #E3E6EE;
+  background: #fff;
   text-align: left;
   cursor: pointer;
-  transition: border-color .2s, background .2s, box-shadow .2s;
-  position: relative;
-}
-.rc:hover {
-  border-color: #CBD5E1;
+  transition: border-color .2s, background .2s;
 }
 .rc[aria-pressed="true"] {
   border-color: var(--c);
   background: color-mix(in srgb, var(--c) 6%, white);
 }
-.rc.lead {
-  border-color: var(--c);
-  background: color-mix(in srgb, var(--c) 4%, white);
-  box-shadow: 0 2px 8px color-mix(in srgb, var(--c) 15%, transparent);
-}
-.rc.consult {
-  border-color: #10B981;
-  background: #F0FDF4;
-}
-.rc.standby {
-  background: var(--paper);
-  border-color: var(--hair-2);
-  opacity: 0.75;
-}
-.rc.standby .nm img {
-  filter: grayscale(.8) opacity(.6);
-}
 .rc .nm {
   display: flex;
   align-items: center;
   gap: 8px;
-  min-width: 0;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
 }
 .rc .nm img {
-  width: 26px;
-  height: 26px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   flex: none;
 }
-.rc .nm-info {
+.rc .pc {
   display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-.rc .nm-title {
-  font: 600 12.5px var(--body);
-  color: var(--ink);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.rc .nm-doc {
-  font-size: 11px;
-  color: var(--mute);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.rc .rc-badge-row {
-  display: flex;
-  align-items: center;
+  align-items: baseline;
   justify-content: space-between;
-  margin-top: 2px;
+}
+.rc .pc b {
+  font: 600 24px/1 var(--display);
+  font-variant-numeric: tabular-nums;
 }
 .rc .tag {
-  font-size: 10.5px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: .03em;
+  font-size: 11.5px;
+  font-weight: 500;
   border-radius: 6px;
-  padding: 2px 6px;
-  background: var(--paper);
-  color: var(--graphite);
+  padding: 2px 7px;
+  background: #F7F8FB;
+  color: #4A5068;
 }
 .rc .tag.lead {
-  background: var(--indigo-50);
-  color: var(--indigo);
-  border: 1px solid #C7D2FE;
+  background: #EEEFFD;
+  color: #2B2FD9;
 }
-.rc .tag.consult {
-  background: var(--verdant-50);
-  color: var(--verdant);
-  border: 1px solid #A7F3D0;
-}
-.rc .tag.assigned {
-  background: #EFF6FF;
-  color: #1D4ED8;
-}
-.rc .book-cite {
-  font-size: 10px;
-  color: var(--mute);
-  font-style: italic;
-  white-space: nowrap;
+.rc .rbar {
+  display: block;
+  height: 5px;
+  border-radius: 5px;
+  background: #EEF0F5;
   overflow: hidden;
-  text-overflow: ellipsis;
+}
+.rc .rbar i {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: var(--c);
+  border-radius: 5px;
+  transition: width .3s ease-out;
+}
+.rc.standby {
+  background: #F7F8FB;
+}
+.rc.standby img {
+  filter: grayscale(.8) opacity(.6);
+}
+.rc.standby .pc b {
+  color: #6B7189;
 }
 
-/* ---------- Workspace Middle / Room ---------- */
-.body {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 390px;
-  gap: 16px;
-  align-items: start;
-}
+/* ---------- Specialist Agents Card & Table ---------- */
 .ch {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 18px 0;
+  padding: 16px 18px 0;
 }
 .ch h2 {
   margin: 0;
@@ -719,15 +645,32 @@ button { font: inherit; color: inherit; }
   transition: background .2s;
 }
 .stage .segs i.on { background: var(--indigo); }
-.play {
+
+.controls-wrap {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
 }
-.ib {
-  width: 28px;
-  height: 28px;
-  border-radius: 7px;
+.btn-primary-control {
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 8px;
+  border: none;
+  background: var(--indigo);
+  color: var(--white);
+  font: 600 12.5px var(--body);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all .15s;
+}
+.btn-primary-control:hover { background: var(--indigo-600); }
+.btn-primary-control svg { width: 14px; height: 14px; }
+.btn-replay-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
   border: 1px solid var(--hair);
   background: var(--white);
   color: var(--graphite);
@@ -735,20 +678,15 @@ button { font: inherit; color: inherit; }
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all .15s;
 }
-.ib:hover {
-  background: var(--paper);
-  color: var(--ink);
-  border-color: #CBD5E1;
-}
-.ib svg { width: 14px; height: 14px; }
+.btn-replay-icon:hover { background: var(--paper); border-color: #CBD5E1; }
+.btn-replay-icon svg { width: 14px; height: 14px; }
 
-/* The Room canvas & nodes */
+/* The Circular Room */
 .room {
   position: relative;
   aspect-ratio: 1.55 / 1;
-  min-height: 420px;
+  min-height: 440px;
   margin: 6px 12px 0;
 }
 .room canvas {
@@ -788,35 +726,6 @@ button { font: inherit; color: inherit; }
   line-height: 1.4;
 }
 
-/* Referral alert banner inside board */
-.board .referral-banner {
-  background: #FFFBEB;
-  border: 1px solid #FDE68A;
-  border-radius: 8px;
-  padding: 6px 8px;
-  margin-top: 4px;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  animation: glow-referral 1.5s infinite alternate;
-}
-@keyframes glow-referral {
-  0% { box-shadow: 0 0 0 rgba(217, 119, 6, 0); }
-  100% { box-shadow: 0 0 10px rgba(217, 119, 6, .35); }
-}
-.board .referral-banner .ref-tag {
-  font-size: 10px;
-  font-weight: 700;
-  color: #B45309;
-  text-transform: uppercase;
-  letter-spacing: .04em;
-}
-.board .referral-banner .ref-desc {
-  font-size: 11.5px;
-  font-weight: 600;
-  color: #78350F;
-}
-
 /* Agent Node button on circle */
 .node {
   position: absolute;
@@ -833,6 +742,7 @@ button { font: inherit; color: inherit; }
   padding: 0;
   transition: opacity .2s, transform .2s;
 }
+.node.dim { opacity: .35; }
 .node .av {
   position: relative;
   width: 44px;
@@ -847,11 +757,6 @@ button { font: inherit; color: inherit; }
   transition: transform .2s, box-shadow .2s;
 }
 .node:hover .av { transform: scale(1.08); box-shadow: 0 4px 14px rgba(15,18,34,.14); }
-.node .av svg {
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-}
 .node .av-face {
   position: relative;
   width: 38px;
@@ -859,6 +764,7 @@ button { font: inherit; color: inherit; }
   border-radius: 50%;
   overflow: hidden;
 }
+.node.standby .av-face { filter: grayscale(.75) opacity(.6); }
 .node.speaking .av {
   transform: scale(1.12);
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--c) 25%, transparent), 0 6px 18px rgba(15,18,34,.16);
@@ -877,30 +783,41 @@ button { font: inherit; color: inherit; }
   white-space: nowrap;
 }
 .node .st {
-  font-size: 10px;
+  font-size: 10.5px;
   font-weight: 500;
   color: var(--mute);
   text-align: center;
   white-space: nowrap;
 }
-.node.standby { opacity: 0.55; }
-.node.dim { opacity: 0.35; }
+.node.speaking .st, .node.thinking .st { color: var(--c); }
+.node.agreed .st { color: var(--verdant); }
 .node.sel .av { border-width: 3px; transform: scale(1.1); }
 
-.routed {
+.routed-footer {
   font-size: 11.5px;
   color: var(--mute);
   padding: 6px 18px 14px;
   margin: 0;
 }
 
-/* ---------- Clinical Decision Column (Right) ---------- */
-.dec {
-  position: sticky;
-  top: 16px;
-  max-height: calc(100vh - 32px);
+/* ---------- Decision Panel (Right Column) ---------- */
+.decision {
   display: flex;
   flex-direction: column;
+  min-height: 100%;
+  max-height: calc(100vh - 32px);
+  position: sticky;
+  top: 16px;
+}
+.decision .pane {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  scrollbar-width: thin;
 }
 .seg {
   display: inline-flex;
@@ -933,15 +850,43 @@ button { font: inherit; color: inherit; }
   background: var(--hair);
   margin-left: 3px;
 }
+.seg button em.has-unread {
+  background: var(--indigo);
+  color: var(--white);
+}
 
-.pane {
-  padding: 16px 18px 18px;
+/* Draft Content & Empty State */
+.draft-empty {
+  padding: 32px 12px;
+  text-align: center;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  overflow-y: auto;
-  scrollbar-width: thin;
+  gap: 14px;
+  align-items: center;
 }
+.draft-empty p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--mute);
+  max-width: 260px;
+  line-height: 1.45;
+}
+.draft-empty-outline {
+  width: 100%;
+  border: 1.5px dashed #CBD5E1;
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  opacity: 0.6;
+}
+.draft-empty-line {
+  height: 10px;
+  border-radius: 5px;
+  background: var(--hair);
+}
+
 .dx-l {
   font-size: 11px;
   font-weight: 700;
@@ -986,7 +931,6 @@ button { font: inherit; color: inherit; }
 }
 .note b { color: var(--ink); }
 
-/* Plan list */
 .plan-h {
   font-size: 11px;
   font-weight: 700;
@@ -1040,13 +984,14 @@ button { font: inherit; color: inherit; }
 }
 
 .sign-box {
-  margin-top: 6px;
-  padding-top: 10px;
+  padding: 12px 18px 16px;
   border-top: 1px solid var(--hair-2);
+  background: var(--white);
+  border-radius: 0 0 16px 16px;
 }
 .btn-sign {
   width: 100%;
-  height: 38px;
+  height: 40px;
   border-radius: 10px;
   background: var(--ink);
   color: var(--white);
@@ -1059,17 +1004,20 @@ button { font: inherit; color: inherit; }
   cursor: pointer;
   transition: all .2s;
 }
-.btn-sign:hover { background: #232738; }
-
-/* Discussion pane */
-#p-disc {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  max-height: 540px;
-  overflow-y: auto;
+.btn-sign:hover:not(:disabled) { background: #232738; }
+.btn-sign:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
-.filter-bar {
+
+/* Discussion Pane & Messages */
+.disc-empty {
+  padding: 40px 12px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--mute);
+}
+.filter-chip {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1078,8 +1026,9 @@ button { font: inherit; color: inherit; }
   border-radius: 8px;
   font-size: 11.5px;
   color: var(--indigo);
+  margin-bottom: 8px;
 }
-.filter-bar button {
+.filter-chip button {
   background: none;
   border: none;
   font-size: 11px;
@@ -1097,10 +1046,6 @@ button { font: inherit; color: inherit; }
   border: 1px solid var(--hair-2);
   font-size: 12px;
   line-height: 1.45;
-}
-.msg.referral-msg {
-  border-color: #FCD34D;
-  background: #FFFBEB;
 }
 .msg-hdr {
   display: flex;
@@ -1125,25 +1070,18 @@ button { font: inherit; color: inherit; }
   color: var(--mute);
   font-style: italic;
 }
-.typing-box {
-  font-size: 11px;
-  color: var(--mute);
-  font-style: italic;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  padding: 4px 6px;
-}
 
 /* Responsive */
-@media (max-width: 1300px) {
-  .app-layout { grid-template-columns: 330px minmax(0, 1fr); }
-  .body { grid-template-columns: minmax(0, 1fr); }
-  .dec { position: static; max-height: none; }
+@media (max-width: 1280px) {
+  .case-room { grid-template-columns: minmax(0, 1fr); }
+  .dossier { position: static; max-height: none; }
 }
-@media (max-width: 960px) {
-  .app-layout { grid-template-columns: 1fr; }
-  .case-sidebar { position: static; max-height: none; }
+@media (max-width: 1080px) {
+  .case-body { grid-template-columns: minmax(0, 1fr); }
+  .decision { position: static; max-height: none; }
+}
+@media (max-width: 640px) {
+  .rcols { grid-auto-flow: row; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
@@ -1153,15 +1091,18 @@ button { font: inherit; color: inherit; }
 </head>
 <body>
 
-<main id="case" class="app-layout">
-  <!-- LEFT SIDEBAR: CASE DOSSIER -->
-  <aside class="case-sidebar" id="case-sidebar" aria-label="Patient Case Dossier">
-    <div class="sidebar-header">
+<main class="case-room" id="case">
+  <!-- LEFT PANEL: CLINICAL DOSSIER -->
+  <aside class="dossier" id="case-sidebar" aria-label="Clinical dossier">
+    <div class="dossier-header">
       <h2>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;color:var(--indigo)"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:17px;height:17px;color:var(--indigo)"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
         Clinical Dossier
       </h2>
-      <span class="live-badge">Live Case</span>
+      <div class="dossier-badges">
+        <span class="badge-synthetic" id="dossier-synthetic" hidden>Synthetic case</span>
+        <span class="badge-status" id="dossier-status" hidden>Live</span>
+      </div>
     </div>
 
     <!-- Case Selector -->
@@ -1170,104 +1111,95 @@ button { font: inherit; color: inherit; }
       <select id="case-select" class="case-select"></select>
     </div>
 
-    <!-- Actions & Toggles -->
-    <div class="action-row">
-      <button class="btn-triage" id="b-start-triage" type="button">
-        <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-        <span>Start Triage</span>
-      </button>
-      <div class="toggles-panel">
-        <label class="toggle-btn" title="Synthesize brief voice updates from specialists (Fish Audio)">
-          <input type="checkbox" id="toggle-voice" checked>
-          <span>Voice Audio</span>
-          <span class="audio-wave" id="audio-wave-icon">
-            <span></span><span></span><span></span><span></span>
-          </span>
-        </label>
-      </div>
-    </div>
+    <!-- Clean Voice Audio Switch -->
+    <label class="switch" title="Synthesize brief verbal updates from specialists (Fish Audio)">
+      <input type="checkbox" id="voice" role="switch">
+      <span>Read agent messages aloud</span>
+    </label>
 
     <!-- Patient Header Card -->
     <div class="patient-card">
-      <div class="patient-card-header">
-        <span class="patient-card-name" id="pt-name">Elena Vance</span>
-        <span class="patient-card-mrn" id="pt-mrn">#VH-8921-OB</span>
-      </div>
-      <div class="patient-card-sub">
-        <span id="pt-demog">32F · G2P1 (34+2 wks)</span>
-        <span class="badge-acuity badge-esi1" id="pt-acuity">ESI 1 · Resuscitation</span>
-      </div>
+      <div class="patient-card-name" id="pt-name">Elena Vance</div>
+      <div class="patient-card-id" id="pt-id">#VH-8921-OB</div>
+      <div class="patient-card-demog" id="pt-demog">32F · G2P1 (34+2 wks)</div>
+      <span class="badge-esi esi2" id="pt-acuity">ESI 2 · Emergent</span>
     </div>
 
     <!-- Chief Complaint -->
-    <div class="dossier-section">
+    <div class="dossier-sec">
       <span class="dossier-title">Chief Complaint</span>
-      <div class="dossier-box" id="pt-cc">
+      <div class="dossier-text" id="pt-cc">
         Severe throbbing frontal headache, blurred vision with floaters, sharp RUQ pain.
       </div>
     </div>
 
     <!-- HPI -->
-    <div class="dossier-section">
+    <div class="dossier-sec">
       <span class="dossier-title">History of Present Illness</span>
-      <div class="dossier-box hpi" id="pt-hpi">
+      <div class="dossier-text" id="pt-hpi">
         32-year-old female at 34+2 weeks gestation presenting with acute-onset severe headache unresponsive to acetaminophen, scotomas, and worsening RUQ pain over the past 6 hours.
       </div>
     </div>
 
-    <!-- Vitals -->
-    <div class="dossier-section">
+    <!-- Vitals (3x2 grid, SpO2) -->
+    <div class="dossier-sec">
       <span class="dossier-title">Vital Signs</span>
       <div class="vitals-grid" id="vitals-grid">
         <!-- Rendered dynamically -->
       </div>
     </div>
 
-    <!-- Key Labs -->
-    <div class="dossier-section">
+    <!-- Diagnostic Labs (No inner scroll, natural height, abnormal only by default) -->
+    <div class="dossier-sec">
       <span class="dossier-title">Diagnostic Labs</span>
-      <div class="labs-container" id="labs-list">
-        <!-- Rendered dynamically -->
+      <div class="labs-wrap">
+        <div class="labs-list" id="labs-list">
+          <!-- Rendered dynamically -->
+        </div>
+        <button type="button" class="show-all-labs-btn" id="b-show-all-labs">Show all labs (12)</button>
       </div>
     </div>
 
-    <!-- Imaging Studies -->
-    <div class="dossier-section">
+    <!-- Imaging & Studies (2-line clamp, finding first) -->
+    <div class="dossier-sec">
       <span class="dossier-title">Imaging & Studies</span>
-      <div class="imaging-container" id="imaging-list">
+      <div class="imaging-list" id="imaging-list">
         <!-- Rendered dynamically -->
       </div>
     </div>
   </aside>
 
-  <!-- RIGHT COLUMN: WORKSPACE -->
-  <div class="case-workspace">
-    <!-- ROUTER SECTION (NO PERCENTAGES) -->
+  <!-- RIGHT COLUMN: MAIN WORKSPACE -->
+  <div class="case-main">
+    <!-- ROUTER CARD -->
     <section class="card router" aria-label="MedGemma routing">
       <div class="rh">
         <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGFyaWEtbGFiZWw9IlZpcnR1YWwgSG9zcGl0YWwgc3ltYm9sIiB2aWV3Qm94PSIyNiAyIDE4OCAyMzYiIHdpZHRoPSIxODgiIGhlaWdodD0iMjM2IiB4bWxuczpjMnBhPSJodHRwOi8vYzJwYS5vcmcvbWFuaWZlc3QiPjxtZXRhZGF0YT48YzJwYTptYW5pZmVzdD5BQUFXZ21wMWJXSUFBQUFlYW5WdFpHTXljR0VBRVFBUWdBQUFxZ0E0bTNFRFl6SndZUUFBQUJaY2FuVnRZZ0FBQUVkcWRXMWtZekp0WVFBUkFCQ0FBQUNxQURpYmNRTjFjbTQ2WXpKd1lUbzJZamd3Wm1KaU9DMW1NbVV6TFRSaVpqZ3RZVEl4TUMwNFpUQTRPRFl5WldNek1Ea0FBQUFEbDJwMWJXSUFBQUFwYW5WdFpHTXlZWE1BRVFBUWdBQUFxZ0E0bTNFRFl6SndZUzVoYzNObGNuUnBiMjV6QUFBQUFMeHFkVzFpQUFBQVJHcDFiV1JqWW05eUFCRUFFSUFBQUtvQU9KdHhFMk15Y0dFdWFXNW5jbVZrYVdWdWRDNTJNd0FBQUFBWVl6SnphQlNLeWhQSTBSNndSYUp1YTcrelo3TUFBQUJ3WTJKdmNxTnBaR002Wm05eWJXRjBiV2x0WVdkbEwzTjJaeXQ0Yld4cWFXNXpkR0Z1WTJWSlJIZ3NlRzF3T21scFpEbzBPR1prTnpZd05DMHdPVFkyTFRSaE1qVXRPR1ZsTXkwME16RXpaR1F3WkdNeE5tVnNjbVZzWVhScGIyNXphR2x3YUhCaGNtVnVkRTltQUFBQjRtcDFiV0lBQUFCQmFuVnRaR05pYjNJQUVRQVFnQUFBcWdBNG0zRVRZekp3WVM1aFkzUnBiMjV6TG5ZeUFBQUFBQmhqTW5Ob3plTnN1VkRRZGZTcDUyT25lSFFOQWdBQUFabGpZbTl5b21kaFkzUnBiMjV6Z3FKbVlXTjBhVzl1YTJNeWNHRXViM0JsYm1Wa2FuQmhjbUZ0WlhSbGNuT2hhMmx1WjNKbFpHbGxiblJ6Z2FKamRYSnNlQzF6Wld4bUkycDFiV0ptUFdNeWNHRXVZWE56WlhKMGFXOXVjeTlqTW5CaExtbHVaM0psWkdsbGJuUXVkak5rYUdGemFGZ2djTnVtVmRGRC9PMExIRW43S2lrRXNoNDRWQUlQZVd6NDlRaFNiTDZ0RHdDa1ptRmpkR2x2Ym5nZFkyOXRMbUZ1ZEdoeWIzQnBZeTVqYkdGMVpHVXVjSEp2ZG1sa1pXUnFjR0Z5WVcxbGRHVnljNkY0SDJOdmJTNWhiblJvY205d2FXTXViM0pwWjJsdUxXTnZibVpwWkdWdVkyVm5kVzVyYm05M2JtdGtaWE5qY21sd2RHbHZibmhtUTJ4aGRXUmxJSEJ5YjNacFpHVmtJSFJvYVhNZ1ptbHNaU0JoZENCMGFHVWdjbVZ4ZFdWemRDQnZaaUJoSUhWelpYSWdZVzVrSUcxaGVTQm9ZWFpsSUdOeVpXRjBaV1FnYjNJZ2JXOWthV1pwWldRZ2RHaGxJR1pwYkdVZ1kyOXVkR1Z1ZEhNdWJYTnZablIzWVhKbFFXZGxiblNoWkc1aGJXVm1RMnhoZFdSbGNtRnNiRUZqZEdsdmJuTkpibU5zZFdSbFpQVUFBQURJYW5WdFlnQUFBRUJxZFcxa1kySnZjZ0FSQUJDQUFBQ3FBRGliY1JOak1uQmhMbWhoYzJndVpHRjBZUUFBQUFBWVl6SnphTDM0M3Y4NW1OT2NGNFJpS1JZUHEwd0FBQUNBWTJKdmNxVmpZV3huWm5Ob1lUSTFObU53WVdSTkFBQUFBQUFBQUFBQUFBQUFBR1JvWVhOb1dDQUhhTm9OS1NrUlg1aVJNT2kxeXBoV2RjR21rWnA0SVU2L0JqZmN1ajZzcW1SdVlXMWxibXAxYldKbUlHMWhibWxtWlhOMGFtVjRZMngxYzJsdmJuT0JvbVZ6ZEdGeWRCaThabXhsYm1kMGFCa2VCQUFBQWo1cWRXMWlBQUFBSjJwMWJXUmpNbU5zQUJFQUVJQUFBS29BT0p0eEEyTXljR0V1WTJ4aGFXMHVkaklBQUFBQ0QyTmliM0tsWTJGc1oyWnphR0V5TlRacGMybG5ibUYwZFhKbGVFMXpaV3htSTJwMWJXSm1QUzlqTW5CaEwzVnlianBqTW5CaE9qWmlPREJtWW1JNExXWXlaVE10TkdKbU9DMWhNakV3TFRobE1EZzROakpsWXpNd09TOWpNbkJoTG5OcFoyNWhkSFZ5WldwcGJuTjBZVzVqWlVsRWVDeDRiWEE2YVdsa09qYzNNalEzWWpoaExUTmpOVEl0TkRJMVl5MWlOamswTFdWa05XRXhaR1psWWpjd09ISmpjbVZoZEdWa1gyRnpjMlZ5ZEdsdmJuT0RvbU4xY214NExYTmxiR1lqYW5WdFltWTlZekp3WVM1aGMzTmxjblJwYjI1ekwyTXljR0V1YVc1bmNtVmthV1Z1ZEM1Mk0yUm9ZWE5vV0NCdzI2WlYwVVA4N1FzY1Nmc3FLUVN5SGpoVUFnOTViUGoxQ0ZKc3ZxMFBBS0pqZFhKc2VDcHpaV3htSTJwMWJXSm1QV015Y0dFdVlYTnpaWEowYVc5dWN5OWpNbkJoTG1GamRHbHZibk11ZGpKa2FHRnphRmdnTFVWK2dBTS9xOEZxYWZ5THZOM0dOZ09ETEhmakxuVUpvemRLd3dSRTBjeWlZM1Z5YkhncGMyVnNaaU5xZFcxaVpqMWpNbkJoTG1GemMyVnlkR2x2Ym5Ndll6SndZUzVvWVhOb0xtUmhkR0ZrYUdGemFGZ2dYMFFReEhzTmI3cU53aFZsM2tzZUNUZTRpenhQNWFUR2lRNTd1Vnd6K0Y1MFkyeGhhVzFmWjJWdVpYSmhkRzl5WDJsdVptK2paRzVoYldWdlFXNTBhSEp2Y0dsaklFWnBiR1Z6WjNabGNuTnBiMjVsTVM0d0xqQnJjM0JsWTFabGNuTnBiMjVsTWk0MExqQUFBQkE0YW5WdFlnQUFBQ2hxZFcxa1l6Smpjd0FSQUJDQUFBQ3FBRGliY1FOak1uQmhMbk5wWjI1aGRIVnlaUUFBQUJBSVkySnZjdEtFV1FJU29nRW1HQ0ZaQWdvd2dnSUdNSUlCamFBREFnRUNBaFJBNWFBSzdzSTUwTDY0Zy9vR1FnVTlaMVVUQURBS0JnZ3Foa2pPUFFRREF6QkpNUmN3RlFZRFZRUUtFdzVCYm5Sb2NtOXdhV01zSUZCQ1F6RXVNQ3dHQTFVRUF4TWxRVzUwYUhKdmNHbGpJRU52Ym5SbGJuUWdRM0psWkdWdWRHbGhiSE1nVW05dmRDQkRRVEFlRncweU5qQTRNRGN4T0RRek5UWmFGdzB5T0RBNE1EWXhPVFF6TlRaYU1FUXhGekFWQmdOVkJBb1REa0Z1ZEdoeWIzQnBZeXdnVUVKRE1Ta3dKd1lEVlFRREV5QkJiblJvY205d2FXTWdRMnhoZFdSbElFTnZiblJsYm5RZ1UybG5ibWx1WnpCWk1CTUdCeXFHU000OUFnRUdDQ3FHU000OUF3RUhBMElBQkpoNkNtdkxVQmdGRk5VMHZVS2xPVnRFNmRqZDE3TDVTdXdYMExlbUZpc0JNM2RrZC8zY3lqeEZBM1FvNVM0NmZYMC9paFkwVlo3bWZiOUtGNzAzdDVPaldEQldNQTRHQTFVZER3RUIvd1FFQXdJSGdEQVZCZ05WSFNVRURqQU1CZ29yQmdFRUFZUG9YZ0lCTUF3R0ExVWRFd0VCL3dRQ01BQXdId1lEVlIwakJCZ3dGb0FVemxIaUJJRk9aRnNqK09QRXo1bytuTUhYWE1Jd0NnWUlLb1pJemowRUF3TURad0F3WkFJd01YTWRGSjRCZXRMTFZZN09SdUU5bm9xYmJBWk9abi9hQXJYeVR3RkFaZktyUHp4RjJ2UG9KTmYxK1VDZGcxWEdBakJ3WDF6ZDlXR3FZa3FtTDVTRnF3MVF5U2pyMXpKZnBKTTkrMXJkRHdTUExNT1BPakt1aVhqb1UvcFVVZUc5UndtaFkzQmhaRmtObmdBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFQWllRSUQ2RXlsZ1IxN2hJcWxPd2hzRHNCeU1yQkRYaTBFbnRYdmRnQXVKeFhIN1YxZVN4QTd1Z1BSU3lMSHdXczg1MVpreEdteDZSSGxpTEE0STkwSzk1Yjg9PC9jMnBhOm1hbmlmZXN0PjwvbWV0YWRhdGE+PG1hc2sgaWQ9InJzIiBtYXNrVW5pdHM9InVzZXJTcGFjZU9uVXNlIiB4PSIwIiB5PSIwIiB3aWR0aD0iMjQwIiBoZWlnaHQ9IjI0MCI+PHJlY3Qgd2lkdGg9IjI0MCIgaGVpZ2h0PSIyNDAiIGZpbGw9IiNmZmYiLz48cGF0aCBkPSJNNzQuMCAyMDguMCBMMTY2LjAgMTcwLjAiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSI0NiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBmaWxsPSJub25lIi8+PHBhdGggZD0iTTc0LjAgNzAuMCBMMTY2LjAgMzIuMCIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjQ2IiBzdHJva2UtbGluZWNhcD0icm91bmQiIGZpbGw9Im5vbmUiLz48cGF0aCBkPSJNNTIuMCAxMjAuMCBMMTg4LjAgMTIwLjAiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSI0OCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBmaWxsPSJub25lIi8+PC9tYXNrPjxyZWN0IHg9IjEwNyIgeT0iMTAiIHdpZHRoPSIyNiIgaGVpZ2h0PSIyMjAiIHJ4PSIxMyIgZmlsbD0iIzBGMTIyMiIgbWFzaz0idXJsKCNycykiLz48cGF0aCBkPSJNNzQuMCAyMDguMCBMMTY2LjAgMTcwLjAiIHN0cm9rZT0iIzJCMkZEOSIgc3Ryb2tlLXdpZHRoPSIzNCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBmaWxsPSJub25lIi8+PHBhdGggZD0iTTc0LjAgNzAuMCBMMTY2LjAgMzIuMCIgc3Ryb2tlPSIjMTNBMDZCIiBzdHJva2Utd2lkdGg9IjM0IiBzdHJva2UtbGluZWNhcD0icm91bmQiIGZpbGw9Im5vbmUiLz48cGF0aCBkPSJNNTIuMCAxMjAuMCBMMTg4LjAgMTIwLjAiIHN0cm9rZT0iIzFGN0JFQSIgc3Ryb2tlLXdpZHRoPSIzNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBmaWxsPSJub25lIi8+PC9zdmc+" alt="Virtual Hospital" class="vh" style="cursor:pointer;" title="Virtual Hospital Hospital Symbol">
         <h2>MedGemma router</h2>
-        <span id="r-sum">Ready for clinical routing</span>
+        <span id="r-sum">Not routed yet</span>
       </div>
-      <div class="rcols" id="rcols"></div>
+      <div class="rcols" id="rcols">
+        <!-- 7 Agent Tiles rendered dynamically -->
+      </div>
     </section>
 
-    <!-- AGENTS AT WORK & CLINICAL REVIEW -->
-    <div class="body">
+    <!-- AGENTS AT WORK & CLINICAL REVIEW (Equal-height grid) -->
+    <div class="case-body">
       <!-- SPECIALIST ROOM -->
       <section class="card" aria-label="Specialist agents">
         <div class="ch">
           <h2>Specialist agents</h2>
-          <div style="display:flex;align-items:center;gap:10px;">
+          <div style="display:flex;align-items:center;gap:12px;">
             <div class="stage">
-              <span id="stage-t">Multidisciplinary review</span>
-              <span class="segs" aria-hidden="true"><i class="on"></i><i></i><i></i><i></i></span>
+              <span id="stage-t">Not started</span>
+              <span class="segs" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
             </div>
-            <div class="play">
-              <button class="ib" id="b-play" type="button" aria-label="Pause">
-                <svg viewBox="0 0 16 16" fill="currentColor"><rect x="3" y="2.5" width="3.4" height="11" rx="1"/><rect x="9.6" y="2.5" width="3.4" height="11" rx="1"/></svg>
+            <div class="controls-wrap">
+              <button class="btn-primary-control" id="b-main-control" type="button" aria-label="Route case">
+                <svg viewBox="0 0 16 16" fill="currentColor"><polygon points="3.5 2.5 13.5 8 3.5 13.5"/></svg>
+                <span>Route case</span>
               </button>
-              <button class="ib" id="b-replay" type="button" aria-label="Replay from the start">
+              <button class="btn-replay-icon" id="b-replay" type="button" aria-label="Replay from the start" hidden>
                 <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2.5 8a5.5 5.5 0 1 0 1.7-4"/><path d="M2.5 2.5v3h3"/></svg>
               </button>
             </div>
@@ -1277,59 +1209,73 @@ button { font: inherit; color: inherit; }
           <canvas id="cv" aria-hidden="true"></canvas>
           <div class="board" id="board" aria-live="polite">
             <b>MedGemma router</b>
-            <p>Case ready for specialist deliberation.</p>
+            <p>Press Route case to assign specialists.</p>
           </div>
         </div>
-        <p class="routed">Select an agent node above to filter discussion to their findings.</p>
+        <p class="routed-footer" id="table-footer">Select an agent, here or in the router, to read only its messages.</p>
       </section>
 
       <!-- WHAT THE PHYSICIAN SIGNS -->
-      <section class="card dec" aria-label="Draft for physician review">
-        <div class="ch">
+      <section class="card decision" aria-label="Draft for physician review">
+        <div class="ch" style="padding-bottom:12px;border-bottom:1px solid var(--hair-2);">
           <div class="seg" role="tablist" aria-label="View">
             <button type="button" role="tab" id="t-draft" aria-selected="true" aria-controls="p-draft">Draft</button>
             <button type="button" role="tab" id="t-disc" aria-selected="false" aria-controls="p-disc">Discussion <em id="count">0</em></button>
           </div>
         </div>
 
-        <!-- DRAFT PANEL -->
+        <!-- DRAFT PANEL (Default tab on load) -->
         <div class="pane" id="p-draft" role="tabpanel" aria-labelledby="t-draft">
-          <div class="dx-l">Working diagnosis</div>
-          <h2 class="dx" id="dx">Preeclampsia with severe features</h2>
-          <div class="conf">
-            <span class="t"><i id="meter" style="width:65%"></i></span>
-            <span>Confidence <b id="conf">0.96</b></span>
-            <span>·</span>
-            <span><b id="agree">0</b> of 7 agree</span>
+          <!-- Empty state in idle -->
+          <div class="draft-empty" id="draft-empty">
+            <p>No draft yet. Route the case to start the specialist review.</p>
+            <div class="draft-empty-outline" aria-hidden="true">
+              <div class="draft-empty-line" style="width:45%;"></div>
+              <div class="draft-empty-line" style="width:85%;"></div>
+              <div class="draft-empty-line" style="width:65%;"></div>
+              <div class="draft-empty-line" style="width:75%;margin-top:8px;"></div>
+              <div class="draft-empty-line" style="width:90%;"></div>
+            </div>
           </div>
-          <p class="note"><b>Less likely:</b> <span id="ddx">acute fatty liver of pregnancy, microangiopathic hemolytic anemia, acute cholecystitis</span>.</p>
-          <p class="note"><b>Watch for:</b> <span id="watch-for">focal neurological deficit, intractable headache, capsular hematoma, pulmonary edema</span>.</p>
-          
-          <div class="plan-h">Actionable Clinical Plan</div>
-          <ul class="plan-list" id="plan">
-            <!-- Rendered dynamically -->
-          </ul>
 
-          <div class="sign-box">
-            <button class="btn-sign" id="b-sign" type="button" disabled>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><polyline points="20 6 9 17 4 12"/></svg>
-              <span>Authorize & Sign Clinical Plan</span>
-            </button>
+          <!-- Dynamic Draft Content -->
+          <div id="draft-content" style="display:flex;flex-direction:column;gap:12px;" hidden>
+            <div class="dx-l">Working diagnosis</div>
+            <h2 class="dx" id="dx">Preeclampsia with severe features</h2>
+            <div class="conf">
+              <span class="t"><i id="meter" style="width:0%"></i></span>
+              <span>Confidence <b id="conf">0.75</b></span>
+              <span>·</span>
+              <span><b id="agree">0</b> of 6 agree</span>
+            </div>
+            <p class="note"><b>Less likely:</b> <span id="ddx">acute fatty liver of pregnancy, microangiopathic hemolytic anemia, acute cholecystitis</span>.</p>
+            <p class="note"><b>Watch for:</b> <span id="watch-for">focal neurological deficit, intractable headache, capsular hematoma, pulmonary edema</span>.</p>
+            
+            <div class="plan-h">Actionable Clinical Plan</div>
+            <ul class="plan-list" id="plan">
+              <!-- Rendered dynamically -->
+            </ul>
           </div>
         </div>
 
         <!-- DISCUSSION PANEL -->
         <div class="pane" id="p-disc" role="tabpanel" aria-labelledby="t-disc" hidden>
-          <div class="filter-bar" id="filter" hidden>
-            <span id="filter-t">Specialist filter active</span>
+          <div class="filter-chip" id="filter-chip" hidden>
+            <span id="filter-chip-text">Obstetrics only</span>
             <button type="button" id="b-clear-filter">Show all</button>
           </div>
+          <div class="disc-empty" id="disc-empty">Messages appear here as the agents work.</div>
           <div id="disc-list" style="display:flex;flex-direction:column;gap:10px;">
             <!-- Rendered dynamically -->
           </div>
-          <div class="typing-box" id="typing" hidden>
-            <span>Agent typing clinical assessment...</span>
-          </div>
+        </div>
+
+        <!-- FOOTER: REVIEW AND SIGN -->
+        <div class="sign-box">
+          <button class="btn-sign" id="b-sign" type="button" disabled title="Available when the agents agree">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><polyline points="20 6 9 17 4 12"/></svg>
+            <span>Review and sign</span>
+          </button>
         </div>
       </section>
     </div>
@@ -1360,41 +1306,49 @@ const AVSVG = {"im": "<svg focusable=\"false\" xmlns=\"http://www.w3.org/2000/sv
 const CASES = {
   preeclampsia_hellp: {
     id: 'preeclampsia_hellp',
+    synthetic: true,
     name: 'Elena Vance',
     mrn: '#VH-8921-OB',
     demog: '32F · G2P1 (34+2 wks)',
-    acuity: 'ESI 1 · Resuscitation',
-    acuityClass: 'badge-esi1',
+    esi: 2,
+    acuity: 'ESI 2 · Emergent',
+    acuityClass: 'esi2',
     chief_complaint: 'Severe throbbing frontal headache, blurred vision with floaters, sharp right upper quadrant pain.',
     hpi: '32-year-old female at 34+2 weeks gestation presenting with acute-onset severe headache unresponsive to acetaminophen, persistent scotomas, and worsening RUQ pain over the past 6 hours.',
     vitals: [
       { label: 'BP', val: '178/112', unit: 'mmHg', status: 'abnormal' },
       { label: 'HR', val: '88', unit: 'bpm', status: 'normal' },
       { label: 'RR', val: '18', unit: '/min', status: 'normal' },
-      { label: 'SpO2', val: '98%', unit: 'RA', status: 'normal' },
+      { label: 'SpO₂', val: '98%', unit: 'RA', status: 'normal' },
       { label: 'Temp', val: '36.8', unit: '°C', status: 'normal' },
       { label: 'GCS', val: '15', unit: '/15', status: 'normal' }
     ],
     labs: [
-      { name: 'Platelets', val: '62,000 /µL', ref: '150-400k', status: 'crit' },
-      { name: 'AST / ALT', val: '210 / 195 U/L', ref: '<35 U/L', status: 'crit' },
-      { name: 'LDH', val: '680 U/L', ref: '140-280', status: 'high' },
-      { name: 'Total Bilirubin', val: '1.8 mg/dL', ref: '0.2-1.2', status: 'high' },
-      { name: 'Urine Protein/Cr', val: '1.8 mg/mg', ref: '<0.3', status: 'crit' },
-      { name: 'Serum Creatinine', val: '1.1 mg/dL', ref: '0.5-0.9', status: 'high' }
+      { name: 'Platelets', val: '62 ×10⁹/L', ref: '150-400', flag: 'Low', status: 'low' },
+      { name: 'AST / ALT', val: '210 / 195 U/L', ref: '<35', flag: 'High', status: 'high' },
+      { name: 'LDH', val: '680 U/L', ref: '140-280', flag: 'High', status: 'high' },
+      { name: 'Bilirubin', val: '31 µmol/L', ref: '3-21', flag: 'High', status: 'high' },
+      { name: 'Urine PCR', val: '1.8 mg/mg', ref: '<0.3', flag: 'High', status: 'high' },
+      { name: 'Creatinine', val: '97 µmol/L', ref: '45-84', flag: 'High', status: 'high' },
+      { name: 'Hemoglobin', val: '118 g/L', ref: '110-140', flag: 'Normal', status: 'normal' },
+      { name: 'WBC Count', val: '8.4 ×10⁹/L', ref: '4.5-11.0', flag: 'Normal', status: 'normal' },
+      { name: 'Fibrinogen', val: '3.8 g/L', ref: '2.0-4.0', flag: 'Normal', status: 'normal' },
+      { name: 'Sodium', val: '138 mmol/L', ref: '135-145', flag: 'Normal', status: 'normal' },
+      { name: 'Potassium', val: '4.1 mmol/L', ref: '3.5-5.0', flag: 'Normal', status: 'normal' },
+      { name: 'Glucose', val: '5.2 mmol/L', ref: '4.0-7.0', flag: 'Normal', status: 'normal' }
     ],
     imaging: [
       {
         title: 'Bedside RUQ Ultrasound',
         mod: 'POCUS Scan',
-        desc: 'Assessing liver capsule & biliary tree',
+        desc: 'Liver capsule intact, no subcapsular haematoma; gallbladder normal',
         icon: 'scan',
         modalText: '<b>Findings:</b> Homogeneous liver parenchyma without subcapsular fluid collection or hematoma. Normal gallbladder without wall thickening or pericholecystic fluid. No intraperitoneal free fluid in Morison pouch.'
       },
       {
         title: 'Continuous Cardiotocography',
         mod: 'Fetal Monitoring',
-        desc: 'Baseline 140 bpm, moderate variability',
+        desc: 'Baseline 140 bpm, moderate variability, reactive non-stress pattern',
         icon: 'ecg',
         modalText: '<b>Findings:</b> Baseline fetal heart rate 140 bpm with moderate variability and recurrent variable decelerations. Reactive non-stress test; no sustained fetal distress at present.'
       }
@@ -1406,107 +1360,110 @@ const CASES = {
       { id: 'ttp', t: 'Thrombotic thrombocytopenic purpura (TTP)' },
       { id: 'chole', t: 'Acute cholecystitis' }
     ],
-    watchFor: 'focal neurological deficits, eclamptic seizures, abruptio placentae, capsular hematoma',
+    watchFor: 'focal neurological deficit, intractable headache, capsular hematoma, pulmonary edema',
     plan: [
-      { id: 'stabilise', own: ['em'], t: '<b>Resuscitation:</b> Left lateral tilt, two 16G IV lines, seizure precautions, continuous fetal monitoring.' },
-      { id: 'antihypertensive', own: ['gy', 'ca'], t: '<b>Severe BP Control:</b> IV labetalol 20 mg bolus, titrate every 10 min. Target BP 140-150 / 90-100 mmHg.' },
-      { id: 'mgso4', own: ['gy', 'ne'], t: '<b>Eclampsia Prophylaxis:</b> Magnesium sulfate 4 g IV over 20 min, then 1 g/h continuous infusion.' },
+      { id: 'stabilise', own: ['em'], t: '<b>Resuscitation:</b> Left lateral tilt, two large-bore IV lines, seizure precautions, continuous fetal monitoring.' },
+      { id: 'antihypertensive', own: ['ob', 'ca'], t: '<b>Severe BP Control:</b> IV labetalol 20 mg bolus, titrate every 10 min. Target BP 140–150 / 90–100 mmHg.' },
+      { id: 'mgso4', own: ['ob', 'ne'], t: '<b>Eclampsia Prophylaxis:</b> Magnesium sulfate 4 g IV over 20 min, then 1 g/h continuous infusion.' },
       { id: 'surgical_eval', own: ['su'], t: '<b>Surgical Clearance:</b> Emergency bedside ultrasound ruled out subcapsular hepatic hematoma.' },
-      { id: 'delivery', own: ['gy'], t: '<b>Expedited Delivery:</b> Maternal stabilization followed by urgent induction/cesarean section once platelet transfusion available.' }
+      { id: 'delivery', own: ['ob'], t: '<b>Expedited Delivery:</b> Maternal stabilization followed by urgent induction/cesarean section once platelet transfusion available.' }
     ],
     router: {
-      primary: 'gy',
+      routedAt: '14:17',
+      primary: 'ob',
       consult: 'su',
-      assigned: ['gy', 'em', 'im', 'ca', 'ne', 'su'],
-      standby: ['id'],
-      rationale: 'Hypertensive emergency in 34-week pregnancy with thrombocytopenia and elevated transaminases indicates HELLP syndrome requiring Gynecology lead with Surgery consultation.'
+      scores: { ob: 97, em: 92, im: 88, ca: 81, ne: 79, su: 64, gy: 18 },
+      status: { ob: 'lead', em: 'assigned', im: 'assigned', ca: 'assigned', ne: 'assigned', su: 'assigned', gy: 'standby' },
+      assigned: ['ob', 'em', 'im', 'ca', 'ne', 'su'],
+      standby: ['gy'],
+      rationale: 'Severe preeclampsia with HELLP features at 34 weeks gestation requires Obstetrics lead with multidisciplinary stabilization.'
     },
     events: [
       {
-        who: 'gy',
+        who: 'ob',
         to: 'board',
         kind: 'assess',
-        short: 'Severe preeclampsia with HELLP syndrome criteria met',
-        detail: 'Blood pressure 178/112 with platelets 62k and AST 210 meets criteria for HELLP syndrome per <em>Williams Gynecology, Ch. 24</em>. Immediate magnesium sulfate seizure prophylaxis and IV labetalol required.',
-        voice: 'BP 178 over 112 with low platelets indicates severe HELLP syndrome.',
-        agreeWith: ['gy'],
+        short: "Severe preeclampsia with HELLP criteria met; initiate MgSO4 and labetalol",
+        detail: "Blood pressure 178/112 with platelets 62 ×10⁹/L and transaminitis meets criteria for HELLP syndrome per <em>Williams Obstetrics, Ch. 24</em>. Immediate magnesium sulfate neuroprotection and IV labetalol indicated.",
+        voice: "Blood pressure 178 over 112 with low platelets confirms severe HELLP syndrome.",
+        agreeWith: ['ob'],
         planAgrees: ['stabilise'],
         dxDelta: { aflp: 0.12, ttp: 0.08, chole: 0.05 }
       },
       {
         who: 'ca',
-        to: 'gy',
+        to: 'ob',
         kind: 'assess',
-        short: 'Concur on urgent IV labetalol 20 mg',
-        detail: 'End-organ cerebral and cardiac perfusion pressure must be preserved while lowering afterload. Avoid nitroprusside; IV labetalol 20 mg titrated up is the primary recommendation (<em>Braunwald, Ch. 88</em>).',
-        voice: 'Start IV labetalol 20 mg immediately to protect maternal cerebral vasculature.',
-        agreeWith: ['gy', 'ca'],
+        short: "Concur on urgent IV labetalol 20 mg bolus",
+        detail: "Cerebrovascular and myocardial perfusion pressure must be preserved while lowering afterload safely (<em>Braunwald Heart Disease, Ch. 88</em>). Titrate IV labetalol 20 to 80 mg.",
+        voice: "Start IV labetalol 20 mg immediately to protect maternal cerebral vasculature.",
+        agreeWith: ['ob', 'ca'],
         planAgrees: ['antihypertensive'],
         dxDelta: { aflp: 0.08, ttp: 0.06 }
       },
       {
         who: 'ne',
-        to: 'gy',
+        to: 'ob',
         kind: 'assess',
-        short: 'Magnesium sulfate 4 g loading dose indicated for PRES risk',
-        detail: 'Persistent scotomas and frontal headache reflect severe cerebrovascular autoregulatory breakthrough. Magnesium sulfate provides NMDA blockade and cerebral vasodilation (<em>Adams & Victor, Ch. 34</em>).',
-        voice: 'Initiate 4-gram magnesium sulfate bolus for seizure and PRES prophylaxis.',
-        agreeWith: ['gy', 'ca', 'ne'],
+        short: "Magnesium sulfate 4 g bolus indicated for PRES prophylaxis",
+        detail: "Persistent scotomas and frontal headache reflect severe cerebrovascular autoregulatory breakthrough. Magnesium sulfate provides NMDA receptor blockade and cerebral vasodilation (<em>Adams and Victor's Principles of Neurology, Ch. 34</em>).",
+        voice: "Initiate 4-gram magnesium sulfate bolus for seizure and PRES prophylaxis.",
+        agreeWith: ['ob', 'ca', 'ne'],
         planAgrees: ['mgso4'],
         dxDelta: { aflp: 0.06 }
       },
       {
-        who: 'gy',
+        who: 'ob',
         to: 'su',
         kind: 'referral',
-        short: 'REFERRAL: Requesting urgent surgical consult for RUQ pain',
-        detail: 'Patient has worsening right upper quadrant pain and dropping platelets. Requesting immediate General Surgery consult to evaluate for subcapsular hepatic hematoma or rupture before operative delivery.',
-        voice: 'Requesting surgical consult: severe RUQ tenderness to rule out hepatic hematoma.',
-        agreeWith: ['gy', 'ca', 'ne'],
+        short: "REFERRAL: Urgent General Surgery consult for sharp RUQ pain",
+        detail: "Patient has severe RUQ pain and dropping platelets. Requesting urgent surgical evaluation to rule out hepatic capsular hematoma or rupture before operative delivery.",
+        voice: "Requesting surgical consult: severe RUQ tenderness to rule out hepatic hematoma.",
+        agreeWith: ['ob', 'ca', 'ne'],
         planAgrees: [],
         dxDelta: {}
       },
       {
         who: 'su',
-        to: 'gy',
+        to: 'ob',
         kind: 'consult_reply',
-        short: 'Bedside POCUS confirms intact liver capsule; no free fluid',
-        detail: 'Bedside ultrasound confirms homogeneous hepatic parenchyma with no subcapsular hematoma or Morison pouch free fluid. Cleared for obstetric management with surgical standby (<em>Schwartz Surgery, Ch. 31</em>).',
-        voice: 'Bedside scan confirms intact liver capsule without hematoma. Surgical clearance granted.',
-        agreeWith: ['gy', 'ca', 'ne', 'su'],
+        short: "Bedside ultrasound confirms intact liver capsule; cleared for delivery",
+        detail: "Bedside POCUS confirms intact hepatic capsule with no subcapsular collection or Morison pouch free fluid (<em>Schwartz's Principles of Surgery, Ch. 31</em>). Cleared for obstetric intervention with surgical standby.",
+        voice: "Bedside scan confirms intact liver capsule without hematoma. Surgical clearance granted.",
+        agreeWith: ['ob', 'ca', 'ne', 'su'],
         planAgrees: ['surgical_eval'],
         dxDelta: { chole: 0.02 }
       },
       {
         who: 'im',
-        to: 'gy',
+        to: 'ob',
         kind: 'assess',
-        short: 'Type & crossmatch 4 units platelets; trend hemolysis markers',
-        detail: 'Fibrinogen is preserved, distinguishing HELLP from acute fatty liver or disseminated intravascular coagulation. Platelet pack crossmatched (<em>Harrison Internal Med, Ch. 142</em>).',
-        voice: 'Platelets crossmatched. Normal fibrinogen confirms HELLP over AFLP.',
-        agreeWith: ['gy', 'ca', 'ne', 'su', 'im'],
+        short: "Crossmatch 4 units platelets; normal fibrinogen rules out AFLP",
+        detail: "Normal fibrinogen distinguishes HELLP from acute fatty liver of pregnancy or overt DIC (<em>Harrison's Principles of Internal Medicine, Ch. 142</em>). Crossmatching platelet pack for delivery.",
+        voice: "Platelets crossmatched. Normal fibrinogen confirms HELLP over AFLP.",
+        agreeWith: ['ob', 'ca', 'ne', 'su', 'im'],
         planAgrees: [],
         dxDelta: { aflp: 0.02, ttp: 0.02 }
       },
       {
         who: 'em',
-        to: 'gy',
+        to: 'ob',
         kind: 'assess',
-        short: 'ICU resuscitation lines secured; neonatology team alerted',
-        detail: 'Two large-bore peripheral lines placed, continuous arterial line prepared if BP refractory. Resuscitation bay fully equipped (<em>Tintinalli, Ch. 100</em>).',
-        voice: 'Resuscitation bay secured and neonatal ICU team alerted for delivery.',
-        agreeWith: ['gy', 'ca', 'ne', 'su', 'im', 'em'],
+        short: "Two large-bore IV access secured; neonatal team alerted",
+        detail: "Resuscitation bay prepared, two 16G lines placed, neonatal intensive care team alerted for 34-week preterm delivery (<em>Tintinalli's Emergency Medicine, Ch. 100</em>).",
+        voice: "Resuscitation bay secured and neonatal ICU team alerted for delivery.",
+        agreeWith: ['ob', 'ca', 'ne', 'su', 'im', 'em'],
         planAgrees: ['stabilise'],
         dxDelta: {}
       },
       {
-        who: 'gy',
+        who: 'ob',
         to: 'board',
         kind: 'consensus',
-        short: 'Consensus reached: Stabilize maternal BP and proceed to delivery',
-        detail: 'All specialists agree on definitive protocol: antihypertensive control, neuroprotection, and delivery once maternal parameters are stabilized. Consensus score 100%.',
-        voice: 'Consensus finalized: maternal stabilization followed by expedited delivery.',
-        agreeWith: ['gy', 'ca', 'ne', 'su', 'im', 'em', 'id'],
+        short: "Consensus reached: Maternal stabilization followed by expedited delivery",
+        detail: "Obstetrics, Cardiology, Neurology, Surgery, Internal Medicine, and Emergency Medicine agree on definitive protocol: antihypertensive control, neuroprotection, and delivery upon maternal stabilization.",
+        voice: "Consensus finalized: maternal stabilization followed by expedited delivery.",
+        agreeWith: ['ob', 'ca', 'ne', 'su', 'im', 'em'],
         planAgrees: ['delivery'],
         dxDelta: { aflp: 0.01, ttp: 0.01, chole: 0.01 }
       }
@@ -1515,41 +1472,49 @@ const CASES = {
 
   septic_shock_mrsa: {
     id: 'septic_shock_mrsa',
+    synthetic: true,
     name: 'Marcus Thorne',
-    mrn: '#VH-4109-ID',
+    mrn: '#VH-4109-IM',
     demog: '58M · Post-TKR (Day 14)',
+    esi: 1,
     acuity: 'ESI 1 · Resuscitation',
-    acuityClass: 'badge-esi1',
+    acuityClass: 'esi1',
     chief_complaint: 'High spiking fever (39.4°C), severe shaking rigors, progressive lethargy, erythematous painful right knee.',
     hpi: '58-year-old male 2 weeks status-post right total knee arthroplasty presenting with acute septic shock: profound hypotension refractory to initial 1L fluid bolus, marked joint effusion, and spreading warm erythema.',
     vitals: [
       { label: 'BP', val: '82/48', unit: 'mmHg', status: 'abnormal' },
       { label: 'HR', val: '124', unit: 'bpm', status: 'abnormal' },
       { label: 'RR', val: '26', unit: '/min', status: 'abnormal' },
-      { label: 'SpO2', val: '93%', unit: 'RA', status: 'warn' },
+      { label: 'SpO₂', val: '93%', unit: 'RA', status: 'abnormal' },
       { label: 'Temp', val: '39.4', unit: '°C', status: 'abnormal' },
-      { label: 'GCS', val: '13', unit: '/15', status: 'warn' }
+      { label: 'GCS', val: '13', unit: '/15', status: 'abnormal' }
     ],
     labs: [
-      { name: 'Blood Cultures', val: 'Gram + Cocci (Clusters)', ref: 'Negative', status: 'crit' },
-      { name: 'Lactic Acid', val: '4.2 mmol/L', ref: '0.5-2.0', status: 'crit' },
-      { name: 'WBC Count', val: '24.8 k/µL (84% bands)', ref: '4.5-11.0', status: 'crit' },
-      { name: 'Procalcitonin', val: '18.5 ng/mL', ref: '<0.1', status: 'crit' },
-      { name: 'Creatinine', val: '2.1 mg/dL', ref: '0.7-1.3', status: 'high' },
-      { name: 'Platelets', val: '118,000 /µL', ref: '150-400k', status: 'warn' }
+      { name: 'Blood Cultures', val: 'Gram + Cocci in clusters', ref: 'Negative', flag: 'Critical', status: 'critical' },
+      { name: 'Lactic Acid', val: '4.2 mmol/L', ref: '0.5-2.0', flag: 'High', status: 'high' },
+      { name: 'WBC Count', val: '24.8 ×10⁹/L', ref: '4.5-11.0', flag: 'High', status: 'high' },
+      { name: 'Procalcitonin', val: '18.5 µg/L', ref: '<0.1', flag: 'High', status: 'high' },
+      { name: 'Creatinine', val: '186 µmol/L', ref: '62-106', flag: 'High', status: 'high' },
+      { name: 'Platelets', val: '118 ×10⁹/L', ref: '150-400', flag: 'Low', status: 'low' },
+      { name: 'Hemoglobin', val: '132 g/L', ref: '130-175', flag: 'Normal', status: 'normal' },
+      { name: 'Bilirubin', val: '14 µmol/L', ref: '3-21', flag: 'Normal', status: 'normal' },
+      { name: 'Sodium', val: '134 mmol/L', ref: '135-145', flag: 'Normal', status: 'normal' },
+      { name: 'Potassium', val: '4.4 mmol/L', ref: '3.5-5.0', flag: 'Normal', status: 'normal' },
+      { name: 'AST', val: '32 U/L', ref: '<35', flag: 'Normal', status: 'normal' },
+      { name: 'ALT', val: '28 U/L', ref: '<35', flag: 'Normal', status: 'normal' }
     ],
     imaging: [
       {
         title: 'Right Knee Plain Radiograph & US',
         mod: 'Bedside POCUS',
-        desc: 'Prosthetic hardware & large joint effusion',
+        desc: 'Prosthetic hardware intact; large intra-articular effusion with echogenic debris',
         icon: 'scan',
         modalText: '<b>Findings:</b> Large intra-articular suprapatellar effusion with dense echogenic debris. Hardware intact without gross loosening; significant soft tissue inflammatory edema.'
       },
       {
         title: 'Portable Chest Radiograph',
         mod: 'Chest X-Ray',
-        desc: 'Ruling out pulmonary septic emboli',
+        desc: 'Clear lung fields bilaterally without focal consolidation or septic emboli',
         icon: 'scan',
         modalText: '<b>Findings:</b> Clear lung fields bilaterally without focal consolidation, pneumothorax, or cavitary septic emboli.'
       }
@@ -1564,93 +1529,85 @@ const CASES = {
     watchFor: 'refractory vasoplegic shock, ARDS, DIC, metastatic spinal epidural abscess',
     plan: [
       { id: 'pressors', own: ['em', 'ca'], t: '<b>Resuscitation:</b> 30 mL/kg balanced crystalloid plus norepinephrine infusion targeting MAP ≥ 65 mmHg.' },
-      { id: 'antimicrobial', own: ['id'], t: '<b>Bactericidal Therapy:</b> Immediate IV Vancomycin (weight-based loading 25-30 mg/kg) plus Cefepime.' },
+      { id: 'antimicrobial', own: ['im'], t: '<b>Bactericidal Therapy:</b> Immediate IV Vancomycin (loading 25–30 mg/kg) plus Cefepime.' },
       { id: 'arthrocentesis', own: ['su'], t: '<b>Source Control:</b> Emergent joint aspiration followed by operative irrigation & debridement (DAIR).' },
       { id: 'tee_echo', own: ['ca'], t: '<b>Endocarditis Screen:</b> Transthoracic & transesophageal echocardiogram to rule out valvular vegetations.' },
       { id: 'renal_support', own: ['im'], t: '<b>AKI Monitoring:</b> Strict hourly urine output; dose-adjust antibiotics to renal clearance.' }
     ],
     router: {
-      primary: 'id',
+      routedAt: '09:24',
+      primary: 'im',
       consult: 'su',
-      assigned: ['id', 'em', 'su', 'im', 'ca', 'ne'],
-      standby: ['gy'],
-      rationale: 'Fever, refractory hypotension, Gram-positive bacteremia, and prosthetic joint infection demand Infectious Disease lead with immediate Orthopedic Surgery consult.'
+      scores: { im: 96, em: 93, su: 89, ca: 78, ne: 65, ob: 12, gy: 12 },
+      status: { im: 'lead', em: 'assigned', su: 'assigned', ca: 'assigned', ne: 'assigned', ob: 'standby', gy: 'standby' },
+      assigned: ['im', 'em', 'su', 'ca', 'ne'],
+      standby: ['ob', 'gy'],
+      rationale: 'MRSA bacteremia with refractory septic shock and prosthetic joint infection requires Internal Medicine lead with immediate Surgery consult.'
     },
     events: [
       {
-        who: 'id',
+        who: 'im',
         to: 'board',
         kind: 'assess',
-        short: 'Septic shock from MRSA prosthetic joint infection',
-        detail: 'Blood cultures demonstrating Gram-positive cocci in clusters with lactate 4.2 confirms fulminant MRSA septic shock (<em>Harrison Infectious Diseases, Ch. 138</em>). Load vancomycin 25-30 mg/kg immediately.',
-        voice: 'Gram-positive bacteremia and high lactate confirm severe MRSA septic shock.',
-        agreeWith: ['id'],
+        short: "Septic shock from MRSA prosthetic joint infection",
+        detail: "Blood cultures demonstrating Gram-positive cocci in clusters with lactate 4.2 mmol/L confirms fulminant MRSA septic shock (<em>Harrison's Principles of Internal Medicine, Ch. 138</em>). Load vancomycin 25-30 mg/kg immediately.",
+        voice: "Gram-positive bacteremia and high lactate confirm severe MRSA septic shock.",
+        agreeWith: ['im'],
         planAgrees: ['antimicrobial'],
         dxDelta: { strep: 0.15, gout: 0.05, endocarditis: 0.25 }
       },
       {
         who: 'em',
-        to: 'id',
+        to: 'im',
         kind: 'assess',
-        short: 'Norepinephrine started; MAP targeted at 65 mmHg',
-        detail: 'Crystalloid bolus running via pressure bag. Peripheral norepinephrine running via dedicated line while central venous catheter placed (<em>Tintinalli, Ch. 151</em>).',
-        voice: 'Norepinephrine running to maintain mean arterial pressure above 65.',
-        agreeWith: ['id', 'em'],
+        short: "Norepinephrine started; MAP targeted at 65 mmHg",
+        detail: "Crystalloid bolus running via pressure bag. Peripheral norepinephrine running via dedicated line while central venous catheter placed (<em>Tintinalli's Emergency Medicine, Ch. 151</em>).",
+        voice: "Norepinephrine running to maintain mean arterial pressure above 65.",
+        agreeWith: ['im', 'em'],
         planAgrees: ['pressors'],
         dxDelta: { gout: 0.02 }
       },
       {
-        who: 'id',
+        who: 'im',
         to: 'su',
         kind: 'referral',
-        short: 'REFERRAL: Urgent Orthopedic Surgery consult for arthrotomy & DAIR',
-        detail: 'Prosthetic joint biofilm cannot be sterilized with antibiotics alone in setting of septic shock. Requesting immediate surgical arthrocentesis and operative debridement.',
-        voice: 'Requesting urgent orthopedic surgery consult for joint aspiration and operative washout.',
-        agreeWith: ['id', 'em'],
+        short: "REFERRAL: Urgent Orthopedic Surgery consult for arthrotomy & DAIR",
+        detail: "Prosthetic joint biofilm cannot be sterilized with antibiotics alone in setting of septic shock. Requesting immediate surgical arthrocentesis and operative debridement.",
+        voice: "Requesting urgent orthopedic surgery consult for joint aspiration and operative washout.",
+        agreeWith: ['im', 'em'],
         planAgrees: [],
         dxDelta: {}
       },
       {
         who: 'su',
-        to: 'id',
+        to: 'im',
         kind: 'consult_reply',
-        short: 'OR activated for emergent knee arthrotomy & liner exchange',
-        detail: 'Joint aspiration yielded 60 mL purulent synovial fluid. OR team mobilized for debridement, antibiotics, and implant retention (DAIR) protocol (<em>Schwartz Surgery, Ch. 42</em>).',
-        voice: 'OR team activated. Proceeding with urgent joint debridement and polyethylene exchange.',
-        agreeWith: ['id', 'em', 'su'],
+        short: "OR activated for emergent knee arthrotomy & liner exchange",
+        detail: "Joint aspiration yielded 60 mL purulent synovial fluid. OR team mobilized for debridement, antibiotics, and implant retention (DAIR) protocol (<em>Schwartz's Principles of Surgery, Ch. 42</em>).",
+        voice: "OR team activated. Proceeding with urgent joint debridement and polyethylene exchange.",
+        agreeWith: ['im', 'em', 'su'],
         planAgrees: ['arthrocentesis'],
         dxDelta: { gout: 0.01 }
       },
       {
         who: 'ca',
-        to: 'id',
+        to: 'im',
         kind: 'assess',
-        short: 'Echo ordered; troponin elevated secondary to septic demand',
-        detail: 'S. aureus bacteremia carries 25% incidence of infective endocarditis. Urgent echocardiography ordered once hemodynamically stabilized in ICU (<em>Braunwald, Ch. 64</em>).',
-        voice: 'Urgent echocardiogram ordered to rule out septic valvular vegetations.',
-        agreeWith: ['id', 'em', 'su', 'ca'],
+        short: "Echo ordered; troponin elevated secondary to septic demand",
+        detail: "S. aureus bacteremia carries 25% incidence of infective endocarditis. Urgent echocardiography ordered once hemodynamically stabilized in ICU (<em>Braunwald's Heart Disease, Ch. 64</em>).",
+        voice: "Urgent echocardiogram ordered to rule out septic valvular vegetations.",
+        agreeWith: ['im', 'em', 'su', 'ca'],
         planAgrees: ['tee_echo'],
         dxDelta: { endocarditis: 0.12 }
       },
       {
         who: 'im',
-        to: 'id',
-        kind: 'assess',
-        short: 'Septic acute kidney injury identified; adjust drug dosing',
-        detail: 'Creatinine 2.1 represents stage 2 AKI. Target vancomycin trough 15-20 mcg/mL with close AUC-guided therapeutic drug monitoring (<em>Harrison Internal Med, Ch. 304</em>).',
-        voice: 'Stage 2 acute kidney injury identified. Monitoring drug troughs closely.',
-        agreeWith: ['id', 'em', 'su', 'ca', 'im'],
-        planAgrees: ['renal_support'],
-        dxDelta: { strep: 0.05 }
-      },
-      {
-        who: 'id',
         to: 'board',
         kind: 'consensus',
-        short: 'Consensus reached: Dual medical resuscitation and emergent surgical source control',
-        detail: 'Full agreement across ID, EM, Surgery, Cardiology, and Internal Medicine. Protocol synchronized for OR transfer under continuous pressor support.',
-        voice: 'Consensus reached: aggressive antimicrobial coverage with immediate surgical source control.',
-        agreeWith: ['id', 'em', 'su', 'ca', 'im', 'ne', 'gy'],
+        short: "Consensus reached: Dual medical resuscitation and emergent surgical source control",
+        detail: "Full agreement across Internal Medicine, Emergency Medicine, Surgery, and Cardiology. Protocol synchronized for OR transfer under continuous pressor support.",
+        voice: "Consensus reached: aggressive antimicrobial coverage with immediate surgical source control.",
+        agreeWith: ['im', 'em', 'su', 'ca', 'ne'],
         planAgrees: ['pressors', 'antimicrobial', 'arthrocentesis', 'tee_echo', 'renal_support'],
         dxDelta: { strep: 0.02, gout: 0.01, endocarditis: 0.08 }
       }
@@ -1659,41 +1616,49 @@ const CASES = {
 
   stemi_cardiogenic: {
     id: 'stemi_cardiogenic',
+    synthetic: true,
     name: 'Arthur Pendelton',
     mrn: '#VH-7822-CA',
     demog: '67M · Hx CAD, T2DM',
+    esi: 1,
     acuity: 'ESI 1 · Resuscitation',
-    acuityClass: 'badge-esi1',
+    acuityClass: 'esi1',
     chief_complaint: 'Crushing substernal chest pressure, profuse diaphoresis, dyspnea, and near-syncope.',
     hpi: '67-year-old male presenting with acute severe substernal pressure radiating to jaw and left arm for 90 minutes. Exam shows mottled extremities, bibasilar rales, and profound cardiogenic shock.',
     vitals: [
       { label: 'BP', val: '84/52', unit: 'mmHg', status: 'abnormal' },
       { label: 'HR', val: '108', unit: 'bpm', status: 'abnormal' },
       { label: 'RR', val: '24', unit: '/min', status: 'abnormal' },
-      { label: 'SpO2', val: '91%', unit: 'RA', status: 'abnormal' },
+      { label: 'SpO₂', val: '91%', unit: 'RA', status: 'abnormal' },
       { label: 'Temp', val: '36.6', unit: '°C', status: 'normal' },
-      { label: 'GCS', val: '14', unit: '/15', status: 'warn' }
+      { label: 'GCS', val: '14', unit: '/15', status: 'normal' }
     ],
     labs: [
-      { name: 'hs-Troponin I', val: '4,200 ng/L', ref: '<14 ng/L', status: 'crit' },
-      { name: 'Lactate', val: '3.6 mmol/L', ref: '0.5-2.0', status: 'crit' },
-      { name: 'NT-proBNP', val: '3,800 pg/mL', ref: '<300', status: 'crit' },
-      { name: 'Arterial pH', val: '7.28', ref: '7.35-7.45', status: 'crit' },
-      { name: 'Potassium', val: '4.8 mEq/L', ref: '3.5-5.0', status: 'norm' },
-      { name: 'Hemoglobin', val: '13.8 g/dL', ref: '13.5-17.5', status: 'norm' }
+      { name: 'hs-Troponin I', val: '4,200 ng/L', ref: '<14', flag: 'High', status: 'high' },
+      { name: 'Lactate', val: '3.6 mmol/L', ref: '0.5-2.0', flag: 'High', status: 'high' },
+      { name: 'NT-proBNP', val: '3,800 pg/mL', ref: '<300', flag: 'High', status: 'high' },
+      { name: 'Arterial pH', val: '7.28', ref: '7.35-7.45', flag: 'Low', status: 'low' },
+      { name: 'Potassium', val: '4.8 mmol/L', ref: '3.5-5.0', flag: 'Normal', status: 'normal' },
+      { name: 'Hemoglobin', val: '138 g/L', ref: '135-175', flag: 'Normal', status: 'normal' },
+      { name: 'Creatinine', val: '102 µmol/L', ref: '62-106', flag: 'Normal', status: 'normal' },
+      { name: 'Sodium', val: '139 mmol/L', ref: '135-145', flag: 'Normal', status: 'normal' },
+      { name: 'WBC Count', val: '9.2 ×10⁹/L', ref: '4.5-11.0', flag: 'Normal', status: 'normal' },
+      { name: 'Platelets', val: '240 ×10⁹/L', ref: '150-400', flag: 'Normal', status: 'normal' },
+      { name: 'Glucose', val: '8.4 mmol/L', ref: '4.0-7.0', flag: 'High', status: 'high' },
+      { name: 'Bilirubin', val: '12 µmol/L', ref: '3-21', flag: 'Normal', status: 'normal' }
     ],
     imaging: [
       {
         title: '12-Lead Electrocardiogram',
         mod: 'Diagnostic ECG',
-        desc: 'ST elevation V1-V4 with reciprocal changes',
+        desc: 'Sinus tachycardia 108 bpm; 4mm ST elevation V1-V4 with reciprocal inferior depression',
         icon: 'ecg',
         modalText: '<b>Findings:</b> Sinus tachycardia at 108 bpm with 4 mm ST-segment elevation in leads V1-V4, reciprocal ST depression in leads II, III, and aVF. Meets criteria for acute anterior STEMI.'
       },
       {
         title: 'Bedside Echocardiogram',
         mod: 'Focus Cardiac US',
-        desc: 'LVEF 28%, extensive anterior wall akinesis',
+        desc: 'LVEF 28%, extensive anterior and apical wall akinesis without pericardial effusion',
         icon: 'scan',
         modalText: '<b>Findings:</b> Severely reduced left ventricular ejection fraction (~28%) with large anterior, anteroseptal, and apical akinesis. No pericardial tamponade or acute severe mitral regurgitation.'
       }
@@ -1714,10 +1679,13 @@ const CASES = {
       { id: 'airway', own: ['em'], t: '<b>Oxygenation:</b> High-flow nasal cannula; non-invasive positive pressure if pulmonary edema worsens.' }
     ],
     router: {
+      routedAt: '11:05',
       primary: 'ca',
       consult: 'su',
+      scores: { ca: 98, em: 94, su: 88, im: 82, ne: 60, ob: 10, gy: 10 },
+      status: { ca: 'lead', em: 'assigned', su: 'assigned', im: 'assigned', ne: 'assigned', ob: 'standby', gy: 'standby' },
       assigned: ['ca', 'em', 'su', 'im', 'ne'],
-      standby: ['gy', 'id'],
+      standby: ['ob', 'gy'],
       rationale: 'ECG ST elevation in V1-V4 with cardiogenic shock mandates immediate Cardiology lead with Cardiovascular Surgery/Cath lab activation.'
     },
     events: [
@@ -1725,9 +1693,9 @@ const CASES = {
         who: 'ca',
         to: 'board',
         kind: 'assess',
-        short: 'Anterolateral STEMI with Killip IV cardiogenic shock',
-        detail: 'ECG shows 4mm ST elevations V1-V4 with troponin 4,200 and cardiogenic shock (<em>Braunwald Heart Disease, Ch. 58</em>). Cath lab activated with target door-to-balloon < 60 minutes.',
-        voice: 'Acute anterolateral STEMI with cardiogenic shock. Cath lab activated immediately.',
+        short: "Anterolateral STEMI with Killip IV cardiogenic shock",
+        detail: "ECG shows 4mm ST elevations V1-V4 with troponin 4,200 ng/L and cardiogenic shock (<em>Braunwald's Heart Disease, Ch. 58</em>). Cath lab activated with target door-to-balloon < 60 minutes.",
+        voice: "Acute anterolateral STEMI with cardiogenic shock. Cath lab activated immediately.",
         agreeWith: ['ca'],
         planAgrees: ['cath_lab', 'antiplatelet'],
         dxDelta: { dissection: 0.08, pe: 0.05, tamponade: 0.02 }
@@ -1736,9 +1704,9 @@ const CASES = {
         who: 'em',
         to: 'ca',
         kind: 'assess',
-        short: 'Norepinephrine running; aspirin administered',
-        detail: 'Aspirin 325 mg given. High-flow oxygen started for SpO2 91%. Norepinephrine initiated for MAP goal 65 mmHg (<em>Tintinalli, Ch. 53</em>).',
-        voice: 'Aspirin given and norepinephrine titrated to support perfusion.',
+        short: "Norepinephrine running; aspirin administered",
+        detail: "Aspirin 325 mg given. High-flow oxygen started for SpO₂ 91%. Norepinephrine initiated for MAP goal 65 mmHg (<em>Tintinalli's Emergency Medicine, Ch. 53</em>).",
+        voice: "Aspirin given and norepinephrine titrated to support perfusion.",
         agreeWith: ['ca', 'em'],
         planAgrees: ['inotropes', 'airway'],
         dxDelta: { pe: 0.03 }
@@ -1747,9 +1715,9 @@ const CASES = {
         who: 'ca',
         to: 'su',
         kind: 'referral',
-        short: 'REFERRAL: Surgical & Perfusion consult for Impella / ECMO standby',
-        detail: 'Given severe LV dysfunction (EF 28%) and rising lactate, patient requires upfront mechanical circulatory support. Requesting cardiovascular surgical team for femoral access and Impella CP standby.',
-        voice: 'Requesting cardiovascular surgical consult for Impella circulatory support placement.',
+        short: "REFERRAL: Surgical & Perfusion consult for Impella / ECMO standby",
+        detail: "Given severe LV dysfunction (EF 28%) and rising lactate, patient requires upfront mechanical circulatory support. Requesting cardiovascular surgical team for femoral access and Impella CP standby.",
+        voice: "Requesting cardiovascular surgical consult for Impella circulatory support placement.",
         agreeWith: ['ca', 'em'],
         planAgrees: [],
         dxDelta: {}
@@ -1758,32 +1726,21 @@ const CASES = {
         who: 'su',
         to: 'ca',
         kind: 'consult_reply',
-        short: 'Surgical and perfusion teams assembled in hybrid cath lab',
-        detail: 'Vascular access equipment and Impella CP console prepped in Hybrid OR/Cath Lab. Standby for surgical revascularization if anatomy unsuitable for stenting (<em>Schwartz Surgery, Ch. 22</em>).',
-        voice: 'Surgical team ready in hybrid lab with Impella console prepped.',
+        short: "Surgical and perfusion teams assembled in hybrid cath lab",
+        detail: "Vascular access equipment and Impella CP console prepped in Hybrid OR/Cath Lab. Standby for surgical revascularization if anatomy unsuitable for stenting (<em>Schwartz's Principles of Surgery, Ch. 22</em>).",
+        voice: "Surgical team ready in hybrid lab with Impella console prepped.",
         agreeWith: ['ca', 'em', 'su'],
         planAgrees: ['circulatory'],
         dxDelta: { dissection: 0.02 }
       },
       {
-        who: 'im',
-        to: 'ca',
-        kind: 'assess',
-        short: 'Metabolic acidosis recognized; renal protective contrast plan',
-        detail: 'Lactate 3.6 with pH 7.28 reflects severe tissue hypoperfusion. Iso-osmolar contrast and volume minimization recommended (<em>Harrison Internal Med, Ch. 272</em>).',
-        voice: 'Acidosis managed; minimal contrast protocol recommended for cath intervention.',
-        agreeWith: ['ca', 'em', 'su', 'im'],
-        planAgrees: [],
-        dxDelta: { dissection: 0.01 }
-      },
-      {
         who: 'ca',
         to: 'board',
         kind: 'consensus',
-        short: 'Consensus reached: Immediate transfer to Cath Lab with mechanical support',
-        detail: 'Unanimous specialist agreement: Emergency stabilization, upfront Impella placement, and primary PCI to restore LAD patency.',
-        voice: 'Consensus finalized: immediate transfer to cath lab with mechanical circulatory support.',
-        agreeWith: ['ca', 'em', 'su', 'im', 'ne', 'gy', 'id'],
+        short: "Consensus reached: Immediate transfer to Cath Lab with mechanical support",
+        detail: "Unanimous specialist agreement: Emergency stabilization, upfront Impella placement, and primary PCI to restore LAD patency.",
+        voice: "Consensus finalized: immediate transfer to cath lab with mechanical circulatory support.",
+        agreeWith: ['ca', 'em', 'su', 'im', 'ne'],
         planAgrees: ['cath_lab', 'circulatory', 'inotropes', 'antiplatelet', 'airway'],
         dxDelta: { dissection: 0.01, pe: 0.01, tamponade: 0.01 }
       }
@@ -1792,39 +1749,49 @@ const CASES = {
 
   ischemic_stroke_lvo: {
     id: 'ischemic_stroke_lvo',
+    synthetic: true,
     name: 'Clara Oswald',
     mrn: '#VH-9013-NE',
     demog: '74F · Atrial Fibrillation',
+    esi: 1,
     acuity: 'ESI 1 · Resuscitation',
-    acuityClass: 'badge-esi1',
+    acuityClass: 'esi1',
     chief_complaint: 'Acute right-sided hemiplegia, global aphasia, forced leftward eye gaze deviation.',
     hpi: '74-year-old female with history of atrial fibrillation presenting with sudden onset right dense hemiparesis and complete inability to speak witnessed 45 minutes prior. NIH Stroke Scale score is 18.',
     vitals: [
       { label: 'BP', val: '186/102', unit: 'mmHg', status: 'abnormal' },
       { label: 'HR', val: '82', unit: 'bpm', status: 'normal' },
       { label: 'RR', val: '16', unit: '/min', status: 'normal' },
-      { label: 'SpO2', val: '97%', unit: 'RA', status: 'normal' },
+      { label: 'SpO₂', val: '97%', unit: 'RA', status: 'normal' },
       { label: 'Temp', val: '36.7', unit: '°C', status: 'normal' },
-      { label: 'Blood Glucose', val: '118', unit: 'mg/dL', status: 'normal' }
+      { label: 'Blood Glucose', val: '6.5', unit: 'mmol/L', status: 'normal' }
     ],
     labs: [
-      { name: 'INR', val: '1.1', ref: '0.8-1.2', status: 'norm' },
-      { name: 'Platelets', val: '220,000 /µL', ref: '150-400k', status: 'norm' },
-      { name: 'Troponin', val: '<6 ng/L', ref: '<14', status: 'norm' },
-      { name: 'Creatinine', val: '0.9 mg/dL', ref: '0.6-1.1', status: 'norm' }
+      { name: 'INR', val: '1.1', ref: '0.8-1.2', flag: 'Normal', status: 'normal' },
+      { name: 'Platelets', val: '220 ×10⁹/L', ref: '150-400', flag: 'Normal', status: 'normal' },
+      { name: 'Troponin', val: '<6 ng/L', ref: '<14', flag: 'Normal', status: 'normal' },
+      { name: 'Creatinine', val: '80 µmol/L', ref: '45-84', flag: 'Normal', status: 'normal' },
+      { name: 'Hemoglobin', val: '128 g/L', ref: '115-160', flag: 'Normal', status: 'normal' },
+      { name: 'WBC Count', val: '6.8 ×10⁹/L', ref: '4.5-11.0', flag: 'Normal', status: 'normal' },
+      { name: 'Sodium', val: '139 mmol/L', ref: '135-145', flag: 'Normal', status: 'normal' },
+      { name: 'Potassium', val: '4.0 mmol/L', ref: '3.5-5.0', flag: 'Normal', status: 'normal' },
+      { name: 'aPTT', val: '28 s', ref: '25-35', flag: 'Normal', status: 'normal' },
+      { name: 'Bilirubin', val: '10 µmol/L', ref: '3-21', flag: 'Normal', status: 'normal' },
+      { name: 'AST', val: '22 U/L', ref: '<35', flag: 'Normal', status: 'normal' },
+      { name: 'ALT', val: '19 U/L', ref: '<35', flag: 'Normal', status: 'normal' }
     ],
     imaging: [
       {
         title: 'Non-Contrast Head CT',
         mod: 'CT Neuro',
-        desc: 'ASPECTS 9, dense MCA sign, no hemorrhage',
+        desc: 'ASPECTS 9, hyperdense left MCA sign, no intracranial hemorrhage or mass effect',
         icon: 'scan',
         modalText: '<b>Findings:</b> No evidence of intracranial hemorrhage or significant mass effect. Hyperdense left MCA sign present. Alberta Stroke Program Early CT Score (ASPECTS) is 9/10, indicating minimal early ischemic core.'
       },
       {
         title: 'CT Angiography (Head & Neck)',
         mod: 'CTA Neuro',
-        desc: 'Abrupt cutoff of left M1 segment MCA',
+        desc: 'Abrupt cutoff of left M1 segment MCA with robust collateral reconstitution',
         icon: 'scan',
         modalText: '<b>Findings:</b> Abrupt cutoff of the proximal left middle cerebral artery (M1 segment) with good collateral vessel reconstitution over the left cerebral convexity.'
       }
@@ -1844,10 +1811,13 @@ const CASES = {
       { id: 'neuro_checks', own: ['ne'], t: '<b>Neurological Monitoring:</b> NIHSS checks every 15 minutes during procedure and recovery.' }
     ],
     router: {
+      routedAt: '08:12',
       primary: 'ne',
       consult: 'su',
-      assigned: ['ne', 'em', 'su', 'im', 'ca'],
-      standby: ['gy', 'id'],
+      scores: { ne: 98, em: 93, su: 91, ca: 76, im: 72, ob: 10, gy: 10 },
+      status: { ne: 'lead', em: 'assigned', su: 'assigned', ca: 'assigned', im: 'assigned', ob: 'standby', gy: 'standby' },
+      assigned: ['ne', 'em', 'su', 'ca', 'im'],
+      standby: ['ob', 'gy'],
       rationale: 'Acute focal neurological deficit with NIHSS 18 within thrombolytic window requires Neurology lead with Neurointerventional Surgery consult.'
     },
     events: [
@@ -1855,9 +1825,9 @@ const CASES = {
         who: 'ne',
         to: 'board',
         kind: 'assess',
-        short: 'Left M1 MCA large vessel occlusion; candidate for IV TNK and EVT',
-        detail: 'Onset 45 min ago, non-contrast CT excludes hemorrhage (ASPECTS 9), CTA confirms left M1 cutoff (<em>Adams & Victor Neurology, Ch. 34</em>). Eligible for immediate IV Tenecteplase and mechanical thrombectomy.',
-        voice: 'Left M1 occlusion with ASPECTS 9. Candidate for tenecteplase and thrombectomy.',
+        short: "Left M1 MCA occlusion; candidate for bridging IV TNK and EVT",
+        detail: "Onset 45 min ago, non-contrast CT excludes hemorrhage (ASPECTS 9), CTA confirms left M1 cutoff (<em>Adams and Victor's Principles of Neurology, Ch. 34</em>). Eligible for immediate IV Tenecteplase and mechanical thrombectomy.",
+        voice: "Left M1 occlusion with ASPECTS 9. Candidate for tenecteplase and thrombectomy.",
         agreeWith: ['ne'],
         planAgrees: ['neuro_checks'],
         dxDelta: { ich: 0.01, todd: 0.02, migraine: 0.01 }
@@ -1866,9 +1836,9 @@ const CASES = {
         who: 'em',
         to: 'ne',
         kind: 'assess',
-        short: 'Labetalol administered; BP adjusted to 172/94 mmHg',
-        detail: 'BP successfully titrated under 185/110 mmHg. Tenecteplase 0.25 mg/kg mixed and ready for IV administration (<em>Tintinalli, Ch. 165</em>).',
-        voice: 'Blood pressure optimized with labetalol. Tenecteplase ready to bolus.',
+        short: "Labetalol administered; BP adjusted to 172/94 mmHg",
+        detail: "BP successfully titrated under 185/110 mmHg. Tenecteplase 0.25 mg/kg mixed and ready for IV administration (<em>Tintinalli's Emergency Medicine, Ch. 165</em>).",
+        voice: "Blood pressure optimized with labetalol. Tenecteplase ready to bolus.",
         agreeWith: ['ne', 'em'],
         planAgrees: ['bp_target', 'thrombolysis'],
         dxDelta: { ich: 0.01 }
@@ -1877,9 +1847,9 @@ const CASES = {
         who: 'ne',
         to: 'su',
         kind: 'referral',
-        short: 'REFERRAL: Neurointerventional surgery consult for emergent EVT',
-        detail: 'Patient has large vessel occlusion with large salvageable penumbra. Requesting emergent neurointerventional surgical activation for endovascular mechanical thrombectomy.',
-        voice: 'Requesting neurointerventional consult: emergent endovascular thrombectomy indicated.',
+        short: "REFERRAL: Neurointerventional surgery consult for emergent EVT",
+        detail: "Patient has large vessel occlusion with large salvageable penumbra. Requesting emergent neurointerventional surgical activation for endovascular mechanical thrombectomy.",
+        voice: "Requesting neurointerventional consult: emergent endovascular thrombectomy indicated.",
         agreeWith: ['ne', 'em'],
         planAgrees: [],
         dxDelta: {}
@@ -1888,32 +1858,21 @@ const CASES = {
         who: 'su',
         to: 'ne',
         kind: 'consult_reply',
-        short: 'Angio suite ready; proceeding to direct mechanical recanalization',
-        detail: 'Neurointerventional team in room. Transferring patient directly from CT scanner to Biplane Angiography suite for aspiration & stent-retriever thrombectomy (<em>Schwartz Surgery, Ch. 41</em>).',
-        voice: 'Angiography suite prepped. Transferring directly for mechanical clot extraction.',
+        short: "Angio suite ready; proceeding to direct mechanical recanalization",
+        detail: "Neurointerventional team in room. Transferring patient directly from CT scanner to Biplane Angiography suite for aspiration & stent-retriever thrombectomy (<em>Schwartz's Principles of Surgery, Ch. 41</em>).",
+        voice: "Angiography suite prepped. Transferring directly for mechanical clot extraction.",
         agreeWith: ['ne', 'em', 'su'],
         planAgrees: ['thrombectomy'],
         dxDelta: { todd: 0.01 }
       },
       {
-        who: 'ca',
-        to: 'ne',
-        kind: 'assess',
-        short: 'Cardioembolic origin likely; post-procedure anticoagulation plan',
-        detail: 'ECG confirms atrial fibrillation. Cardioembolic clot suspected. Defer oral anticoagulation 48-72h post-thrombectomy to minimize hemorrhage risk (<em>Braunwald, Ch. 41</em>).',
-        voice: 'Atrial fibrillation confirmed as etiology. Anticoagulation plan scheduled post-procedure.',
-        agreeWith: ['ne', 'em', 'su', 'ca'],
-        planAgrees: [],
-        dxDelta: {}
-      },
-      {
         who: 'ne',
         to: 'board',
         kind: 'consensus',
-        short: 'Consensus reached: Dual bridging thrombolysis and endovascular thrombectomy',
-        detail: 'Unanimous clinical consensus: IV TNK bolus followed immediately by groin puncture for mechanical recanalization.',
-        voice: 'Consensus finalized: immediate bridging tenecteplase and mechanical thrombectomy.',
-        agreeWith: ['ne', 'em', 'su', 'ca', 'im', 'gy', 'id'],
+        short: "Consensus reached: Dual bridging thrombolysis and endovascular thrombectomy",
+        detail: "Unanimous clinical consensus: IV TNK bolus followed immediately by groin puncture for mechanical recanalization.",
+        voice: "Consensus finalized: immediate bridging tenecteplase and mechanical thrombectomy.",
+        agreeWith: ['ne', 'em', 'su', 'ca', 'im'],
         planAgrees: ['bp_target', 'thrombolysis', 'thrombectomy', 'neuro_checks'],
         dxDelta: { ich: 0.00, todd: 0.01, migraine: 0.00 }
       }
@@ -1922,32 +1881,42 @@ const CASES = {
 
   acute_appendicitis: {
     id: 'acute_appendicitis',
+    synthetic: true,
     name: 'Jordan Rivera',
     mrn: '#VH-6291-SU',
     demog: '24M · Previously Healthy',
+    esi: 2,
     acuity: 'ESI 2 · Emergent',
-    acuityClass: 'badge-esi2',
+    acuityClass: 'esi2',
     chief_complaint: 'Periumbilical pain migrating to right lower quadrant, nausea, anorexia, and fever.',
     hpi: '24-year-old male presenting with 18 hours of progressively worsening abdominal pain initially periumbilical, now localized to McBurney point with marked rebound tenderness and low-grade pyrexia.',
     vitals: [
       { label: 'BP', val: '124/78', unit: 'mmHg', status: 'normal' },
-      { label: 'HR', val: '102', unit: 'bpm', status: 'warn' },
+      { label: 'HR', val: '102', unit: 'bpm', status: 'normal' },
       { label: 'RR', val: '18', unit: '/min', status: 'normal' },
-      { label: 'SpO2', val: '99%', unit: 'RA', status: 'normal' },
-      { label: 'Temp', val: '38.2', unit: '°C', status: 'warn' },
+      { label: 'SpO₂', val: '99%', unit: 'RA', status: 'normal' },
+      { label: 'Temp', val: '38.2', unit: '°C', status: 'abnormal' },
       { label: 'GCS', val: '15', unit: '/15', status: 'normal' }
     ],
     labs: [
-      { name: 'WBC Count', val: '16.4 k/µL (78% segs)', ref: '4.5-11.0', status: 'high' },
-      { name: 'C-Reactive Protein', val: '48 mg/L', ref: '<5 mg/L', status: 'high' },
-      { name: 'Urinalysis', val: 'Normal / 0 RBC', ref: 'Negative', status: 'norm' },
-      { name: 'Serum Lipase', val: '24 U/L', ref: '10-60', status: 'norm' }
+      { name: 'WBC Count', val: '16.4 ×10⁹/L', ref: '4.5-11.0', flag: 'High', status: 'high' },
+      { name: 'C-Reactive Protein', val: '48 mg/L', ref: '<5', flag: 'High', status: 'high' },
+      { name: 'Serum Lipase', val: '24 U/L', ref: '10-60', flag: 'Normal', status: 'normal' },
+      { name: 'Creatinine', val: '78 µmol/L', ref: '62-106', flag: 'Normal', status: 'normal' },
+      { name: 'Hemoglobin', val: '148 g/L', ref: '130-175', flag: 'Normal', status: 'normal' },
+      { name: 'Platelets', val: '260 ×10⁹/L', ref: '150-400', flag: 'Normal', status: 'normal' },
+      { name: 'Bilirubin', val: '11 µmol/L', ref: '3-21', flag: 'Normal', status: 'normal' },
+      { name: 'Sodium', val: '140 mmol/L', ref: '135-145', flag: 'Normal', status: 'normal' },
+      { name: 'Potassium', val: '4.2 mmol/L', ref: '3.5-5.0', flag: 'Normal', status: 'normal' },
+      { name: 'Glucose', val: '5.6 mmol/L', ref: '4.0-7.0', flag: 'Normal', status: 'normal' },
+      { name: 'AST', val: '24 U/L', ref: '<35', flag: 'Normal', status: 'normal' },
+      { name: 'ALT', val: '22 U/L', ref: '<35', flag: 'Normal', status: 'normal' }
     ],
     imaging: [
       {
         title: 'Abdominal & Pelvic CT with IV Contrast',
         mod: 'CT Scan',
-        desc: 'Dilated appendix (9.5mm), fat stranding, appendicolith',
+        desc: 'Dilated appendix (9.5mm), prominent fat stranding, obstructing appendicolith at base',
         icon: 'scan',
         modalText: '<b>Findings:</b> Blind-ending, non-compressible tubular structure in the right lower quadrant measuring 9.5 mm in outer diameter with an obstructing appendicolith at the base. Prominent periappendiceal fat stranding and localized peritoneal thickening without generalized free air.'
       }
@@ -1962,25 +1931,28 @@ const CASES = {
     watchFor: 'peritoneal sepsis, microperforation, intra-abdominal abscess formation',
     plan: [
       { id: 'npo', own: ['su', 'em'], t: '<b>Pre-Operative Care:</b> NPO status, IV crystalloid resuscitation, analgesia.' },
-      { id: 'antibiotics', own: ['id', 'su'], t: '<b>Antimicrobial Prophylaxis:</b> IV Piperacillin-tazobactam or Cefoxitin 2 g within 60 min of incision.' },
+      { id: 'antibiotics', own: ['im', 'su'], t: '<b>Antimicrobial Prophylaxis:</b> IV Piperacillin-tazobactam or Cefoxitin 2 g within 60 min of incision.' },
       { id: 'lap_app', own: ['su'], t: '<b>Definitive Surgery:</b> Emergent laparoscopic appendectomy.' },
       { id: 'dvt_ppx', own: ['im'], t: '<b>Perioperative Care:</b> Sequential compression devices and early ambulation.' }
     ],
     router: {
+      routedAt: '16:40',
       primary: 'su',
-      consult: 'id',
-      assigned: ['su', 'id', 'em', 'im'],
-      standby: ['ca', 'ne', 'gy'],
-      rationale: 'Migratory RLQ pain, leukocytosis, and CT imaging confirming dilated 9.5mm appendix with appendicolith requires Surgery lead with Infectious Disease antibiotic consultation.'
+      consult: 'im',
+      scores: { su: 98, em: 90, im: 84, ca: 52, ne: 40, ob: 10, gy: 10 },
+      status: { su: 'lead', em: 'assigned', im: 'assigned', ca: 'assigned', ne: 'assigned', ob: 'standby', gy: 'standby' },
+      assigned: ['su', 'em', 'im', 'ca', 'ne'],
+      standby: ['ob', 'gy'],
+      rationale: 'Migratory RLQ pain, leukocytosis, and CT imaging confirming dilated 9.5mm appendix with appendicolith requires Surgery lead with Internal Medicine antibiotic consultation.'
     },
     events: [
       {
         who: 'su',
         to: 'board',
         kind: 'assess',
-        short: 'Acute appendicitis confirmed on CT; laparoscopic surgery scheduled',
-        detail: 'Alvarado score 9/10 with CT confirming 9.5 mm obstructed appendix and appendicolith (<em>Schwartz Surgery, Ch. 30</em>). Patient scheduled for emergent laparoscopic appendectomy.',
-        voice: 'CT confirms acute appendicitis. Scheduling emergent laparoscopic appendectomy.',
+        short: "Acute appendicitis confirmed on CT; laparoscopic surgery scheduled",
+        detail: "Alvarado score 9/10 with CT confirming 9.5 mm obstructed appendix and appendicolith (<em>Schwartz's Principles of Surgery, Ch. 30</em>). Patient scheduled for emergent laparoscopic appendectomy.",
+        voice: "CT confirms acute appendicitis. Scheduling emergent laparoscopic appendectomy.",
         agreeWith: ['su'],
         planAgrees: ['npo'],
         dxDelta: { mesenteric: 0.05, crohn: 0.04, colic: 0.01 }
@@ -1989,54 +1961,43 @@ const CASES = {
         who: 'em',
         to: 'su',
         kind: 'assess',
-        short: 'IV fluids running; multimodal analgesia provided',
-        detail: 'Ringer lactate bolus initiated. Acetaminophen and fentanyl administered for pain control without compromising abdominal exam (<em>Tintinalli, Ch. 73</em>).',
-        voice: 'IV hydration and analgesia administered; patient comfortable and NPO.',
+        short: "IV fluids running; multimodal analgesia provided",
+        detail: "Ringer lactate bolus initiated. Acetaminophen and fentanyl administered for pain control without compromising abdominal exam (<em>Tintinalli's Emergency Medicine, Ch. 73</em>).",
+        voice: "IV hydration and analgesia administered; patient comfortable and NPO.",
         agreeWith: ['su', 'em'],
         planAgrees: ['npo'],
         dxDelta: { colic: 0.01 }
       },
       {
         who: 'su',
-        to: 'id',
+        to: 'im',
         kind: 'referral',
-        short: 'REFERRAL: Infectious Disease consult for antimicrobial prophylaxis',
-        detail: 'CT shows prominent fat stranding and appendicolith raising concern for micro-perforation. Requesting Infectious Disease recommendation for pre-operative and potential extended coverage.',
-        voice: 'Requesting ID consult: optimal antibiotic regimen for micro-perforation risk.',
+        short: "REFERRAL: Internal Medicine consult for antimicrobial prophylaxis",
+        detail: "CT shows prominent fat stranding and appendicolith raising concern for micro-perforation. Requesting Internal Medicine recommendation for pre-operative coverage.",
+        voice: "Requesting Internal Medicine consult: optimal antibiotic regimen for micro-perforation risk.",
         agreeWith: ['su', 'em'],
         planAgrees: [],
         dxDelta: {}
       },
       {
-        who: 'id',
-        to: 'su',
-        kind: 'consult_reply',
-        short: 'Recommend IV Piperacillin-tazobactam for anaerobic & enteric coverage',
-        detail: 'Given localized peritonitis, recommend IV Piperacillin-tazobactam 3.375g to cover enteric gram-negatives and Bacteroides fragilis (<em>Harrison Infectious Diseases, Ch. 129</em>). Continue 24h post-op if uncomplicated.',
-        voice: 'Recommend intravenous piperacillin-tazobactam for anaerobic and enteric coverage.',
-        agreeWith: ['su', 'em', 'id'],
-        planAgrees: ['antibiotics'],
-        dxDelta: { mesenteric: 0.02, crohn: 0.02 }
-      },
-      {
         who: 'im',
         to: 'su',
-        kind: 'assess',
-        short: 'Preoperative clearance granted; low cardiac and pulmonary risk',
-        detail: 'Young patient with RCRI score 0. Cleared for general anesthesia with standard monitoring (<em>Harrison Internal Med, Ch. 29</em>).',
-        voice: 'Patient cleared for general anesthesia; perioperative DVT prophylaxis ordered.',
-        agreeWith: ['su', 'em', 'id', 'im'],
-        planAgrees: ['dvt_ppx'],
-        dxDelta: { crohn: 0.01 }
+        kind: 'consult_reply',
+        short: "Recommend IV Piperacillin-tazobactam for anaerobic & enteric coverage",
+        detail: "Given localized peritonitis, recommend IV Piperacillin-tazobactam 3.375g to cover enteric gram-negatives and Bacteroides fragilis (<em>Harrison's Principles of Internal Medicine, Ch. 129</em>). Continue 24h post-op if uncomplicated.",
+        voice: "Recommend intravenous piperacillin-tazobactam for anaerobic and enteric coverage.",
+        agreeWith: ['su', 'em', 'im'],
+        planAgrees: ['antibiotics'],
+        dxDelta: { mesenteric: 0.02, crohn: 0.02 }
       },
       {
         who: 'su',
         to: 'board',
         kind: 'consensus',
-        short: 'Consensus reached: Proceed to OR for laparoscopic appendectomy',
-        detail: 'Surgery, Infectious Disease, Emergency, and Internal Medicine aligned. Patient prepped for laparoscopic intervention.',
-        voice: 'Consensus reached: proceeding directly to operating room for laparoscopic appendectomy.',
-        agreeWith: ['su', 'em', 'id', 'im', 'ca', 'ne', 'gy'],
+        short: "Consensus reached: Proceed to OR for laparoscopic appendectomy",
+        detail: "Surgery, Internal Medicine, and Emergency Medicine aligned. Patient prepped for laparoscopic intervention.",
+        voice: "Consensus reached: proceeding directly to operating room for laparoscopic appendectomy.",
+        agreeWith: ['su', 'em', 'im'],
         planAgrees: ['npo', 'antibiotics', 'lap_app', 'dvt_ppx'],
         dxDelta: { mesenteric: 0.01, crohn: 0.01, colic: 0.00 }
       }
@@ -2050,44 +2011,47 @@ const CASES = {
   const $ = s => document.querySelector(s);
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  /* Specialist Roster (Clean Asklevia Medical Roster) */
-  const AG = {
-    id: { name: 'Infectious Disease', short: 'Infectious Dis.', doc: 'Dr. Anthony Mercer', book: "Harrison's Infectious Diseases", c: '#2E9FE6' },
-    gy: { name: 'Gynecology', short: 'Gynecology', doc: 'Dr. Evelyn Reed', book: 'Williams Gynecology', c: '#E11D48' },
-    em: { name: 'Emergency Medicine', short: 'Emergency', doc: 'Dr. Marcus Vance', book: "Tintinalli's Emergency Med.", c: '#0E9AA7' },
-    im: { name: 'Internal Medicine', short: 'Internal Med.', doc: 'Dr. Sarah Chen', book: "Harrison's Principles of Internal Med.", c: '#2B2FD9' },
-    ca: { name: 'Cardiology', short: 'Cardiology', doc: 'Dr. David Kim', book: "Braunwald's Heart Disease", c: '#1F7BEA' },
-    ne: { name: 'Neurology', short: 'Neurology', doc: 'Dr. James Wilson', book: "Adams & Victor's Neurology", c: '#5B3DF5' },
-    su: { name: 'Surgery', short: 'Surgery', doc: 'Dr. Michael Chang', book: "Schwartz's Surgery", c: '#13A06B' },
-    router: { name: 'MedGemma router', c: '#4A5068', sys: true },
-    report: { name: 'NVIDIA Nemotron', c: '#4A5068', sys: true },
+  /* Canonical 7 Specialist Agents (Phase 1) */
+  const AGENTS = {
+    ob: { name: 'Obstetrics', short: 'Obstetrics', color: '#2E9FE6', book: 'Williams Obstetrics' },
+    em: { name: 'Emergency Medicine', short: 'Emergency', color: '#0E9AA7', book: "Tintinalli's Emergency Medicine" },
+    ca: { name: 'Cardiology', short: 'Cardiology', color: '#1F7BEA', book: "Braunwald's Heart Disease" },
+    su: { name: 'Surgery', short: 'Surgery', color: '#13A06B', book: "Schwartz's Principles of Surgery" },
+    gy: { name: 'Gynecology', short: 'Gynecology', color: '#0FA88A', book: 'Williams Gynecology' },
+    ne: { name: 'Neurology', short: 'Neurology', color: '#5B3DF5', book: "Adams and Victor's Principles of Neurology" },
+    im: { name: 'Internal Medicine', short: 'Internal Med.', color: '#2B2FD9', book: "Harrison's Principles of Internal Medicine" },
   };
 
-  const TABLE = ['gy', 'id', 'em', 'ca', 'su', 'ne', 'im'];
+  /* Default Table Order (lead at top, clockwise descending score, standby at bottom) */
+  const SEAT_ORDER = ['ob', 'em', 'ca', 'su', 'gy', 'ne', 'im'];
 
-  /* Avatar aliases */
-  AV.id = AV.ob;
-  AVSVG.id = AVSVG.ob;
-  AV.report = AV.router;
-  AVSVG.report = AVSVG.router;
+  /* Node Status Map */
+  const NODE_STATUS = {
+    idle: 'Ready',
+    thinking: 'Evaluating…',
+    speaking: 'Sharing',
+    listening: 'Listening',
+    agreed: 'Agrees',
+    standby: 'Standby'
+  };
 
-  /* Active Case State */
+  /* Single State Source of Truth (Phase 2) */
   let currentCaseKey = 'preeclampsia_hellp';
   let activeCase = CASES[currentCaseKey];
-  let PLAN = activeCase.plan;
-  let DDX = activeCase.ddx;
-  let EV = activeCase.events;
 
-  /* Deliberation State */
-  const S = { i: 0, dx: {}, agree: new Set(), plan: {} };
-  const heard = new Set();
-  let filter = null;
-  let playing = !reduce;
-  let stage = 'idle';
-  let stageAt = 0;
-  let routeAnim = 0;
+  const state = {
+    phase: 'idle',       // 'idle' | 'routing' | 'review' | 'crosscheck' | 'consensus' | 'signoff'
+    running: false,      // false = paused or idle
+    routing: null,       // RoutingResult | null
+    filter: null,        // AgentKey | null (ALWAYS null on load / case change)
+    tab: 'draft',        // 'draft' | 'discussion' (ALWAYS 'draft' on load / case change)
+    eventIndex: 0,
+    agreedAgents: new Set(),
+    agreedPlans: new Set(),
+    showAllLabs: false
+  };
 
-  /* Canvas elements */
+  /* DOM references */
   const table = $('#table');
   const cv = $('#cv');
   const ctx = cv.getContext('2d');
@@ -2098,24 +2062,159 @@ const CASES = {
   const rcol = {};
   const planRows = {};
   const packets = [];
-  const ripples = [];
   let speakerAt = null;
-  let pointerIn = false;
+  let lastTick = 0;
+  let phaseTimer = 0;
 
-  /* ---------- Sidebar Population ---------- */
+  /* Derive Labels (Phase 2 #2) */
+  function routedSummary(r) {
+    if (!r) return 'Not routed yet';
+    const assignedCount = Object.values(r.status).filter(s => s !== 'standby').length;
+    const totalCount = Object.keys(r.status).length;
+    const leadKey = Object.keys(r.status).find(k => r.status[k] === 'lead') || r.primary;
+    const leadName = AGENTS[leadKey] ? AGENTS[leadKey].name : 'Specialist';
+    return `Routed ${r.routedAt || '14:17'} · ${assignedCount} of ${totalCount} assigned · ${leadName} leads`;
+  }
+
+  function getLabels() {
+    switch (state.phase) {
+      case 'idle':
+        return { router: 'Not routed yet', stage: 'Not started', badge: null, action: 'Route case' };
+      case 'routing':
+        return { router: 'Routing the case…', stage: state.running ? 'Routing' : 'Routing (Paused)', badge: 'Live', action: state.running ? 'Pause' : 'Resume' };
+      case 'review':
+        return { router: routedSummary(state.routing), stage: state.running ? 'Independent review' : 'Independent review (Paused)', badge: 'Live', action: state.running ? 'Pause' : 'Resume' };
+      case 'crosscheck':
+        return { router: routedSummary(state.routing), stage: state.running ? 'Cross-check' : 'Cross-check (Paused)', badge: 'Live', action: state.running ? 'Pause' : 'Resume' };
+      case 'consensus':
+        return { router: routedSummary(state.routing), stage: state.running ? 'Consensus' : 'Consensus (Paused)', badge: 'Live', action: state.running ? 'Pause' : 'Resume' };
+      case 'signoff':
+        return { router: routedSummary(state.routing), stage: 'Ready to sign', badge: 'Awaiting signature', action: 'Replay' };
+    }
+  }
+
+  /* Sync Header, Badges, and Primary Control */
+  function syncUI() {
+    const labels = getLabels();
+
+    // Router header
+    $('#r-sum').textContent = labels.router;
+
+    // Stage text
+    $('#stage-t').textContent = labels.stage;
+
+    // Stage Segments (4 segments: Review, Crosscheck, Consensus, Ready to sign)
+    const segs = document.querySelectorAll('.stage .segs i');
+    segs.forEach((seg, idx) => {
+      let on = false;
+      if (state.phase === 'review' && idx === 0) on = true;
+      else if (state.phase === 'crosscheck' && idx <= 1) on = true;
+      else if (state.phase === 'consensus' && idx <= 2) on = true;
+      else if (state.phase === 'signoff') on = true;
+      seg.classList.toggle('on', on);
+    });
+
+    // Dossier Badges
+    const badgeStatus = $('#dossier-status');
+    if (labels.badge) {
+      badgeStatus.hidden = false;
+      badgeStatus.textContent = labels.badge;
+      badgeStatus.className = 'badge-status' + (labels.badge === 'Awaiting signature' ? ' awaiting' : '');
+    } else {
+      badgeStatus.hidden = true;
+    }
+
+    const badgeSynthetic = $('#dossier-synthetic');
+    badgeSynthetic.hidden = !activeCase.synthetic;
+
+    // Primary Control in Specialists Header (Phase 2 #3)
+    const mainBtn = $('#b-main-control');
+    const mainSpan = mainBtn.querySelector('span');
+    const replayBtn = $('#b-replay');
+
+    mainSpan.textContent = labels.action;
+    mainBtn.setAttribute('aria-label', labels.action);
+
+    if (labels.action === 'Route case' || labels.action === 'Resume') {
+      mainBtn.querySelector('svg').innerHTML = '<polygon points="3.5 2.5 13.5 8 3.5 13.5"/>';
+    } else if (labels.action === 'Pause') {
+      mainBtn.querySelector('svg').innerHTML = '<rect x="3" y="2.5" width="3.4" height="11" rx="1"/><rect x="9.6" y="2.5" width="3.4" height="11" rx="1"/>';
+    } else if (labels.action === 'Replay') {
+      mainBtn.querySelector('svg').innerHTML = '<path d="M2.5 8a5.5 5.5 0 1 0 1.7-4"/><path d="M2.5 2.5v3h3"/>';
+    }
+
+    // Secondary replay button only visible once run is in progress or completed
+    replayBtn.hidden = (state.phase === 'idle');
+
+    // Board Copy (Phase 4 #4)
+    const board = $('#board');
+    if (state.phase === 'idle') {
+      board.innerHTML = '<b>MedGemma router</b><p>Press Route case to assign specialists.</p>';
+    } else if (state.phase === 'routing') {
+      board.innerHTML = '<b>MedGemma router</b><p>Scoring relevance for each specialist…</p>';
+    } else if (state.phase === 'signoff') {
+      const leadK = (state.routing && state.routing.primary) || 'ob';
+      const roleText = leadK === 'ob' ? 'on-call obstetrician' : 'attending physician';
+      board.innerHTML = `<b>MedGemma router</b><p>Waiting for the ${roleText}.</p>`;
+    }
+
+    // Sign button
+    const signBtn = $('#b-sign');
+    signBtn.disabled = (state.phase !== 'signoff');
+    signBtn.title = (state.phase === 'signoff') ? 'Authorize and sign clinical plan' : 'Available when the agents agree';
+
+    // Tabs & Panels
+    syncPanels();
+  }
+
+  /* Sync Draft and Discussion Panels */
+  function syncPanels() {
+    const isDraft = (state.tab === 'draft');
+    $('#t-draft').setAttribute('aria-selected', String(isDraft));
+    $('#t-disc').setAttribute('aria-selected', String(!isDraft));
+    $('#p-draft').hidden = !isDraft;
+    $('#p-disc').hidden = isDraft;
+
+    // Draft empty state vs content
+    const hasDraftContent = (state.phase !== 'idle' && state.phase !== 'routing');
+    $('#draft-empty').hidden = hasDraftContent;
+    $('#draft-content').hidden = !hasDraftContent;
+
+    // Discussion empty state vs messages
+    const discList = $('#disc-list');
+    const msgCount = discList.children.length;
+    $('#disc-empty').hidden = (msgCount > 0);
+    $('#count').textContent = msgCount;
+
+    // Badge styling for unread
+    const countBadge = $('#count');
+    countBadge.classList.toggle('has-unread', isDraft && msgCount > 0);
+
+    // Discussion Filter Chip
+    const filterChip = $('#filter-chip');
+    if (state.filter) {
+      filterChip.hidden = false;
+      const ag = AGENTS[state.filter];
+      $('#filter-chip-text').textContent = `${ag ? ag.name : state.filter} only`;
+    } else {
+      filterChip.hidden = true;
+    }
+  }
+
+  /* Populate Clinical Dossier (Phase 5) */
   function populateSidebar(c) {
     $('#pt-name').textContent = c.name;
-    $('#pt-mrn').textContent = c.mrn;
+    $('#pt-id').textContent = c.mrn;
     $('#pt-demog').textContent = c.demog;
-    
+
     const acuityEl = $('#pt-acuity');
-    acuityEl.className = 'badge-acuity ' + c.acuityClass;
-    acuityEl.textContent = c.acuity;
+    acuityEl.className = 'badge-esi ' + (c.acuityClass || 'esi2');
+    acuityEl.textContent = c.acuity || `ESI ${c.esi} · Emergent`;
 
     $('#pt-cc').textContent = c.chief_complaint;
     $('#pt-hpi').textContent = c.hpi;
 
-    // Vitals
+    // Vitals (3x2 grid, tabular nums, SpO2)
     const vitGrid = $('#vitals-grid');
     vitGrid.innerHTML = c.vitals.map(v => `
       <div class="vital-item ${v.status}">
@@ -2124,38 +2223,21 @@ const CASES = {
       </div>
     `).join('');
 
-    // Labs
-    const labsList = $('#labs-list');
-    labsList.innerHTML = c.labs.map(l => `
-      <div class="lab-row">
-        <span class="lab-name">${l.name}</span>
-        <span class="lab-val">
-          ${l.val}
-          <span class="lab-flag ${l.status}">${l.status}</span>
-        </span>
-      </div>
-    `).join('');
+    // Render Labs
+    renderLabs(c);
 
-    // Imaging
+    // Imaging Studies (2-line clamp on findings, finding first)
     const imgList = $('#imaging-list');
     imgList.innerHTML = c.imaging.map((img, idx) => `
       <div class="imaging-card" data-idx="${idx}">
-        <div class="imaging-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-            <circle cx="8.5" cy="8.5" r="1.5"/>
-            <polyline points="21 15 16 10 5 21"/>
-          </svg>
-        </div>
         <div class="imaging-info">
           <span class="imaging-title">${img.title}</span>
-          <span class="imaging-desc">${img.mod} · ${img.desc}</span>
+          <span class="imaging-findings">${img.desc}</span>
         </div>
-        <span class="imaging-badge">View</span>
+        <button type="button" class="imaging-btn" aria-label="View study">View</button>
       </div>
     `).join('');
 
-    // Attach click events to imaging cards
     imgList.querySelectorAll('.imaging-card').forEach(card => {
       card.addEventListener('click', () => {
         const idx = parseInt(card.dataset.idx, 10);
@@ -2164,12 +2246,45 @@ const CASES = {
     });
   }
 
-  /* ---------- Imaging Modal ---------- */
+  /* Render Labs: Abnormal only by default, expand to all */
+  function renderLabs(c) {
+    const list = $('#labs-list');
+    const labs = c.labs || [];
+    const abnormalLabs = labs.filter(l => l.status === 'low' || l.status === 'high' || l.status === 'crit' || l.status === 'critical');
+    const displayLabs = state.showAllLabs ? labs : (abnormalLabs.length ? abnormalLabs : labs);
+
+    list.innerHTML = displayLabs.map(l => {
+      const flagClass = (l.status === 'critical' || l.status === 'crit') ? 'critical' : (l.status === 'low' ? 'low' : (l.status === 'high' ? 'high' : 'norm'));
+      const flagText = l.flag || (flagClass === 'critical' ? 'Critical' : (flagClass === 'low' ? 'Low' : (flagClass === 'high' ? 'High' : '')));
+      return `
+        <div class="lab-row">
+          <span class="lab-name">${l.name}</span>
+          <div class="lab-right">
+            <span class="lab-val">${l.val}</span>
+            ${flagText ? `<span class="lab-flag ${flagClass}">${flagText}</span>` : ''}
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    const toggleBtn = $('#b-show-all-labs');
+    if (labs.length > abnormalLabs.length) {
+      toggleBtn.hidden = false;
+      toggleBtn.textContent = state.showAllLabs ? `Show abnormal only (${abnormalLabs.length})` : `Show all labs (${labs.length})`;
+    } else {
+      toggleBtn.hidden = true;
+    }
+  }
+
+  $('#b-show-all-labs').addEventListener('click', () => {
+    state.showAllLabs = !state.showAllLabs;
+    renderLabs(activeCase);
+  });
+
+  /* Imaging Modal */
   function openImagingModal(img) {
     $('#modal-title').textContent = `${img.title} (${img.mod})`;
     $('#modal-report').innerHTML = img.modalText;
-    
-    // Create preview diagram
     $('#modal-preview').innerHTML = `
       <div style="text-align:center;color:#94A3B8;display:flex;flex-direction:column;align-items:center;gap:12px;">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:56px;height:56px;color:var(--indigo)">
@@ -2180,50 +2295,58 @@ const CASES = {
     `;
     $('#imaging-modal').hidden = false;
   }
-
-  $('#modal-close').addEventListener('click', () => {
-    $('#imaging-modal').hidden = true;
-  });
-  $('#imaging-modal').addEventListener('click', (e) => {
+  $('#modal-close').addEventListener('click', () => { $('#imaging-modal').hidden = true; });
+  $('#imaging-modal').addEventListener('click', e => {
     if (e.target === $('#imaging-modal')) $('#imaging-modal').hidden = true;
   });
 
-  /* ---------- Router Cards (NO PERCENTAGES) ---------- */
-  function renderRouterCards(routing) {
+  /* Render Router Cards (Phase 3) */
+  function renderRouterCards() {
     const rcols = $('#rcols');
     rcols.innerHTML = '';
-    
-    TABLE.forEach(k => {
-      const a = AG[k];
-      let role = 'standby';
-      if (k === routing.primary) role = 'lead';
-      else if (k === routing.consult) role = 'consult';
-      else if (routing.assigned && routing.assigned.includes(k)) role = 'assigned';
+
+    // Sort order: if routing exists, sort high to low by score; otherwise default SEAT_ORDER
+    let order = [...SEAT_ORDER];
+    if (state.routing && state.routing.scores) {
+      order.sort((a, b) => (state.routing.scores[b] || 0) - (state.routing.scores[a] || 0));
+    }
+
+    order.forEach(k => {
+      const a = AGENTS[k];
+      const isRouted = !!state.routing;
+      const score = isRouted && state.routing.scores ? state.routing.scores[k] : null;
+      const status = isRouted && state.routing.status ? state.routing.status[k] : null;
+      const isStandby = (status === 'standby');
+      const isLead = (status === 'lead');
 
       const btn = document.createElement('button');
       btn.type = 'button';
-      btn.className = `rc ${role}`;
-      btn.style.setProperty('--c', a.c);
-      btn.setAttribute('aria-pressed', 'false');
-      btn.setAttribute('aria-label', `${a.name} (${a.doc}): ${role}`);
+      btn.className = 'rc' + (isStandby ? ' standby' : '');
+      btn.style.setProperty('--c', a.color);
+      btn.setAttribute('aria-pressed', String(state.filter === k));
+      btn.setAttribute('aria-label', `${a.name}: ${score !== null ? score + '% relevance' : 'Not routed'}${isLead ? ', lead' : ''}. Select to filter.`);
+
+      let tagMarkup = '';
+      if (isRouted && status) {
+        if (isLead) tagMarkup = '<span class="tag lead">Lead</span>';
+        else if (isStandby) tagMarkup = '<span class="tag">Standby</span>';
+        else tagMarkup = '<span class="tag">Assigned</span>';
+      }
 
       btn.innerHTML = `
         <span class="nm">
           <img src="${AV[k]}" alt="">
-          <span class="nm-info">
-            <span class="nm-title">${a.name}</span>
-            <span class="nm-doc">${a.doc}</span>
-          </span>
+          <span>${a.short}</span>
         </span>
-        <div class="rc-badge-row">
-          <span class="tag ${role}">${role === 'lead' ? 'Lead' : role === 'consult' ? 'Consulted' : role === 'assigned' ? 'Assigned' : 'Standby'}</span>
-          <span class="book-cite" title="${a.book}">${a.book.split("'s")[0] || a.book.split(" ")[0]}</span>
+        <div class="pc">
+          <b class="v">${score !== null ? score : '—'}</b>
+          ${tagMarkup}
         </div>
+        <span class="rbar"><i style="width:${score !== null ? score : 0}%"></i></span>
       `;
 
       btn.addEventListener('click', () => {
-        setFilter(filter === k ? null : k);
-        if (filter) showTab('disc');
+        setFilter(state.filter === k ? null : k);
       });
 
       rcols.appendChild(btn);
@@ -2231,61 +2354,130 @@ const CASES = {
     });
   }
 
-  /* ---------- Flash Audio & Speech Synthesis ---------- */
-  async function speakTurn(who, voiceText) {
-    if (!voiceText || !$('#toggle-voice').checked) return;
-    const waveIcon = $('#audio-wave-icon');
-    if (waveIcon) waveIcon.classList.add('active');
-
-    try {
-      const resp = await fetch('/api/tts/speak', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          text: voiceText,
-          voice: who,
-          specialty: AG[who] ? AG[who].name : 'Specialist'
-        })
-      });
-      const data = await resp.json();
-      if (data.audio_base64 && !data.fallback) {
-        const audio = new Audio('data:audio/mp3;base64,' + data.audio_base64);
-        audio.onended = () => { if (waveIcon) waveIcon.classList.remove('active'); };
-        audio.onerror = () => { if (waveIcon) waveIcon.classList.remove('active'); };
-        await audio.play();
-        return;
+  /* Animate Scores (Phase 3 #3) */
+  function animateScores(scores, ms = 1300) {
+    if (reduce) {
+      for (const [key, el] of Object.entries(rcol)) {
+        const v = scores[key] || 0;
+        const vEl = el.querySelector('.v');
+        const barEl = el.querySelector('.rbar i');
+        if (vEl) vEl.textContent = Math.round(v);
+        if (barEl) barEl.style.width = v + '%';
       }
-    } catch (err) {
-      console.warn('Backend TTS failed, falling back to speech synthesis:', err);
+      return;
     }
 
-    // Fallback to browser SpeechSynthesis
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      const ut = new SpeechSynthesisUtterance(voiceText);
-      ut.rate = 1.05;
-      ut.pitch = (who === 'gy' || who === 'im') ? 1.2 : 0.95;
-      ut.onend = () => { if (waveIcon) waveIcon.classList.remove('active'); };
-      ut.onerror = () => { if (waveIcon) waveIcon.classList.remove('active'); };
-      window.speechSynthesis.speak(ut);
-    } else {
-      if (waveIcon) waveIcon.classList.remove('active');
+    const t0 = performance.now();
+    const ease = k => 1 - Math.pow(1 - k, 3);
+    function step(now) {
+      const k = Math.min(1, (now - t0) / ms), u = ease(k);
+      for (const [key, el] of Object.entries(rcol)) {
+        const v = (scores[key] || 0) * u;
+        const vEl = el.querySelector('.v');
+        const barEl = el.querySelector('.rbar i');
+        if (vEl) vEl.textContent = Math.round(v);
+        if (barEl) barEl.style.width = v + '%';
+      }
+      if (k < 1) requestAnimationFrame(step);
     }
+    requestAnimationFrame(step);
   }
 
-  /* ---------- Plan & Differentials DOM Setup ---------- */
-  function setupPlanAndDraft() {
-    $('#dx').textContent = activeCase.dx;
-    $('#watch-for').textContent = activeCase.watchFor;
-    $('#ddx').textContent = activeCase.ddx.map(d => d.t).join(', ');
+  /* Room Nodes Setup (Phase 4) */
+  SEAT_ORDER.forEach(k => {
+    const a = AGENTS[k];
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'node';
+    b.style.setProperty('--c', a.color);
+    b.setAttribute('aria-label', `${a.name} AI agent. Filter messages.`);
+
+    b.innerHTML = `
+      <div class="av">
+        <div class="av-face">
+          ${AVSVG[k] || ''}
+        </div>
+      </div>
+      <span class="lbl">${a.name}</span>
+      <span class="st">Ready</span>
+    `;
+
+    b.addEventListener('click', () => {
+      setFilter(state.filter === k ? null : k);
+    });
+
+    table.appendChild(b);
+    nodes[k] = b;
+  });
+
+  /* Node and Seating Layout (Phase 4 #2) */
+  function layout() {
+    const r = table.getBoundingClientRect();
+    W = r.width;
+    H = r.height;
+    dpr = window.devicePixelRatio || 1;
+    cv.width = W * dpr;
+    cv.height = H * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    const small = W < 640;
+    const rx = W * (small ? 0.40 : 0.41);
+    const ry = H * (small ? 0.36 : 0.36);
+    core = { x: W / 2, y: H / 2 };
+
+    // Update agent name strings for responsive screens
+    SEAT_ORDER.forEach(k => {
+      const lbl = nodes[k].querySelector('.lbl');
+      if (lbl) lbl.textContent = small ? AGENTS[k].short : AGENTS[k].name;
+    });
+
+    // Seating order: lead at top (-PI/2), clockwise descending scores
+    SEAT_ORDER.forEach((k, i) => {
+      const a = -Math.PI / 2 + (i * Math.PI * 2) / SEAT_ORDER.length;
+      const x = W / 2 + Math.cos(a) * rx;
+      const y = H / 2 + Math.sin(a) * ry - (small ? 6 : 10);
+      pos[k] = { x, y };
+      nodes[k].style.left = x + 'px';
+      nodes[k].style.top = y + 'px';
+    });
+  }
+  window.addEventListener('resize', layout);
+
+  /* Gaze Pupils Tracking */
+  function gaze(pt, except) {
+    SEAT_ORDER.forEach(k => {
+      const n = nodes[k], p = pos[k];
+      if (!p || n.classList.contains('standby')) return;
+      if (!pt || k === except) {
+        n.style.setProperty('--gx', '0px');
+        n.style.setProperty('--gy', '0px');
+        return;
+      }
+      const dx = pt.x - p.x, dy = pt.y - p.y;
+      const dist = Math.hypot(dx, dy) || 1;
+      n.style.setProperty('--gx', ((dx / dist) * 2.5).toFixed(1) + 'px');
+      n.style.setProperty('--gy', ((dy / dist) * 2.5).toFixed(1) + 'px');
+    });
+  }
+  table.addEventListener('pointermove', e => {
+    const r = table.getBoundingClientRect();
+    gaze({ x: e.clientX - r.left, y: e.clientY - r.top });
+  });
+  table.addEventListener('pointerleave', () => gaze(speakerAt));
+
+  /* Draft & Plan Setup */
+  function setupDraftPlan(c) {
+    $('#dx').textContent = c.dx;
+    $('#watch-for').textContent = c.watchFor;
+    $('#ddx').textContent = c.ddx.map(d => d.t).join(', ');
 
     const planEl = $('#plan');
     planEl.innerHTML = '';
-    PLAN.forEach(p => {
+    c.plan.forEach(p => {
       const li = document.createElement('li');
-      li.className = 'plan-item pending';
+      li.className = 'plan-item';
       li.id = 'plan-' + p.id;
-      const ownerTags = p.own.map(o => `<span class="own-pill">${AG[o] ? AG[o].short || AG[o].name : o}</span>`).join('');
+      const ownerTags = p.own.map(o => `<span class="own-pill">${AGENTS[o] ? AGENTS[o].short : o}</span>`).join('');
       li.innerHTML = `
         <input type="checkbox" id="chk-${p.id}" disabled>
         <label for="chk-${p.id}">
@@ -2298,191 +2490,228 @@ const CASES = {
     });
   }
 
-  /* ---------- Room Canvas & Nodes Setup ---------- */
-  TABLE.forEach((k) => {
-    const a = AG[k];
-    const b = document.createElement('button');
-    b.type = 'button';
-    b.className = 'node';
-    b.style.setProperty('--c', a.c);
-    b.setAttribute('aria-label', `${a.name} (${a.doc}). Filter messages.`);
+  /* Reset to Initial State (Phase 2 #1) */
+  function resetToInitialState() {
+    state.phase = 'idle';
+    state.running = false;
+    state.routing = null;
+    state.filter = null;
+    state.tab = 'draft';
+    state.eventIndex = 0;
+    state.agreedAgents.clear();
+    state.agreedPlans.clear();
+    state.showAllLabs = false;
+    packets.length = 0;
+    speakerAt = null;
 
-    b.innerHTML = `
-      <div class="av">
-        <div class="av-face">
-          ${AVSVG[k] || ''}
-        </div>
-      </div>
-      <span class="lbl">${a.short || a.name}</span>
-      <span class="st">Ready</span>
-    `;
-
-    b.addEventListener('click', () => {
-      setFilter(filter === k ? null : k);
-      if (filter) showTab('disc');
-    });
-
-    table.appendChild(b);
-    nodes[k] = b;
-  });
-
-  /* ---------- Reset Deliberation State ---------- */
-  function reset() {
-    S.i = 0;
-    S.agree.clear();
-    heard.clear();
     $('#disc-list').innerHTML = '';
     $('#count').textContent = '0';
-    $('#b-sign').disabled = true;
+    $('#conf').textContent = '0.75';
+    $('#agree').textContent = '0';
+    $('#meter').style.width = '0%';
 
-    PLAN.forEach(p => S.plan[p.id] = 'pending');
-    TABLE.forEach(k => {
-      nodes[k].classList.remove('thinking', 'speaking', 'agreed', 'standby');
-      const isSb = activeCase.router.standby && activeCase.router.standby.includes(k);
+    SEAT_ORDER.forEach(k => {
+      nodes[k].className = 'node';
+      const isSb = (activeCase.router && activeCase.router.standby && activeCase.router.standby.includes(k));
       if (isSb) nodes[k].classList.add('standby');
-      nodes[k].querySelector('.st').textContent = isSb ? 'Standby' : 'Ready';
+      nodes[k].querySelector('.st').textContent = isSb ? NODE_STATUS.standby : NODE_STATUS.idle;
     });
 
-    setBoard('router', 'Case ready for specialist deliberation.', false);
-    render();
+    renderRouterCards();
+    syncUI();
   }
 
-  /* ---------- Render State Updates ---------- */
-  function render() {
-    // Confidence & Agreement
-    const agreeCount = S.agree.size;
-    $('#agree').textContent = agreeCount;
-    const progress = Math.min(1, S.i / Math.max(1, EV.length));
-    const currentConf = (0.75 + progress * (activeCase.conf - 0.75)).toFixed(2);
-    $('#conf').textContent = currentConf;
-    $('#meter').style.width = (progress * 100) + '%';
+  /* Filter Handling (Phase 4 #1) */
+  function setFilter(k) {
+    state.filter = k;
+    if (k) {
+      state.tab = 'discussion';
+    }
 
-    // Highlight agreed nodes
-    TABLE.forEach(k => {
-      nodes[k].classList.toggle('agreed', S.agree.has(k) && !nodes[k].classList.contains('speaking') && !nodes[k].classList.contains('thinking'));
+    // Toggle selected and dimmed nodes
+    SEAT_ORDER.forEach(t => {
+      nodes[t].classList.toggle('sel', t === k);
+      nodes[t].classList.toggle('dim', k !== null && t !== k);
     });
 
-    // Update plan items
-    PLAN.forEach(pl => {
-      const isAgreed = S.plan[pl.id] === 'agreed';
-      const li = planRows[pl.id];
-      if (li) {
-        li.className = 'plan-item ' + (isAgreed ? 'agreed' : 'pending');
-        const chk = li.querySelector('input');
-        if (chk) chk.checked = isAgreed;
+    // Toggle router tile selection
+    Object.entries(rcol).forEach(([kk, b]) => {
+      b.setAttribute('aria-pressed', String(kk === k));
+    });
+
+    // Filter discussion messages
+    document.querySelectorAll('.msg').forEach(m => {
+      m.hidden = !!k && m.dataset.who !== k;
+    });
+
+    syncUI();
+  }
+
+  // Clear filter via button and Escape key (Phase 4 #1)
+  $('#b-clear-filter').addEventListener('click', () => setFilter(null));
+  window.addEventListener('keydown', e => {
+    if (e.key === 'Escape') setFilter(null);
+  });
+
+  /* Tabs switching */
+  $('#t-draft').addEventListener('click', () => {
+    state.tab = 'draft';
+    syncUI();
+  });
+  $('#t-disc').addEventListener('click', () => {
+    state.tab = 'discussion';
+    syncUI();
+    const d = $('#disc-list');
+    d.scrollTop = d.scrollHeight;
+  });
+
+  /* TTS Voice playback */
+  async function speakTurn(who, voiceText) {
+    const voiceCheckbox = $('#voice');
+    if (!voiceText || !voiceCheckbox || !voiceCheckbox.checked) return;
+
+    try {
+      const resp = await fetch('/api/tts/speak', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text: voiceText,
+          voice: who,
+          specialty: AGENTS[who] ? AGENTS[who].name : 'Specialist'
+        })
+      });
+      const data = await resp.json();
+      if (data.audio_base64 && !data.fallback) {
+        const audio = new Audio('data:audio/mp3;base64,' + data.audio_base64);
+        await audio.play();
+        return;
       }
-    });
+    } catch (e) {
+      // Backend unavailable, fallback to browser speech synthesis
+    }
 
-    // Enable sign-off when all events finish
-    if (S.i >= EV.length) {
-      $('#b-sign').disabled = false;
-      $('#stage-t').textContent = 'Consensus Reached';
-      document.querySelectorAll('.stage .segs i').forEach(i => i.classList.add('on'));
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      const ut = new SpeechSynthesisUtterance(voiceText);
+      ut.rate = 1.05;
+      window.speechSynthesis.speak(ut);
     }
   }
 
-  /* ---------- Central Board Update ---------- */
-  function setBoard(who, text, animate, isReferral = false) {
-    const b = $('#board');
-    if (isReferral) {
-      b.innerHTML = `
-        <b>${AG[who] ? AG[who].name : who}</b>
-        <div class="referral-banner">
-          <span class="ref-tag">EMERGENT REFERRAL CONSULT</span>
-          <span class="ref-desc">${text}</span>
-        </div>
-      `;
-    } else {
-      b.innerHTML = `<b>${AG[who] ? AG[who].name : who}</b><p>${text}</p>`;
-    }
-  }
+  /* Step forward through deliberate events */
+  function stepTo(targetIndex) {
+    const events = activeCase.events || [];
+    while (state.eventIndex < targetIndex && state.eventIndex < events.length) {
+      const ev = events[state.eventIndex];
+      const whoAg = AGENTS[ev.who] || { name: ev.who, short: ev.who, book: '' };
 
-  /* ---------- Step Progression ---------- */
-  function stepTo(targetI) {
-    while (S.i < targetI) {
-      const e = EV[S.i];
-      heard.add(e.who);
+      // Update Phase based on progress
+      if (state.eventIndex === 0) state.phase = 'review';
+      else if (state.eventIndex >= 2 && state.eventIndex < events.length - 2) state.phase = 'crosscheck';
+      else if (state.eventIndex >= events.length - 2 && state.eventIndex < events.length) state.phase = 'consensus';
 
-      // Append message to discussion
+      // Agreement sets
+      if (ev.agreeWith) ev.agreeWith.forEach(w => state.agreedAgents.add(w));
+      if (ev.planAgrees) ev.planAgrees.forEach(pid => state.agreedPlans.add(pid));
+
+      // Append discussion message
       const msg = document.createElement('div');
-      msg.className = 'msg' + (e.kind === 'referral' ? ' referral-msg' : '');
-      msg.dataset.who = e.who;
-
-      const a = AG[e.who] || { name: e.who, doc: e.who };
+      msg.className = 'msg';
+      msg.dataset.who = ev.who;
+      msg.hidden = (state.filter !== null && state.filter !== ev.who);
       msg.innerHTML = `
         <div class="msg-hdr">
           <span class="msg-who">
-            <img src="${AV[e.who]}" alt="">
-            ${a.name} (${a.doc})
+            <img src="${AV[ev.who]}" alt="">
+            ${whoAg.name} <span style="font-weight:400;color:var(--mute)">· AI agent</span>
           </span>
-          <span class="msg-cite">${a.book || ''}</span>
+          <span class="msg-cite">${whoAg.book}</span>
         </div>
-        <div>${e.detail}</div>
+        <div>${ev.detail}</div>
       `;
       $('#disc-list').appendChild(msg);
-      $('#count').textContent = $('#disc-list').children.length;
-
-      // Update agreement set
-      if (e.agreeWith) {
-        e.agreeWith.forEach(w => S.agree.add(w));
-      }
-      // Update plan agreed
-      if (e.planAgrees) {
-        e.planAgrees.forEach(pid => S.plan[pid] = 'agreed');
-      }
-
-      // Board message
-      setBoard(e.who, e.short, true, e.kind === 'referral');
 
       // Packet animation
-      const targetPos = (e.to && pos[e.to]) ? pos[e.to] : core;
-      if (pos[e.who]) {
+      const targetPos = (ev.to && pos[ev.to]) ? pos[ev.to] : core;
+      if (pos[ev.who]) {
         packets.push({
-          from: pos[e.who],
+          from: pos[ev.who],
           to: targetPos,
-          color: (e.kind === 'referral') ? '#D97706' : (AG[e.who] ? AG[e.who].c : '#2B2FD9'),
+          color: AGENTS[ev.who] ? AGENTS[ev.who].color : '#2B2FD9',
           t0: performance.now(),
           dur: 900
         });
       }
 
-      // Voice verbal update
-      speakTurn(e.who, e.voice);
+      // Board update
+      $('#board').innerHTML = `<b>${whoAg.name}</b><p>${ev.short}</p>`;
 
-      // Node animation state
-      TABLE.forEach(k => {
+      // Voice verbal line
+      speakTurn(ev.who, ev.voice);
+
+      // Node styling
+      SEAT_ORDER.forEach(k => {
         nodes[k].classList.remove('speaking', 'thinking');
-        if (k === e.who) {
+        if (k === ev.who) {
           nodes[k].classList.add('speaking');
-          nodes[k].querySelector('.st').textContent = 'Speaking';
-        } else if (k === e.to && e.kind === 'referral') {
+          nodes[k].querySelector('.st').textContent = NODE_STATUS.speaking;
+        } else if (k === ev.to && ev.kind === 'referral') {
           nodes[k].classList.add('thinking');
-          nodes[k].querySelector('.st').textContent = 'Consulted';
-        } else if (S.agree.has(k)) {
-          nodes[k].querySelector('.st').textContent = 'Agrees';
+          nodes[k].querySelector('.st').textContent = NODE_STATUS.thinking;
+        } else if (state.agreedAgents.has(k)) {
+          nodes[k].querySelector('.st').textContent = NODE_STATUS.agreed;
         }
       });
 
-      speakerAt = pos[e.who];
-      gaze(speakerAt, e.who);
+      speakerAt = pos[ev.who];
+      gaze(speakerAt, ev.who);
 
-      S.i++;
-      render();
+      state.eventIndex++;
+
+      // Update Plan Items
+      activeCase.plan.forEach(pl => {
+        const isAgreed = state.agreedPlans.has(pl.id);
+        const li = planRows[pl.id];
+        if (li) {
+          li.classList.toggle('agreed', isAgreed);
+          const chk = li.querySelector('input');
+          if (chk) chk.checked = isAgreed;
+        }
+      });
+
+      // Update agreement counter & meter
+      const totalAgents = SEAT_ORDER.filter(k => !nodes[k].classList.contains('standby')).length;
+      const count = Math.min(totalAgents, state.agreedAgents.size);
+      $('#agree').textContent = count;
+
+      const progress = state.eventIndex / events.length;
+      const currentConf = (0.75 + progress * (activeCase.conf - 0.75)).toFixed(2);
+      $('#conf').textContent = currentConf;
+      $('#meter').style.width = (progress * 100) + '%';
+
+      syncUI();
+    }
+
+    // Finished all events -> signoff
+    if (state.eventIndex >= events.length) {
+      state.phase = 'signoff';
+      state.running = false;
+      syncUI();
     }
   }
 
-  /* ---------- Player Loop & Ticks ---------- */
+  /* Tick loop for Canvas and Timeline */
   function tick(now) {
     ctx.clearRect(0, 0, W, H);
 
-    // Spokes to central board
-    TABLE.forEach(k => {
+    // Spokes to center
+    SEAT_ORDER.forEach(k => {
       const p = pos[k];
       if (!p) return;
       const sb = nodes[k].classList.contains('standby');
-      ctx.strokeStyle = sb ? 'rgba(201,206,218,.4)' : '#DDE1EA';
+      ctx.strokeStyle = sb ? 'rgba(201,206,218,.35)' : '#E3E6EE';
       ctx.lineWidth = 1;
-      ctx.setLineDash(sb ? [3, 5] : []);
+      ctx.setLineDash(sb ? [3, 4] : []);
       ctx.beginPath();
       ctx.moveTo(p.x, p.y);
       ctx.lineTo(core.x, core.y);
@@ -2490,7 +2719,7 @@ const CASES = {
     });
     ctx.setLineDash([]);
 
-    // Animated packets
+    // Packets
     for (let i = packets.length - 1; i >= 0; i--) {
       const P = packets[i];
       const u = Math.min(1, (now - P.t0) / P.dur);
@@ -2506,16 +2735,19 @@ const CASES = {
       if (u >= 1) packets.splice(i, 1);
     }
 
-    // Advance timeline
-    if (playing && stage === 'running') {
-      if (now - stageAt > 2800) {
-        if (S.i < EV.length) {
-          stepTo(S.i + 1);
-          stageAt = now;
-        } else {
-          stage = 'end';
-          playing = false;
-          syncPlay();
+    // Step progression when running
+    if (state.running) {
+      if (now - phaseTimer > 2800) {
+        if (state.phase === 'routing') {
+          // Finish routing -> review
+          state.phase = 'review';
+          renderRouterCards();
+          animateScores(state.routing.scores, 1300);
+          phaseTimer = now;
+          stepTo(1);
+        } else if (state.eventIndex < activeCase.events.length) {
+          stepTo(state.eventIndex + 1);
+          phaseTimer = now;
         }
       }
     }
@@ -2523,118 +2755,84 @@ const CASES = {
     requestAnimationFrame(tick);
   }
 
-  /* ---------- Play Controls ---------- */
-  const playBtn = $('#b-play');
-  function syncPlay() {
-    playBtn.innerHTML = playing
-      ? '<svg viewBox="0 0 16 16" fill="currentColor"><rect x="3" y="2.5" width="3.4" height="11" rx="1"/><rect x="9.6" y="2.5" width="3.4" height="11" rx="1"/></svg>'
-      : '<svg viewBox="0 0 16 16" fill="currentColor"><polygon points="3.5 2.5 13.5 8 3.5 13.5"/></svg>';
-  }
+  /* Primary Control Flow */
+  async function handleMainControl() {
+    if (state.phase === 'idle') {
+      // Start routing
+      state.phase = 'routing';
+      state.running = true;
+      phaseTimer = performance.now();
+      syncUI();
 
-  playBtn.addEventListener('click', () => {
-    if (stage === 'end') {
+      // Consult backend router with graceful fallback
+      let result = activeCase.router;
+      try {
+        const resp = await fetch('/api/router/route', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chief_complaint: activeCase.chief_complaint,
+            patient_history: activeCase.hpi,
+            vitals: activeCase.vitals,
+            diagnostic_data: activeCase.labs
+          })
+        });
+        if (resp.ok) {
+          const data = await resp.json();
+          const mapKey = name => {
+            if (!name) return null;
+            const n = name.toLowerCase();
+            if (n.includes('obstet')) return 'ob';
+            if (n.includes('gynec')) return 'gy';
+            if (n.includes('emerg')) return 'em';
+            if (n.includes('cardio')) return 'ca';
+            if (n.includes('neuro')) return 'ne';
+            if (n.includes('surg')) return 'su';
+            if (n.includes('internal')) return 'im';
+            return null;
+          };
+          const primaryKey = mapKey(data.primary_agent) || activeCase.router.primary;
+          const consultKey = mapKey(data.consult_agent) || activeCase.router.consult;
+          const scores = activeCase.router.scores;
+          const status = { ...activeCase.router.status };
+          if (primaryKey) status[primaryKey] = 'lead';
+          result = {
+            ...activeCase.router,
+            primary: primaryKey,
+            consult: consultKey,
+            scores,
+            status
+          };
+        }
+      } catch (e) {
+        // Fallback to activeCase.router
+      }
+
+      state.routing = result;
+      syncUI();
+      return;
+    }
+
+    if (state.phase === 'signoff') {
       replay();
       return;
     }
-    playing = !playing;
-    syncPlay();
-  });
 
-  $('#b-replay').addEventListener('click', () => replay());
+    // Toggle Pause / Resume
+    state.running = !state.running;
+    phaseTimer = performance.now();
+    syncUI();
+  }
 
   function replay() {
-    speakerAt = null;
-    gaze(null);
-    packets.length = 0;
-    reset();
-    stage = 'running';
-    stageAt = performance.now();
-    playing = true;
-    syncPlay();
-    stepTo(1);
+    resetToInitialState();
+    handleMainControl();
   }
 
-  /* ---------- Layout Calculations ---------- */
-  function layout() {
-    const r = table.getBoundingClientRect();
-    W = r.width;
-    H = r.height;
-    dpr = window.devicePixelRatio || 1;
-    cv.width = W * dpr;
-    cv.height = H * dpr;
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  $('#b-main-control').addEventListener('click', handleMainControl);
+  $('#b-replay').addEventListener('click', replay);
 
-    const small = W < 500;
-    const rx = W * (small ? 0.40 : 0.41);
-    const ry = H * (small ? 0.36 : 0.36);
-    core = { x: W / 2, y: H / 2 };
-
-    TABLE.forEach((k, i) => {
-      const a = -Math.PI / 2 + (i * Math.PI * 2) / TABLE.length;
-      const x = W / 2 + Math.cos(a) * rx;
-      const y = H / 2 + Math.sin(a) * ry - (small ? 6 : 10);
-      pos[k] = { x, y };
-      nodes[k].style.left = x + 'px';
-      nodes[k].style.top = y + 'px';
-    });
-  }
-  window.addEventListener('resize', layout);
-
-  /* ---------- Gaze Pupils ---------- */
-  function gaze(pt, except) {
-    TABLE.forEach(k => {
-      const n = nodes[k], p = pos[k];
-      if (!p || n.classList.contains('standby')) return;
-      if (!pt || k === except) {
-        n.style.setProperty('--gx', '0px');
-        n.style.setProperty('--gy', '0px');
-        return;
-      }
-      const dx = pt.x - p.x, dy = pt.y - p.y;
-      const dist = Math.hypot(dx, dy) || 1;
-      n.style.setProperty('--gx', ((dx / dist) * 2.5).toFixed(1) + 'px');
-      n.style.setProperty('--gy', ((dy / dist) * 2.5).toFixed(1) + 'px');
-    });
-  }
-
-  table.addEventListener('pointermove', e => {
-    const r = table.getBoundingClientRect();
-    gaze({ x: e.clientX - r.left, y: e.clientY - r.top });
-  });
-  table.addEventListener('pointerleave', () => gaze(speakerAt));
-
-  /* ---------- Filtering & Tabs ---------- */
-  function setFilter(k) {
-    filter = k;
-    document.querySelectorAll('.msg').forEach(m => {
-      m.hidden = !!k && m.dataset.who !== k;
-    });
-    TABLE.forEach(t => {
-      nodes[t].classList.toggle('sel', t === k);
-      nodes[t].classList.toggle('dim', !!k && t !== k);
-    });
-    Object.entries(rcol).forEach(([kk, b]) => b.setAttribute('aria-pressed', String(kk === k)));
-    $('#filter').hidden = !k;
-    if (k) $('#filter-t').textContent = `${AG[k].name} findings only`;
-  }
-
-  $('#b-clear-filter').addEventListener('click', () => setFilter(null));
-
-  function showTab(t) {
-    $('#t-draft').setAttribute('aria-selected', String(t === 'draft'));
-    $('#t-disc').setAttribute('aria-selected', String(t === 'disc'));
-    $('#p-draft').hidden = t !== 'draft';
-    $('#p-disc').hidden = t !== 'disc';
-    if (t === 'disc') {
-      const d = $('#disc-list');
-      d.scrollTop = d.scrollHeight;
-    }
-  }
-
-  $('#t-draft').addEventListener('click', () => showTab('draft'));
-  $('#t-disc').addEventListener('click', () => showTab('disc'));
-
-  /* ---------- Case Selection & Real Router Integration ---------- */
+  /* Case Selector Change */
   const caseSelect = $('#case-select');
   Object.keys(CASES).forEach(k => {
     const opt = document.createElement('option');
@@ -2646,81 +2844,10 @@ const CASES = {
   caseSelect.addEventListener('change', () => {
     currentCaseKey = caseSelect.value;
     activeCase = CASES[currentCaseKey];
-    PLAN = activeCase.plan;
-    DDX = activeCase.ddx;
-    EV = activeCase.events;
-
     populateSidebar(activeCase);
-    setupPlanAndDraft();
-    reset();
-    renderRouterCards(activeCase.router);
-    $('#r-sum').textContent = 'Ready for MedGemma routing';
+    setupDraftPlan(activeCase);
+    resetToInitialState();
   });
-
-  async function startTriage() {
-    const startBtn = $('#b-start-triage');
-    startBtn.disabled = true;
-    startBtn.innerHTML = '<span>Routing Case...</span>';
-    $('#r-sum').textContent = 'Consulting MedGemma 27B clinical router...';
-
-    let routingResult = activeCase.router;
-
-    try {
-      const resp = await fetch('/api/router/route', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          chief_complaint: activeCase.chief_complaint,
-          patient_history: activeCase.hpi,
-          vitals: activeCase.vitals,
-          diagnostic_data: activeCase.labs
-        })
-      });
-      if (resp.ok) {
-        const data = await resp.json();
-        // Map backend agent names to abbreviations
-        const mapAgent = name => {
-          if (!name) return null;
-          const n = name.toLowerCase();
-          if (n.includes('gynecology') || n.includes('obstetrics')) return 'gy';
-          if (n.includes('infectious')) return 'id';
-          if (n.includes('emergency')) return 'em';
-          if (n.includes('internal')) return 'im';
-          if (n.includes('cardio')) return 'ca';
-          if (n.includes('neuro')) return 'ne';
-          if (n.includes('surgery')) return 'su';
-          return null;
-        };
-
-        const primaryKey = mapAgent(data.primary_agent) || activeCase.router.primary;
-        const consultKey = mapAgent(data.consult_agent) || activeCase.router.consult;
-        const assignedKeys = (data.assigned_agents || []).map(mapAgent).filter(Boolean);
-
-        routingResult = {
-          primary: primaryKey,
-          consult: consultKey,
-          assigned: assignedKeys.length ? assignedKeys : activeCase.router.assigned,
-          standby: activeCase.router.standby,
-          rationale: data.rationale || activeCase.router.rationale
-        };
-      }
-    } catch (e) {
-      console.warn('Real router request failed, using validated clinical fallback:', e);
-    }
-
-    renderRouterCards(routingResult);
-    const primName = AG[routingResult.primary] ? AG[routingResult.primary].name : 'Primary';
-    const consName = AG[routingResult.consult] ? AG[routingResult.consult].name : 'Consult';
-    $('#r-sum').textContent = `Routed via MedGemma · ${primName} leads · Consulted: ${consName}`;
-
-    startBtn.disabled = false;
-    startBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg><span>Start Triage</span>';
-
-    // Start Deliberation
-    replay();
-  }
-
-  $('#b-start-triage').addEventListener('click', () => startTriage());
 
   // Logo navigation to Intake
   const vhLogo = document.querySelector('.vh');
@@ -2733,14 +2860,12 @@ const CASES = {
     });
   }
 
-  // Initial Boot: populate case dossier and await manual Start
+  /* Boot Sequence */
   populateSidebar(activeCase);
-  setupPlanAndDraft();
-  renderRouterCards(activeCase.router);
-  reset();
+  setupDraftPlan(activeCase);
+  resetToInitialState();
   layout();
   requestAnimationFrame(tick);
-  $('#r-sum').textContent = 'Ready for MedGemma routing';
 
 })();
 
