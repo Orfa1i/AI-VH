@@ -398,6 +398,52 @@ async def chat_gynecology_stream(req: DoctorChatRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@api_router.post("/specialists/obstetrics/consult")
+async def consult_obstetrics(req: SpecialistConsultRequest):
+    """Consult Dr. Evelyn Reed, MD, FACOG (Obstetrics) powered by Williams Obstetrics RAG."""
+    try:
+        result = await orchestrator.conduct_obstetrics_consult(
+            clinical_scenario=req.clinical_scenario,
+            abnormal_labs=req.abnormal_labs,
+            patient_id=req.patient_id or "PAT-OB-CONSULT",
+        )
+        return result
+    except Exception as e:
+        logger.error(f"Obstetrics consult error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.post("/specialists/obstetrics/chat")
+async def chat_obstetrics(req: DoctorChatRequest):
+    """Direct conversational clinical consultation with Dr. Evelyn Reed, MD, FACOG (Obstetrics)."""
+    try:
+        result = await orchestrator.chat_with_dr_evelyn_reed_ob(
+            user_message=req.message,
+            conversation_history=req.conversation_history,
+            patient_context=req.patient_context,
+        )
+        return result
+    except Exception as e:
+        logger.error(f"Doctor Evelyn Reed (Obstetrics) chat error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.post("/specialists/obstetrics/chat/stream")
+async def chat_obstetrics_stream(req: DoctorChatRequest):
+    """Streams real-time clinical diagnostic consultation tokens with Dr. Evelyn Reed, MD, FACOG (Obstetrics)."""
+    try:
+        generator = orchestrator.stream_chat_with_dr_evelyn_reed_ob(
+            user_message=req.message,
+            conversation_history=req.conversation_history,
+            patient_context=req.patient_context,
+        )
+        return StreamingResponse(generator, media_type="text/event-stream")
+    except Exception as e:
+        logger.error(f"Doctor Evelyn Reed (Obstetrics) streaming error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+
 @api_router.post("/specialists/neurology/consult")
 async def consult_neurology(req: SpecialistConsultRequest):
     """Consult Dr. Alexander Hayes, MD, PhD, FAAN (Neurology) powered by Adams and Victor's Principles of Neurology RAG."""
@@ -514,6 +560,37 @@ async def run_simulation(req: SimulationRequest):
     except Exception as e:
         logger.error(f"Simulation error: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
+
+
+class ExecuteClinicalCaseRequest(BaseModel):
+    case_id: Optional[str] = "CASE-101"
+    patient_case: Optional[Dict[str, Any]] = None
+    data_origin: Optional[str] = "REAL_EHR"
+    max_consultations: Optional[int] = 2
+
+
+@api_router.post("/clinical/execute-case")
+async def execute_clinical_case(req: ExecuteClinicalCaseRequest):
+    """
+    Production Multi-Agent Clinical Architecture Workflow:
+    Step 1: Patient Intake (Preserves data, vitals, labs, imaging, tracks EHR vs synthetic)
+    Step 2: MedGemma Specialty Router
+    Step 3: Specialist Agent Execution (Specialty Medical Textbook + Shared RAG)
+    Step 4: Dynamic Multi-Agent Consultation (Secondary referrals, cycle checks, disagreement extraction, emergency safety locks)
+    Step 5: Evidence-Grounded Nemotron Synthesis (Nebius API, 5-tier provenance, fail-safe degradation telemetry)
+    """
+    try:
+        case_input = req.patient_case or req.case_id or "CASE-101"
+        result = await orchestrator.execute_production_clinical_workflow(
+            patient_case=case_input,
+            data_origin=req.data_origin or "REAL_EHR",
+            max_consultations=req.max_consultations or 2,
+        )
+        return result
+    except Exception as e:
+        logger.error(f"Production clinical execution workflow error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 
 @api_router.get("/simulation/events")

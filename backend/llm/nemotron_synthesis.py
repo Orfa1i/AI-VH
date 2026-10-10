@@ -16,6 +16,7 @@ import logging
 from typing import Dict, List, Any, Optional, Tuple
 from dataclasses import dataclass, field
 from pathlib import Path
+from datetime import datetime
 
 from ..clinical.models import DifferentialItem
 
@@ -120,6 +121,11 @@ class NemotronSynthesisResult:
     thinking_trace: Optional[str] = None
     engine_name: str = "Nemotron-3-Nano-30B-A3B"
     sections: Dict[str, str] = field(default_factory=dict)
+    status: str = "COMPLETED"  # "COMPLETED", "DEGRADED", "ERROR"
+    error_message: Optional[str] = None
+    provenance: Dict[str, Any] = field(default_factory=dict)
+    secondary_consultations: List[Dict[str, Any]] = field(default_factory=list)
+    disagreements: List[Dict[str, Any]] = field(default_factory=list)
 
 
 class NemotronSynthesisEngine:
@@ -170,6 +176,8 @@ class NemotronSynthesisEngine:
         lab_results: List[Dict[str, Any]],
         medgemma_decision: Dict[str, Any],
         citations: List[Dict[str, Any]],
+        secondary_consultations: Optional[List[Dict[str, Any]]] = None,
+        disagreements: Optional[List[Dict[str, Any]]] = None,
     ) -> str:
         """Formats the unified patient data, MedGemma output, and RAG evidence."""
         # 1. Patient Data
@@ -247,8 +255,43 @@ class NemotronSynthesisEngine:
                 lines.append(meta)
                 lines.append(f"Excerpt: \"{text.strip()}\"\n")
 
+        # 4. Secondary Specialist Consultations
+        if secondary_consultations:
+            lines.append("\n# SECONDARY SPECIALIST CONSULTATIONS")
+            for sc in secondary_consultations:
+                spec = sc.get("specialty", "Specialist")
+                name = sc.get("specialist_name", "Consultant")
+                dx = sc.get("primary_diagnosis", "N/A")
+                conf = sc.get("confidence", 0.0)
+                recs = sc.get("treatment_recommendations", [])
+                flags = sc.get("red_flags", [])
+                lines.append(f"- Specialty: {spec} ({name})")
+                lines.append(f"  Consultant Assessment: {dx} (Confidence: {conf})")
+                if sc.get("clinical_reasoning"):
+                    lines.append(f"  Reasoning: {sc.get('clinical_reasoning')}")
+                if recs:
+                    lines.append(f"  Recommendations: {', '.join(recs)}")
+                if flags:
+                    lines.append(f"  Consultant Red Flags: {', '.join(flags)}")
+
+        # 5. Inter-Specialist Disagreements
+        if disagreements:
+            lines.append("\n# INTER-SPECIALIST CLINICAL DISAGREEMENTS")
+            for d in disagreements:
+                issue = d.get("issue_type", "DIAGNOSTIC_DISAGREEMENT")
+                p_view = d.get("primary_view", "")
+                c_view = d.get("consultant_view", "")
+                lines.append(f"- Conflict Type: {issue}")
+                lines.append(f"  Primary View: {p_view}")
+                lines.append(f"  Consultant View: {c_view}")
+                if d.get("clinical_impact"):
+                    lines.append(f"  Impact: {d.get('clinical_impact')}")
+                if d.get("resolution_guidance"):
+                    lines.append(f"  Resolution Guidance: {d.get('resolution_guidance')}")
+
         lines.append("\nSynthesize these inputs critically according to the system instructions. Output the exact structured report.")
         return "\n".join(lines)
+
 
     def parse_synthesis_response(
         self,
@@ -256,6 +299,11 @@ class NemotronSynthesisEngine:
         medgemma_decision: Dict[str, Any],
         citations: List[Dict[str, Any]],
         thinking_trace: Optional[str] = None,
+        secondary_consultations: Optional[List[Dict[str, Any]]] = None,
+        disagreements: Optional[List[Dict[str, Any]]] = None,
+        patient_info: Optional[Dict[str, Any]] = None,
+        status: str = "COMPLETED",
+        error_message: Optional[str] = None,
     ) -> NemotronSynthesisResult:
         """Parses the 9 markdown sections into typed clinical report structures."""
         import unicodedata
@@ -393,6 +441,53 @@ class NemotronSynthesisEngine:
             from ..agents.specialists.reasoning_engine import SpecialtyClinicalReasoningEngine
             evidence_sources = SpecialtyClinicalReasoningEngine.build_source_attribution(citations)
 
+        provenance = {
+            "tier_1_patient_observed_data": {
+                "patient_id": (patient_info or {}).get("id", "PAT-UNSPECIFIED"),
+                "patient_name": (patient_info or {}).get("name", "Unknown"),
+                "demographics": f"{(patient_info or {}).get('age', 'Unknown')}yo {(patient_info or {}).get('sex', 'Unknown')}",
+                "chief_complaint": (patient_info or {}).get("chief_complaint", "Unspecified"),
+                "data_origin": (patient_info or {}).get("data_origin", "CLINICAL_OR_BENCHMARK"),
+            },
+
+            "tier_2_model_hypotheses": {
+                "router_specialty": medgemma_decision.get("specialty", "INTERNAL_MEDICINE"),
+                "primary_hypothesis": medgemma_decision.get("primary_diagnosis", "None"),
+                "confidence": medgemma_decision.get("confidence", 0.0),
+                "differential": [d.get("condition") for d in medgemma_decision.get("differential", [])],
+            },
+            "tier_3_retrieved_evidence": [
+                {
+                    "source": c.get("source") or c.get("book") or "Medical Literature",
+                    "chapter": c.get("chapter", ""),
+                    "page": str(c.get("page", "")),
+                    "relevance_score": c.get("relevance_score", 0.0),
+                }
+                for c in citations
+            ],
+            "tier_4_specialist_consult_findings": [
+                {
+                    "specialty": sc.get("specialty"),
+                    "specialist_name": sc.get("specialist_name"),
+                    "primary_diagnosis": sc.get("primary_diagnosis"),
+                    "is_emergency": sc.get("is_emergency", False),
+                }
+                for sc in (secondary_consultations or [])
+            ],
+            "tier_5_final_synthesized_conclusions": {
+                "primary_diagnosis": primary_dx,
+                "confidence": confidence,
+                "certainty": certainty,
+            },
+            "meta": {
+                "provider": "nebius_ai_studio",
+                "model": self.model,
+                "status": status,
+                "error": error_message,
+                "timestamp": datetime.utcnow().isoformat(),
+            }
+        }
+
         return NemotronSynthesisResult(
             primary_diagnosis=primary_dx,
             confidence=confidence,
@@ -404,7 +499,13 @@ class NemotronSynthesisEngine:
             evidence_sources=evidence_sources,
             raw_synthesis_text=raw_text,
             thinking_trace=thinking_trace,
+            engine_name=self.model,
             sections=sections,
+            status=status,
+            error_message=error_message,
+            provenance=provenance,
+            secondary_consultations=secondary_consultations or [],
+            disagreements=disagreements or [],
         )
 
     def synthesize_diagnostic_report(
@@ -415,15 +516,20 @@ class NemotronSynthesisEngine:
         lab_results: List[Dict[str, Any]],
         medgemma_decision: Dict[str, Any],
         citations: List[Dict[str, Any]],
+        secondary_consultations: Optional[List[Dict[str, Any]]] = None,
+        disagreements: Optional[List[Dict[str, Any]]] = None,
+        strict_live_only: bool = False,
     ) -> NemotronSynthesisResult:
         """
         Executes synthesis via Nebius Nemotron API with retries and exponential backoff.
-        Falls back seamlessly to local heuristic synthesis if API key is unset or network fails.
+        If live API fails or is unconfigured, marks case as DEGRADED with explicit error
+        telemetry and provenance (never silent mock replacement).
         """
         client = self._get_client()
 
         if not self.is_available or client is None:
-            logger.info("Nebius API key not configured or client unavailable. Using local heuristic synthesis engine.")
+            err = "Nebius API key is not configured or client initialization failed."
+            logger.warning(f"{err} Generating degraded fallback synthesis.")
             return self._fallback_synthesis(
                 patient_info=patient_info,
                 vitals_summary=vitals_summary,
@@ -431,6 +537,10 @@ class NemotronSynthesisEngine:
                 lab_results=lab_results,
                 medgemma_decision=medgemma_decision,
                 citations=citations,
+                secondary_consultations=secondary_consultations,
+                disagreements=disagreements,
+                status="DEGRADED",
+                error_message=err,
             )
 
         prompt = self.format_synthesis_prompt(
@@ -440,6 +550,8 @@ class NemotronSynthesisEngine:
             lab_results=lab_results,
             medgemma_decision=medgemma_decision,
             citations=citations,
+            secondary_consultations=secondary_consultations,
+            disagreements=disagreements,
         )
 
         last_error = None
@@ -472,6 +584,11 @@ class NemotronSynthesisEngine:
                     medgemma_decision=medgemma_decision,
                     citations=citations,
                     thinking_trace=reasoning,
+                    secondary_consultations=secondary_consultations,
+                    disagreements=disagreements,
+                    patient_info=patient_info,
+                    status="COMPLETED",
+                    error_message=None,
                 )
 
             except Exception as e:
@@ -480,7 +597,8 @@ class NemotronSynthesisEngine:
                 logger.warning(f"Nebius Nemotron call failed on attempt {attempt}: {e}. Retrying in {backoff}s...")
                 time.sleep(backoff)
 
-        logger.error(f"All {self.max_retries} Nebius Nemotron attempts failed: {last_error}. Falling back to local synthesis.")
+        err = f"All {self.max_retries} Nebius Nemotron attempts failed: {last_error}"
+        logger.error(f"{err}. Generating degraded fallback synthesis.")
         return self._fallback_synthesis(
             patient_info=patient_info,
             vitals_summary=vitals_summary,
@@ -488,6 +606,10 @@ class NemotronSynthesisEngine:
             lab_results=lab_results,
             medgemma_decision=medgemma_decision,
             citations=citations,
+            secondary_consultations=secondary_consultations,
+            disagreements=disagreements,
+            status="DEGRADED",
+            error_message=err,
         )
 
     def _fallback_synthesis(
@@ -498,8 +620,12 @@ class NemotronSynthesisEngine:
         lab_results: List[Dict[str, Any]],
         medgemma_decision: Dict[str, Any],
         citations: List[Dict[str, Any]],
+        secondary_consultations: Optional[List[Dict[str, Any]]] = None,
+        disagreements: Optional[List[Dict[str, Any]]] = None,
+        status: str = "DEGRADED",
+        error_message: Optional[str] = "Deterministic clinical fallback executed.",
     ) -> NemotronSynthesisResult:
-        """Deterministic local fallback preserving fail-closed patient safety."""
+        """Deterministic local fallback preserving fail-closed patient safety with clear DEGRADED status marking."""
         from ..agents.specialists.reasoning_engine import SpecialtyClinicalReasoningEngine
         
         primary_dx = str(medgemma_decision.get("primary_diagnosis", "Acute Clinical Presentation"))
@@ -518,19 +644,73 @@ class NemotronSynthesisEngine:
         
         sources = SpecialtyClinicalReasoningEngine.build_source_attribution(citations)
         
+        provenance = {
+            "tier_1_patient_observed_data": {
+                "patient_id": patient_info.get("id", "PAT-FALLBACK"),
+                "patient_name": patient_info.get("name", "Unknown"),
+                "demographics": f"{patient_info.get('age', 'Unknown')}yo {patient_info.get('sex', 'Unknown')}",
+                "chief_complaint": patient_info.get("chief_complaint", "Unspecified"),
+                "data_origin": patient_info.get("data_origin", "CLINICAL_OR_BENCHMARK"),
+            },
+
+            "tier_2_model_hypotheses": {
+                "router_specialty": medgemma_decision.get("specialty", "INTERNAL_MEDICINE"),
+                "primary_hypothesis": primary_dx,
+                "confidence": conf,
+                "differential": [d.condition for d in diff_items],
+            },
+            "tier_3_retrieved_evidence": [
+                {
+                    "source": c.get("source") or c.get("book") or "Medical Literature",
+                    "chapter": c.get("chapter", ""),
+                    "page": str(c.get("page", "")),
+                    "relevance_score": c.get("relevance_score", 0.0),
+                }
+                for c in citations
+            ],
+            "tier_4_specialist_consult_findings": [
+                {
+                    "specialty": sc.get("specialty"),
+                    "specialist_name": sc.get("specialist_name"),
+                    "primary_diagnosis": sc.get("primary_diagnosis"),
+                    "is_emergency": sc.get("is_emergency", False),
+                }
+                for sc in (secondary_consultations or [])
+            ],
+            "tier_5_final_synthesized_conclusions": {
+                "primary_diagnosis": primary_dx,
+                "confidence": conf,
+                "certainty": "provisional",
+            },
+            "meta": {
+                "provider": "local_fallback",
+                "model": "deterministic_safety_backup",
+                "status": status,
+                "error": error_message,
+                "timestamp": datetime.utcnow().isoformat(),
+            }
+        }
+        
         return NemotronSynthesisResult(
             primary_diagnosis=primary_dx,
             confidence=conf,
-            certainty="probable",
+            certainty="provisional",
             differential=diff_items,
             clinical_reasoning=str(medgemma_decision.get("clinical_reasoning", "Clinical synthesis generated by deterministic backup engine.")),
             missing_information=["Serial cardiac biomarkers or imaging follow-up as clinically indicated"],
             red_flags=["Hemodynamic instability or acute decompensation"],
             evidence_sources=sources,
-            raw_synthesis_text="[Local Heuristic Fallback Synthesis]",
+            raw_synthesis_text="[Local Heuristic Fallback Synthesis - DEGRADED]",
             engine_name="Local-Clinical-Fallback",
+            status=status,
+
+            error_message=error_message,
+            provenance=provenance,
+            secondary_consultations=secondary_consultations or [],
+            disagreements=disagreements or [],
         )
 
 
 # Singleton instance for platform-wide use
 nemotron_synthesis_engine = NemotronSynthesisEngine()
+

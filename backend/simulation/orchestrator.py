@@ -47,6 +47,10 @@ from ..agents.specialists.gynecology import GynecologySpecialistAgent
 from ..rag.specialists.gynecology_rag import GynecologyRAGAgent
 from ..agents.specialists.neurology import NeurologySpecialistAgent
 from ..rag.specialists.neurology_rag import NeurologyRAGAgent
+from ..agents.specialists.obstetrics import ObstetricsSpecialistAgent
+from ..rag.specialists.obstetrics_rag import ObstetricsRAGAgent
+from ..agents.consultation import consultation_engine, MultiAgentConsultationRecord
+from ..llm.nemotron_synthesis import nemotron_synthesis_engine
 from ..agents.router import MedicalSpecialtyRouter
 from ..rl.dpo_generator import DPOPreferenceGenerator, DPOPreferencePair
 from ..rl.dataset_curator import dataset_curator
@@ -148,6 +152,11 @@ class HospitalOrchestrator:
         self.neurology_specialist = NeurologySpecialistAgent(
             medgemma_service=self.medgemma,
             rag_agent=self.neurology_rag_agent
+        )
+        self.obstetrics_rag_agent = ObstetricsRAGAgent()
+        self.obstetrics_specialist = ObstetricsSpecialistAgent(
+            medgemma_service=self.medgemma,
+            rag_agent=self.obstetrics_rag_agent
         )
         self.pharmacist = PharmacistAgent()
         self.evaluation_pipeline = evaluation_pipeline
@@ -446,6 +455,63 @@ class HospitalOrchestrator:
         ):
             yield chunk
 
+    async def conduct_obstetrics_consult(
+        self,
+        clinical_scenario: str,
+        abnormal_labs: Optional[List[str]] = None,
+        patient_id: str = "PAT-OB-CONSULT",
+    ) -> Dict[str, Any]:
+        """Provides an on-demand clinical consultation with Dr. Evelyn Reed, MD, FACOG (Obstetrics)."""
+        encounter_id = f"CON-OB-{uuid.uuid4().hex[:6].upper()}"
+        return await self.obstetrics_specialist.conduct_specialist_consultation(
+            encounter_id=encounter_id,
+            patient_id=patient_id,
+            clinical_scenario=clinical_scenario,
+            abnormal_labs=abnormal_labs,
+        )
+
+    async def chat_with_dr_evelyn_reed_ob(
+        self,
+        user_message: str,
+        conversation_history: Optional[List[Dict[str, str]]] = None,
+        patient_context: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
+        """Provides direct conversational clinical consultation with Dr. Evelyn Reed, MD, FACOG (Obstetrics)."""
+        return await self.obstetrics_specialist.chat_with_specialist(
+            user_message=user_message,
+            conversation_history=conversation_history,
+            patient_context=patient_context,
+        )
+
+    async def stream_chat_with_dr_evelyn_reed_ob(
+        self,
+        user_message: str,
+        conversation_history: Optional[List[Dict[str, str]]] = None,
+        patient_context: Optional[Dict[str, Any]] = None,
+    ):
+        """Streams real-time clinical diagnostic consultation tokens with Dr. Evelyn Reed, MD, FACOG (Obstetrics)."""
+        async for chunk in self.obstetrics_specialist.stream_chat_with_specialist(
+            user_message=user_message,
+            conversation_history=conversation_history,
+            patient_context=patient_context,
+        ):
+            yield chunk
+
+    def get_specialist_registry(self) -> Dict[str, Any]:
+        """Returns the active registry of specialist agents keyed by uppercase specialty."""
+        return {
+            "INTERNAL_MEDICINE": self.im_specialist,
+            "CARDIOLOGY": self.cardio_specialist,
+            "SURGERY": self.surgery_specialist,
+            "EMERGENCY_MEDICINE": self.emergency_specialist,
+            "EMERGENCY": self.emergency_specialist,
+            "INFECTIOUS_DISEASES": self.id_specialist,
+            "GYNECOLOGY": self.gynecology_specialist,
+            "OBSTETRICS": self.obstetrics_specialist,
+            "NEUROLOGY": self.neurology_specialist,
+        }
+
+
     async def review_medication_orders(
         self,
         prescriptions: List[str],
@@ -490,10 +556,53 @@ class HospitalOrchestrator:
         routing = MedicalSpecialtyRouter.route_case(case)
         logger.info(f"Encounter {encounter_id} routed to {routing.specialty} ({routing.suggested_specialist_name}): {routing.primary_rationale}")
 
-        if routing.specialty == "CARDIOLOGY":
+        spec_norm = routing.specialty.upper().replace(" ", "_")
+        if spec_norm == "CARDIOLOGY":
             doctor_agent = CardiologySpecialistAgent(
                 medgemma_service=self.medgemma,
                 rag_agent=self.cardio_rag_agent,
+                lab_agent=lab_agent,
+                radiology_agent=radiology_agent,
+            )
+        elif spec_norm == "NEUROLOGY":
+            doctor_agent = NeurologySpecialistAgent(
+                medgemma_service=self.medgemma,
+                rag_agent=self.neurology_rag_agent,
+                lab_agent=lab_agent,
+                radiology_agent=radiology_agent,
+            )
+        elif spec_norm == "SURGERY":
+            doctor_agent = SurgerySpecialistAgent(
+                medgemma_service=self.medgemma,
+                rag_agent=self.surgery_rag_agent,
+                lab_agent=lab_agent,
+                radiology_agent=radiology_agent,
+            )
+        elif spec_norm in ["EMERGENCY_MEDICINE", "EMERGENCY"]:
+            doctor_agent = EmergencySpecialistAgent(
+                medgemma_service=self.medgemma,
+                rag_agent=self.emergency_rag_agent,
+                lab_agent=lab_agent,
+                radiology_agent=radiology_agent,
+            )
+        elif spec_norm == "OBSTETRICS":
+            doctor_agent = ObstetricsSpecialistAgent(
+                medgemma_service=self.medgemma,
+                rag_agent=self.obstetrics_rag_agent,
+                lab_agent=lab_agent,
+                radiology_agent=radiology_agent,
+            )
+        elif spec_norm == "GYNECOLOGY":
+            doctor_agent = GynecologySpecialistAgent(
+                medgemma_service=self.medgemma,
+                rag_agent=self.gynecology_rag_agent,
+                lab_agent=lab_agent,
+                radiology_agent=radiology_agent,
+            )
+        elif spec_norm == "INFECTIOUS_DISEASES":
+            doctor_agent = InfectiousDiseasesSpecialistAgent(
+                medgemma_service=self.medgemma,
+                rag_agent=self.id_rag_agent,
                 lab_agent=lab_agent,
                 radiology_agent=radiology_agent,
             )
@@ -533,8 +642,42 @@ class HospitalOrchestrator:
 
         # 5. Specialist Doctor Encounter in Examination Room
         state.status = "EXAMINATION"
-        state.current_department = "CARDIOLOGY_SUITE" if routing.specialty == "CARDIOLOGY" else "EXAMINATION_ROOM_1"
+        dept_map = {
+            "CARDIOLOGY": "CARDIOLOGY_SUITE",
+            "NEUROLOGY": "NEUROLOGY_SUITE",
+            "SURGERY": "SURGERY_CONSULT_ROOM",
+            "EMERGENCY_MEDICINE": "EMERGENCY_BAY_1",
+            "OBSTETRICS": "OBSTETRICS_SUITE",
+            "GYNECOLOGY": "GYNECOLOGY_CLINIC",
+        }
+        state.current_department = dept_map.get(spec_norm, "EXAMINATION_ROOM_1")
         report = await doctor_agent.conduct_clinical_encounter(encounter_id, toolkit)
+
+        # 5b. Dynamic Multi-Agent Consultation (Controlled Secondary Review)
+        consult_record = await consultation_engine.coordinate_consultations(
+            encounter_id=encounter_id,
+            primary_specialty=routing.specialty,
+            patient_data={
+                "id": case.id,
+                "name": case.name,
+                "age": case.age,
+                "sex": case.sex,
+                "chief_complaint": case.chief_complaint,
+                "history_of_present_illness": getattr(case, "history_of_present_illness", case.chief_complaint),
+            },
+            primary_finding={
+                "primary_diagnosis": report.primary_diagnosis,
+                "confidence": report.diagnostic_confidence,
+                "differential": [d.model_dump() for d in report.differential_diagnosis],
+            },
+            specialist_registry=self.get_specialist_registry(),
+            abnormal_labs=getattr(case, "abnormal_labs", []),
+        )
+        report.multi_agent_consultation = consult_record.model_dump()
+        if consult_record.emergency_red_flags:
+            # Emergency red flags must trigger the appropriate safety escalation and must never be suppressed
+            report.safety_warnings = list(set(report.safety_warnings + consult_record.emergency_red_flags))
+
         
         # 5. Pharmacist Medication Safety Review & Dispensing in Pharmacy
         state.status = "PHARMACY_REVIEW"
@@ -600,6 +743,199 @@ class HospitalOrchestrator:
             "report": report.model_dump(),
             "events_count": len(event_bus.get_encounter_events(encounter_id))
         }
+
+    async def execute_production_clinical_workflow(
+        self,
+        patient_case: Any,
+        data_origin: str = "REAL_EHR",
+        max_consultations: int = 2,
+    ) -> Dict[str, Any]:
+        """
+        Executes the production 5-step clinical workflow:
+        Step 1: Patient Intake (Preserves vitals, labs, history, imaging; tags data_origin)
+        Step 2: MedGemma Router (Dynamic specialty routing with validated rationale)
+        Step 3: Specialist Agent Execution (Specialty RAG + active shared knowledge sources)
+        Step 4: Dynamic Multi-Agent Consultation (Controlled consultations, cycle prevention, disagreement detection, emergency lock)
+        Step 5: Evidence-Grounded Nemotron Synthesis (Nebius Nemotron synthesis with 5-tier provenance, no silent mocks)
+        """
+        # Step 1: Patient Intake
+        if isinstance(patient_case, str):
+            # Case ID provided; retrieve from benchmark cases
+            b_case = get_benchmark_case(patient_case)
+            patient_id = b_case.id
+            patient_name = b_case.name
+            age = b_case.age
+            sex = b_case.sex
+            chief_complaint = b_case.chief_complaint
+            hpi = getattr(b_case, "history_of_present_illness", b_case.chief_complaint)
+            pmh = getattr(b_case, "past_medical_history", getattr(b_case, "medical_history", []))
+            meds = getattr(b_case, "medications", getattr(b_case, "current_medications", []))
+            allergies = getattr(b_case, "allergies", [])
+            vitals = b_case.baseline_vitals.to_dict() if hasattr(b_case, "baseline_vitals") and hasattr(b_case.baseline_vitals, "to_dict") else {}
+            labs = [
+                {"test_type": l.test_type.value if hasattr(l.test_type, "value") else str(l.test_type), "values": l.values, "interpretation": l.interpretation}
+                for l in getattr(b_case, "lab_results", [])
+            ]
+            imaging = getattr(b_case, "imaging_findings", {})
+            origin = "SYNTHETIC_BENCHMARK"
+        elif isinstance(patient_case, dict):
+            patient_id = patient_case.get("id") or f"PAT-{uuid.uuid4().hex[:6].upper()}"
+            patient_name = patient_case.get("name", "EHR Inpatient")
+            age = patient_case.get("age", 45)
+            sex = patient_case.get("sex", "Unknown")
+            chief_complaint = patient_case.get("chief_complaint", "Clinical evaluation requested")
+            hpi = patient_case.get("history_of_present_illness", "")
+            pmh = patient_case.get("past_medical_history", [])
+            meds = patient_case.get("medications", [])
+            allergies = patient_case.get("allergies", [])
+            vitals = patient_case.get("vital_signs") or patient_case.get("baseline_vitals") or {}
+            labs = patient_case.get("lab_results", [])
+            imaging = patient_case.get("imaging_findings", {})
+            origin = patient_case.get("data_origin", data_origin)
+        else:
+            # Pydantic or ground truth object
+            patient_id = getattr(patient_case, "id", f"PAT-{uuid.uuid4().hex[:6].upper()}")
+            patient_name = getattr(patient_case, "name", "Patient")
+            age = getattr(patient_case, "age", 45)
+            sex = getattr(patient_case, "sex", "Unknown")
+            chief_complaint = getattr(patient_case, "chief_complaint", "Clinical evaluation requested")
+            hpi = getattr(patient_case, "history_of_present_illness", chief_complaint)
+            pmh = getattr(patient_case, "past_medical_history", getattr(patient_case, "medical_history", []))
+            meds = getattr(patient_case, "medications", getattr(patient_case, "current_medications", []))
+            allergies = getattr(patient_case, "allergies", [])
+            vitals = getattr(patient_case, "vital_signs", {})
+            labs = getattr(patient_case, "lab_results", [])
+            imaging = getattr(patient_case, "imaging_findings", {})
+            origin = getattr(patient_case, "data_origin", data_origin)
+
+        encounter_id = f"ENC-PROD-{uuid.uuid4().hex[:8].upper()}"
+        logger.info(f"Initiating production clinical workflow {encounter_id} for {patient_name} ({origin})")
+
+        intake_data = {
+            "id": patient_id,
+            "name": patient_name,
+            "age": age,
+            "sex": sex,
+            "chief_complaint": chief_complaint,
+            "history_of_present_illness": hpi,
+            "past_medical_history": pmh,
+            "medications": meds,
+            "allergies": allergies,
+            "vital_signs": vitals,
+            "lab_results": labs,
+            "imaging_findings": imaging,
+            "data_origin": origin,
+        }
+
+        # Step 2: MedGemma Router
+        if hasattr(MedicalSpecialtyRouter, "route_case_with_medgemma") and getattr(self.medgemma, "model", None) is not None:
+            routing = MedicalSpecialtyRouter.route_case_with_medgemma(intake_data, medgemma_service=self.medgemma)
+        else:
+            routing = MedicalSpecialtyRouter.route_case(intake_data)
+
+        # Step 3: Primary Specialist Agent Execution
+        registry = self.get_specialist_registry()
+        norm_spec = routing.specialty.upper().replace(" ", "_")
+        primary_agent = registry.get(norm_spec, self.im_specialist)
+
+        scenario_text = (
+            f"Chief Complaint: {chief_complaint}. "
+            f"HPI: {hpi}. "
+            f"PMH: {', '.join(pmh) if pmh else 'None'}. "
+            f"Medications: {', '.join(meds) if meds else 'None'}."
+        )
+
+        abnormal_lab_strings = []
+        for l in labs:
+            if isinstance(l, dict):
+                tt = l.get("test_type", "Lab")
+                val = l.get("values", l.get("value", ""))
+                interp = l.get("interpretation", "")
+                abnormal_lab_strings.append(f"{tt}: {val} ({interp})" if interp else f"{tt}: {val}")
+            else:
+                abnormal_lab_strings.append(str(l))
+
+        primary_consult = await primary_agent.conduct_specialist_consultation(
+            encounter_id=encounter_id,
+            patient_id=patient_id,
+            clinical_scenario=scenario_text,
+            abnormal_labs=abnormal_lab_strings,
+        )
+
+        # Step 4: Dynamic Multi-Agent Consultation
+        consult_engine = consultation_engine
+        consult_engine.max_consultations = max_consultations
+        consultation_record = await consult_engine.coordinate_consultations(
+            encounter_id=encounter_id,
+            primary_specialty=routing.specialty,
+            patient_data=intake_data,
+            primary_finding=primary_consult,
+            specialist_registry=registry,
+            abnormal_labs=abnormal_lab_strings,
+        )
+
+        # Step 5: Evidence-Grounded Nemotron Synthesis
+        secondary_consults_list = [
+            f.model_dump() for f in consultation_record.consultation_findings.values()
+        ]
+        disagreements_list = [
+            d.model_dump() for d in consultation_record.disagreements
+        ]
+
+        # Combine verified citations
+        combined_citations = list(primary_consult.get("citations", []))
+        for sc in secondary_consults_list:
+            for c in sc.get("citations", []):
+                if c not in combined_citations:
+                    combined_citations.append(c)
+
+        vitals_str = "; ".join(f"{k}: {v}" for k, v in vitals.items()) if isinstance(vitals, dict) else str(vitals)
+
+        synthesis_result = nemotron_synthesis_engine.synthesize_diagnostic_report(
+            patient_info=intake_data,
+            vitals_summary=vitals_str or "Vitals stable",
+            exam_findings=imaging,
+            lab_results=labs,
+            medgemma_decision=primary_consult,
+            citations=combined_citations,
+            secondary_consultations=secondary_consults_list,
+            disagreements=disagreements_list,
+        )
+
+        return {
+            "encounter_id": encounter_id,
+            "status": synthesis_result.status,
+            "data_origin": origin,
+            "patient_id": patient_id,
+            "patient_name": patient_name,
+            "intake_data": intake_data,
+            "routing": routing.model_dump(),
+
+            "primary_specialist": {
+                "specialty": routing.specialty,
+                "doctor_name": routing.suggested_specialist_name,
+                "findings": primary_consult,
+            },
+            "multi_agent_consultation": consultation_record.model_dump(),
+            "synthesis": {
+                "primary_diagnosis": synthesis_result.primary_diagnosis,
+                "confidence": synthesis_result.confidence,
+                "certainty": synthesis_result.certainty,
+                "differential": [d.model_dump() if hasattr(d, "model_dump") else d.__dict__ for d in synthesis_result.differential],
+                "clinical_reasoning": synthesis_result.clinical_reasoning,
+                "missing_information": synthesis_result.missing_information,
+                "red_flags": list(set(synthesis_result.red_flags + consultation_record.emergency_red_flags)),
+                "evidence_sources": synthesis_result.evidence_sources,
+                "engine_name": synthesis_result.engine_name,
+                "thinking_trace": synthesis_result.thinking_trace,
+                "provenance": synthesis_result.provenance,
+                "sections": synthesis_result.sections,
+                "error_message": synthesis_result.error_message,
+            },
+            "emergency_escalation": consultation_record.is_emergency_escalated,
+            "timestamp": datetime.utcnow().isoformat(),
+        }
+
 
     def submit_physician_review(
         self,

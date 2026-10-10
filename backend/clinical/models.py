@@ -112,6 +112,11 @@ class ClinicalReport(BaseModel):
     # Automated Multi-Stage Evaluation (Independent 6-Dimension Pipeline)
     automated_evaluation: Optional[Dict[str, Any]] = None
 
+    # Production Multi-Agent Architecture & Provenance Traceability
+    multi_agent_consultation: Optional[Dict[str, Any]] = None
+    provenance: Optional[Dict[str, Any]] = None
+    data_origin: Optional[str] = "REAL_OR_BENCHMARK"
+
 
 class MedicationSafetyReport(BaseModel):
     id: str
