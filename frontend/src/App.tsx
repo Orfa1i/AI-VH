@@ -149,9 +149,10 @@ export const App: React.FC = () => {
     }
   };
 
-  const handlePatientAdmitted = (_patient: PatientRecord) => {
+  const handlePatientAdmitted = (patient: PatientRecord) => {
     setPatientRefreshCounter((prev) => prev + 1);
     refreshData();
+    window.postMessage({ type: 'PATIENT_ADMITTED', patient }, '*');
   };
 
   const handleAdmitAndSimulate = async (caseId: string, patientName?: string) => {

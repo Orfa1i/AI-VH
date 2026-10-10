@@ -3231,22 +3231,228 @@ const CASES = {
   $('#b-main-control').addEventListener('click', handleMainControl);
   $('#b-replay').addEventListener('click', replay);
 
-  /* Case Selector Change */
+  /* Dynamic Admitted Patient Case Selector */
   const caseSelect = $('#case-select');
-  Object.keys(CASES).forEach(k => {
-    const opt = document.createElement('option');
-    opt.value = k;
-    opt.textContent = `${CASES[k].name} — ${CASES[k].dx.split(' ')[0]} (${CASES[k].acuity.split('·')[0].trim()})`;
-    caseSelect.appendChild(opt);
-  });
+  let admittedCasesMap = {};
+  let isLoadingAdmittedPatients = false;
+
+  function findCanonicalCaseMatch(p) {
+    if (!p) return null;
+    const pMrn = (p.mrn || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    const pName = (p.name || '').toLowerCase();
+    const pId = (p.id || '').toLowerCase();
+    for (const k of Object.keys(CASES)) {
+      const c = CASES[k];
+      const cMrn = (c.mrn || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+      const cName = (c.name || '').toLowerCase();
+      const cId = (c.id || '').toLowerCase();
+      if (pMrn && cMrn && (pMrn.includes(cMrn) || cMrn.includes(pMrn))) return k;
+      if (pName && cName && (pName.includes(cName) || cName.includes(pName))) return k;
+      if (pId && cId && (pId.includes(cId) || cId.includes(pId))) return k;
+    }
+    return null;
+  }
+
+  function mapDynamicPatientRecord(p) {
+    const raw = p.case_data || {};
+    const acuityMap = {
+      'RESUSCITATION': { esi: 1, text: 'ESI 1 · Resuscitation', cls: 'esi1' },
+      'EMERGENT': { esi: 2, text: 'ESI 2 · Emergent', cls: 'esi2' },
+      'URGENT': { esi: 3, text: 'ESI 3 · Urgent', cls: 'esi3' },
+      'LESS_URGENT': { esi: 4, text: 'ESI 4 · Less Urgent', cls: 'esi4' },
+      'NON_URGENT': { esi: 5, text: 'ESI 5 · Non-Urgent', cls: 'esi5' },
+    };
+    const acInfo = acuityMap[p.triage_acuity] || { esi: 2, text: `ESI 2 · ${p.triage_acuity || 'Emergent'}`, cls: 'esi2' };
+
+    const bv = raw.baseline_vitals || {};
+    const vitals = [
+      { label: 'BP', val: bv.systolic_bp && bv.diastolic_bp ? `${bv.systolic_bp}/${bv.diastolic_bp}` : '120/80', unit: 'mmHg', status: (bv.systolic_bp > 140 || bv.systolic_bp < 90) ? 'abnormal' : 'normal' },
+      { label: 'HR', val: String(bv.heart_rate || 75), unit: 'bpm', status: (bv.heart_rate > 100 || bv.heart_rate < 60) ? 'abnormal' : 'normal' },
+      { label: 'RR', val: String(bv.respiratory_rate || 16), unit: '/min', status: (bv.respiratory_rate > 20 || bv.respiratory_rate < 12) ? 'abnormal' : 'normal' },
+      { label: 'SpO₂', val: `${bv.spo2_percent || 98}%`, unit: 'RA', status: (bv.spo2_percent && bv.spo2_percent < 94) ? 'abnormal' : 'normal' },
+      { label: 'Temp', val: String(bv.temperature_c || 37.0), unit: '°C', status: (bv.temperature_c > 38.0 || bv.temperature_c < 36.0) ? 'abnormal' : 'normal' },
+      { label: 'GCS', val: '15', unit: '/15', status: 'normal' }
+    ];
+
+    const labs = (raw.labs && raw.labs.length) ? raw.labs : [
+      { name: 'Hemoglobin', val: '135 g/L', ref: '120-160', flag: 'Normal', status: 'normal' },
+      { name: 'WBC Count', val: '7.8 ×10⁹/L', ref: '4.5-11.0', flag: 'Normal', status: 'normal' },
+      { name: 'Platelets', val: '240 ×10⁹/L', ref: '150-400', flag: 'Normal', status: 'normal' },
+      { name: 'Creatinine', val: '75 µmol/L', ref: '45-84', flag: 'Normal', status: 'normal' },
+    ];
+
+    const imaging = (raw.imaging && raw.imaging.length) ? raw.imaging : [
+      {
+        title: 'Bedside Intake Evaluation',
+        mod: 'Point-of-Care Assessment',
+        desc: 'Completed upon admission into hospital inpatient ward',
+        icon: 'scan',
+        modalText: `<b>Intake Assessment:</b> Patient admitted for: ${p.chief_complaint}. Monitored in bed ${p.bed_number || 'BAY-01'}.`
+      }
+    ];
+
+    const dx = raw.presumptive_diagnosis || p.chief_complaint || 'Undifferentiated Admission';
+
+    return {
+      id: p.id,
+      mrn: p.mrn,
+      name: p.name,
+      demog: `${p.age}${p.sex ? p.sex[0].toUpperCase() : ''} · ${p.assigned_department || 'Inpatient'} (Bed ${p.bed_number || '01'})`,
+      esi: acInfo.esi,
+      acuity: acInfo.text,
+      acuityClass: acInfo.cls,
+      chief_complaint: p.chief_complaint,
+      hpi: raw.history_of_present_illness || p.chief_complaint,
+      vitals,
+      labs,
+      imaging,
+      dx,
+      conf: 0.92,
+      ddx: [
+        { id: 'primary', t: dx },
+        { id: 'eval', t: 'Secondary clinical evaluation pending' }
+      ],
+      watchFor: 'hemodynamic stability, clinical deterioration, pain progression',
+      plan: [
+        { id: 'intake_eval', t: `Clinical assessment for ${p.name}`, done: true, own: ['im', 'em'] },
+        { id: 'diagnostic_workup', t: 'Perform focused diagnostic workup and specialty consult', done: false, own: ['im', 'ca', 'ne'] },
+        { id: 'treatment_order', t: 'Formulate definitive inpatient management plan', done: false, own: ['im'] }
+      ],
+      router: null,
+      events: [],
+      synthetic: false,
+      admission_status: p.admission_status,
+      assigned_department: p.assigned_department,
+      bed_number: p.bed_number,
+      admitted_at: p.admitted_at
+    };
+  }
+
+  async function loadAdmittedPatients(preferredPatientId = null) {
+    if (isLoadingAdmittedPatients) return;
+    isLoadingAdmittedPatients = true;
+    try {
+      const resp = await fetch('/api/patients?status=ADMITTED');
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const data = await resp.json();
+      const admittedList = Array.isArray(data.patients)
+        ? data.patients.filter(p => p.admission_status === 'ADMITTED')
+        : [];
+
+      admittedCasesMap = {};
+      caseSelect.innerHTML = '';
+
+      if (admittedList.length === 0) {
+        const opt = document.createElement('option');
+        opt.value = '';
+        opt.disabled = true;
+        opt.selected = true;
+        opt.textContent = 'No admitted patients in wards (Admit via Intake)';
+        caseSelect.appendChild(opt);
+
+        // Clear and show empty state in dossier
+        $('#pt-name').textContent = 'No Admitted Patients';
+        $('#pt-id').textContent = '—';
+        $('#pt-demog').textContent = 'Hospital census currently has 0 active admissions';
+        const acuityEl = $('#pt-acuity');
+        acuityEl.className = 'badge-esi esi3';
+        acuityEl.textContent = 'NO ACTIVE ADMISSIONS';
+        $('#pt-cc').textContent = 'All hospital beds are currently vacant or discharged.';
+        $('#pt-hpi').textContent = 'To test clinical triage, please navigate to Case Intake and admit an inpatient record.';
+        $('#vitals-grid').innerHTML = '<div style="grid-column: 1 / -1; padding: 12px; text-align: center; color: var(--mute); font-size: 12px;">No active telemetry</div>';
+        $('#labs-list').innerHTML = '<div style="padding: 12px; text-align: center; color: var(--mute); font-size: 12px;">No active laboratory results</div>';
+        $('#imaging-list').innerHTML = '<div style="padding: 12px; text-align: center; color: var(--mute); font-size: 12px;">No active imaging studies</div>';
+        $('#board').innerHTML = '<b>MedGemma router</b><p>Waiting for an admitted patient. Admit patients in Intake.</p>';
+        return;
+      }
+
+      admittedList.forEach(p => {
+        const canonKey = findCanonicalCaseMatch(p);
+        const caseObj = canonKey ? {
+          ...CASES[canonKey],
+          id: p.id,
+          mrn: p.mrn,
+          name: p.name,
+          bed_number: p.bed_number,
+          assigned_department: p.assigned_department,
+          admission_status: 'ADMITTED',
+          synthetic: false
+        } : mapDynamicPatientRecord(p);
+
+        admittedCasesMap[p.id] = caseObj;
+
+        const opt = document.createElement('option');
+        opt.value = p.id;
+        const bedPrefix = p.bed_number ? `[${p.bed_number}] ` : '';
+        const dxShort = (caseObj.dx || p.chief_complaint || 'Admitted').split(' ')[0];
+        const acuityShort = (caseObj.acuity || p.triage_acuity || 'Admitted').split('·')[0].trim();
+        opt.textContent = `${bedPrefix}${p.name} — ${dxShort} (${acuityShort})`;
+        caseSelect.appendChild(opt);
+      });
+
+      let targetId = preferredPatientId;
+      if (!targetId || !admittedCasesMap[targetId]) {
+        if (currentCaseKey && admittedCasesMap[currentCaseKey]) {
+          targetId = currentCaseKey;
+        } else {
+          targetId = admittedList[0].id;
+        }
+      }
+
+      caseSelect.value = targetId;
+      currentCaseKey = targetId;
+      activeCase = admittedCasesMap[targetId];
+
+      populateSidebar(activeCase);
+      setupDraftPlan(activeCase);
+      resetToInitialState();
+    } catch (err) {
+      console.warn('Could not fetch admitted patients from database:', err);
+    } finally {
+      isLoadingAdmittedPatients = false;
+    }
+  }
 
   caseSelect.addEventListener('change', () => {
-    currentCaseKey = caseSelect.value;
-    activeCase = CASES[currentCaseKey];
-    populateSidebar(activeCase);
-    setupDraftPlan(activeCase);
-    resetToInitialState();
+    const selectedId = caseSelect.value;
+    if (selectedId && admittedCasesMap[selectedId]) {
+      currentCaseKey = selectedId;
+      activeCase = admittedCasesMap[selectedId];
+      populateSidebar(activeCase);
+      setupDraftPlan(activeCase);
+      resetToInitialState();
+    }
   });
+
+  // Re-sync on dropdown focus to capture recent admissions/discharges
+  caseSelect.addEventListener('focus', () => {
+    if (state.phase === 'idle') {
+      loadAdmittedPatients(caseSelect.value);
+    }
+  });
+
+  // Real-time synchronization from Case Intake messages
+  window.addEventListener('message', (e) => {
+    if (!e.data || typeof e.data !== 'object') return;
+    if (e.data.type === 'PATIENT_ADMITTED' || e.data.type === 'REFRESH_PATIENTS' || e.data.type === 'CASE_ADMITTED') {
+      const newPid = e.data.patient ? e.data.patient.id : null;
+      loadAdmittedPatients(newPid);
+    }
+  });
+
+  // Re-check when window/tab regains visibility
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && state.phase === 'idle') {
+      loadAdmittedPatients(caseSelect.value);
+    }
+  });
+
+  // Periodic polling check every 10s if idle
+  setInterval(() => {
+    if (state.phase === 'idle') {
+      loadAdmittedPatients(caseSelect.value);
+    }
+  }, 10000);
 
   // Logo navigation to Intake
   const vhLogo = document.querySelector('.vh');
@@ -3265,6 +3471,7 @@ const CASES = {
   resetToInitialState();
   layout();
   requestAnimationFrame(tick);
+  loadAdmittedPatients();
 
 })();
 

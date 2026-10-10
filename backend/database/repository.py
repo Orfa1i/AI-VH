@@ -983,6 +983,222 @@ class DatabaseRepository:
             res = cur.fetchone()
             return res[0] if res else 0
 
+    def seed_default_admitted_patients(self) -> int:
+        """
+        Seeds canonical admitted patient records into the patients table if no admitted
+        patients currently exist. This guarantees that real-time clinical triage testing
+        always has officially admitted patients with complete EHR charts (vitals, labs,
+        imaging, department and bed numbers), while strictly setting admission_status = 'ADMITTED'.
+        """
+        if self.count_patients(status="ADMITTED") > 0:
+            return 0
+
+        canonical_patients = [
+            {
+                "id": "PAT-8921-OB",
+                "mrn": "VH-8921-OB",
+                "name": "Elena Vance",
+                "age": 32,
+                "sex": "Female",
+                "triage_acuity": "EMERGENT",
+                "chief_complaint": "Severe throbbing frontal headache, blurred vision with floaters, sharp right upper quadrant pain.",
+                "history_of_present_illness": "32-year-old female at 34+2 weeks gestation presenting with acute-onset severe headache unresponsive to acetaminophen, persistent scotomas, and worsening RUQ pain over the past 6 hours.",
+                "assigned_department": "OBSTETRICS",
+                "bed_number": "OB-BAY-01",
+                "past_medical_history": ["Nulliparous until current gestation", "Gestational hypertension diagnosed at 28 weeks"],
+                "medications": ["Prenatal multivitamins", "Labetalol 100mg PO BID"],
+                "allergies": ["Sulfa drugs (hives)"],
+                "baseline_vitals": {
+                    "heart_rate": 88,
+                    "systolic_bp": 178,
+                    "diastolic_bp": 112,
+                    "respiratory_rate": 18,
+                    "temperature_c": 36.8,
+                    "spo2_percent": 98.0,
+                    "pain_score": 7
+                },
+                "labs": [
+                    {"name": "Platelets", "val": "62 ×10⁹/L", "ref": "150-400", "flag": "Low", "status": "low"},
+                    {"name": "AST / ALT", "val": "210 / 195 U/L", "ref": "<35", "flag": "High", "status": "high"},
+                    {"name": "LDH", "val": "680 U/L", "ref": "140-280", "flag": "High", "status": "high"},
+                    {"name": "Urine PCR", "val": "1.8 mg/mg", "ref": "<0.3", "flag": "High", "status": "high"}
+                ],
+                "imaging": [
+                    {
+                        "title": "Bedside RUQ Ultrasound",
+                        "mod": "POCUS Scan",
+                        "desc": "Liver capsule intact, no subcapsular haematoma; gallbladder normal",
+                        "icon": "scan",
+                        "modalText": "<b>Findings:</b> Homogeneous liver parenchyma without subcapsular fluid collection or hematoma."
+                    }
+                ],
+                "presumptive_diagnosis": "Preeclampsia with severe features complicated by HELLP syndrome"
+            },
+            {
+                "id": "PAT-3391-CCU",
+                "mrn": "VH-3391-CCU",
+                "name": "Arthur Pendelton",
+                "age": 64,
+                "sex": "Male",
+                "triage_acuity": "RESUSCITATION",
+                "chief_complaint": "Crushing substernal chest pressure radiating to left jaw, diaphoresis, dyspnea at rest.",
+                "history_of_present_illness": "64-year-old male with heavy retrosternal chest pain radiating to left arm and neck for 90 minutes. Diaphoretic, pale, cold extremities.",
+                "assigned_department": "CARDIOLOGY",
+                "bed_number": "CCU-BAY-03",
+                "past_medical_history": ["Hypertension", "Hyperlipidemia", "Type 2 Diabetes"],
+                "medications": ["Atorvastatin 40mg", "Metformin 1000mg BID", "Lisinopril 20mg"],
+                "allergies": ["NKDA"],
+                "baseline_vitals": {
+                    "heart_rate": 112,
+                    "systolic_bp": 82,
+                    "diastolic_bp": 54,
+                    "respiratory_rate": 26,
+                    "temperature_c": 36.4,
+                    "spo2_percent": 91.0,
+                    "pain_score": 9
+                },
+                "labs": [
+                    {"name": "Troponin I", "val": "14.2 ng/mL", "ref": "<0.04", "flag": "Critical", "status": "critical"},
+                    {"name": "BNP", "val": "1420 pg/mL", "ref": "<100", "flag": "High", "status": "high"},
+                    {"name": "Lactate", "val": "3.8 mmol/L", "ref": "0.5-2.0", "flag": "High", "status": "high"}
+                ],
+                "imaging": [
+                    {
+                        "title": "12-Lead ECG",
+                        "mod": "Cardiology Panel",
+                        "desc": "Marked ST elevations in V1-V4 with reciprocal depressions in II, III, aVF",
+                        "icon": "ecg",
+                        "modalText": "<b>Findings:</b> Hyperacute anterolateral STEMI with cardiogenic shock signs."
+                    }
+                ],
+                "presumptive_diagnosis": "Acute anterolateral STEMI with cardiogenic shock"
+            },
+            {
+                "id": "PAT-4102-ICU",
+                "mrn": "VH-4102-ICU",
+                "name": "Marcus Holloway",
+                "age": 58,
+                "sex": "Male",
+                "triage_acuity": "RESUSCITATION",
+                "chief_complaint": "High fevers, rigors, progressive confusion, productive cough with rust-colored sputum.",
+                "history_of_present_illness": "58-year-old male with 4-day history of worsening cough and fever, acutely decompensating over 8 hours with altered mental status and hypotension refractory to fluid bolus.",
+                "assigned_department": "EMERGENCY",
+                "bed_number": "ICU-BAY-02",
+                "past_medical_history": ["COPD", "Former smoker (35 pack-years)"],
+                "medications": ["Tiotropium inhaler", "Albuterol PRN"],
+                "allergies": ["Penicillin (anaphylaxis)"],
+                "baseline_vitals": {
+                    "heart_rate": 128,
+                    "systolic_bp": 78,
+                    "diastolic_bp": 46,
+                    "respiratory_rate": 32,
+                    "temperature_c": 39.4,
+                    "spo2_percent": 88.0,
+                    "pain_score": 4
+                },
+                "labs": [
+                    {"name": "WBC Count", "val": "24.6 ×10⁹/L", "ref": "4.5-11.0", "flag": "High", "status": "high"},
+                    {"name": "Lactate", "val": "4.6 mmol/L", "ref": "0.5-2.0", "flag": "Critical", "status": "critical"},
+                    {"name": "Procalcitonin", "val": "18.4 ng/mL", "ref": "<0.1", "flag": "High", "status": "high"}
+                ],
+                "imaging": [
+                    {
+                        "title": "Portable Chest Radiograph",
+                        "mod": "Radiology",
+                        "desc": "Dense right lower lobe cavitary consolidation with air bronchograms",
+                        "icon": "scan",
+                        "modalText": "<b>Findings:</b> Severe necrotizing pneumonia suspicious for MRSA."
+                    }
+                ],
+                "presumptive_diagnosis": "Septic shock secondary to severe MRSA pneumonia"
+            },
+            {
+                "id": "PAT-7742-NEURO",
+                "mrn": "VH-7742-NEURO",
+                "name": "Diana Reyes",
+                "age": 71,
+                "sex": "Female",
+                "triage_acuity": "RESUSCITATION",
+                "chief_complaint": "Acute right-sided hemiplegia, expressive aphasia, right facial droop noted 75 minutes ago.",
+                "history_of_present_illness": "71-year-old female witnessed by daughter developing sudden loss of speech and dense right-sided paralysis at breakfast. Last known normal 75 minutes prior to ED presentation.",
+                "assigned_department": "NEUROLOGY",
+                "bed_number": "STROKE-BAY-01",
+                "past_medical_history": ["Atrial fibrillation", "Hypertension"],
+                "medications": ["Apixaban 5mg BID", "Amlodipine 10mg"],
+                "allergies": ["NKDA"],
+                "baseline_vitals": {
+                    "heart_rate": 94,
+                    "systolic_bp": 186,
+                    "diastolic_bp": 104,
+                    "respiratory_rate": 18,
+                    "temperature_c": 36.9,
+                    "spo2_percent": 97.0,
+                    "pain_score": 0
+                },
+                "labs": [
+                    {"name": "Blood Glucose", "val": "6.1 mmol/L", "ref": "4.0-7.0", "flag": "Normal", "status": "normal"},
+                    {"name": "INR", "val": "1.2", "ref": "0.9-1.2", "flag": "Normal", "status": "normal"},
+                    {"name": "Platelets", "val": "220 ×10⁹/L", "ref": "150-400", "flag": "Normal", "status": "normal"}
+                ],
+                "imaging": [
+                    {
+                        "title": "Non-Contrast Head CT & CTA",
+                        "mod": "Neuro-Radiology",
+                        "desc": "Hyperdense left MCA sign, ASPECTS 8, CTA confirms left M1 occlusion",
+                        "icon": "scan",
+                        "modalText": "<b>Findings:</b> Acute left MCA large vessel occlusion eligible for mechanical thrombectomy."
+                    }
+                ],
+                "presumptive_diagnosis": "Acute ischemic stroke with left MCA large vessel occlusion (LVO)"
+            },
+            {
+                "id": "PAT-1904-SURG",
+                "mrn": "VH-1904-SURG",
+                "name": "Liam Chen",
+                "age": 26,
+                "sex": "Male",
+                "triage_acuity": "EMERGENT",
+                "chief_complaint": "Periumbilical abdominal pain migrating to right lower quadrant, anorexia, nausea, fever.",
+                "history_of_present_illness": "26-year-old male with 18 hours of continuous abdominal pain starting periumbilically and localizing to McBurney's point. Positive Rovsing and psoas signs on exam.",
+                "assigned_department": "SURGERY",
+                "bed_number": "SURG-BAY-04",
+                "past_medical_history": ["None"],
+                "medications": ["None"],
+                "allergies": ["NKDA"],
+                "baseline_vitals": {
+                    "heart_rate": 104,
+                    "systolic_bp": 126,
+                    "diastolic_bp": 78,
+                    "respiratory_rate": 20,
+                    "temperature_c": 38.3,
+                    "spo2_percent": 99.0,
+                    "pain_score": 8
+                },
+                "labs": [
+                    {"name": "WBC Count", "val": "16.8 ×10⁹/L", "ref": "4.5-11.0", "flag": "High", "status": "high"},
+                    {"name": "Neutrophils %", "val": "86%", "ref": "40-70", "flag": "High", "status": "high"},
+                    {"name": "CRP", "val": "48 mg/L", "ref": "<5", "flag": "High", "status": "high"}
+                ],
+                "imaging": [
+                    {
+                        "title": "Abdominal Ultrasound & CT",
+                        "mod": "Surgical Imaging",
+                        "desc": "Non-compressible, dilated appendix (9mm) with appendicolith and periappendiceal fat stranding",
+                        "icon": "scan",
+                        "modalText": "<b>Findings:</b> Acute uncomplicated suppurative appendicitis requiring laparoscopic appendectomy."
+                    }
+                ],
+                "presumptive_diagnosis": "Acute suppurative appendicitis with localized peritonitis"
+            }
+        ]
+
+        count = 0
+        for p in canonical_patients:
+            self.admit_patient(p)
+            count += 1
+        logger.info(f"Seeded {count} canonical admitted patients into hospital wards.")
+        return count
+
     # =========================================================================
     # Hospital Staff Management
     # =========================================================================
@@ -1542,6 +1758,8 @@ class DatabaseRepository:
 db_repo = DatabaseRepository()
 db_repo.seed_default_staff()
 db_repo.seed_default_knowledge_sources()
+db_repo.seed_default_admitted_patients()
+
 
 
 

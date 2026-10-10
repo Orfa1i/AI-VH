@@ -31,6 +31,10 @@ export const HospitalFlowDiagram: React.FC<HospitalFlowDiagramProps> = ({
         } else if (onNavigateTab) {
           onNavigateTab(e.data.tab);
         }
+      } else if (e.data && (e.data.type === 'PATIENT_ADMITTED' || e.data.type === 'REFRESH_PATIENTS')) {
+        if (iframeRef.current && iframeRef.current.contentWindow) {
+          iframeRef.current.contentWindow.postMessage(e.data, '*');
+        }
       }
     };
 

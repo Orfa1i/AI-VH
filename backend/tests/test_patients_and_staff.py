@@ -268,3 +268,53 @@ def test_staff_api_endpoints():
     resp_404 = client.get("/api/staff/STAFF-DOESNOTEXIST")
     assert resp_404.status_code == 404
 
+
+def test_admitted_patients_status_filtering_and_lifecycle():
+    """
+    Verifies that the /api/patients?status=ADMITTED endpoint strictly filters and returns
+    only patients with an active 'ADMITTED' status, excluding discharged or unadmitted records.
+    """
+    client = TestClient(app)
+
+    # 1. Admit a test patient
+    intake_payload = {
+        "name": "Jordan Hayes",
+        "age": 39,
+        "sex": "Non-Binary",
+        "chief_complaint": "Acute onset right-sided flank pain radiating to groin with microscopic hematuria",
+        "history_of_present_illness": "Colicky flank pain starting 3 hours ago, vomiting twice.",
+        "triage_acuity": "URGENT",
+        "assigned_department": "EMERGENCY",
+        "bed_number": "ED-BAY-07"
+    }
+    resp_admit = client.post("/api/patients/admit", json=intake_payload)
+    assert resp_admit.status_code == 200
+    admitted_patient = resp_admit.json()
+    p_id = admitted_patient["id"]
+
+    # 2. Verify patient appears in ADMITTED status query
+    resp_admitted = client.get("/api/patients?status=ADMITTED")
+    assert resp_admitted.status_code == 200
+    admitted_list = resp_admitted.json()["patients"]
+    assert any(p["id"] == p_id and p["admission_status"] == "ADMITTED" for p in admitted_list)
+    # Ensure every returned patient has admission_status == "ADMITTED"
+    assert all(p["admission_status"] == "ADMITTED" for p in admitted_list)
+
+    # 3. Discharge the patient
+    resp_dc = client.post(f"/api/patients/{p_id}/discharge")
+    assert resp_dc.status_code == 200
+    assert resp_dc.json()["status"] == "DISCHARGED"
+
+    # 4. Verify patient is NO LONGER present in ADMITTED status query
+    resp_admitted_after_dc = client.get("/api/patients?status=ADMITTED")
+    assert resp_admitted_after_dc.status_code == 200
+    admitted_list_after = resp_admitted_after_dc.json()["patients"]
+    assert not any(p["id"] == p_id for p in admitted_list_after)
+
+    # 5. Verify patient IS present in DISCHARGED status query
+    resp_discharged = client.get("/api/patients?status=DISCHARGED")
+    assert resp_discharged.status_code == 200
+    discharged_list = resp_discharged.json()["patients"]
+    assert any(p["id"] == p_id and p["admission_status"] == "DISCHARGED" for p in discharged_list)
+
+
