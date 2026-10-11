@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { CaseIntakeAdmissionSection } from './components/management/CaseIntakeAdmissionSection';
 import { PatientDirectorySection } from './components/management/PatientDirectorySection';
 import { StaffManagementSection } from './components/management/StaffManagementSection';
@@ -7,6 +7,7 @@ import { KnowledgeSourcesSection } from './components/management/KnowledgeSource
 import { PhysicianReviewDashboard } from './components/dashboard/PhysicianReviewDashboard';
 import { RLDatasetModal } from './components/rl/RLDatasetModal';
 import { PolicyBenchmarkModal } from './components/rl/PolicyBenchmarkModal';
+import { PolicyBenchmarkPage } from './components/rl/PolicyBenchmarkPage';
 import { ReviewedReportsSection } from './components/reviewing/ReviewedReportsSection';
 import { LeftNotificationDrawer } from './components/notifications/LeftNotificationDrawer';
 import { ActiveEncounterProgressBar } from './components/simulation/ActiveEncounterProgressBar';
@@ -74,7 +75,30 @@ export const App: React.FC = () => {
   }, []);
 
 
-  // Real-time Event Telemetry Listener for Left Notification Drawer
+  // Fetch initial cases, pending reports, and reviewed count
+  const refreshData = useCallback(async () => {
+    try {
+      const [cRes, rRes, revRes] = await Promise.all([
+        fetch('/api/cases'),
+        fetch('/api/reports/pending'),
+        fetch('/api/reports/reviewed'),
+      ]);
+      if (cRes.ok) setCases(await cRes.json());
+      if (rRes.ok) setReports(await rRes.json());
+      if (revRes.ok) {
+        const revData = await revRes.json();
+        setReviewedCount(Array.isArray(revData) ? revData.length : 0);
+      }
+    } catch (err) {
+      console.error('Failed to load portal data:', err);
+    }
+  }, []);
+
+  useEffect(() => {
+    refreshData();
+  }, [refreshData]);
+
+  // Real-time Event Telemetry Listener for Left Notification Drawer & Live Report Sync
   useEffect(() => {
     fetch('/api/simulation/events')
       .then((res) => res.json())
@@ -95,6 +119,13 @@ export const App: React.FC = () => {
         try {
           const parsed: HospitalEvent = JSON.parse(event.data);
           setEvents((prev) => [...prev.slice(-99), parsed]);
+          if (
+            parsed.event_type === 'CLINICAL_REPORT_GENERATED' ||
+            parsed.event_type === 'PHYSICIAN_REVIEWED' ||
+            parsed.event_type === 'ENCOUNTER_CLOSED'
+          ) {
+            refreshData();
+          }
         } catch (e) {
           console.error('Failed to parse WS event:', e);
         }
@@ -103,33 +134,36 @@ export const App: React.FC = () => {
       console.warn('WS connection error:', err);
     }
 
+    // Cross-frame and BroadcastChannel synchronization for real-time report updates
+    const handleWindowMessage = (e: MessageEvent) => {
+      if (e.data) {
+        if (e.data.type === 'REPORT_GENERATED' || e.data.type === 'REPORT_REVIEWED') {
+          refreshData();
+        } else if (e.data.type === 'NAVIGATE' && e.data.tab) {
+          const target = e.data.tab === 'CASE_ROOM' ? 'JOURNEY' : e.data.tab;
+          setActiveTab(target as PortalTab);
+        }
+      }
+    };
+
+    window.addEventListener('message', handleWindowMessage);
+
+    let channel: BroadcastChannel | null = null;
+    if (typeof BroadcastChannel !== 'undefined') {
+      channel = new BroadcastChannel('vh_patient_channel');
+      channel.addEventListener('message', (e) => {
+        if (e.data && (e.data.type === 'REPORT_GENERATED' || e.data.type === 'REPORT_REVIEWED')) {
+          refreshData();
+        }
+      });
+    }
+
     return () => {
       if (ws) ws.close();
+      window.removeEventListener('message', handleWindowMessage);
+      if (channel) channel.close();
     };
-  }, []);
-
-  // Fetch initial cases, pending reports, and reviewed count
-  const refreshData = async () => {
-    try {
-      const [cRes, rRes, revRes] = await Promise.all([
-        fetch('/api/cases'),
-        fetch('/api/reports/pending'),
-        fetch('/api/reports/reviewed'),
-      ]);
-      if (cRes.ok) setCases(await cRes.json());
-      if (rRes.ok) setReports(await rRes.json());
-      if (revRes.ok) {
-        const revData = await revRes.json();
-        setReviewedCount(Array.isArray(revData) ? revData.length : 0);
-      }
-    } catch (err) {
-      console.error('Failed to load portal data:', err);
-    }
-  };
-
-  useEffect(() => {
-    refreshData();
-  }, []);
+  }, [refreshData]);
 
   // Submit physician review
   const handleSubmitReview = async (reviewPayload: PhysicianReviewPayload) => {
@@ -413,32 +447,8 @@ export const App: React.FC = () => {
         )}
 
         {activeTab === 'BENCHMARK' && (
-          <div className="flex-1 p-6 overflow-y-auto max-w-5xl mx-auto flex flex-col justify-center items-center text-center">
-            <div className="max-w-xl p-8 bg-white border border-[var(--ak-color-border-subtle)] rounded-xl shadow-md">
-              <div className="w-12 h-12 rounded-lg bg-[var(--ak-color-primary-soft)] border border-[var(--ak-color-border-subtle)] flex items-center justify-center text-[var(--ak-color-primary)] mx-auto mb-4 shadow-xs">
-                <Scale className="w-6 h-6 text-[var(--ak-color-primary)]" />
-              </div>
-              <h3 className="text-lg font-bold text-[var(--ak-color-text-primary)] font-mono tracking-wide mb-2 uppercase">
-                Reinforcement Learning Policy Benchmark
-              </h3>
-              <p className="text-xs text-[var(--ak-color-text-secondary)] mb-6 leading-relaxed font-sans">
-                Evaluate unaligned Base Foundation Model (v0.1) against Physician-Guided RL DPO (v0.3) across multi-case diagnostic accuracy, test appropriateness, and contraindication avoidance.
-              </p>
-              <div className="flex flex-wrap items-center justify-center gap-3 font-mono">
-                <button
-                  onClick={() => setIsBenchmarkOpen(true)}
-                  className="px-4 py-2.5 bg-[var(--ak-color-primary)] hover:bg-[var(--ak-color-primary)] text-white font-bold text-xs rounded-md shadow-xs transition cursor-pointer"
-                >
-                  Launch Policy Benchmark Console
-                </button>
-                <button
-                  onClick={() => setIsRLModalOpen(true)}
-                  className="px-4 py-2.5 bg-[var(--ak-color-bg-subtle)] hover:border-[var(--ak-color-border-subtle)] text-[var(--ak-color-text-primary)] font-semibold text-xs rounded-md border border-[var(--ak-color-border-subtle)] transition cursor-pointer"
-                >
-                  Inspect DPO Preference Dataset
-                </button>
-              </div>
-            </div>
+          <div className="flex-1 w-full h-full overflow-hidden flex flex-col">
+            <PolicyBenchmarkPage onNavigateTab={navigateToTab} />
           </div>
         )}
 

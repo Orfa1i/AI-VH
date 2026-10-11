@@ -1371,14 +1371,14 @@ async def trigger_manual_fine_tuning(req: Optional[ManualTrainingRequest] = None
 
 
 @api_router.get("/rl/benchmark")
-async def get_policy_benchmark_report():
+async def get_policy_benchmark_report(force_refresh: bool = False):
     """
     Executes and returns comparative policy evaluation benchmark report:
     Base MedGemma (v0.1) vs Physician-Guided RL DPO-Aligned Agent (v0.3)
     across all clinical benchmark cases.
     """
     try:
-        report = PolicyEvaluator.run_full_benchmark()
+        report = await asyncio.to_thread(PolicyEvaluator.run_full_benchmark, force_refresh=force_refresh)
         return report.model_dump()
     except Exception as e:
         logger.error(f"Error running policy benchmark: {e}", exc_info=True)
@@ -1386,7 +1386,7 @@ async def get_policy_benchmark_report():
 
 
 @api_router.get("/rl/benchmark/cases/{case_id}")
-async def get_case_policy_evaluation(case_id: str):
+async def get_case_policy_evaluation(case_id: str, force_refresh: bool = False):
     """
     Returns comparative evaluation metrics for a specific clinical case.
     """
@@ -1394,7 +1394,7 @@ async def get_case_policy_evaluation(case_id: str):
     if not case:
         raise HTTPException(status_code=404, detail=f"Case '{case_id}' not found in benchmark cases")
     try:
-        comparison = PolicyEvaluator.evaluate_case(case)
+        comparison = await asyncio.to_thread(PolicyEvaluator.evaluate_case, case, force_refresh=force_refresh)
         return comparison.model_dump()
     except Exception as e:
         logger.error(f"Error evaluating case {case_id}: {e}", exc_info=True)
@@ -1410,7 +1410,8 @@ async def run_comparative_model_inference(req: ComparativeInferenceRequest):
     """
     try:
         from ..llm.medgemma_service import medgemma_service
-        result = medgemma_service.generate_comparative_inference(
+        result = await asyncio.to_thread(
+            medgemma_service.generate_comparative_inference,
             case_id=req.case_id,
             clinical_scenario=req.clinical_scenario,
             force_gpu=req.force_gpu or False,
