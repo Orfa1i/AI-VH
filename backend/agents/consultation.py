@@ -68,15 +68,17 @@ class ConsultationEngine:
         ],
         "CARDIOLOGY": [
             "troponin", "stemi", "nstemi", "chest pain", "ecg", "st elevation", "cardiogenic",
-            "arrhythmia", "heart failure", "chf", "bnp", "impella", "cath lab"
+            "arrhythmia", "heart failure", "chf", "bnp", "impella", "cath lab", "tachycardia",
+            "palpitations", "tachyarrhythmia"
         ],
         "NEUROLOGY": [
             "stroke", "facial droop", "aphasia", "hemiparesis", "seizure", "pres",
-            "headache with visual", "scotoma", "nihss", "thrombectomy", "tenecteplase"
+            "headache with visual", "scotoma", "nihss", "thrombectomy", "tenecteplase",
+            "altered mental status", "gcs < 15"
         ],
         "GYNECOLOGY": [
             "adnexal mass", "pelvic mass", "ovarian torsion", "abnormal uterine bleeding",
-            "aub", "pelvic pain", "ectopic", "ovarian cyst"
+            "aub", "pelvic pain", "ectopic", "ovarian cyst", "adnexal"
         ],
         "OBSTETRICS": [
             "pregnancy", "pregnant", "gestational", "preeclampsia", "hellp", "fetal",
@@ -84,21 +86,26 @@ class ConsultationEngine:
         ],
         "INFECTIOUS_DISEASES": [
             "bacteremia", "mrsa", "endocarditis", "septic shock", "fever of unknown origin",
-            "vancomycin", "refractory fever", "blood cultures positive"
+            "vancomycin", "refractory fever", "blood cultures positive", "pneumonia"
         ],
         "EMERGENCY": [
             "resuscitation", "shock", "hypotension", "anaphylaxis", "airway", "intubation",
-            "stridor", "rapid sequence", "pressors", "map < 65"
+            "stridor", "rapid sequence", "pressors", "map < 65", "asthma", "bronchospasm",
+            "wheezing", "dyspnea", "shortness of breath", "respiratory distress", "hypoxia", "acute"
+        ],
+        "INTERNAL_MEDICINE": [
+            "fever", "cough", "diabetes", "hyperglycemia", "creatinine", "aki", "electrolyte",
+            "hyponatremia", "acidosis", "dehydration"
         ],
     }
 
     EMERGENCY_KEYWORDS = [
         "stemi", "cardiogenic shock", "large vessel occlusion", "stroke within window",
         "nihss > 15", "septic shock", "eclampsia", "severe hellp", "aortic dissection",
-        "acute abdomen with peritonitis", "anaphylactic shock", "cardiac arrest"
+        "acute abdomen with peritonitis", "anaphylactic shock", "cardiac arrest", "status asthmaticus"
     ]
 
-    def __init__(self, max_consultations: int = 2, timeout: float = 30.0):
+    def __init__(self, max_consultations: int = 2, timeout: float = 65.0):
         self.max_consultations = max_consultations
         self.timeout = timeout
 
@@ -114,9 +121,37 @@ class ConsultationEngine:
         Never invokes every specialist for every case; strictly clinically indicated.
         """
         indicated: List[str] = []
+        
+        # Build vitals telemetry string
+        vitals_dict = patient_data.get("vital_signs") or patient_data.get("baseline_vitals") or {}
+        vitals_text = ""
+        if isinstance(vitals_dict, dict):
+            v_parts = []
+            for k, val in vitals_dict.items():
+                v_parts.append(f"{k}: {val}")
+                # Flag abnormal thresholds
+                k_l = str(k).lower()
+                try:
+                    num_val = float(str(val).split()[0].replace("/", "."))
+                    if "hr" in k_l or "heart" in k_l:
+                        if num_val > 100: v_parts.append("tachycardia")
+                        elif num_val < 60: v_parts.append("bradycardia")
+                    elif "spo2" in k_l or "o2" in k_l:
+                        if num_val < 94: v_parts.append("hypoxia respiratory distress")
+                    elif "rr" in k_l or "resp" in k_l:
+                        if num_val > 20: v_parts.append("tachypnea respiratory distress")
+                except Exception:
+                    pass
+            vitals_text = " ".join(v_parts)
+        elif isinstance(vitals_dict, list):
+            vitals_text = " ".join(str(v) for v in vitals_dict)
+        elif vitals_dict:
+            vitals_text = str(vitals_dict)
+
         text = (
             f"{patient_data.get('chief_complaint', '')} "
             f"{patient_data.get('history_of_present_illness', '')} "
+            f"{vitals_text} "
             f"{initial_diagnosis} "
             f"{' '.join(abnormal_labs or [])}"
         ).lower()

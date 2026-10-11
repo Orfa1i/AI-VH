@@ -198,15 +198,25 @@ class NemotronSynthesisEngine:
         
         lines.append(f"Vital Signs: {vitals_summary}")
         
-        exam_parts = [f"{sys}: {val}" for sys, val in (exam_findings or {}).items() if val]
-        lines.append(f"Physical Examination: {'; '.join(exam_parts) if exam_parts else 'Grossly unremarkable'}")
+        if isinstance(exam_findings, dict):
+            exam_parts = [f"{sys}: {val}" for sys, val in exam_findings.items() if val]
+        elif isinstance(exam_findings, list):
+            exam_parts = [f"{item.get('title', 'Study')}: {item.get('desc', str(item))}" if isinstance(item, dict) else str(item) for item in exam_findings]
+        elif exam_findings:
+            exam_parts = [str(exam_findings)]
+        else:
+            exam_parts = []
+        lines.append(f"Physical Examination & Studies: {'; '.join(exam_parts) if exam_parts else 'Grossly unremarkable'}")
         
         lab_lines = []
         for lab in lab_results or []:
-            tt = lab.get("test_type", "Lab")
-            val = lab.get("values", lab.get("value", lab.get("interpretation", "Pending")))
-            interp = lab.get("interpretation", "")
-            lab_lines.append(f"- {tt}: {val} ({interp})" if interp else f"- {tt}: {val}")
+            if isinstance(lab, dict):
+                tt = lab.get("test_type", lab.get("name", "Lab"))
+                val = lab.get("values", lab.get("val", lab.get("value", lab.get("interpretation", "Pending"))))
+                interp = lab.get("interpretation", lab.get("flag", ""))
+                lab_lines.append(f"- {tt}: {val} ({interp})" if interp else f"- {tt}: {val}")
+            else:
+                lab_lines.append(f"- {str(lab)}")
         lines.append("Diagnostic & Laboratory Results:")
         lines.extend(lab_lines or ["- None available"])
 

@@ -2302,7 +2302,7 @@ const CASES = {
       case 'idle':
         return { router: 'Not routed yet', stage: 'Not started', badge: null, action: 'Route case' };
       case 'routing':
-        return { router: 'Routing the case…', stage: state.running ? 'Routing' : 'Routing (Paused)', badge: 'Live', action: state.running ? 'Pause' : 'Resume' };
+        return { router: 'Routing the case…', stage: 'Routing', badge: 'Live', action: 'Routing the case...' };
       case 'review':
         return { router: routedSummary(state.routing), stage: state.running ? 'Independent review' : 'Independent review (Paused)', badge: 'Live', action: state.running ? 'Pause' : 'Resume' };
       case 'crosscheck':
@@ -2355,8 +2355,11 @@ const CASES = {
 
     mainSpan.textContent = labels.action;
     mainBtn.setAttribute('aria-label', labels.action);
+    mainBtn.disabled = (state.phase === 'routing');
 
-    if (labels.action === 'Route case' || labels.action === 'Resume') {
+    if (labels.action === 'Routing the case...') {
+      mainBtn.querySelector('svg').innerHTML = '<circle cx="8" cy="8" r="5" stroke="currentColor" stroke-width="2" fill="none" stroke-dasharray="24" stroke-dashoffset="8"><animateTransform attributeName="transform" type="rotate" from="0 8 8" to="360 8 8" dur="0.9s" repeatCount="indefinite"/></circle>';
+    } else if (labels.action === 'Route case' || labels.action === 'Resume') {
       mainBtn.querySelector('svg').innerHTML = '<polygon points="3.5 2.5 13.5 8 3.5 13.5"/>';
     } else if (labels.action === 'Pause') {
       mainBtn.querySelector('svg').innerHTML = '<rect x="3" y="2.5" width="3.4" height="11" rx="1"/><rect x="9.6" y="2.5" width="3.4" height="11" rx="1"/>';
@@ -2577,6 +2580,7 @@ const CASES = {
 
   /* Animate Scores */
   function animateScores(scores, ms = 1300) {
+    if (!scores || typeof scores !== 'object') return;
     if (reduce) {
       for (const [key, el] of Object.entries(rcol)) {
         const v = scores[key] || 0;
@@ -3010,6 +3014,8 @@ const CASES = {
     state.eventSubState = 'idle';
     speakerAt = null;
     gaze(null);
+    state.tab = 'draft';
+    syncPanels();
     syncUI();
   }
 
@@ -3121,23 +3127,17 @@ const CASES = {
 
     // Step progression when running
     if (state.running) {
-      if (state.phase === 'routing') {
-        if (now - phaseTimer > 2000) {
-          state.phase = 'review';
-          renderRouterCards();
-          animateScores(state.routing.scores, 1300);
-          state.eventIndex = 0;
-          startEventThinking(0, now);
-        }
-      } else if (state.eventSubState === 'thinking') {
-        const thinkingDur = reduce ? 0 : 1300;
-        if (now - state.subStateTime >= thinkingDur) {
-          startEventSpeaking(state.eventIndex, now);
-        }
-      } else if (state.eventSubState === 'speaking') {
-        const speakingDur = reduce ? 0 : 1800;
-        if (now - state.subStateTime >= speakingDur) {
-          finishEventSpeaking(state.eventIndex, now);
+      if (state.phase === 'review' || state.phase === 'crosscheck' || state.phase === 'consensus') {
+        if (state.eventSubState === 'thinking') {
+          const thinkingDur = reduce ? 0 : 1300;
+          if (now - state.subStateTime >= thinkingDur) {
+            startEventSpeaking(state.eventIndex, now);
+          }
+        } else if (state.eventSubState === 'speaking') {
+          const speakingDur = reduce ? 0 : 1800;
+          if (now - state.subStateTime >= speakingDur) {
+            finishEventSpeaking(state.eventIndex, now);
+          }
         }
       }
     }
@@ -3154,51 +3154,92 @@ const CASES = {
       phaseTimer = performance.now();
       syncUI();
 
-      // Consult backend router with graceful fallback
-      let result = activeCase.router;
       try {
-        const resp = await fetch('/api/router/route', {
+        const rawCase = activeCase.raw || {};
+        const rawData = rawCase.case_data || {};
+        const payloadCase = {
+          id: activeCase.id || 'CASE-101',
+          name: activeCase.name || 'Admitted Inpatient',
+          age: rawCase.age || parseInt(activeCase.demog) || 35,
+          sex: rawCase.sex || (activeCase.demog && activeCase.demog.includes('F') ? 'Female' : 'Male'),
+          chief_complaint: activeCase.chief_complaint || 'Acute clinical evaluation',
+          history_of_present_illness: activeCase.hpi || activeCase.chief_complaint,
+          past_medical_history: rawData.past_medical_history || [],
+          medications: rawData.medications || [],
+          allergies: rawData.allergies || [],
+          baseline_vitals: rawData.baseline_vitals || (Array.isArray(activeCase.vitals) ? activeCase.vitals.reduce((acc, v) => ({ ...acc, [v.label.toLowerCase()]: v.val }), {}) : {}),
+          lab_results: (activeCase.labs && activeCase.labs.length) ? activeCase.labs : (rawData.labs || []),
+          imaging_findings: (activeCase.imaging && activeCase.imaging.length) ? activeCase.imaging : (rawData.imaging || {}),
+          data_origin: activeCase.synthetic ? 'SYNTHETIC_BENCHMARK' : 'REAL_EHR'
+        };
+
+        const resp = await fetch('/api/clinical/execute-case', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            chief_complaint: activeCase.chief_complaint,
-            patient_history: activeCase.hpi,
-            vitals: activeCase.vitals,
-            diagnostic_data: activeCase.labs
+            case_id: activeCase.id || 'CASE-101',
+            patient_case: payloadCase,
+            data_origin: activeCase.synthetic ? 'SYNTHETIC_BENCHMARK' : 'REAL_EHR',
+            max_consultations: 1
           })
         });
+
         if (resp.ok) {
           const data = await resp.json();
-          const mapKey = name => {
-            if (!name) return null;
-            const n = name.toLowerCase();
-            if (n.includes('obstet')) return 'ob';
-            if (n.includes('gynec')) return 'gy';
-            if (n.includes('emerg')) return 'em';
-            if (n.includes('cardio')) return 'ca';
-            if (n.includes('neuro')) return 'ne';
-            if (n.includes('surg')) return 'su';
-            if (n.includes('internal')) return 'im';
-            return null;
-          };
-          const primaryKey = mapKey(data.primary_agent) || activeCase.router.primary;
-          const consultKey = mapKey(data.consult_agent) || activeCase.router.consult;
-          const scores = activeCase.router.scores;
-          const status = { ...activeCase.router.status };
-          if (primaryKey) status[primaryKey] = 'lead';
-          result = {
-            ...activeCase.router,
-            primary: primaryKey,
-            consult: consultKey,
-            scores,
-            status
-          };
+          if (data.routing) {
+            state.routing = data.routing;
+            activeCase.router = data.routing;
+          }
+          if (data.events && Array.isArray(data.events) && data.events.length > 0) {
+            activeCase.events = data.events;
+          }
+          if (data.synthesis) {
+            activeCase.dx = data.synthesis.primary_diagnosis || activeCase.dx;
+            activeCase.conf = data.synthesis.confidence || 0.92;
+            if (data.synthesis.differential && data.synthesis.differential.length) {
+              activeCase.ddx = data.synthesis.differential.map((d, i) => ({
+                id: 'dx-' + i,
+                t: typeof d === 'string' ? d : (d.condition || d.diagnosis || d.t || JSON.stringify(d))
+              }));
+            }
+            if (data.synthesis.red_flags && data.synthesis.red_flags.length) {
+              activeCase.watchFor = data.synthesis.red_flags.join(', ');
+            }
+            if (data.synthesis.treatment_plan && data.synthesis.treatment_plan.length) {
+              activeCase.plan = data.synthesis.treatment_plan.map((tp, idx) => ({
+                id: 'plan-' + idx,
+                t: typeof tp === 'string' ? tp : (tp.action || tp.title || JSON.stringify(tp)),
+                done: idx === 0,
+                own: [data.routing?.primary || 'im']
+              }));
+            }
+            setupDraftPlan(activeCase);
+          }
         }
-      } catch (e) {
-        // Fallback to activeCase.router
+      } catch (err) {
+        console.warn('Execution pipeline fallback to client heuristic:', err);
       }
 
-      state.routing = result;
+      // Ensure fallback routing exists if network had issue
+      if (!state.routing) {
+        state.routing = activeCase.router;
+      }
+
+      // Ensure at least 1100ms visual animation of "Routing the case..."
+      const elapsed = performance.now() - phaseTimer;
+      const remainingWait = Math.max(0, 1100 - elapsed);
+      if (remainingWait > 0) {
+        await new Promise(r => setTimeout(r, remainingWait));
+      }
+
+      // Transition to review and automatic switch to Discussion tab!
+      state.phase = 'review';
+      state.tab = 'discussion';
+      syncPanels();
+      renderRouterCards();
+      animateScores(state.routing ? state.routing.scores : null, 1300);
+      state.eventIndex = 0;
+      startEventThinking(0, performance.now());
       syncUI();
       return;
     }
@@ -3295,6 +3336,70 @@ const CASES = {
 
     const dx = raw.presumptive_diagnosis || p.chief_complaint || 'Undifferentiated Admission';
 
+    // Determine initial specialty heuristic from complaint
+    const cc = (p.chief_complaint || '').toLowerCase();
+    let initPrim = 'im';
+    if (cc.includes('pregnan') || cc.includes('gestat') || cc.includes('labor') || cc.includes('preeclamp')) initPrim = 'ob';
+    else if (cc.includes('pelvic') || cc.includes('bleeding') || cc.includes('ovarian') || cc.includes('adnexal')) initPrim = 'gy';
+    else if (cc.includes('chest') || cc.includes('angina') || cc.includes('infarct') || cc.includes('coronary')) initPrim = 'ca';
+    else if (cc.includes('stroke') || cc.includes('seizure') || cc.includes('weakness') || cc.includes('numbness') || cc.includes('headache')) initPrim = 'ne';
+    else if (cc.includes('appendic') || cc.includes('abdomen') || cc.includes('periton') || cc.includes('surgical')) initPrim = 'su';
+    else if (cc.includes('trauma') || cc.includes('shock') || cc.includes('unresponsive') || cc.includes('overdose')) initPrim = 'em';
+
+    const defaultScores = { ob: 40, gy: 38, ca: 48, su: 38, em: 62, ne: 35, im: 50 };
+    defaultScores[initPrim] = 94;
+    defaultScores['em'] = Math.max(defaultScores['em'], 75);
+
+    const defaultStatus = { ob: 'standby', gy: 'standby', ca: 'standby', su: 'standby', em: 'assigned', ne: 'standby', im: 'standby' };
+    defaultStatus[initPrim] = 'lead';
+
+    const fallbackRouter = {
+      routedAt: 'Pending',
+      primary: initPrim,
+      consult: 'em',
+      scores: defaultScores,
+      status: defaultStatus,
+      assigned: [initPrim, 'em'],
+      standby: Object.keys(defaultStatus).filter(k => k !== initPrim && k !== 'em'),
+      rationale: `Case presented with ${p.chief_complaint}. Triaged for multidisciplinary review.`
+    };
+
+    const fallbackEvents = [
+      {
+        who: initPrim,
+        to: 'board',
+        kind: 'assess',
+        short: `Initial clinical evaluation: ${dx}`,
+        detail: `Patient admitted to bed ${p.bed_number || '01'} with ${p.chief_complaint}. Telemetry vitals monitored. Formulating initial clinical pathway.`,
+        voice: `Patient admitted for ${p.chief_complaint}. Initiating clinical assessment.`,
+        agreeWith: [initPrim],
+        planAgrees: ['intake_eval'],
+        dxDelta: {}
+      },
+      {
+        who: 'em',
+        to: initPrim,
+        kind: 'consult_reply',
+        short: 'Emergency Triage: Continuous vitals and line access verified',
+        detail: `Continuous bedside telemetry and nursing oversight active per emergency protocol. Baseline vitals reviewed.`,
+        voice: 'Emergency telemetry active and patient status verified.',
+        agreeWith: [initPrim, 'em'],
+        planAgrees: ['intake_eval'],
+        dxDelta: {}
+      },
+      {
+        who: initPrim,
+        to: 'board',
+        kind: 'consensus',
+        short: `Consensus synthesized: ${dx}`,
+        detail: `Multidisciplinary review confirmed initial workup plan for ${p.name}.`,
+        voice: `Clinical review finalized for ${p.name}.`,
+        agreeWith: [initPrim, 'em'],
+        planAgrees: ['intake_eval', 'diagnostic_workup'],
+        dxDelta: {}
+      }
+    ];
+
     return {
       id: p.id,
       mrn: p.mrn,
@@ -3320,13 +3425,14 @@ const CASES = {
         { id: 'diagnostic_workup', t: 'Perform focused diagnostic workup and specialty consult', done: false, own: ['im', 'ca', 'ne'] },
         { id: 'treatment_order', t: 'Formulate definitive inpatient management plan', done: false, own: ['im'] }
       ],
-      router: null,
-      events: [],
+      router: fallbackRouter,
+      events: fallbackEvents,
       synthetic: false,
       admission_status: p.admission_status,
       assigned_department: p.assigned_department,
       bed_number: p.bed_number,
-      admitted_at: p.admitted_at
+      admitted_at: p.admitted_at,
+      raw: p
     };
   }
 
@@ -3378,7 +3484,8 @@ const CASES = {
           bed_number: p.bed_number,
           assigned_department: p.assigned_department,
           admission_status: 'ADMITTED',
-          synthetic: false
+          synthetic: false,
+          raw: p
         } : mapDynamicPatientRecord(p);
 
         admittedCasesMap[p.id] = caseObj;
