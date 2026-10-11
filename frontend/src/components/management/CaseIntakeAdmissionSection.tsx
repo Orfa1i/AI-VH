@@ -46,6 +46,8 @@ export const CaseIntakeAdmissionSection: React.FC<CaseIntakeAdmissionSectionProp
 
   useEffect(() => {
     const handleMessage = (e: MessageEvent) => {
+      // Ignore messages dispatched by host window to prevent recursive loops
+      if (e.source === window) return;
       if (!e.data || typeof e.data !== 'object') return;
 
       if (e.data.type === 'NAVIGATE' && e.data.tab) {

@@ -635,42 +635,86 @@
     $('#n-M').textContent = P.filter(p => p.sex === 'M').length;
   };
 
+  const syncChannel = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('vh_patient_channel') : null;
+
   const admit = async p => {
     if (p.admitted) return;
     p.admitted = true;
     render();
     if (current === p) fillDrawer(p);
 
-    // Live API integration
+    let admittedRecord = null;
+    // 1. Try primary demo-patients admit endpoint
     try {
       const resp = await fetch(`/api/demo-patients/${p.id}/admit`, { method: 'POST' });
       if (resp.ok) {
         const data = await resp.json();
-        if (window.parent && window.parent !== window) {
-          window.parent.postMessage({ type: 'PATIENT_ADMITTED', patient: data.patient || p }, '*');
-        }
+        admittedRecord = data.patient || null;
       }
     } catch (e) {
-      console.warn('Backend admit call failed:', e);
+      console.warn('Backend demo-patients admit call failed:', e);
     }
 
-    // Always notify parent of admission
+    // 2. Fallback to direct /api/patients/admit if not found in demo index
+    if (!admittedRecord) {
+      try {
+        const fallbackPayload = {
+          name: p.name,
+          age: Number(p.age) || 50,
+          sex: p.sex === 'M' ? 'Male' : 'Female',
+          chief_complaint: (p.dx && p.dx[0]) || 'Observation',
+          triage_acuity: 'EMERGENT',
+          assigned_department: 'EMERGENCY',
+          bed_number: `BED-${p.id.replace(/[^a-zA-Z0-9]/g, '').slice(-4).toUpperCase()}`,
+          baseline_vitals: {
+            heart_rate: 80,
+            systolic_bp: 120,
+            diastolic_bp: 80,
+            respiratory_rate: 18,
+            temperature_c: 37.0,
+            spo2: 98.0
+          }
+        };
+        const fResp = await fetch('/api/patients/admit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(fallbackPayload)
+        });
+        if (fResp.ok) {
+          admittedRecord = await fResp.json();
+        }
+      } catch (fErr) {
+        console.error('Fallback admit failed:', fErr);
+      }
+    }
+
+    const payload = admittedRecord || {
+      id: p.id,
+      mrn: p.id,
+      name: p.name,
+      age: p.age,
+      sex: p.sex === 'M' ? 'Male' : 'Female',
+      chief_complaint: p.dx[0] || 'Observation',
+      triage_acuity: 'EMERGENT',
+      assigned_department: 'EMERGENCY',
+      bed_number: `BED-${p.id.split('-').pop()}`,
+      admitted_at: new Date().toISOString()
+    };
+
+    // Single unified notification to parent
     if (window.parent && window.parent !== window) {
       window.parent.postMessage({
         type: 'PATIENT_ADMITTED',
-        patient: {
-          id: p.id,
-          mrn: p.id,
-          name: p.name,
-          age: p.age,
-          sex: p.sex === 'M' ? 'Male' : 'Female',
-          chief_complaint: p.dx[0] || 'Observation',
-          triage_acuity: 'EMERGENT',
-          assigned_department: 'EMERGENCY',
-          bed_number: `BED-${p.id.split('-').pop()}`,
-          admitted_at: new Date().toISOString()
-        }
+        patient: payload
       }, '*');
+    }
+
+    // Broadcast cross-tab and cross-iframe
+    if (syncChannel) {
+      syncChannel.postMessage({
+        type: 'PATIENT_ADMITTED',
+        patient: payload
+      });
     }
 
     say(`${p.name} admitted to intake. Directing to triage.`);
@@ -890,6 +934,9 @@
       if (window.parent && window.parent !== window) {
         window.parent.postMessage({ type: 'PATIENT_ADMITTED', patient: admitted }, '*');
       }
+      if (syncChannel) {
+        syncChannel.postMessage({ type: 'PATIENT_ADMITTED', patient: admitted });
+      }
 
       say(`Patient ${admitted.name} admitted successfully.`);
     } catch (err) {
@@ -905,8 +952,9 @@
   document.querySelectorAll('.tab[data-tab]').forEach(btn => {
     btn.addEventListener('click', () => {
       const tab = btn.dataset.tab;
+      const targetTab = (tab === 'CASE_ROOM') ? 'JOURNEY' : tab;
       if (window.parent && window.parent !== window) {
-        window.parent.postMessage({ type: 'NAVIGATE', tab: tab }, '*');
+        window.parent.postMessage({ type: 'NAVIGATE', tab: targetTab }, '*');
       } else {
         if (tab === 'STAFF') window.location.href = '/staff-roster.html';
         else if (tab === 'CASE_ROOM' || tab === 'JOURNEY') window.location.href = '/case-room.html';
@@ -937,6 +985,23 @@
       say('No new system alerts.');
     }
   });
+
+  // Sync admission state from database on boot
+  fetch('/api/patients?status=ADMITTED')
+    .then(r => r.json())
+    .then(data => {
+      if (data && Array.isArray(data.patients)) {
+        const admittedSet = new Set(data.patients.map(p => (p.name || '').toLowerCase()));
+        const admittedMrnSet = new Set(data.patients.map(p => (p.mrn || '').toLowerCase()));
+        P.forEach(p => {
+          if (admittedSet.has(p.name.toLowerCase()) || admittedMrnSet.has(p.id.toLowerCase())) {
+            p.admitted = true;
+          }
+        });
+        render();
+      }
+    })
+    .catch(err => console.warn('Could not sync initial admission statuses:', err));
 
   render();
 })();

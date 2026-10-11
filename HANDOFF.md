@@ -2,7 +2,7 @@
 
 **Date:** 2026-10-11  
 **Git Branch:** `redesign/phase-7`  
-**Latest Commit:** `Pending commit` (Chat Consultant UI compact redesign, glasses removal, and brand aesthetic alignment)  
+**Latest Commit:** Pending commit (`fix(intake): resolve Synthea patient admission synchronization to Case Room dropdown`)  
 **Environment Status:**
 - Frontend Dev Server: Running on `http://localhost:5173` (Vite, task-7004)
 - Backend API Server: Running on `http://127.0.0.1:8000` (FastAPI / Uvicorn, task-8003)
@@ -11,44 +11,38 @@
 
 ## 1. Accomplished This Session
 
-### Chat Consultant UI Redesign: Compact Sizing, Glasses Removal & Brand Alignment
-Redesigned the Chat Consultant UI (`frontend/src/components/specialists/DoctorChatModal.tsx`, avatar assets, SVG files, and roster views) to address all user requirements:
+### Synthea Patient Admission Synchronization to "Select Patient Case" Dropdown
+Investigated and resolved the issue where patients admitted from Synthea were not appearing or synchronizing into the "Select Patient Case" dropdown in the Clinical Dossier (`case-room.html` / `Journey` tab):
 
-1. **Compact Vertical Size & Viewport Clearance**:
-   - Replaced oversized modal container (`max-w-4xl h-[90vh]`) with a compact, ergonomically centered container (`max-w-3xl h-[72vh] min-h-[500px] max-h-[640px] my-auto`).
-   - Modal now leaves at least 140px+ clearance from top and bottom viewport edges on standard displays, eliminating top-of-screen stretching.
-   - Refactored header padding from `p-4 sm:p-5` to `px-4 sm:px-5 py-2.5 sm:py-3`, reducing header vertical footprint by ~35%.
-   - Reduced quick scenario starter chips padding from `px-4 py-2.5` to `px-4 py-1.5`.
-   - Compacted message thread spacing from `p-4 sm:p-6 space-y-5` to `p-3.5 sm:p-4 space-y-3`.
-   - Tightened doctor and clinician message bubbles from `p-4 sm:p-5` to `p-3 sm:p-3.5` with `max-w-xl`.
-   - Streamlined structured cards (Differential diagnosis, clinical safety alerts, diagnostic workup, guideline management, and textbook citations) with high-density spacing and typography.
-   - Reduced input footer from `p-4` with 2-line textarea to compact `px-3.5 sm:px-4 py-2.5` with clean 1-line auto-grow input and concise placeholder.
+1. **Eliminated Infinite postMessage Recursion Loop (`net::ERR_INSUFFICIENT_RESOURCES`)**:
+   - **Root Cause**: In `frontend/src/components/management/CaseIntakeAdmissionSection.tsx`, a `window.addEventListener('message')` listener received messages and invoked `onPatientAdmitted(patient)`. In `App.tsx`, `handlePatientAdmitted` dispatched `window.postMessage({ type: 'PATIENT_ADMITTED', patient }, '*')` back to `window`. Because `window` dispatched to itself, the listener caught its own message in an uncontrolled loop. This fired thousands of parallel `refreshData()` fetch requests, exhausting browser network sockets and causing subsequent fetch requests (such as `loadAdmittedPatients()`) to fail with `net::ERR_INSUFFICIENT_RESOURCES`.
+   - **Resolution**: Added `if (e.source === window) return;` guard to `CaseIntakeAdmissionSection.tsx` to ignore intra-window broadcasts, and removed the redundant `postMessage` echo in `App.tsx`.
 
-2. **Glasses Icon / Graphic Removal**:
-   - Identified root cause of the distracting glasses graphic: generated as a specialty signature detail on the Internal Medicine doctor avatar (`Dr. Marcus Vance`).
-   - Removed round reading glasses circles (`cx="452"` and `cx="572"`, `r="54"`) and bridge overlay (`M506 460 Q512 452 518 460`) from:
-     - `frontend/public/assets/generator-av.py`
-     - `frontend/public/assets/svg/vh-agent-internal-medicine-circle.svg`
-     - `frontend/public/assets/svg/vh-agent-internal-medicine-compact.svg`
-     - `frontend/public/assets/svg/vh-agent-internal-medicine-rounded.svg`
-     - `frontend/public/assets/svg/vh-agent-internal-medicine-transparent.svg`
-     - `frontend/public/staff-roster.html` (`AVSVG["im"]`)
-     - `frontend/public/case-room.html` (`AVSVG["im"]`)
-     - `frontend/public/assets/README.md`
-   - Re-rendered all PNG assets in `frontend/src/assets/` and `frontend/public/assets/png/` (`1024`, `512`, `256`, `128`, `64`, compact sizes, and `dr_marcus_vance.jpg`) using headless Playwright Chromium, producing pixel-perfect, clean, glasses-free avatars.
+2. **Added Synthea Backend Fallback for Unindexed Patient IDs**:
+   - **Root Cause**: `case-intake.html` contained hardcoded cards (`SYNTH-101-0011` William Brooks, `SYNTH-101-0012` Aisha Bello, `SYNTH-101-0013` Noah Patel) that were not present in static cache files in `demo_data_service`. When clicked, `/api/demo-patients/{id}/admit` returned 404, causing the admission to silently fail.
+   - **Resolution**: In `src/vh/synthea/service.py` (`admit_to_hospital`), added automated dynamic synthesis fallback for any unindexed patient ID. If a patient is not in the cached file dictionary, the service generates a valid clinical profile, creates a FHIR R4 Patient/Encounter/Condition bundle, assigns a hospital bed (`BED-SYNTH-XXXX`), sets status to `ADMITTED`, and commits the record to the hospital database.
 
-3. **Brand Aesthetic Alignment (Asklevia Design System)**:
-   - Aligned modal styling with Asklevia CSS tokens: `--bg-surface`, `--bg-subtle`, `--bg-page`, `--border-default`, `--scrim`, `--indigo-500`, `--indigo-600`, `--success-600`, `--warning-600`.
-   - Connected distinct, high-fidelity avatars for all 7 specialties (Internal Medicine, Surgery, Cardiology, Emergency Medicine, Neurology, Gynecology, and Obstetrics).
-   - Created clean "On duty" chip badge, RAG telemetry badge, audio TTS readout button, and Geist Mono technical metadata.
+3. **Multi-Channel Admission Synchronization (BroadcastChannel + postMessage + Polling)**:
+   - In `frontend/public/case-intake.html`:
+     - Initialized `new BroadcastChannel('vh_patient_channel')` alongside `window.parent.postMessage`.
+     - Direct fallback to `/api/patients/admit` if demo admission endpoint encounters an error.
+     - Fetched current `/api/patients?status=ADMITTED` on mount so already-admitted cards render with an active "Admitted" badge immediately.
+     - Updated tab mapping from `CASE_ROOM` to `'JOURNEY'` so navigation works reliably with React `App.tsx`.
+   - In `frontend/public/case-room.html`:
+     - Added `BroadcastChannel('vh_patient_channel')` listener to receive instantaneous notifications across tabs/iframes.
+     - Enhanced `loadAdmittedPatients(preferredPatientId)` with fuzzy matching (id, case_id, mrn, patient_name) so admitted patients automatically become the selected active case.
+     - Enhanced vitals mapping to support both `spo2` / `spo2_percent` and `temperature` / `temperature_c`.
+
+4. **Portal Direct Navigation Timing**:
+   - In `frontend/index.html`: Added a `DOMContentLoaded` listener that calls `enterPortal()` when the URL hash is `/#portal`, guaranteeing `#root` is immediately displayed and visible without manual landing page interaction during automated tests.
 
 ---
 
 ## 2. Key Decisions & Rationale
 
-- **Capped Max Height (`max-h-[640px]`) & Responsive `72vh`**: Setting both a relative height (`72vh`) and a hard pixel cap (`max-h-[640px]`) ensures that on large screens the modal stays compact and centered without stretching, while on small laptop screens (768px height) it shrinks responsively with full viewport clearance.
-- **Full Asset Re-rendering via Playwright**: Rather than just hiding the glasses in CSS, re-rendering the actual vector SVG files and PNG bundles guarantees that the glasses are removed across all platform surfaces—including the chat modal, staff roster iframe, case room journey, and future exports.
-- **Obstetrics Profile Integration**: Added dedicated `OBSTETRICS_PROFILE` grounded in *Williams Obstetrics (26th Edition)* with its matching avatar `agentObstetrics`, ensuring full coverage across all 7 hospital specialist roles and zero unused import warnings.
+- **Dual-Channel Messaging (`BroadcastChannel` + `postMessage`)**: Cross-origin or cross-frame messaging can sometimes be dropped if iframes load asynchronously or are nested inside different contexts. Combining modern `BroadcastChannel` with standard `window.parent.postMessage` guarantees immediate delivery regardless of iframe hierarchy.
+- **Dynamic Fallback in Synthea Service**: Ensures that no patient ID in any UI repository or random generator seed can fail with a 404 on admission. Every patient can be admitted and tracked through triage, bed assignment, and clinical dossier review.
+- **Fuzzy Preferred Patient Matching**: Allows newly admitted patients passed by name, case ID, or Synthea ID to be selected automatically in the dropdown and displayed in the dossier sidebar upon opening the Case Room.
 
 ---
 
@@ -58,17 +52,24 @@ Redesigned the Chat Consultant UI (`frontend/src/components/specialists/DoctorCh
   - 12/12 test files passed (100% green).
   - 51/51 unit tests passed with 0 failures.
 - **Frontend Production Build**:
-  - `tsc -b && vite build` built cleanly in 1.31s with 0 TypeScript or bundling errors.
-- **Visual Verification via Playwright Screenshot**:
-  - Captured full viewport screenshot at `C:/Users/PCD/.gemini/antigravity-cli/brain/17f22c14-b8f7-4171-b34f-c13b0184026f/chat-consultant-compact.png`.
-  - Confirmed modal is vertically compact, beautifully centered, leaves ample space above and below, and displays clean doctor avatar with no glasses.
-- **Glasses Search Audit**:
-  - Zero remaining occurrences of `r="54"` or glasses coordinates in the avatar SVGs, HTML files, or script templates.
+  - `npm run build` completed successfully (`tsc -b && vite build`) in 2.19s with 0 errors.
+- **Frontend Linter (Oxlint)**:
+  - `npm run lint` passed with 0 errors across 66 files.
+- **Backend Synthea Tests (Pytest)**:
+  - `py -3.13 -m pytest tests/test_synthea_integration.py -v` passed with 9/9 tests passed (100% green).
+- **End-to-End User Flow Test (Playwright)**:
+  - Executed `node frontend/scripts/test_user_flow.cjs`:
+    - Admitted patient `Layla Grace Johnson` (`CASE-SYNTH-pat-demo-004`).
+    - Switched to Journey / Case Room tab.
+    - Verified that `[BED-SYNTH--004] Layla Grace Johnson — Acute (ESI 3)` was rendered at the top of the `#case-select` dropdown.
+    - Verified that all 14 admitted patients are listed with real beds, ESI tiers, and conditions.
+    - Verified clinical dossier sidebar renders telemetry vitals (BP 120/80, HR 122 bpm, RR 18, SpO2 98%, TEMP 37 °C, GCS 15/15), labs, and chief complaint.
+    - Captured screenshot artifact: `C:/Users/PCD/.gemini/antigravity-cli/brain/17f22c14-b8f7-4171-b34f-c13b0184026f/synthea-admission-case-room.png`.
 
 ---
 
 ## 4. Concrete Next Steps
 
-- Add keyboard navigation shortcuts (e.g. `Esc` to close, `Alt+1..4` to pick quick scenario presets).
-- Implement conversation history persistence in localStorage or backend sessions per specialist.
-- Add audio waveform visualization when the clinical specialist is speaking via TTS.
+1. **Live Model Routing & Consultation Testing**: Run MedGemma routing on an admitted Synthea patient case and verify the specialist consultation flow.
+2. **Clinical Decision Support Evaluation**: Test secondary specialist escalation (e.g. Cardiology consult on acute asthma with tachycardia).
+3. **Synthesis Generation with Nemotron**: Verify diagnostic synthesis and report generation on admitted cases.

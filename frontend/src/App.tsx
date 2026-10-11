@@ -149,10 +149,14 @@ export const App: React.FC = () => {
     }
   };
 
-  const handlePatientAdmitted = (patient: PatientRecord) => {
+  const navigateToTab = (tab: string) => {
+    const target = tab === 'CASE_ROOM' ? 'JOURNEY' : tab;
+    setActiveTab(target as PortalTab);
+  };
+
+  const handlePatientAdmitted = (_patient: PatientRecord) => {
     setPatientRefreshCounter((prev) => prev + 1);
     refreshData();
-    window.postMessage({ type: 'PATIENT_ADMITTED', patient }, '*');
   };
 
   const handleAdmitAndSimulate = async (caseId: string, patientName?: string) => {
@@ -369,7 +373,7 @@ export const App: React.FC = () => {
             cases={cases}
             onPatientAdmitted={handlePatientAdmitted}
             onAdmitAndSimulate={handleAdmitAndSimulate}
-            onNavigateTab={(tab) => setActiveTab(tab as any)}
+            onNavigateTab={navigateToTab}
             initialMode="SYNTHETIC"
           />
         )}
@@ -381,7 +385,7 @@ export const App: React.FC = () => {
         )}
 
         {activeTab === 'STAFF' && (
-          <StaffManagementSection onNavigateTab={(tab) => setActiveTab(tab as any)} />
+          <StaffManagementSection onNavigateTab={navigateToTab} />
         )}
 
         {activeTab === 'REPORTS' && (
@@ -403,7 +407,7 @@ export const App: React.FC = () => {
           <div className="flex-1 w-full h-full overflow-hidden flex flex-col">
             <PatientJourneyFlowPage
               onBackToPortal={() => setActiveTab('INTAKE')}
-              onNavigateTab={(tab) => setActiveTab(tab as any)}
+              onNavigateTab={navigateToTab}
             />
           </div>
         )}

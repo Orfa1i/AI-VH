@@ -3265,12 +3265,14 @@ const CASES = {
     const acInfo = acuityMap[p.triage_acuity] || { esi: 2, text: `ESI 2 · ${p.triage_acuity || 'Emergent'}`, cls: 'esi2' };
 
     const bv = raw.baseline_vitals || {};
+    const spo2Val = bv.spo2_percent || bv.spo2 || 98;
+    const tempVal = bv.temperature_c || bv.temperature || 37.0;
     const vitals = [
       { label: 'BP', val: bv.systolic_bp && bv.diastolic_bp ? `${bv.systolic_bp}/${bv.diastolic_bp}` : '120/80', unit: 'mmHg', status: (bv.systolic_bp > 140 || bv.systolic_bp < 90) ? 'abnormal' : 'normal' },
       { label: 'HR', val: String(bv.heart_rate || 75), unit: 'bpm', status: (bv.heart_rate > 100 || bv.heart_rate < 60) ? 'abnormal' : 'normal' },
       { label: 'RR', val: String(bv.respiratory_rate || 16), unit: '/min', status: (bv.respiratory_rate > 20 || bv.respiratory_rate < 12) ? 'abnormal' : 'normal' },
-      { label: 'SpO₂', val: `${bv.spo2_percent || 98}%`, unit: 'RA', status: (bv.spo2_percent && bv.spo2_percent < 94) ? 'abnormal' : 'normal' },
-      { label: 'Temp', val: String(bv.temperature_c || 37.0), unit: '°C', status: (bv.temperature_c > 38.0 || bv.temperature_c < 36.0) ? 'abnormal' : 'normal' },
+      { label: 'SpO₂', val: `${spo2Val}%`, unit: 'RA', status: (spo2Val < 94) ? 'abnormal' : 'normal' },
+      { label: 'Temp', val: String(tempVal), unit: '°C', status: (tempVal > 38.0 || tempVal < 36.0) ? 'abnormal' : 'normal' },
       { label: 'GCS', val: '15', unit: '/15', status: 'normal' }
     ];
 
@@ -3391,6 +3393,19 @@ const CASES = {
       });
 
       let targetId = preferredPatientId;
+      if (preferredPatientId && (!targetId || !admittedCasesMap[targetId])) {
+        // Try fuzzy match by MRN, name, or partial ID
+        const targetClean = preferredPatientId.toLowerCase().replace(/[^a-z0-9]/g, '');
+        const matchedKey = Object.keys(admittedCasesMap).find(k => {
+          const c = admittedCasesMap[k];
+          const kClean = k.toLowerCase().replace(/[^a-z0-9]/g, '');
+          const mrnClean = (c.mrn || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+          const nameClean = (c.name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+          return kClean === targetClean || mrnClean === targetClean || kClean.includes(targetClean) || targetClean.includes(kClean) || nameClean.includes(targetClean);
+        });
+        if (matchedKey) targetId = matchedKey;
+      }
+
       if (!targetId || !admittedCasesMap[targetId]) {
         if (currentCaseKey && admittedCasesMap[currentCaseKey]) {
           targetId = currentCaseKey;
@@ -3432,13 +3447,21 @@ const CASES = {
   });
 
   // Real-time synchronization from Case Intake messages
-  window.addEventListener('message', (e) => {
-    if (!e.data || typeof e.data !== 'object') return;
-    if (e.data.type === 'PATIENT_ADMITTED' || e.data.type === 'REFRESH_PATIENTS' || e.data.type === 'CASE_ADMITTED') {
-      const newPid = e.data.patient ? e.data.patient.id : null;
+  const handleAdmissionSync = (data) => {
+    if (!data || typeof data !== 'object') return;
+    if (data.type === 'PATIENT_ADMITTED' || data.type === 'REFRESH_PATIENTS' || data.type === 'CASE_ADMITTED') {
+      const newPid = data.patient ? (data.patient.id || data.patient.mrn) : null;
       loadAdmittedPatients(newPid);
     }
-  });
+  };
+
+  window.addEventListener('message', (e) => handleAdmissionSync(e.data));
+
+  // Cross-tab and cross-frame BroadcastChannel synchronization
+  if (typeof BroadcastChannel !== 'undefined') {
+    const syncChannel = new BroadcastChannel('vh_patient_channel');
+    syncChannel.addEventListener('message', (e) => handleAdmissionSync(e.data));
+  }
 
   // Re-check when window/tab regains visibility
   document.addEventListener('visibilitychange', () => {

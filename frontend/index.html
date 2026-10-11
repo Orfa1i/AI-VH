@@ -1066,8 +1066,16 @@ footer .legal { text-align: right; font-size: 13.5px; color: var(--mute); displa
     }
   });
 
-  if (window.location.hash === '#portal') {
-    enterPortal();
+  const checkInitialHash = () => {
+    if (window.location.hash === '#portal') {
+      enterPortal();
+    }
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', checkInitialHash);
+  } else {
+    checkInitialHash();
   }
 
   document.querySelectorAll('.btn-req-demo, [href="#portal"]').forEach(btn => {
