@@ -472,6 +472,27 @@ export const App: React.FC = () => {
         isOpen={isRLModalOpen}
         onClose={() => setIsRLModalOpen(false)}
       />
+
+      {/* Relocated Patient Journey Graph & Clinical Flow Viewport */}
+      {isJourneyOpen && (
+        <div className="fixed inset-0 z-50 bg-white flex flex-col animate-in fade-in duration-200">
+          <PatientJourneyFlowPage
+            onBackToPortal={() => setIsJourneyOpen(false)}
+            onReportFinalized={(report) => {
+              setReports((prev) => {
+                const exists = prev.some((r) => r.id === report.id);
+                return exists ? prev : [report, ...prev];
+              });
+              setCases((prev) => prev.filter((c) => c.id !== report.patient_id && c.id !== (report as any).case_id));
+              refreshData();
+            }}
+            onPatientDischarged={(patientId) => {
+              setCases((prev) => prev.filter((c) => c.id !== patientId));
+              refreshData();
+            }}
+          />
+        </div>
+      )}
     </div>
   );
 };

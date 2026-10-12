@@ -25,8 +25,9 @@ export interface TrajectoryStageItem {
 }
 
 export interface ActiveTrajectoryStepperProps {
-  progress: number; // 0 to 100
-  isRunning: boolean;
+  progress?: number; // 0 to 100
+  activeStep?: 1 | 2 | 3 | 4;
+  isRunning?: boolean;
   currentCase?: BenchmarkCase | null;
   latestEvent?: HospitalEvent | null;
   activeDepartment?: string;
@@ -38,32 +39,55 @@ export interface ActiveTrajectoryStepperProps {
 
 export const ActiveTrajectoryStepper: React.FC<ActiveTrajectoryStepperProps> = ({
   progress,
-  isRunning,
+  activeStep,
+  isRunning = false,
   currentCase,
   latestEvent,
   activeDepartment = 'RECEPTION',
-  doctorAction = 'Reviewing Inpatient Charts',
+  doctorAction = 'Reviewing Inpatient Radiographs & Lab Panels',
   onSelectStage,
   onOpenDepartmentStation,
   className = '',
 }) => {
   const [activeTooltipStageId, setActiveTooltipStageId] = useState<string | null>(null);
 
-  // Normalize progress between 0 and 100
-  const normalizedProgress = Math.min(100, Math.max(0, Math.round(progress)));
+  // Compute effective active step (1 to 4) dynamically
+  const getDerivedStep = (): 1 | 2 | 3 | 4 => {
+    if (activeStep !== undefined) return activeStep;
+    if (currentCase) {
+      const isDischarged = (currentCase as any).status === 'discharged' || (currentCase as any).admission_status === 'DISCHARGED';
+      if (isDischarged) return 4;
+    }
+    if (isRunning) {
+      if (activeDepartment === 'RECEPTION' || activeDepartment === 'NURSE_STATION') return 1;
+      if (activeDepartment.includes('DOCTOR') || activeDepartment.includes('EXAMINATION') || activeDepartment === 'INTERNAL_MEDICINE') return 2;
+      if (activeDepartment === 'LABORATORY' || activeDepartment === 'RADIOLOGY' || activeDepartment === 'PHARMACY' || activeDepartment === 'CASES') return 3;
+      if (activeDepartment === 'DISCHARGE') return 4;
+    }
+    // If progress is provided explicitly
+    if (progress !== undefined) {
+      if (progress >= 95) return 4;
+      if (progress >= 70) return 3;
+      if (progress >= 40) return 2;
+      return 1;
+    }
+    // Default for admitted patient in queue: Step 3 (Cases Area)
+    return currentCase ? 3 : 1;
+  };
 
-  // Derive stage status dynamically
-  const isTriageComplete = normalizedProgress > 35 || (!isRunning && currentCase !== null && normalizedProgress >= 25);
-  const isTriageActive = isRunning && (activeDepartment === 'RECEPTION' || activeDepartment === 'NURSE_STATION');
+  const currentStep = getDerivedStep();
 
-  const isExamComplete = normalizedProgress > 65;
-  const isExamActive = isRunning && (activeDepartment.includes('DOCTOR') || activeDepartment.includes('EXAMINATION'));
+  // Progress percentage mapped to active step
+  const effectiveProgress = progress !== undefined ? Math.round(progress) : (
+    currentStep === 4 ? 100 : currentStep === 3 ? 75 : currentStep === 2 ? 50 : 25
+  );
 
-  const isWorkupComplete = normalizedProgress > 85;
-  const isWorkupActive = isRunning && (activeDepartment === 'LABORATORY' || activeDepartment === 'RADIOLOGY' || activeDepartment === 'PHARMACY');
-
-  const isDischargeComplete = normalizedProgress >= 100 || latestEvent?.event_type === 'CLINICAL_REPORT_GENERATED';
-  const isDischargeActive = isRunning && (normalizedProgress >= 90 || activeDepartment === 'DISCHARGE');
+  const getStageStatus = (step: number): 'completed' | 'active' | 'upcoming' => {
+    if (currentStep === 4) return 'completed';
+    if (step < currentStep) return 'completed';
+    if (step === currentStep) return 'active';
+    return 'upcoming';
+  };
 
   const stages: TrajectoryStageItem[] = [
     {
@@ -76,142 +100,95 @@ export const ActiveTrajectoryStepper: React.FC<ActiveTrajectoryStepperProps> = (
       description: 'Patient identification, chief complaint intake, and objective vital sign telemetry recording.',
       actionRequired: 'Automated ESI Level calculation and baseline vitals acquisition.',
       evidence: currentCase ? `ESI Level ${currentCase.acuity === 'Critical' ? '1' : '2'} • Vitals Acquired` : 'Standby for triage queue admission',
-      timestamp: currentCase ? 'T+00:00' : undefined,
-      status: isTriageComplete && !isTriageActive ? 'completed' : isTriageActive || (currentCase && normalizedProgress < 35) ? 'active' : 'upcoming',
+      timestamp: 'T+00:00',
+      status: getStageStatus(1),
     },
     {
       id: 'EXAM',
       stepNumber: 2,
       label: 'ASSESSMENT',
-      title: 'Attending Physician Examination',
-      department: 'Internal Medicine Department',
+      title: 'Attending Examination',
+      department: 'Internal Medicine Dept.',
       stationId: 'INTERNAL_MEDICINE',
       description: 'Differential diagnosis synthesis, physical findings analysis, and evidence-based clinical reasoning.',
       actionRequired: 'Attending physician evaluation and preliminary clinical orders.',
-      evidence: doctorAction || 'Clinical Diagnostics & Evidence Synthesis',
-      timestamp: normalizedProgress >= 35 ? 'T+00:15' : undefined,
-      status: isExamComplete && !isExamActive ? 'completed' : isExamActive || (normalizedProgress >= 35 && normalizedProgress < 65) ? 'active' : 'upcoming',
+      evidence: doctorAction || 'Harrison’s Principles 21st Ed. Semantic Retrieval',
+      timestamp: 'T+00:15',
+      status: getStageStatus(2),
     },
     {
       id: 'WORKUP',
       stepNumber: 3,
       label: 'DIAGNOSTICS',
-      title: 'Multidisciplinary Workup & Labs',
+      title: 'Multidisciplinary Labs',
       department: 'Clinical Pathology & Imaging',
       stationId: 'LABORATORY',
-      description: 'Laboratory blood panels, microbiology, radiographic scans, and clinical pharmacology review.',
-      actionRequired: 'Execution of diagnostic orders, imaging reads, and toxicological screening.',
-      evidence: 'Biomarkers & Radiological Interpretations Verified',
-      timestamp: normalizedProgress >= 65 ? 'T+00:30' : undefined,
-      status: isWorkupComplete && !isWorkupActive ? 'completed' : isWorkupActive || (normalizedProgress >= 65 && normalizedProgress < 85) ? 'active' : 'upcoming',
+      description: 'Serum biomarkers, high-sensitivity cardiac assays, diagnostic radiography, and pharmacy reconciliation.',
+      actionRequired: 'Laboratory turn-around time validation and interaction verification.',
+      evidence: 'STAT Gram Stain, Procalcitonin & Ceftriaxone Protocol',
+      timestamp: 'T+00:45',
+      status: getStageStatus(3),
     },
     {
       id: 'EXIT',
       stepNumber: 4,
       label: 'DISPOSITION',
-      title: 'Discharge Hub & Disposition',
-      department: 'Hospital Discharge Gateway',
+      title: 'Discharge Hub',
+      department: 'Clinical Management Hub',
       stationId: 'DISCHARGE',
-      description: 'Comprehensive clinical report finalization, prescription order routing, and physician review transfer.',
-      actionRequired: 'Independent multi-stage evaluation verification and attending sign-off.',
-      evidence: 'Clinical Report Synthesized & Verified',
-      timestamp: normalizedProgress >= 85 ? 'T+00:45' : undefined,
-      status: isDischargeComplete ? 'completed' : isDischargeActive || normalizedProgress >= 85 ? 'active' : 'upcoming',
+      description: 'Formal clinical report generation, evidence grounding verification, and discharge care planning.',
+      actionRequired: 'Final clinical documentation sign-off and physician evaluation rubric routing.',
+      evidence: currentStep === 4 ? 'Report Generated • 100% Evidence Grounded' : 'Disposition criteria pending diagnostics',
+      timestamp: 'T+01:30',
+      status: getStageStatus(4),
     },
   ];
 
   const getStageHeaderSummary = () => {
-    if (isDischargeComplete) return 'Discharge Gate Cleared • Clinical Report Finalized';
-    if (isWorkupActive) return 'Diagnostic Workup In Progress • Biomarker & Imaging Analysis';
-    if (isExamActive) return 'Attending Examination • Internal Medicine Clinical Synthesis';
-    if (isTriageActive) return 'Triage Gateway • Objective Telemetry & Vitals Acquisition';
-    if (isRunning) return 'Encounter Active • Routing Patient Trajectory...';
-    return currentCase ? 'Patient Admitted • Clinical Trajectory Ready' : 'System Standby • Awaiting Patient Intake';
+    if (currentStep === 4) return 'Discharge Gate Cleared • Clinical Report Finalized';
+    if (currentStep === 3) return 'Cases Area • Multidisciplinary Labs & Pathology In Progress';
+    if (currentStep === 2) return 'Attending Examination • Dr. Vance Harrison’s RAG Analysis';
+    return currentCase ? 'Intake Gateway • Patient Triage Recorded' : 'System Standby • Awaiting Patient Intake';
   };
+
+  const latestAuditText = latestEvent?.summary || (
+    currentCase
+      ? `Nurse Sarah Jenkins, RN brought patient ${currentCase.name} into Stepdown Unit (Bed 04-B)`
+      : 'Telemetry event bus listening for hospital agent actions...'
+  );
 
   return (
     <Card
       aria-label="Active Trajectory Sequence and State Flow"
-      className={className}
-      style={{ padding: 0, overflow: 'hidden' }}
+      className={`w-full bg-white rounded-xl border border-slate-200/90 shadow-2xs relative isolate transition-all duration-300 font-sans ${className}`}
     >
       {/* ── Top Micro-HUD Telemetry Header ── */}
-      <div
-        style={{
-          padding: 'var(--space-3) var(--space-4)',
-          borderBottom: '1px solid var(--border-subtle)',
-          backgroundColor: 'var(--bg-app)',
-          display: 'flex',
-          flexWrap: 'wrap',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: 'var(--space-3)',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-          <Activity className="w-4 h-4" style={{ color: 'var(--color-primary)' }} />
-          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-            <span
-              className="caption"
-              style={{
-                fontWeight: 700,
-                color: 'var(--text-primary)',
-                letterSpacing: '0.04em',
-                textTransform: 'uppercase',
-              }}
-            >
-              ACTIVE TRAJECTORY SEQUENCE &amp; STATE FLOW
-            </span>
-            <Badge variant="brand" className="ak-num">
-              {normalizedProgress}% PROGRESS
-            </Badge>
+      <div className="px-4 py-3 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3 bg-gradient-to-r from-slate-50/90 via-white to-teal-50/20 rounded-t-xl">
+        <div className="flex items-center gap-2.5">
+          <div className="w-7 h-7 rounded-lg bg-teal-50 border border-teal-200 flex items-center justify-center text-[#0d6e60] shadow-2xs">
+            <Activity className="w-4 h-4 animate-pulse" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-mono font-bold text-slate-900 tracking-wider uppercase">
+                ACTIVE TRAJECTORY SEQUENCE &amp; STATE FLOW
+              </span>
+              <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-teal-50 text-[#0d6e60] border border-teal-200 tabular-nums">
+                {effectiveProgress}% PROGRESS
+              </span>
+            </div>
           </div>
         </div>
 
-        {/* Real-Time Live Ticker */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-          {latestEvent ? (
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-                padding: '2px var(--space-3)',
-                borderRadius: 'var(--radius-pill)',
-                backgroundColor: 'var(--bg-surface)',
-                border: '1px solid var(--border-subtle)',
-                maxWidth: 400,
-              }}
-            >
-              <span
-                style={{
-                  width: 6,
-                  height: 6,
-                  borderRadius: '50%',
-                  backgroundColor: 'var(--color-success)',
-                }}
-              />
-              <span className="caption" style={{ color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>
-                LATEST:
-              </span>
-              <span
-                className="caption"
-                style={{
-                  fontWeight: 600,
-                  color: 'var(--color-primary)',
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                }}
-              >
-                {latestEvent.summary || latestEvent.event_type}
-              </span>
-            </div>
-          ) : (
-            <span className="caption ak-num" style={{ color: 'var(--text-tertiary)' }}>
-              AWAITING SIMULATION STREAM
+        {/* Real-Time Live Audit Ticker */}
+        <div className="flex items-center gap-2 text-xs font-mono">
+          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100/80 border border-slate-200 text-slate-700 max-w-sm sm:max-w-xl truncate">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+            <span className="text-[10px] text-slate-500 font-bold uppercase shrink-0">LATEST AUDIT:</span>
+            <span className="text-slate-800 font-medium truncate text-[11px]">
+              {latestAuditText}
             </span>
-          )}
+          </div>
         </div>
       </div>
 
@@ -219,41 +196,16 @@ export const ActiveTrajectoryStepper: React.FC<ActiveTrajectoryStepperProps> = (
       <div style={{ padding: 'var(--space-6) var(--space-4)' }}>
         <div style={{ position: 'relative', width: '100%' }}>
           {/* Background Connecting Rail */}
-          <div
-            style={{
-              position: 'absolute',
-              top: 20,
-              left: 24,
-              right: 24,
-              height: 4,
-              backgroundColor: 'var(--border-subtle)',
-              borderRadius: 'var(--radius-pill)',
-              zIndex: 0,
-            }}
-          >
-            {/* Fluid Progress Line with Neural Spectrum when encounter running */}
+          <div className="absolute top-5 left-10 right-10 h-1.5 bg-slate-200 rounded-full z-0 pointer-events-none">
+            {/* Deep Clinical Teal Filled Progress Line */}
             <div
-              className={isRunning ? 'ak-progress--spectrum' : undefined}
-              style={{
-                height: '100%',
-                backgroundColor: isRunning ? undefined : 'var(--color-primary)',
-                borderRadius: 'var(--radius-pill)',
-                transition: 'width 0.5s ease',
-                width: `${normalizedProgress}%`,
-              }}
+              className="h-full bg-[#0d6e60] rounded-full transition-all duration-700 ease-out shadow-[0_0_8px_rgba(13,110,96,0.35)]"
+              style={{ width: `${effectiveProgress}%` }}
             />
           </div>
 
-          {/* Stepper Nodes Grid: Responsive Horizontal Layout */}
-          <div
-            style={{
-              position: 'relative',
-              zIndex: 1,
-              display: 'grid',
-              gridTemplateColumns: 'repeat(4, 1fr)',
-              gap: 'var(--space-2)',
-            }}
-          >
+          {/* Stepper Nodes Grid: Responsive 4-Column Layout */}
+          <div className="relative z-10 grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-2">
             {stages.map((stage) => {
               const isCompleted = stage.status === 'completed';
               const isActive = stage.status === 'active';
@@ -289,35 +241,27 @@ export const ActiveTrajectoryStepper: React.FC<ActiveTrajectoryStepperProps> = (
                   }}
                   aria-label={`${stage.title} - ${stage.status.toUpperCase()}`}
                 >
-                  {/* Node Circle Avatar */}
-                  <div style={{ position: 'relative', marginBottom: 'var(--space-2)' }}>
+                  {/* Node Circle with Deep Teal Aesthetic */}
+                  <div className="relative flex items-center justify-center mb-2.5">
+                    {/* Active Halo Glow Animation */}
+                    {isActive && (
+                      <>
+                        <span className="absolute -inset-2 rounded-full bg-teal-400/25 animate-ping pointer-events-none" />
+                        <span className="absolute -inset-1 rounded-full bg-[#0d6e60]/20 blur-xs pointer-events-none" />
+                      </>
+                    )}
+
                     <div
-                      style={{
-                        width: 40,
-                        height: 40,
-                        borderRadius: '50%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontWeight: 700,
-                        fontSize: '0.875rem',
-                        transition: 'all 0.2s ease',
-                        backgroundColor: isCompleted
-                          ? 'var(--color-success)'
+                      className={`w-10 h-10 rounded-full flex items-center justify-center font-mono font-bold text-xs transition-all duration-300 relative z-10 ${
+                        isCompleted
+                          ? 'bg-[#0d6e60] text-white shadow-md shadow-teal-900/25 border-2 border-[#0d6e60] scale-100 group-hover:scale-105'
                           : isActive
-                          ? 'var(--color-primary)'
-                          : 'var(--bg-surface)',
-                        color: isCompleted || isActive ? 'var(--ak-color-bg-surface)' : 'var(--text-tertiary)',
-                        border: isCompleted
-                          ? '2px solid var(--color-success)'
-                          : isActive
-                          ? '2px solid var(--color-primary)'
-                          : '2px solid var(--border-subtle)',
-                        boxShadow: isActive ? 'var(--shadow-md)' : undefined,
-                      }}
+                          ? 'bg-[#0d6e60] text-white shadow-lg shadow-teal-900/35 ring-4 ring-teal-100 border-2 border-white scale-110'
+                          : 'bg-white text-slate-400 border-2 border-slate-300 group-hover:border-slate-400 group-hover:text-slate-600'
+                      }`}
                     >
-                      {isCompleted ? (
-                        <CheckCircle2 className="w-5 h-5" style={{ color: 'var(--ak-color-bg-surface)' }} />
+                      {isCompleted || isActive ? (
+                        <CheckCircle2 className="w-5 h-5 text-white stroke-[2.5]" />
                       ) : (
                         <span className="ak-num">{stage.stepNumber}</span>
                       )}
@@ -325,32 +269,10 @@ export const ActiveTrajectoryStepper: React.FC<ActiveTrajectoryStepperProps> = (
 
                     {/* Active Patient Floating Pin when at this active node */}
                     {isActive && currentCase && (
-                      <div
-                        style={{
-                          position: 'absolute',
-                          bottom: '100%',
-                          left: '50%',
-                          transform: 'translateX(-50%)',
-                          marginBottom: 4,
-                          whiteSpace: 'nowrap',
-                          pointerEvents: 'none',
-                        }}
-                      >
-                        <span
-                          style={{
-                            padding: '2px 8px',
-                            borderRadius: 'var(--radius-pill)',
-                            backgroundColor: 'var(--text-primary)',
-                            color: 'var(--ak-color-bg-surface)',
-                            fontSize: '0.625rem',
-                            fontWeight: 600,
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 4,
-                          }}
-                        >
-                          <User className="w-2.5 h-2.5" />
-                          <span>{(currentCase.name || 'Patient').split(' ')[0]}</span>
+                      <div className="absolute -top-7 left-1/2 -translate-x-1/2 whitespace-nowrap z-20 pointer-events-none animate-bounce">
+                        <span className="px-2 py-0.5 rounded-full bg-slate-900 text-white text-[9px] font-mono font-semibold shadow-md flex items-center gap-1 border border-slate-700">
+                          <User className="w-2.5 h-2.5 text-teal-400" />
+                          <span>{currentCase.name}</span>
                         </span>
                       </div>
                     )}

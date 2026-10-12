@@ -26,29 +26,29 @@ const mockEvent: HospitalEvent = {
 };
 
 describe('ActiveTrajectoryStepper Component', () => {
-  it('renders all 4 stages and progress indicator', () => {
+  it('renders all 4 stages and progress indicator dynamically mapped to activeStep', () => {
     render(
       <ActiveTrajectoryStepper
-        progress={65}
+        activeStep={3}
         isRunning={true}
         currentCase={mockCase}
         latestEvent={mockEvent}
-        activeDepartment="INTERNAL_MEDICINE"
+        activeDepartment="LABORATORY"
       />
     );
 
     expect(screen.getByText('ACTIVE TRAJECTORY SEQUENCE & STATE FLOW')).toBeInTheDocument();
-    expect(screen.getByText('65% PROGRESS')).toBeInTheDocument();
+    expect(screen.getByText('75% PROGRESS')).toBeInTheDocument();
     expect(screen.getByText('Clinical Intake & Triage')).toBeInTheDocument();
-    expect(screen.getByText('Attending Physician Examination')).toBeInTheDocument();
-    expect(screen.getByText('Multidisciplinary Workup & Labs')).toBeInTheDocument();
-    expect(screen.getByText('Discharge Hub & Disposition')).toBeInTheDocument();
+    expect(screen.getByText('Attending Examination')).toBeInTheDocument();
+    expect(screen.getByText('Multidisciplinary Labs')).toBeInTheDocument();
+    expect(screen.getByText('Discharge Hub')).toBeInTheDocument();
   });
 
   it('renders metadata footer with acuity and patient info', () => {
     render(
       <ActiveTrajectoryStepper
-        progress={35}
+        activeStep={3}
         isRunning={false}
         currentCase={mockCase}
         activeDepartment="RECEPTION"
@@ -56,15 +56,16 @@ describe('ActiveTrajectoryStepper Component', () => {
     );
 
     expect(screen.getByText('PATIENT ACUITY:')).toBeInTheDocument();
-    expect(screen.getByText('Critical')).toBeInTheDocument();
+    expect(screen.getByText('CRITICAL')).toBeInTheDocument();
     expect(screen.getByText('62yo Male')).toBeInTheDocument();
     expect(screen.getByText('100% GROUNDED')).toBeInTheDocument();
+    expect(screen.getByText('M. Vance, MD')).toBeInTheDocument();
   });
 
   it('reveals popover tooltip HUD on hover', () => {
     render(
       <ActiveTrajectoryStepper
-        progress={50}
+        activeStep={2}
         isRunning={true}
         currentCase={mockCase}
       />
@@ -87,7 +88,7 @@ describe('ActiveTrajectoryStepper Component', () => {
 
     render(
       <ActiveTrajectoryStepper
-        progress={50}
+        activeStep={1}
         isRunning={true}
         currentCase={mockCase}
         onSelectStage={onSelectStage}
