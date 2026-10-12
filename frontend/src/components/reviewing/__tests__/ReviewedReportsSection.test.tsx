@@ -67,7 +67,7 @@ describe('ReviewedReportsSection', () => {
     const user = userEvent.setup();
     render(<ReviewedReportsSection />);
 
-    const trainButton = screen.getByRole('button', { name: /MANUAL MODEL TRAINING/i });
+    const trainButton = screen.getByRole('button', { name: /manual.*training/i });
     expect(trainButton).toBeInTheDocument();
     await user.click(trainButton);
 

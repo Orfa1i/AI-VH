@@ -96,17 +96,17 @@ export const DoctorReviewSection: React.FC = () => {
   return (
     <div className="flex-1 p-6 overflow-y-auto">
       <div className="max-w-5xl mx-auto space-y-4">
-        <div className="p-4 bg-white border border-slate-200 rounded-xl shadow-md hud-bracket">
+        <div className="p-4 bg-white border border-[var(--ak-color-border-subtle)] rounded-xl shadow-md">
           <div className="flex items-center gap-2 mb-3">
-            <Stethoscope className="w-4 h-4 text-sky-700" aria-hidden="true" />
-            <h1 className="text-sm font-mono font-bold uppercase tracking-wide text-slate-900">
+            <Stethoscope className="w-4 h-4 text-[var(--ak-color-primary)]" aria-hidden="true" />
+            <h1 className="text-sm font-mono font-bold uppercase tracking-wide text-[var(--ak-color-text-primary)]">
               Doctor review
             </h1>
           </div>
           {client === null ? (
             <div className="flex flex-wrap items-end gap-2">
               <div className="flex-1 min-w-52">
-                <label htmlFor="reviewer-token" className="block text-[11px] font-mono text-slate-500 mb-1">
+                <label htmlFor="reviewer-token" className="block text-[11px] font-mono text-[var(--ak-color-text-muted)] mb-1">
                   Reviewer token
                 </label>
                 <input
@@ -114,22 +114,22 @@ export const DoctorReviewSection: React.FC = () => {
                   type="password"
                   value={token}
                   onChange={(event) => setToken(event.target.value)}
-                  className="w-full text-xs border border-slate-300 rounded-md px-2 py-1.5 bg-white text-slate-900 font-mono"
+                  className="w-full text-xs border border-[var(--ak-color-border-subtle)] rounded-md px-2 py-1.5 bg-white text-[var(--ak-color-text-primary)] font-mono"
                 />
               </div>
               <button
                 type="button"
                 onClick={() => void connect()}
-                className="px-4 py-1.5 text-xs font-mono font-bold bg-sky-700 hover:bg-sky-600 text-white rounded-md transition cursor-pointer"
+                className="px-4 py-1.5 text-xs font-mono font-bold text-[var(--ak-color-primary)] hover:bg-[var(--ak-color-primary)] text-white rounded-md transition cursor-pointer"
               >
                 Connect
               </button>
             </div>
           ) : (
-            <p className="text-xs text-slate-600 font-sans">Connected to the review API.</p>
+            <p className="text-xs text-[var(--ak-color-text-secondary)] font-sans">Connected to the review API.</p>
           )}
           {error !== null && (
-            <p role="alert" className="mt-2 text-xs font-sans text-red-800">
+            <p role="alert" className="mt-2 text-xs font-sans text-[var(--ak-color-danger)]">
               {error}
             </p>
           )}
@@ -142,7 +142,7 @@ export const DoctorReviewSection: React.FC = () => {
             </div>
             <div className="lg:col-span-2 space-y-4">
               {status !== null && (
-                <p role="status" className="text-xs font-sans text-sky-700">
+                <p role="status" className="text-xs font-sans text-[var(--ak-color-primary)]">
                   {status.text}
                 </p>
               )}

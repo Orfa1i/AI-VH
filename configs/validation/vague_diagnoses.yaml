@@ -1,0 +1,15 @@
+# Vague final-diagnosis labels (V5): NOT a diagnosis unless certainty=provisional + missing_data non-empty.
+# Content owner: Medical Expert. Status: draft pending physician review (H4 covers safety tables;
+# this list is reviewed alongside them).
+# Matching is case-insensitive, normalized whitespace/punctuation.
+vague_labels:
+  - "undifferentiated acute medical illness"
+  - "undifferentiated illness"
+  - "acute medical illness"
+  - "acute inpatient admission"
+  - "clinical presentation"
+  - "medical illness"
+  - "unknown diagnosis"
+  - "undifferentiated disease"
+  - "acute undifferentiated illness"
+status: draft-pending-physician-review

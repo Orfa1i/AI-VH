@@ -1,0 +1,17 @@
+{
+  "manifest_id": "MNF-TEST-001",
+  "dataset_version": "v20261012090450",
+  "dataset_hash_sha256": "83a7c4e9862f5d8760a37b62f4a79a1c433e87f9e7bd2aaf5e039bb9dd6ec77a",
+  "eligible_records_count": 1,
+  "record_ids": [
+    "TDR-8EA30A10"
+  ],
+  "base_model_version": "google/medgemma-4b",
+  "git_commit": "89cd7981c849eece35679f38950c3a9920824935",
+  "hyperparameters": {
+    "epochs": 4,
+    "learning_rate": 0.0002
+  },
+  "frozen_dataset_path": "data/manifests\\dataset_TEST-HASH-01.jsonl",
+  "created_at": "2026-10-12T09:04:50.122451"
+}

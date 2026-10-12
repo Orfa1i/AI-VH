@@ -62,10 +62,31 @@ class ClinicalToolkit:
         self.ordered_labs.append(test_type)
 
         test_key = test_type.value
-        values = self.ground_truth.simulated_labs.get(test_key, {
-            "result": "Normal / Non-diagnostic",
-            "interpretation": "Within standard clinical parameters"
-        })
+        values = self.ground_truth.simulated_labs.get(test_key)
+        if not values:
+            test_lower = test_key.lower()
+            for k, v in self.ground_truth.simulated_labs.items():
+                k_lower = k.lower()
+                if (
+                    ("troponin" in test_lower and "troponin" in k_lower) or
+                    ("cbc" in test_lower and "cbc" in k_lower) or
+                    ("bmp" in test_lower and "bmp" in k_lower) or
+                    ("cmp" in test_lower and "cmp" in k_lower) or
+                    ("ecg" in test_lower and "ecg" in k_lower) or
+                    ("x-ray" in test_lower and "x-ray" in k_lower) or
+                    ("cxr" in test_lower and "cxr" in k_lower) or
+                    ("bnp" in test_lower and "bnp" in k_lower) or
+                    ("abg" in test_lower and "abg" in k_lower) or
+                    ("urinalysis" in test_lower and "urinalysis" in k_lower) or
+                    ("lactate" in test_lower and "lactate" in k_lower)
+                ):
+                    values = v
+                    break
+        if not values:
+            values = {
+                "result": "Normal / Non-diagnostic",
+                "interpretation": "Within standard clinical parameters"
+            }
 
         # Calculate abnormal flags
         flags = {}
@@ -96,7 +117,12 @@ class ClinicalToolkit:
         differential: List[DifferentialItem],
         clinical_reasoning: str,
         treatment_plan: List[str],
-        citations: List[Dict[str, Any]]
+        citations: List[Dict[str, Any]],
+        ungrounded: bool = False,
+        clinical_summary: str = "",
+        relevant_findings: Optional[List[str]] = None,
+        recommended_next_steps: Optional[List[str]] = None,
+        recommended_disposition: str = "Admit to Internal Medicine / Observation",
     ) -> ClinicalReport:
         """Doctor generates the structured clinical report for human physician review."""
         logger.info(f"Tool called: write_clinical_report for encounter {encounter_id}")
@@ -116,11 +142,16 @@ class ClinicalToolkit:
             physical_exam_findings=self.ground_truth.physical_exam,
             investigations_ordered=self.ordered_labs,
             investigation_results=self.lab_results,
+            clinical_summary=clinical_summary,
+            relevant_findings=relevant_findings or [],
             differential_diagnosis=differential,
             primary_diagnosis=primary_diagnosis,
             diagnostic_confidence=diagnostic_confidence,
             clinical_reasoning=clinical_reasoning,
             treatment_plan=treatment_plan,
+            recommended_disposition=recommended_disposition,
+            recommended_next_steps=recommended_next_steps or [recommended_disposition],
             medical_knowledge_citations=citations,
+            ungrounded=ungrounded,
         )
         return report

@@ -1,0 +1,174 @@
+# V10 diagnosis-specific completeness rules (validator V10).
+# Content owner: Medical Expert. 19 rules (2 approved + 17 draft-audit).
+# Rules with status "approved" FAIL the report when unmet; rules with status
+# "draft-pending-physician-review" run in AUDIT mode (outcome recorded, never
+# fails) until a physician approves them.
+# Matching: final_diagnosis.diagnosis normalized contains any match_term.
+# Workup/treatment matching is case-insensitive substring on test/item text.
+# spo2 rule: applies only when structured vitals carry spo2 (else skipped).
+rules:
+  - key: community_acquired_pneumonia
+    status: approved
+    source: prompt FOR UPDATE/03_Phase3 example
+    match_terms: [pneumonia, cap]
+    require_severity_any: [CURB-65, CURB65, PSI]
+    require_workup_any: [chest x-ray, chest radiography, cxr, radiography, ct chest]
+    require_treatment_terms_any: [amoxicillin, clavulanate, azithromycin, ceftriaxone, doxycycline, levofloxacin, moxifloxacin, piperacillin, tazobactam, vancomycin, meropenem, cefepime, ceftaroline, macrolide, beta-lactam, antibiotic]
+    require_oxygen_target_when_spo2_below: 94
+    require_disposition: true
+  - key: sepsis
+    status: approved
+    source: prompt FOR UPDATE/03_Phase3 example
+    match_terms: [sepsis, septic shock]
+    require_workup_any_terms:
+      - [lactate]
+      - [blood cultur]
+    require_treatment_terms_any_groups:
+      - [antibiotic, vancomycin, piperacillin, meropenem, ceftriaxone, cefepime, metronidazole]
+      - [fluid, crystalloid, normal saline, lactated, resuscitation]
+    require_disposition: true
+  - key: acute_coronary_syndrome
+    status: draft-pending-physician-review
+    match_terms: [acute coronary syndrome, myocardial infarction, stemi, nstemi, unstable angina]
+    require_workup_any_terms:
+      - [ecg, electrocardiogram]
+      - [troponin]
+    require_treatment_terms_any_groups:
+      - [aspirin, antiplatelet, heparin, anticoag]
+    require_disposition: true
+  - key: diabetic_ketoacidosis
+    status: draft-pending-physician-review
+    match_terms: [ketoacidosis, dka]
+    require_workup_any_terms:
+      - [metabolic panel, bmp, basic metabolic]
+      - [blood gas, vbg, abg]
+    require_treatment_terms_any_groups:
+      - [fluid, saline]
+      - [insulin]
+    require_disposition: true
+  - key: copd_exacerbation
+    status: draft-pending-physician-review
+    match_terms: [copd, chronic obstructive pulmonary]
+    require_workup_any_terms:
+      - [chest x-ray, chest radiography, cxr]
+    require_treatment_terms_any_groups:
+      - [steroid, prednisone, methylprednisolone]
+      - [bronchodilator, albuterol, salbutamol, tiotropium]
+    require_disposition: false
+  - key: heart_failure
+    status: draft-pending-physician-review
+    match_terms: [heart failure]
+    require_workup_any_terms:
+      - [bnp, pro-bnp, nt-probnp]
+      - [echocardiogram, echo]
+    require_treatment_terms_any_groups:
+      - [diuretic, furosemide, bumetanide]
+    require_disposition: true
+  - key: acute_kidney_injury
+    status: draft-pending-physician-review
+    match_terms: [kidney injury, aki, renal failure]
+    require_workup_any_terms:
+      - [creatinine, metabolic panel, bmp]
+    require_treatment_terms_any_groups:
+      - [fluid, hold nephrotoxin, discontinue]
+    require_disposition: false
+  - key: stroke
+    status: draft-pending-physician-review
+    match_terms: [stroke, tia, transient ischemic]
+    require_workup_any_terms:
+      - [ct head, noncontrast ct, mri brain]
+      - [nihss, nih stroke]
+    require_treatment_terms_any_groups:
+      - [aspirin, alteplase, tenecteplase, thrombectomy]
+    require_disposition: true
+  - key: pulmonary_embolism
+    status: draft-pending-physician-review
+    match_terms: [pulmonary embolism, venous thromboembolism]
+    require_workup_any_terms:
+      - [ct angiography, cta, d-dimer, dimer]
+    require_treatment_terms_any_groups:
+      - [anticoag, heparin, apixaban, rivaroxaban, enoxaparin]
+    require_disposition: true
+  - key: gi_bleed
+    status: draft-pending-physician-review
+    match_terms: [gastrointestinal bleed, gi bleed, hematemesis, melena]
+    require_workup_any_terms:
+      - [complete blood count, cbc, hemoglobin]
+      - [type and screen, crossmatch]
+    require_treatment_terms_any_groups:
+      - [transfusion, endoscopy, ppi, octreotide]
+    require_disposition: true
+  - key: cellulitis
+    status: draft-pending-physician-review
+    match_terms: [cellulitis, erysipelas]
+    require_workup_any_terms:
+      - [blood cultur, complete blood count, cbc]
+    require_treatment_terms_any_groups:
+      - [cephalexin, clindamycin, vancomycin, antibiotic]
+    require_disposition: false
+  - key: urinary_tract_infection
+    status: draft-pending-physician-review
+    match_terms: [urinary tract infection, pyelonephritis, urosepsis]
+    require_workup_any_terms:
+      - [urinalysis, urine culture]
+    require_treatment_terms_any_groups:
+      - [nitrofurantoin, ciprofloxacin, ceftriaxone, antibiotic]
+    require_disposition: false
+  - key: meningitis
+    status: draft-pending-physician-review
+    match_terms: [meningitis, encephalitis]
+    require_workup_any_terms:
+      - [lumbar puncture, cerebrospinal, csf]
+      - [blood cultur]
+    require_treatment_terms_any_groups:
+      - [ceftriaxone, vancomycin, acyclovir, dexamethasone, antibiotic]
+    require_disposition: true
+  - key: asthma_exacerbation
+    status: draft-pending-physician-review
+    match_terms: [asthma]
+    require_workup_any_terms:
+      - [peak flow, spirometry, oximetry, spo2]
+    require_treatment_terms_any_groups:
+      - [steroid, prednisone, methylprednisolone]
+      - [bronchodilator, albuterol, salbutamol]
+    require_disposition: false
+  - key: anemia
+    status: draft-pending-physician-review
+    match_terms: [anemia, anaemia]
+    require_workup_any_terms:
+      - [complete blood count, cbc, hemoglobin, reticulocyte, iron studies, ferritin]
+    require_treatment_terms_any_groups:
+      - [transfusion, iron, folate, b12]
+    require_disposition: false
+  - key: hyponatremia
+    status: draft-pending-physician-review
+    match_terms: [hyponatremia, sodium]
+    require_workup_any_terms:
+      - [metabolic panel, bmp, osmolality]
+    require_treatment_terms_any_groups:
+      - [fluid restriction, hypertonic, saline]
+    require_disposition: false
+  - key: hyperkalemia
+    status: draft-pending-physician-review
+    match_terms: [hyperkalemia, potassium]
+    require_workup_any_terms:
+      - [ecg, electrocardiogram, metabolic panel, bmp]
+    require_treatment_terms_any_groups:
+      - [calcium, insulin, glucose, kayexalate, patiromer, zirconium]
+    require_disposition: false
+  - key: pneumothorax
+    status: draft-pending-physician-review
+    match_terms: [pneumothorax]
+    require_workup_any_terms:
+      - [chest x-ray, chest radiography, cxr]
+    require_treatment_terms_any_groups:
+      - [oxygen, chest tube, needle decompression, observation]
+    require_disposition: true
+  - key: appendicitis
+    status: draft-pending-physician-review
+    match_terms: [appendicitis]
+    require_workup_any_terms:
+      - [ct abdomen, ultrasound]
+    require_treatment_terms_any_groups:
+      - [surgery, appendectomy, antibiotic]
+    require_disposition: true

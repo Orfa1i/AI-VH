@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI-VH Method Figure — CCF-A Conference Architecture</title>
+  <style>
+    :root {
+      --bg: #F8FAFC;
+      --card-bg: #FFFFFF;
+      --border: #E2E8F0;
+      --text-main: #0F172A;
+      --text-muted: #475569;
+      --accent: #2563EB;
+    }
+    body {
+      margin: 0;
+      padding: 40px 20px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text-main);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .container {
+      max-width: 1200px;
+      width: 100%;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 32px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+    }
+    h1 {
+      font-size: 24px;
+      margin: 0 0 8px 0;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+    .subtitle {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-bottom: 24px;
+    }
+    .figure-wrapper {
+      background: #FFFFFF;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      text-align: center;
+      margin-bottom: 24px;
+      box-shadow: inset 0 0 4px rgba(0,0,0,0.02);
+    }
+    .figure-wrapper img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 4px;
+      display: block;
+      margin: 0 auto;
+    }
+    .caption {
+      font-size: 13.5px;
+      line-height: 1.6;
+      color: #1E293B;
+      text-align: justify;
+      margin-top: 16px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border);
+    }
+    .caption b {
+      color: #0F172A;
+    }
+    .panels-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      margin-top: 28px;
+    }
+    @media (max-width: 768px) {
+      .panels-grid { grid-template-columns: 1fr; }
+    }
+    .panel-card {
+      background: #F8FAFC;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+    }
+    .panel-card h3 {
+      margin: 0 0 8px 0;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .panel-card p {
+      margin: 0;
+      font-size: 12.5px;
+      line-height: 1.5;
+      color: var(--text-muted);
+    }
+    .math-box {
+      background: #0F172A;
+      color: #F8FAFC;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 12px;
+      padding: 12px 16px;
+      border-radius: 6px;
+      margin-top: 16px;
+      overflow-x: auto;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Virtual Hospital (AI-VH) System Architecture</h1>
+    <div class="subtitle">Publication-grade method figure designed for CCF-A proceedings (CVPR / ICLR / NeurIPS format)</div>
+
+    <div class="figure-wrapper">
+      <img src="ai_vh_method_architecture.jpg" alt="AI-VH System Architecture Figure" />
+      <div class="caption">
+        <b>Figure 1: Architectural framework of the AI-VH Autonomous Clinical Deliberation & Direct Preference Optimization (DPO) System.</b>
+        <b>(a) Clinical Case Intake &amp; MedGemma Triage Router:</b> Patient EHR data $x$ (intake demographics, vitals, labs, imaging) is encoded and dispatched via the MedGemma routing network $\mathcal{M}_{\text{router}}$ into 7 departmental specialist agents (Internal Medicine, Cardiology, Neurology, Surgery, Emergency Medicine, Obstetrics, Gynecology) using active/standby state management.
+        <b>(b) Multi-Agent Deliberation &amp; Grounded RAG:</b> Active specialists perform retrieval-augmented reasoning over indexed medical knowledge bases (Harrison’s, Braunwald’s, Williams, Schwartz’s) and real-time pharmacology APIs (RxNorm, openFDA), which the NVIDIA Nemotron synthesis engine deliberates to produce a candidate Clinical Assessment Report $y$.
+        <b>(c) Attending Physician Attestation &amp; Multi-Dimensional Grading:</b> Human physicians evaluate candidate reports across four clinical axes (Diagnosis, Reasoning, Workup, Safety), partitioning candidate reports into chosen ($y_w$) and rejected ($y_l$) pairs within preference dataset $\mathcal{D}_{\text{pref}}$.
+        <b>(d) On-Device DPO Alignment &amp; Closed-Loop Feedback:</b> Using parameter-efficient LoRA on local GPU hardware, the policy model $\pi_\theta$ is continuously optimized against the frozen reference model $\pi_{\text{ref}}$ via the DPO objective $\mathcal{L}_{\text{DPO}}$, routing improved weights back into the clinical ward in an active closed-loop cycle.
+      </div>
+    </div>
+
+    <div class="panels-grid">
+      <div class="panel-card">
+        <h3>Panel (a): Intake &amp; MedGemma Router</h3>
+        <p>Encodes multi-modal inpatient admission telemetry $x$ including objective ESI acuity scores. Computes domain dispatch probabilities across 7 specialist agents, managing initial Ready state, standby partitioning, and dynamic handoff referrals.</p>
+      </div>
+      <div class="panel-card">
+        <h3>Panel (b): Multi-Agent Deliberation &amp; RAG</h3>
+        <p>Specialists ground clinical assertions in authoritative medical literature with verbatim chapter and page citations. The NVIDIA Nemotron-3-Nano-30B-A3B engine synthesizes differential diagnoses, diagnostic orders, and management plans.</p>
+      </div>
+      <div class="panel-card">
+        <h3>Panel (c): Human Attestation &amp; Dataset Generation</h3>
+        <p>Attending physicians conduct a single-click attestation or submit multi-dimensional clinical grades. Approved reports and clinician corrections are paired to form verified DPO preference triplets $(x, y_w, y_l)$.</p>
+      </div>
+      <div class="panel-card">
+        <h3>Panel (d): On-Device DPO Fine-Tuning</h3>
+        <p>Executes Direct Preference Optimization without external reward model instability, comparing $\pi_\theta$ against $\pi_{\text{ref}}$ on local RTX GPU infrastructure, benchmarked across 6 clinical axes.</p>
+      </div>
+    </div>
+
+    <div class="math-box">
+      $$\mathcal{L}_{\text{DPO}}(\pi_\theta; \pi_{\text{ref}}) = -\mathbb{E}_{(x, y_w, y_l) \sim \mathcal{D}_{\text{pref}}} \left[ \log \sigma \left( \beta \log \frac{\pi_\theta(y_w|x)}{\pi_{\text{ref}}(y_w|x)} - \beta \log \frac{\pi_\theta(y_l|x)}{\pi_{\text{ref}}(y_l|x)} \right) \right]$$
+    </div>
+  </div>
+</body>
+</html>

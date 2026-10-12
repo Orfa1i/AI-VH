@@ -24,14 +24,19 @@ export interface DifferentialItem {
 }
 
 export interface MedicalCitation {
-  id: string;
-  book: string;
-  chapter: string;
-  topic: string;
-  page: number;
-  specialty: string;
-  text: string;
+  id?: string;
+  book?: string;
+  chapter?: string;
+  topic?: string;
+  page?: number | string;
+  specialty?: string;
+  text?: string;
+  excerpt?: string;
+  source?: string;
+  reference?: string;
+  relevance?: number;
   relevance_score?: number;
+  retrieved_at?: string;
 }
 
 export interface ClinicalReport {
@@ -51,14 +56,45 @@ export interface ClinicalReport {
   physical_exam_findings: Record<string, string>;
   investigations_ordered: string[];
   investigation_results: LabResult[];
+  clinical_summary?: string;
+  relevant_findings?: string[];
   differential_diagnosis: DifferentialItem[];
   primary_diagnosis: string;
   diagnostic_confidence: number;
   clinical_reasoning: string;
   treatment_plan: string[];
   recommended_disposition: string;
+  recommended_next_steps?: string[];
   medical_knowledge_citations: MedicalCitation[];
   pharmacist_review?: MedicationSafetyReport;
+  automated_evaluation?: AggregateEvaluationResult;
+}
+
+export interface DimensionEvaluationResult {
+  dimension: string;
+  display_name: string;
+  passed: boolean;
+  score: number;
+  explanation: string;
+  detected_issues: string[];
+  severity: 'INFO' | 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  evidence: Array<Record<string, any>>;
+}
+
+export interface AggregateEvaluationResult {
+  evaluation_id: string;
+  report_id: string;
+  encounter_id: string;
+  patient_id: string;
+  overall_score: number;
+  dimension_scores: Record<string, number>;
+  dimensions: Record<string, DimensionEvaluationResult>;
+  failed_checks: string[];
+  severity: 'INFO' | 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  final_status: 'PASSED' | 'FLAGGED' | 'REJECTED';
+  passed: boolean;
+  fail_reasons: string[];
+  evaluated_at: string;
 }
 
 export interface MedicationSafetyReport {
@@ -177,17 +213,59 @@ export interface DoctorChatResponse {
   };
 }
 
+export type ReviewAssessment = 'CORRECT' | 'PARTIALLY_CORRECT' | 'INCORRECT';
+
+export type ReviewErrorTaxonomy =
+  | 'MISSING_INFORMATION'
+  | 'HALLUCINATION'
+  | 'INCORRECT_DIAGNOSIS'
+  | 'INCORRECT_REASONING'
+  | 'UNSUPPORTED_RECOMMENDATION'
+  | 'INCORRECT_MEDICAL_FACT'
+  | 'POOR_EVIDENCE_USE'
+  | 'OTHER';
+
+export type DatasetEligibilityStatus =
+  | 'ELIGIBLE'
+  | 'INELIGIBLE_INCOMPLETE'
+  | 'INELIGIBLE_DUPLICATE'
+  | 'INELIGIBLE_UNGROUNDED';
+
+export interface TrainingDatasetRecord {
+  id: string;
+  case_id: string;
+  patient_id: string;
+  report_id: string;
+  model_version: string;
+  specialty: string;
+  original_input: Record<string, any>;
+  original_ai_output: Record<string, any>;
+  reviewer_feedback: Record<string, any>;
+  corrected_output: Record<string, any>;
+  provenance: Record<string, any>;
+  review_status: string;
+  dataset_eligibility: DatasetEligibilityStatus;
+  timestamp: string;
+}
+
 export interface PhysicianReviewPayload {
   report_id: string;
   physician_name: string;
-  diagnosis_grade: string;
-  reasoning_grade: string;
-  tests_grade: string;
-  treatment_grade: string;
+  diagnosis_grade?: string;
+  reasoning_grade?: string;
+  tests_grade?: string;
+  treatment_grade?: string;
   overall_score: number;
   approved: boolean;
   notes: string;
   corrected_diagnosis?: string;
+  corrected_reasoning?: string;
+  corrected_treatment?: string[];
+  corrected_recommendations?: string[];
+  assessment?: ReviewAssessment;
+  identified_errors?: ReviewErrorTaxonomy[];
+  reviewer_role?: string;
+  specialty?: string;
 }
 
 export interface DPOPreferencePair {
@@ -258,5 +336,21 @@ export interface HospitalStaffRecord {
   total_encounters: number;
   created_at?: string;
 }
+
+export type KnowledgeSourceStatus = 'ACTIVE' | 'INACTIVE' | 'SYNCING' | 'ERROR';
+export type KnowledgeSourceType = 'PUBMED' | 'OPENFDA' | 'RXNORM' | 'CUSTOM';
+
+export interface KnowledgeSource {
+  id: string;
+  name: string;
+  url: string;
+  description: string;
+  status: KnowledgeSourceStatus;
+  source_type: KnowledgeSourceType;
+  last_synced_at?: string | null;
+  error_message?: string | null;
+  created_at?: string;
+}
+
 
 

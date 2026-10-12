@@ -213,7 +213,7 @@ Provide your final evaluation EXACTLY in the following JSON format, with no addi
         ).to("cuda")
 
         with torch.inference_mode():
-            output = self.model.generate(**inputs, max_new_tokens=350, do_sample=False)
+            output = self.model.generate(**inputs, max_new_tokens=180, do_sample=False)
 
         raw_output = self.processor.decode(output[0][inputs["input_ids"].shape[-1]:], skip_special_tokens=True)
         return self._parse_or_supplement_output(raw_output, chief_complaint, lab_results, rag_context)

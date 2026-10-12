@@ -373,10 +373,18 @@ BENCHMARK_CASES: List[PatientGroundTruth] = [
 
 
 def get_benchmark_case(case_id: str = "CASE-101") -> PatientGroundTruth:
-    # 1. Check database for manually admitted patient
+    # 1. Check static benchmark bank first for direct ID match
+    for c in BENCHMARK_CASES:
+        if c.id == case_id:
+            return c
+
+    # 2. Check database for admitted patient or case pool entry
     try:
         from ..database.repository import db_repo
+        from .case_builder import SyntheticClinicalCaseBuilder
         import json
+
+        # Check admitted patients
         p = db_repo.get_patient(case_id)
         if p:
             raw = p.get("raw_json", {})
@@ -386,67 +394,32 @@ def get_benchmark_case(case_id: str = "CASE-101") -> PatientGroundTruth:
                 except Exception:
                     raw = {}
 
-            v_dict = raw.get("baseline_vitals", {})
-            vitals = VitalSigns(
-                heart_rate=v_dict.get("heart_rate", 80),
-                systolic_bp=v_dict.get("systolic_bp", 120),
-                diastolic_bp=v_dict.get("diastolic_bp", 80),
-                respiratory_rate=v_dict.get("respiratory_rate", 16),
-                temperature_c=v_dict.get("temperature_c", 37.0),
-                spo2_percent=v_dict.get("spo2_percent", 98.0),
-                pain_score=v_dict.get("pain_score", 0),
-            )
+            profile_data = dict(raw)
+            profile_data["id"] = p["id"]
+            profile_data["name"] = p["name"]
+            profile_data["age"] = p["age"]
+            profile_data["sex"] = p["sex"]
+            profile_data["chief_complaint"] = p.get("chief_complaint", profile_data.get("chief_complaint", ""))
+            profile_data["triage_acuity"] = p.get("triage_acuity", profile_data.get("triage_acuity", "URGENT"))
 
-            acuity_str = str(p.get("triage_acuity", "URGENT"))
-            acuity_enum = TriageAcuity.URGENT
-            if "RESUSCITATION" in acuity_str:
-                acuity_enum = TriageAcuity.RESUSCITATION
-            elif "EMERGENT" in acuity_str:
-                acuity_enum = TriageAcuity.EMERGENT
-            elif "LESS_URGENT" in acuity_str:
-                acuity_enum = TriageAcuity.LESS_URGENT
-            elif "NON_URGENT" in acuity_str:
-                acuity_enum = TriageAcuity.NON_URGENT
+            return SyntheticClinicalCaseBuilder.build_from_profile(profile_data)
 
-            pmh = raw.get("past_medical_history", [])
-            if isinstance(pmh, str):
-                pmh = [s.strip() for s in pmh.split(",") if s.strip()]
-            meds = raw.get("medications", [])
-            if isinstance(meds, str):
-                meds = [s.strip() for s in meds.split(",") if s.strip()]
-            allergies = raw.get("allergies", [])
-            if isinstance(allergies, str):
-                allergies = [s.strip() for s in allergies.split(",") if s.strip()]
+        # Check case pool
+        pool_case = db_repo.get_pool_case(case_id)
+        if pool_case:
+            case_data = pool_case.get("case_details", {})
+            case_data["id"] = pool_case["id"]
+            case_data["name"] = pool_case["name"]
+            case_data["age"] = pool_case["age"]
+            case_data["sex"] = pool_case["sex"]
+            case_data["chief_complaint"] = pool_case["chief_complaint"]
+            case_data["triage_acuity"] = pool_case["triage_acuity"]
+            return SyntheticClinicalCaseBuilder.build_from_profile(case_data)
+    except Exception as e:
+        import logging
+        logging.getLogger("cases").warning(f"Error resolving case '{case_id}' from database/pool: {e}")
 
-            complaint = p.get("chief_complaint", "")
-            hpi = raw.get("history_of_present_illness") or raw.get("hpi") or complaint
-
-            return PatientGroundTruth(
-                id=p["id"],
-                name=p["name"],
-                age=p["age"],
-                sex=p["sex"],
-                triage_acuity=acuity_enum,
-                chief_complaint=complaint,
-                history_of_present_illness=hpi,
-                past_medical_history=pmh,
-                medications=meds,
-                allergies=allergies,
-                baseline_vitals=vitals,
-                true_diagnosis=raw.get("true_diagnosis") or "Clinical Evaluation in Progress",
-                icd10_code="R69",
-                differential_candidates=[],
-                recommended_labs=[LabTestType.CBC, LabTestType.BMP],
-                contraindicated_treatments=[],
-                optimal_treatment=["Clinical workup and specialist consultation"],
-                simulated_labs={},
-                physical_exam={"General": f"Patient presenting with {complaint}. Responsive and oriented."},
-            )
-    except Exception:
-        pass
-
-    for c in BENCHMARK_CASES:
-        if c.id == case_id:
-            return c
+    # Fallback to default benchmark case
     return BENCHMARK_CASES[0] if BENCHMARK_CASES else None
+
 
