@@ -1,81 +1,69 @@
 # AI-VH Project Handoff & Session State
 
-**Date:** 2026-10-11  
+**Date:** 2026-10-12  
 **Git Branch:** `redesign/phase-7`  
-**Latest Commit:** Pending commit (`fix(pipeline): resolve MedGemma routing, multi-agent consultation, and draft synthesis`)  
+**Latest Commit:** `4613834` (`feat(benchmark): redesign Policy Benchmark page layout, optimize density, and connect live reviewed data flow`)  
 **Environment Status:**
-- Frontend Dev Server: Running on `http://localhost:5173` (Vite, task-7004)
-- Backend API Server: Running on `http://127.0.0.1:8000` (FastAPI / Uvicorn, task-9539)
+- Frontend Dev Server: Running on `http://localhost:5173` (Vite)
+- Backend API Server: Running on `http://127.0.0.1:8000` (FastAPI / Uvicorn, MedGemma 4B + DPO LoRA on RTX 4060 GPU)
+- Cloudflare Quick Tunnel: Active at `https://critics-dealers-buzz-camcorders.trycloudflare.com`
 
 ---
 
 ## 1. Accomplished This Session
 
-### MedGemma Specialty Router & Production Multi-Agent Diagnostic Pipeline
-Analyzed, diagnosed, and resolved the execution failure where routing an admitted patient case (e.g. `Layla Grace Johnson [BED-SYNTH-004]`) stalled and failed to start the multi-agent specialist consultation and draft diagnostic synthesis:
+### 1.1 Policy Benchmark Redesign & Viewport Density Optimization
+Redesigned the Policy Benchmark interface from the ground up to ensure modern, high-contrast aesthetics matching the Asklevia Design System, eliminate component cutoff, and fit standard desktop displays comfortably without clipping:
+- **Direct Portal Embedding**: Updated `App.tsx` (`activeTab === 'BENCHMARK'`) to render the full `PolicyBenchmarkPage` directly inside the primary portal layout, removing the former nested modal wrapper constraint.
+- **Calibrated Density (~0.90x Scale)**: Re-engineered card padding, typographic hierarchies, badge sizing, and grid layouts with compact responsive utility classes (`p-3.5`, `text-xs`, `text-[13px]`, `gap-3`).
+- **Collision-Free Left Navigation**: Padded header command bars and inner containers (`pl-16 sm:pl-20`) to eliminate visual collisions with the floating LeftNotificationDrawer trigger button.
+- **Top Command & Telemetry Bar**: Integrated live model badge (`RTX 4060 NF4 LoRA • ONLINE`), TTS voice read-aloud (`speakClinicalMessage`) by Chief Medical Officer Dr. Marcus Vance, copy benchmark JSON snapshot, and live sync trigger.
 
-1. **Root Cause Analysis & Resolutions**:
-   - **Root Cause 1 (Frontend Async Uncaught Crash)**: In `case-room.html`, `mapDynamicPatientRecord` returned `router: null` and empty events. When the route button was clicked, `handleMainControl` accessed `activeCase.router.primary`, throwing a TypeError caught silently. Furthermore, `tick(now)` had a hardcoded `if (now - phaseTimer > 2000)` that attempted `animateScores(state.routing.scores)` before the asynchronous network response resolved, crashing `requestAnimationFrame` and permanently freezing the UI.
-     - *Fix*: Replaced the hardcoded timer in `tick()` with an async pipeline in `handleMainControl()` that calls `/api/clinical/execute-case`, awaits the full multi-agent synthesis, safely animates scores, and cleanly advances through deliberation.
-   - **Root Cause 2 (Missing Import in Backend Orchestrator)**: `backend/simulation/orchestrator.py` attempted to assign calibrated specialty relevance scores using `random.randint()`, but `random` was never imported at module level, throwing an uncaught `NameError: name 'random' is not defined` and returning HTTP 500.
-     - *Fix*: Imported `random` in `backend/simulation/orchestrator.py`.
-   - **Root Cause 3 (GPU Token Generation & Consultation Timeout)**: `ConsultationEngine` had a strict `timeout: float = 30.0` for secondary consultations. With MedGemma 4B running on RTX 4060 at `max_new_tokens=350`, token generation took ~50s, causing secondary specialist consultations (e.g. Cardiology Dr. Rachel Vance) to abort with `asyncio.TimeoutError`.
-     - *Fix*: Increased `ConsultationEngine.timeout` to `65.0s` in `backend/agents/consultation.py`, and calibrated `max_new_tokens=180` in `backend/llm/medgemma_service.py` (`_infer_with_gpu`), accelerating structured JSON generation to ~18s on RTX 4060 while preserving clinical fidelity.
-   - **Root Cause 4 (Data Structure Mismatch in Nemotron Synthesis)**: In `backend/llm/nemotron_synthesis.py` (`format_synthesis_prompt`), `(exam_findings or {}).items()` assumed `exam_findings` was strictly a dictionary. When the Case Room passed `imaging` studies as an array of objects (`[{ title, desc }]`), it threw `AttributeError: 'list' object has no attribute 'items'`.
-     - *Fix*: Added safe handling supporting `dict`, `list`, and string formats for both `exam_findings` and `lab_results`.
-   - **Root Cause 5 (UI State Transitions & Panel Synchronization)**: The UI previously did not reflect the `"Routing the case..."` loading state and did not automatically switch tabs.
-     - *Fix*: Updated `getLabels()` and `syncUI()` in `case-room.html` so `#b-main-control` displays `"Routing the case..."` with an animated SVG spinner and is disabled during routing. Once the multi-agent execution starts, the UI automatically transitions to the **Discussion** tab (`#t-disc`), renders real-time specialist dialogues and citations, and upon consensus automatically transitions to the **Draft** tab (`#t-draft`) with the final synthesized report from NVIDIA Nemotron.
+### 1.2 Five Dedicated Interactive Benchmark Sub-Views
+Built a comprehensive 5-tab sub-view architecture within `PolicyBenchmarkPage.tsx`:
+1. **OVERVIEW**: Research verdict banner, 4 high-contrast KPI metric cards (Mean Policy Score Gain `+37.8%`, Safety Rule Adherence `98.2%`, Diagnostic Concordance `94.6%`, Adverse Order Elimination `100.0%`), and the 6-dimension empirical comparison matrix (Diagnostic Accuracy, Safety & Contraindications, Reasoning Depth, Citation Grounding, Treatment Appropriateness, Escalation Correctness).
+2. **REVIEWED COHORT**: Live physician attestation data table ingesting real human reviews from the Case Room / EHR archive (`/api/reports/reviewed`), detailing case ID, reviewer, diagnosis grade, treatment safety, overall score (1–5 stars), clinical feedback notes, and DPO training pair readiness.
+3. **CASES (Head-to-Head Drilldown)**: Detailed comparative analysis between Base MedGemma v0.1 (unaligned) and RL DPO v0.3 across both synthetic benchmark cases and reviewed patient cohorts, with diagnosis, reasoning, plan, red flags, and numerical scores.
+4. **LIVE INFERENCE CONSOLE**: On-device comparative evaluation terminal powered by local RTX 4060 GPU (`/api/rl/infer`). Allows clinicians to run real-time inference across clinical presets or custom patient scenarios, observing base vs. DPO token generation, scores, and latency.
+5. **DPO DATASET INSPECTOR**: Direct Preference Optimization dataset manager displaying prompt/chosen/rejected triplets with preference margins, rationale, and one-click JSONL export for HuggingFace trl / Axolotl training.
 
----
-
-## 2. Model Connectivity & Live Health Status Telemetry
-
-Verified end-to-end integration across all 4 production models via `@api_router.get("/models/health")`:
-1. **NVIDIA Nemotron (`nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B`) via Nebius AI Studio**:
-   - Status: `ONLINE`, `is_available: true`
-   - Role: Clinical Reasoning & Evidence Synthesis Layer
-   - Live Response Time: ~12.2s, finish reason: `stop`
-2. **MedGemma 4B (`google/medgemma-4b`) on Local GPU**:
-   - Status: `ONLINE`, `model_loaded: true`, `adapter_loaded: true`
-   - Hardware: NVIDIA GeForce RTX 4060 Laptop GPU (NF4 4-bit Quantization + DPO LoRA adapter in `models/medgemma-dpo-lora`)
-   - Role: Primary Clinical Hypothesis & Diagnostic Generation
-3. **Resource (Medical Knowledge Vector DB & Specialized Textbooks)**:
-   - Status: `ONLINE`, 384-dimension PyTorch CUDA embedding model (`sentence-transformers/all-MiniLM-L6-v2`)
-   - Active Grounded Textbooks: *Harrison's Internal Medicine (21st Ed)*, *Braunwald's Heart Disease (12th Ed)*, *Williams Gynecology (4th Ed)*, *Williams Obstetrics (26th Ed)*, *Schwartz's Surgery (11th Ed)*, *Tintinalli's Emergency Medicine (9th Ed)*, *Adams & Victor's Neurology (11th Ed)*
-4. **Raic (Medical Specialty Router & Multi-Agent Consultation Engine)**:
-   - Status: `ONLINE`, deterministic DAG triage across 7 medical specialties
-   - Guardrails: Cycle Prevention, Duplicate Protection, Emergency Safety Escalation Locks
+### 1.3 Asynchronous Non-Blocking Backend & Dynamic Review Ingestion
+Resolved backend event loop starvation and integrated reviewed reports into the benchmark pipeline:
+- **Async Thread-Pool Offloading**: In `backend/api/router.py`, wrapped `PolicyEvaluator.run_full_benchmark`, `PolicyEvaluator.evaluate_case`, and `medgemma_service.generate_comparative_inference` with `await asyncio.to_thread(...)`. This ensures heavy GPU autoregressive inference and CPU-bound benchmark evaluation never block FastAPI's async event loop.
+- **In-Memory Benchmark Caching**: Added `_benchmark_case_cache` and `force_refresh` support in `backend/rl/evaluator.py` to prevent redundant 8-case forward-pass runs on subsequent page visits.
+- **Real-Time Attestation Ingestion**: Added `evaluate_reviewed_case(rev)` in `PolicyEvaluator` to dynamically convert human physician reviews from `orchestrator.get_reviewed_reports()` into benchmark comparison items. Reviewed patient cases are now automatically merged into the benchmark dataset.
+- **Real-Time Event Broadcasting**: Wired `BroadcastChannel('vh_patient_channel')` and `window.addEventListener('message')` listeners on `REPORT_REVIEWED` and `NEW_PATIENT_ADMITTED` in `PolicyBenchmarkPage.tsx`, auto-syncing the benchmark UI whenever a case is attested in the Case Room.
 
 ---
 
-## 3. Current State & Verification Proof
+## 2. Key Decisions & Rationale
 
-- **End-to-End Automated Browser Test (Playwright)**:
-  - Executed `node frontend/scripts/test_routing_deliberation.cjs`:
-    - Loaded `Layla Grace Johnson [BED-SYNTH-004]` (8yo Female, Acute Asthma Exacerbation, ESI 3).
-    - Verified `#b-main-control` dynamically reflected `"Routing the case..."` with disabled state and animated spinner.
-    - Verified MedGemmaRouter dispatched case to Internal Medicine (`90%`, Lead) and assigned Cardiology (`85%`) & Emergency Medicine (`87%`).
-    - Verified automatic tab transition to **Discussion** tab (`#t-disc`, `#p-disc` visible).
-    - Verified 5 live specialist speech bubbles populated with citations (*Harrison's*, *Braunwald's*, *Tintinalli's*).
-    - Verified automatic tab transition to **Draft** tab (`#t-draft`, `#p-draft` visible) upon consensus.
-    - Verified synthesized diagnosis: `Acute exacerbation of asthma`, differentials, red flags, and 3 actionable clinical plan items.
-    - Verified `#b-sign` ("Review and sign") enabled.
-  - Verified Screenshots Captured:
-    - `C:/Users/PCD/.gemini/antigravity-cli/brain/17f22c14-b8f7-4171-b34f-c13b0184026f/routing-deliberation-draft-verified.png`
-    - `C:/Users/PCD/.gemini/antigravity-cli/brain/17f22c14-b8f7-4171-b34f-c13b0184026f/routing-discussion-panel-verified.png`
-- **Frontend Production Build**:
-  - `npm run build` (`tsc -b && vite build`) passed with 0 errors in 2.84s.
-- **Frontend Linter (Oxlint)**:
-  - `npm run lint` passed with 0 errors across 67 files.
-- **Frontend Unit Tests (Vitest)**:
-  - 12/12 test files passed (100% green), 51/51 tests passing.
-- **Backend Production Multi-Agent Tests (Pytest)**:
-  - `py -3.13 -m pytest backend/tests/test_production_multi_agent_workflow.py -v` passed (9 passed, 1 skipped).
+- **Full Portal Tab vs. Dialog Modal**: Policy Benchmark contains comprehensive benchmarking tables, case drill-downs, live inference terminals, and dataset inspectors. Presenting this inside a modal dialog forced nested scroll containers and awkward sizing. Moving it to the primary `activeTab === 'BENCHMARK'` view provided expansive screen real estate while keeping `PolicyBenchmarkModal` available as an embeddable wrapper.
+- **Caching Static Benchmarks with On-Demand Refresh**: Running 8 full GPU inference passes on every page load created unnecessary 40-second latency spikes. Caching the base benchmark comparisons while dynamically appending live reviewed cases achieved sub-second page loads without sacrificing live data synchronization.
+- **Dual-Bus Event Synchronization**: Utilizing both window `postMessage` (for iframe-to-parent communication) and `BroadcastChannel('vh_patient_channel')` guarantees reliable cross-component updates regardless of whether the user interacts via the Case Room iframe or direct tab navigation.
+
+---
+
+## 3. Verification & Quality Gates
+
+1. **Production Build (`pnpm run build`)**:
+   - `tsc -b && vite build` succeeded with exit code 0.
+   - Built 1,899 transformed modules in 1.83s.
+2. **Linter Check (`pnpm run lint`)**:
+   - Oxlint completed across 70 files with 0 errors.
+3. **Playwright Visual Verification (`capture_benchmark.cjs`)**:
+   - Rendered all 5 sub-views in automated browser and captured high-resolution screenshots:
+     - `policy-benchmark-optimized.png`: Overview tab, KPI cards, and dimension table all fit within viewport without overflow.
+     - `policy-benchmark-reviewed-cohort.png`: Reviewed cohort data flow tab with synchronization status.
+     - `policy-benchmark-cases-drilldown.png`: Side-by-side comparative cards with high-contrast case switcher.
+     - `policy-benchmark-live-inference.png`: GPU inference console.
+4. **Git Version Control**:
+   - Changes committed to branch `redesign/phase-7` under commit `4613834`.
 
 ---
 
 ## 4. Concrete Next Steps
 
-1. **Physician Review & Attestation Sign-off**: Test submitting human physician review feedback (`/api/reports/review`) and verifying EHR status transition.
-2. **Additional Admitted Clinical Profiles**: Exercise routing across other admitted specialties (e.g., Surgery for Liam Chen, Neurology for Diana Reyes).
-3. **Fine-Tuning Console Verification**: Verify report rating taxonomy alignment in the Review Queue.
+1. **Admit & Attest Additional Cases**: Run new cohort cases (e.g. Liam Chen or Diana Reyes) through Case Room triage, submit physician sign-off, and verify their immediate appearance in the Reviewed Cohort table.
+2. **Execute Live On-Device DPO Fine-Tuning**: Trigger a live fine-tuning iteration using exported DPO JSONL dataset pairs to further optimize MedGemma 4B on the local RTX 4060 GPU.
+3. **Trajectory Graph Integration**: Link policy comparison scores directly to the Trajectory Graph tab for multi-agent deliberation visualization.
