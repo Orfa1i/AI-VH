@@ -1,0 +1,27 @@
+{
+  "short_name": "Virtual Hospital",
+  "name": "Virtual Hospital by Asklevia",
+  "description": "AI-assisted diagnosis, reviewed by clinicians.",
+  "icons": [
+    {
+      "src": "/vh-app-icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "/vh-app-icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    },
+    {
+      "src": "/logos/vh-app-icon-rounded.svg",
+      "type": "image/svg+xml",
+      "sizes": "any"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#F7F8FB",
+  "theme_color": "#F7F8FB",
+  "display": "standalone",
+  "orientation": "any"
+}

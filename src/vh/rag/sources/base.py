@@ -86,6 +86,11 @@ def assert_licence_permitted(licence: Optional[str], doc_id: str = "") -> None:
 class SourceDocument(BaseModel):
     """
     Standardized normalised schema for all ingested clinical and pharmacological source documents.
+
+    Phase 1 (case extraction + Harrison retrieval) extension: optional Harrison
+    textbook metadata. All new fields are nullable and never fabricated: when the
+    chapter/page cannot be determined from the source record, they stay None.
+    Owner: Software Engineer. FROZEN fields above this note are unchanged.
     """
     source_id: str = Field(..., description="Identifier for the source adapter (e.g. pubmed, dailymed)")
     doc_id: str = Field(..., description="Unique document identifier within the source repository")
@@ -98,9 +103,30 @@ class SourceDocument(BaseModel):
     licence: str = Field(..., description="Document licence identifier")
     text: str = Field(..., description="Normalised plain text content of the document or section")
     metadata: Dict[str, Any] = Field(default_factory=dict, description="Extensible metadata payload")
+    # --- Phase 1 Harrison textbook metadata (all nullable, never invented) ---
+    edition: Optional[str] = Field(default=None, description="Textbook edition, e.g. '21st Edition (2022)'")
+    chapter_number: Optional[str] = Field(default=None, description="Chapter number when determinable from source")
+    chapter_title: Optional[str] = Field(default=None, description="Chapter number/title as given by the source")
+    section_heading: Optional[str] = Field(default=None, description="Section heading within the chapter")
+    page: Optional[int] = Field(default=None, description="Page number when given by the source; else None")
 
     class Config:
         extra = "allow"
+
+
+class SourceSearchHit(BaseModel):
+    """
+    Phase 1 common search result shape behind the SourceAdapter interface.
+
+    `search(query)` returns a list of these: source_name, chunk_id, metadata,
+    text and score. No logic outside the adapter may be Harrison-specific.
+    Owner: Software Engineer.
+    """
+    source_name: str = Field(..., description="Source repository name, e.g. 'harrison'")
+    chunk_id: str = Field(..., description="Stable chunk identifier from the source collection")
+    metadata: Dict[str, Any] = Field(default_factory=dict, description="chunk_id, edition, chapter, section, page(s)")
+    text: str = Field(..., description="Full chunk text")
+    score: float = Field(default=0.0, description="Retrieval score for this query")
 
 
 class SourceAdapter(ABC):
@@ -115,6 +141,16 @@ class SourceAdapter(ABC):
     def fetch(self, query_or_id: str) -> List[SourceDocument]:
         """Fetch documents by ID or query. Base implementation raises NotImplementedError for offline use."""
         raise NotImplementedError("Live fetch disabled in offline mode. Use parse with recorded fixtures.")
+
+    def search(self, query: str, top_k: int = 6) -> List[SourceSearchHit]:
+        """
+        Phase 1 common interface: search(query) -> chunks.
+
+        Default implementation raises NotImplementedError; adapters override it.
+        Non-abstract so existing adapters (pubmed, dailymed, guidelines, ...)
+        keep instantiating without changes.
+        """
+        raise NotImplementedError(f"search() not implemented for source '{self.source_id}'")
 
 
 class RateLimiter:

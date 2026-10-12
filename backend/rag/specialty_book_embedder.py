@@ -43,6 +43,7 @@ class SpecialtyBookEmbedder:
         collection_path: Path,
         embeddings_path: Path,
         checkpoint_path: Path,
+        custom_page_map: Optional[List[Tuple[int, int, str]]] = None,
     ):
         self.pdf_path = Path(pdf_path)
         self.book_title = book_title
@@ -50,6 +51,7 @@ class SpecialtyBookEmbedder:
         self.collection_path = Path(collection_path)
         self.embeddings_path = Path(embeddings_path)
         self.checkpoint_path = Path(checkpoint_path)
+        self.custom_page_map = custom_page_map
 
         self.db_repo = DatabaseRepository()
         self.embedder = get_vector_embedder()
@@ -67,11 +69,15 @@ class SpecialtyBookEmbedder:
         self.total_pages = len(self.doc)
         logger.info(f"Loaded {self.book_title} with {self.total_pages} pages.")
 
-        toc = self.doc.get_toc()
-        logger.info(f"Found {len(toc)} Table of Contents entries.")
-        for level, title, p in toc:
-            self.page_map.append((p, level, title.strip()))
-        self.page_map.sort(key=lambda x: x[0])
+        if self.custom_page_map:
+            self.page_map = sorted(self.custom_page_map, key=lambda x: x[0])
+            logger.info(f"Using provided custom page map with {len(self.page_map)} entries.")
+        else:
+            toc = self.doc.get_toc()
+            logger.info(f"Found {len(toc)} Table of Contents entries.")
+            for level, title, p in toc:
+                self.page_map.append((p, level, title.strip()))
+            self.page_map.sort(key=lambda x: x[0])
 
     def get_chapter_info(self, page_num_1based: int) -> Tuple[str, str]:
         curr_part = self.specialty

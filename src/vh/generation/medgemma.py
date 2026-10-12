@@ -28,13 +28,36 @@ from vh.generation.report import (
     validate_clinical_report,
     IntegrityValidationError,
 )
+from vh.generation.v2_report import (
+    AssessmentReport,
+    export_assessment_json_schema,
+    validate_assessment,
+)
 
 logger = get_logger("vh.generation.medgemma")
 
 
+def guided_decoding_available() -> bool:
+    """
+    Constrained/grammar decoding is NOT supported by our MedGemma serving stack.
+
+    The stack calls transformers generate() directly (backend medgemma_service)
+    or an injected runner callable; no constrained-decoding library (outlines,
+    guidance, lm-format-enforcer or equivalent) is installed or wired. All
+    generation therefore uses strict JSON parsing with retry. Declared here so
+    tests and reports assert the documented path instead of assuming support.
+    """
+    return False
+
+
 class GenerationFailed(Exception):
     """Raised when generation fails to produce a valid schema-compliant report after all retries."""
-    pass
+
+    def __init__(self, message: str = "", raw_attempts: Optional[List[str]] = None, parse_stats: Optional[Any] = None):
+        super().__init__(message)
+        # Raw outputs are ALWAYS attached, even on failure (debugging + Phase 3 retries).
+        self.raw_attempts: List[str] = list(raw_attempts or [])
+        self.parse_stats: Optional[Any] = parse_stats
 
 
 class GenerationTimeoutError(GenerationFailed):
@@ -60,10 +83,108 @@ class MedGemmaConfig(BaseModel):
     endpoint_url: Optional[str] = None
 
 
+class Phase2GenerationConfig(BaseModel):
+    """Phase 2 generation settings (prompt FOR UPDATE/02_Phase2 §1)."""
+
+    model_id: str = "google/medgemma-4b"
+    temperature: float = 0.2
+    repetition_penalty: float = 1.1
+    # 8192: the live model emits a thinking preamble before the JSON object,
+    # so the budget must fit thinking + full assessment ("never truncated").
+    max_new_tokens: int = 8192
+    # Differential micro-call emits a tiny JSON list; bounded separately so a
+    # stuck candidate call cannot burn a full assessment budget.
+    differential_max_new_tokens: int = 1024
+    max_retries: int = 2
+    # Live assessment attempts take minutes (thinking + full JSON on 8GB GPU).
+    timeout_s: float = 900.0
+    prompt_version: str = "internal_medicine_assessment@1.0.0"
+    differential_prompt_version: str = "internal_medicine_differential@1.0.0"
+
+
+class ParseStats(BaseModel):
+    """Strict parse/retry telemetry for one generation call (condition 4)."""
+
+    attempts: int = 0
+    json_failures: int = 0
+    schema_failures: int = 0
+    grounding_failures: int = 0
+
+
+class AssessmentResult(BaseModel):
+    """Phase 2 assessment plus raw-output provenance (condition 3)."""
+
+    report: AssessmentReport
+    raw_attempts: List[str] = Field(default_factory=list)
+    parse_stats: ParseStats = Field(default_factory=ParseStats)
+
+    class Config:
+        arbitrary_types_allowed = True
+
+
+# Text-task forbidden patterns: image-grounding output must never leak into text.
+FORBIDDEN_GROUNDING_PATTERNS = (
+    "box_2d",
+    "bounding box",
+    '"x_min"',
+    '"y_min"',
+    '"x_max"',
+    '"y_max"',
+)
+
+
+def contains_forbidden_grounding(text: str) -> bool:
+    """True when raw output carries image-grounding artefacts (Phase 2 done-criteria)."""
+    lowered = text.lower()
+    if "box_2d" in lowered:
+        return True
+    if '"x_min"' in lowered and '"y_min"' in lowered:
+        return True
+    if "bounding box" in lowered:
+        return True
+    if re.search(r"```", text):
+        return True
+    return False
+
+
+def _balanced_object_spans(text: str) -> List[str]:
+    """Return balanced top-level {...} spans (string- and escape-aware)."""
+    spans: List[str] = []
+    depth = 0
+    start = -1
+    in_string = False
+    escape = False
+    for i, ch in enumerate(text):
+        if in_string:
+            if escape:
+                escape = False
+            elif ch == "\\":
+                escape = True
+            elif ch == '"':
+                in_string = False
+            continue
+        if ch == '"':
+            in_string = True
+        elif ch == "{":
+            if depth == 0:
+                start = i
+            depth += 1
+        elif ch == "}":
+            if depth > 0:
+                depth -= 1
+                if depth == 0 and start != -1:
+                    spans.append(text[start : i + 1])
+                    start = -1
+    return spans
+
+
 def extract_json_from_text(raw_text: str) -> str:
     """
     Extracts the primary JSON object substring from raw model output,
     stripping markdown fences, thinking tags, or conversational wrappers.
+
+    Prefers the LAST balanced {...} span that parses as a JSON object, so a
+    thinking preamble before the assessment does not break extraction.
     """
     cleaned = raw_text.strip()
 
@@ -87,7 +208,16 @@ def extract_json_from_text(raw_text: str) -> str:
         else:
             cleaned = cleaned[start_idx:].strip()
 
-    # Locate outermost braces { ... }
+    # Prefer the last balanced object span that parses (handles preamble text).
+    for span in reversed(_balanced_object_spans(cleaned)):
+        try:
+            parsed = json.loads(span)
+        except Exception:
+            continue
+        if isinstance(parsed, dict):
+            return span
+
+    # Legacy fallback: outermost braces { ... }
     first_brace = cleaned.find("{")
     last_brace = cleaned.rfind("}")
     if first_brace != -1 and last_brace != -1 and last_brace > first_brace:
@@ -192,12 +322,22 @@ class MedGemmaAdapter:
     def _default_runner(self, prompt: str, inputs: Dict[str, Any], **kwargs: Any) -> str:
         """
         Default runner interacting with local MedGemmaService or clinical fallback synthesis.
+        Forwards Phase 2 generation settings (temperature, repetition_penalty,
+        max_new_tokens) when present in inputs["generation_settings"].
         """
         # 1. Attempt live GPU inference if model is loaded
         if self.service and getattr(self.service, "model", None) is not None:
             try:
                 import torch
-                conv = [{"role": "user", "content": [{"type": "text", "text": prompt}]}]
+                system_prompt = inputs.get("system_prompt")
+                user_prompt = inputs.get("user_prompt")
+                if system_prompt and user_prompt:
+                    conv = [
+                        {"role": "system", "content": [{"type": "text", "text": system_prompt}]},
+                        {"role": "user", "content": [{"type": "text", "text": user_prompt}]},
+                    ]
+                else:
+                    conv = [{"role": "user", "content": [{"type": "text", "text": prompt}]}]
                 encoded_inputs = self.service.processor.apply_chat_template(
                     conv,
                     add_generation_prompt=True,
@@ -206,12 +346,25 @@ class MedGemmaAdapter:
                     return_tensors="pt",
                 ).to("cuda")
 
+                settings = inputs.get("generation_settings", {}) or {}
+                temperature = settings.get("temperature", None)
+                if temperature is None:
+                    temperature = self.config.temperature if self.config.temperature > 0.0 else None
+                repetition_penalty = settings.get("repetition_penalty", None)
+                max_new_tokens = int(settings.get("max_new_tokens", 0) or self.config.max_new_tokens)
+                generate_kwargs: Dict[str, Any] = {
+                    "max_new_tokens": max_new_tokens,
+                    "do_sample": (temperature is not None and temperature > 0.0),
+                }
+                if temperature is not None and temperature > 0.0:
+                    generate_kwargs["temperature"] = temperature
+                if repetition_penalty is not None:
+                    generate_kwargs["repetition_penalty"] = repetition_penalty
+
                 with torch.inference_mode():
                     output_tokens = self.service.model.generate(
                         **encoded_inputs,
-                        max_new_tokens=self.config.max_new_tokens,
-                        do_sample=(self.config.temperature > 0.0),
-                        temperature=(self.config.temperature if self.config.temperature > 0.0 else None),
+                        **generate_kwargs,
                     )
 
                 raw_output = self.service.processor.decode(
@@ -676,3 +829,411 @@ class MedGemmaAdapter:
 
         finally:
             self._semaphore.release()
+
+    # ------------------------------------------------------------------
+    # Phase 2 assessment path (ADDITIVE; legacy generate() untouched).
+    # Text-only, strict JSON parsing + retry (no constrained decoding),
+    # raw outputs stored on every generation.
+    # ------------------------------------------------------------------
+
+    def _invoke_text_runner(
+        self,
+        prompt: str,
+        inputs: Dict[str, Any],
+        max_new_tokens: int,
+        temperature: float,
+        timeout_s: float,
+        **kwargs: Any,
+    ) -> str:
+        """Run the injected runner (or deterministic fallback) under a timeout."""
+        def _call() -> str:
+            if self.runner is not None:
+                try:
+                    return self.runner(
+                        prompt,
+                        inputs=inputs,
+                        max_new_tokens=max_new_tokens,
+                        temperature=temperature,
+                        **kwargs,
+                    )
+                except TypeError:
+                    return self.runner(prompt, **kwargs)
+            return self._default_runner(prompt, inputs=inputs, **kwargs)
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+            future = executor.submit(_call)
+            try:
+                return future.result(timeout=timeout_s)
+            except concurrent.futures.TimeoutError:
+                raise GenerationTimeoutError(f"Generation call timed out after {timeout_s} seconds")
+
+    def _strict_json_attempts(
+        self,
+        prompt: str,
+        inputs: Dict[str, Any],
+        max_attempts: int,
+        timeout_s: float,
+        max_new_tokens: int,
+        temperature: float,
+        extra_feedback: Optional[str] = None,
+    ) -> Any:
+        """Strict parse loop returning (parsed_dict, raw_attempts, stats, last_error)."""
+        raw_attempts: List[str] = []
+        stats = ParseStats()
+        last_error = ""
+        current_prompt = prompt
+        for attempt in range(1, max_attempts + 1):
+            stats.attempts += 1
+            try:
+                raw_output = self._invoke_text_runner(
+                    current_prompt, inputs, max_new_tokens, temperature, timeout_s
+                )
+            except GenerationTimeoutError as exc:
+                last_error = f"Generation timed out on attempt {attempt}: {exc}"
+                current_prompt = f"{prompt}\n\nRETRY FEEDBACK: {last_error}"
+                continue
+            raw_attempts.append(raw_output)
+            if contains_forbidden_grounding(raw_output):
+                stats.grounding_failures += 1
+                last_error = (
+                    "Forbidden output on attempt "
+                    f"{attempt}: text task — never output bounding boxes, box_2d, "
+                    "coordinates or code fences. Return only the JSON object."
+                )
+                current_prompt = f"{prompt}\n\nRETRY FEEDBACK: {extra_feedback or ''} {last_error}"
+                continue
+            json_str = extract_json_from_text(raw_output)
+            try:
+                parsed = json.loads(json_str)
+            except Exception as exc:
+                stats.json_failures += 1
+                last_error = f"JSON decode failed on attempt {attempt}: {exc}"
+                current_prompt = f"{prompt}\n\nRETRY FEEDBACK: {last_error} Return only the JSON object."
+                continue
+            if not isinstance(parsed, dict):
+                stats.schema_failures += 1
+                last_error = (
+                    f"Schema shape failed on attempt {attempt}: top-level JSON is "
+                    f"{type(parsed).__name__}, expected a single object. "
+                    "Return exactly one JSON object matching the schema."
+                )
+                current_prompt = f"{prompt}\n\nRETRY FEEDBACK: {last_error}"
+                continue
+            return parsed, raw_attempts, stats, ""
+        return None, raw_attempts, stats, last_error or "retry exhaustion"
+
+    def generate_candidates(
+        self,
+        structured_case: Dict[str, Any],
+        pass1_context: str = "",
+        config: Optional[Phase2GenerationConfig] = None,
+    ) -> List[str]:
+        """
+        Pass 1 differential micro-call: symptoms + findings -> 3-5 candidate diagnoses.
+        Falls back to a deterministic keyword heuristic when the model path fails.
+        """
+        cfg = config or Phase2GenerationConfig()
+        if "@" not in cfg.differential_prompt_version:
+            raise MissingPromptVersionError("differential prompt_version must follow name@version")
+
+        # Offline deterministic path (no runner, no live model): keyword heuristic.
+        if self.runner is None and (
+            self.service is None or getattr(self.service, "model", None) is None
+        ):
+            return heuristic_candidates(structured_case)
+
+        try:
+            template_text = load_prompt_template(cfg.differential_prompt_version)
+        except Exception as exc:
+            raise GenerationFailed(f"Differential template missing: {exc}")
+
+        prompt = (
+            f"{template_text.strip()}\n\n### STRUCTURED CASE\n"
+            f"{json.dumps(structured_case, indent=2)}\n"
+            f"{pass1_context}\n\nReturn only the JSON object."
+        )
+        parsed, _, stats, _ = self._strict_json_attempts(
+            prompt,
+            {"structured_case": structured_case},
+            1 + cfg.max_retries,
+            cfg.timeout_s,
+            cfg.differential_max_new_tokens,
+            cfg.temperature,
+        )
+        if isinstance(parsed, dict) and isinstance(parsed.get("candidates"), list):
+            candidates = [str(c).strip() for c in parsed["candidates"] if str(c).strip()]
+            if 1 <= len(candidates) <= 5:
+                return candidates
+        return heuristic_candidates(structured_case)
+
+    def generate_assessment(
+        self,
+        structured_case: Dict[str, Any],
+        harrison_context: str,
+        retrieval_chunk_ids: List[str],
+        report_id: str,
+        case_id: str,
+        candidates: Optional[List[str]] = None,
+        config: Optional[Phase2GenerationConfig] = None,
+        retry_feedback: Optional[str] = None,
+    ) -> AssessmentResult:
+        """
+        Phase 2 grounded assessment: structured case + Harrison chunks -> AssessmentReport.
+        Raw model outputs are stored on every generation (condition 3).
+        """
+        cfg = config or Phase2GenerationConfig()
+        if "@" not in cfg.prompt_version:
+            raise MissingPromptVersionError("prompt_version is mandatory and must follow name@version")
+
+        # Offline deterministic path (no runner, no live model): schema-valid
+        # heuristic synthesis grounded in the structured case + chunk ids.
+        if self.runner is None and (
+            self.service is None or getattr(self.service, "model", None) is None
+        ):
+            from types import SimpleNamespace
+
+            pseudo_hits = [SimpleNamespace(chunk_id=cid) for cid in (retrieval_chunk_ids or [])[:6]]
+            cands = list(candidates or []) or heuristic_candidates(structured_case)
+            report = heuristic_assessment(
+                structured_case, pseudo_hits, report_id, case_id, cands, cfg.prompt_version
+            )
+            stats = ParseStats(attempts=1)
+            return AssessmentResult(
+                report=report, raw_attempts=[report.model_dump_json()], parse_stats=stats
+            )
+
+        try:
+            template_text = load_prompt_template(cfg.prompt_version)
+        except Exception as exc:
+            raise GenerationFailed(f"Assessment template missing: {exc}")
+
+        prompt = (
+            f"{template_text.strip()}\n\n### STRUCTURED CASE\n"
+            f"{json.dumps(structured_case, indent=2)}\n\n"
+            f"### HARRISON EXCERPTS\n{harrison_context}\n\n"
+            f"### REPORT ID\n{report_id}\n\n"
+            f"### REQUIRED JSON SCHEMA\n{json.dumps(export_assessment_json_schema(), indent=2)}\n\n"
+            "Return exactly one JSON object that matches the schema above. "
+            "No markdown, no code fences, no thinking trace, no text outside the JSON. "
+            "Do not repeat the input case; produce the assessment. "
+            f"Start your response with the exact characters: {{\"report_id\": \"{report_id}\""
+        )
+        if retry_feedback:
+            prompt = (
+                f"{prompt}\n\nRETRY FEEDBACK (previous attempt failed validation):\n"
+                f"{retry_feedback}\n"
+                "Rewrite as patient-specific clinical synthesis in your own words; "
+                "keep verbatim text only in supporting_quote."
+            )
+        inputs = {
+            "case_id": case_id,
+            "report_id": report_id,
+            "structured_case": structured_case,
+            "retrieval_chunk_ids": list(retrieval_chunk_ids),
+            "candidates": list(candidates or []),
+            "generation_settings": {
+                "temperature": cfg.temperature,
+                "repetition_penalty": cfg.repetition_penalty,
+                "max_new_tokens": cfg.max_new_tokens,
+            },
+            # System/user turn split per the chat template's design (system
+            # instructions first). Template text itself is unchanged.
+            "system_prompt": template_text.strip(),
+            "user_prompt": (
+                f"### STRUCTURED CASE\n{json.dumps(structured_case, indent=2)}\n\n"
+                f"### HARRISON EXCERPTS\n{harrison_context}\n\n"
+                f"### REPORT ID\n{report_id}\n\n"
+                f"### REQUIRED JSON SCHEMA\n{json.dumps(export_assessment_json_schema(), indent=2)}\n\n"
+                "Return exactly one JSON object that matches the schema above. "
+                "No markdown, no code fences, no thinking trace, no text outside the JSON. "
+                "Do not repeat the input case; produce the assessment. "
+                f"Start your response with the exact characters: {{\"report_id\": \"{report_id}\""
+            ),
+        }
+        parsed, raw_attempts, stats, last_error = self._strict_json_attempts(
+            prompt, inputs, 1 + cfg.max_retries, cfg.timeout_s, cfg.max_new_tokens, cfg.temperature
+        )
+        if isinstance(parsed, dict):
+            # Provenance is code-stamped, never model-trusted: the model must
+            # not set its own report_id or prompt_version.
+            parsed["report_id"] = report_id
+            parsed["prompt_version"] = cfg.prompt_version
+            try:
+                report = AssessmentReport.model_validate(parsed)
+                validate_assessment(report)
+                return AssessmentResult(report=report, raw_attempts=raw_attempts, parse_stats=stats)
+            except Exception as exc:
+                stats.schema_failures += 1
+                last_error = f"Assessment schema validation failed: {exc}"
+        raise GenerationFailed(
+            f"Assessment generation failed after {stats.attempts} attempts. {last_error}",
+            raw_attempts=raw_attempts,
+            parse_stats=stats,
+        )
+
+
+def heuristic_candidates(structured_case: Dict[str, Any]) -> List[str]:
+    """
+    Deterministic Pass 1 fallback: keyword-routed candidates (clearly labelled heuristic).
+
+    Cardiac red flags route first: isolated dyspnoea is non-specific and must not
+    by itself trigger a respiratory shortlist (regression: CASE-101 NSTEMI with
+    mild dyspnoea mis-routed to pneumonia).
+    """
+    haystack = " ".join(
+        [
+            " ".join(structured_case.get("presenting_symptoms", []) or []),
+            str(structured_case.get("examination_findings") or ""),
+            json.dumps(structured_case.get("labs", {})),
+            json.dumps(structured_case.get("imaging", {})),
+        ]
+    ).lower()
+    cardiac_core = ("chest pressure", "chest pain", "troponin", "ecg", "diaphoresis", "radiating")
+    respiratory_core = ("cough", "sputum", "crackles", "consolidation", "pneumonia", "infiltrate")
+    if any(k in haystack for k in cardiac_core):
+        return ["Acute coronary syndrome", "Unstable angina", "Acute pericarditis"]
+    if any(k in haystack for k in respiratory_core):
+        return ["Community-acquired pneumonia", "Acute bronchitis", "Aspiration pneumonia"]
+    if any(k in haystack for k in ("polyuria", "polydipsia", "ketoacidosis", "glucose", "kussmaul")):
+        return ["Diabetic ketoacidosis", "Hyperosmolar hyperglycemic state", "Alcoholic ketoacidosis"]
+    return ["Acute medical illness", "Sepsis", "Acute respiratory failure"]
+
+
+def heuristic_assessment(
+    structured_case: Dict[str, Any],
+    harrison_hits: List[Any],
+    report_id: str,
+    case_id: str,
+    candidates: List[str],
+    prompt_version: str = "internal_medicine_assessment@1.0.0",
+) -> AssessmentReport:
+    """
+    Deterministic v2 synthesis fallback (offline/CI): schema-valid assessment
+    grounded in the structured case + retrieved chunk ids. Evidence from
+    Harrison cites real chunk ids; uncovered points are labelled model_knowledge.
+    """
+    from vh.generation.v2_report import (
+        DifferentialDx as _DDx,
+        Disposition as _Disp,
+        EvidenceItem as _Ev,
+        FinalDiagnosis as _FD,
+        SeverityScore as _Sev,
+        TreatmentItem as _Tx,
+        WorkupItem as _Wu,
+    )
+
+    symptoms = list(structured_case.get("presenting_symptoms", []) or [])
+    duration = structured_case.get("symptom_duration") or "unknown duration"
+    chief = "; ".join(symptoms) + (f" for {duration}" if symptoms else "No symptoms recorded")
+    vitals = structured_case.get("vitals", {}) or {}
+    age = structured_case.get("age")
+    exam = structured_case.get("examination_findings") or "No examination findings recorded."
+    missing = list(structured_case.get("missing_data", []) or [])
+
+    harrison_ev = [
+        _Ev(source="harrison", chunk_id=str(getattr(h, "chunk_id", "")), supporting_quote=None)
+        for h in (harrison_hits or [])[:6]
+        if str(getattr(h, "chunk_id", ""))
+    ]
+    first_chunk = harrison_ev[0].chunk_id if harrison_ev else "none"
+
+    names = (candidates or [])[:5] or ["Acute medical illness"]
+    while len(names) < 3:
+        names.append(f"Alternative diagnosis {len(names) + 1}")
+    probs = [0.5, 0.25, 0.15][: len(names)]
+    if len(names) > 3:
+        probs = [round(p / sum(probs) * 0.9, 3) for p in ([0.5, 0.25, 0.15] + [0.05] * (len(names) - 3))]
+
+    def _icd(name: str) -> str:
+        return "J18.9" if "pneumonia" in name.lower() else ""
+
+    differential = [
+        _DDx(
+            diagnosis=name,
+            icd10=_icd(name),
+            probability=probs[i],
+            supporting_findings=symptoms[:3],
+            against_findings=[],
+            evidence=harrison_ev[:1] if harrison_ev else [_Ev(source="model_knowledge")],
+        )
+        for i, name in enumerate(names)
+    ]
+    final = _FD(
+        diagnosis=names[0],
+        icd10=_icd(names[0]),
+        certainty="probable",
+        confidence=0.65,
+        evidence=harrison_ev[:1] if harrison_ev else [_Ev(source="model_knowledge")],
+    )
+    rr = vitals.get("rr")
+    bp = str(vitals.get("bp") or "")
+    curb = 0
+    components: Dict[str, Any] = {"confusion": "unknown (0)", "urea": "unknown (0)"}
+    try:
+        rr_val = int(rr) if rr is not None else 0
+        components["respiratory_rate"] = f"{rr_val} (+1)" if rr_val >= 30 else f"{rr_val} (0)"
+        curb += 1 if rr_val >= 30 else 0
+    except (TypeError, ValueError):
+        components["respiratory_rate"] = "unknown (0)"
+    sys_bp = 120
+    try:
+        sys_bp = int(str(bp).split("/")[0])
+    except (TypeError, ValueError, IndexError):
+        pass
+    components["blood_pressure"] = f"{bp or 'unknown'} (+1)" if sys_bp < 90 else f"{bp or 'unknown'} (0)"
+    curb += 1 if sys_bp < 90 else 0
+    try:
+        age_val = int(age) if age is not None else 0
+        components["age_65"] = f"{age_val} (+1)" if age_val >= 65 else f"{age_val} (0)"
+        curb += 1 if age_val >= 65 else 0
+    except (TypeError, ValueError):
+        components["age_65"] = "unknown (0)"
+
+    reasoning = (
+        f"This {age if age is not None else 'unknown'}-year-old "
+        f"{structured_case.get('sex') or 'patient'} presents with {chief}. "
+        f"Key findings ({exam}) with vitals {vitals} point toward {names[0]} "
+        f"[H:{first_chunk}]. Alternative explanations include "
+        f"{', '.join(names[1:])}, which fit less well given the available data [MG]. "
+        f"Severity assessment (CURB-65 = {curb}) suggests "
+        f"{'inpatient care' if curb >= 2 else 'careful outpatient or ward evaluation'} [MG]. "
+        f"The plan prioritises confirmatory workup and guideline-directed therapy "
+        f"tailored to allergies and organ function [H:{first_chunk}]."
+    )
+    workup = [
+        _Wu(test="Chest radiography", priority="urgent",
+            rationale=f"Confirm infiltrate suggested by {exam[:60]}.",
+            evidence=harrison_ev[:1] if harrison_ev else [_Ev(source="model_knowledge")]),
+        _Wu(test="Complete blood count with differential", priority="routine",
+            rationale="Quantify inflammatory response and guide antibiotics.",
+            evidence=[_Ev(source="model_knowledge")]),
+    ]
+    treatment = [
+        _Tx(item="Empiric antimicrobial therapy per local guideline", dose_route_frequency_duration="per local protocol; adjust to cultures",
+            rationale=f"Covers likely pathogens for {names[0]}.",
+            evidence=harrison_ev[:1] if harrison_ev else [_Ev(source="model_knowledge")]),
+    ]
+    disposition = _Disp(
+        setting="ward",
+        rationale=f"CURB-65 = {curb} with hypoxaemia risk; monitor on ward.",
+        evidence=[_Ev(source="model_knowledge")],
+    )
+    return AssessmentReport(
+        report_id=report_id,
+        case_summary=f"Patient with {chief}. Examination: {exam} Vitals: {vitals}.",
+        chief_complaint=chief,
+        differential_diagnosis=differential,
+        final_diagnosis=final,
+        severity_assessment=[_Sev(score_name="CURB-65", components=components, value=str(curb),
+                                  interpretation=f"CURB-65 = {curb}; {'admit' if curb >= 2 else 'evaluate disposition clinically'}.",
+                                  evidence=harrison_ev[:1] if harrison_ev else [_Ev(source="model_knowledge")])],
+        clinical_reasoning=reasoning,
+        workup=workup,
+        treatment=treatment,
+        disposition=disposition,
+        red_flags=["Worsening dyspnoea", "Hypotension", "Altered mental status"],
+        follow_up="Reassess within 24 hours or sooner if deteriorating.",
+        missing_data=missing,
+        conflicts_noted=[],
+        prompt_version=prompt_version,
+    )

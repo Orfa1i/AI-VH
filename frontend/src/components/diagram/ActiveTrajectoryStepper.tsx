@@ -2,13 +2,13 @@ import React, { useState } from 'react';
 import {
   Activity,
   CheckCircle2,
-  Clock,
   ExternalLink,
   MapPin,
   ShieldCheck,
   User,
 } from 'lucide-react';
 import type { BenchmarkCase, HospitalEvent } from '../../types';
+import { Badge, Card } from '../ui';
 
 export interface TrajectoryStageItem {
   id: string;
@@ -110,7 +110,7 @@ export const ActiveTrajectoryStepper: React.FC<ActiveTrajectoryStepperProps> = (
       title: 'Attending Examination',
       department: 'Internal Medicine Dept.',
       stationId: 'INTERNAL_MEDICINE',
-      description: 'Differential diagnosis synthesis, physical findings analysis, and Harrison’s Principles RAG retrieval.',
+      description: 'Differential diagnosis synthesis, physical findings analysis, and evidence-based clinical reasoning.',
       actionRequired: 'Attending physician evaluation and preliminary clinical orders.',
       evidence: doctorAction || 'Harrison’s Principles 21st Ed. Semantic Retrieval',
       timestamp: 'T+00:15',
@@ -130,7 +130,7 @@ export const ActiveTrajectoryStepper: React.FC<ActiveTrajectoryStepperProps> = (
       status: getStageStatus(3),
     },
     {
-      id: 'DISCHARGE',
+      id: 'EXIT',
       stepNumber: 4,
       label: 'DISPOSITION',
       title: 'Discharge Hub',
@@ -158,7 +158,7 @@ export const ActiveTrajectoryStepper: React.FC<ActiveTrajectoryStepperProps> = (
   );
 
   return (
-    <section
+    <Card
       aria-label="Active Trajectory Sequence and State Flow"
       className={`w-full bg-white rounded-xl border border-slate-200/90 shadow-2xs relative isolate transition-all duration-300 font-sans ${className}`}
     >
@@ -193,8 +193,8 @@ export const ActiveTrajectoryStepper: React.FC<ActiveTrajectoryStepperProps> = (
       </div>
 
       {/* ── Main Stepper Track & Process Flow ── */}
-      <div className="p-4 sm:p-6">
-        <div className="relative w-full">
+      <div style={{ padding: 'var(--space-6) var(--space-4)' }}>
+        <div style={{ position: 'relative', width: '100%' }}>
           {/* Background Connecting Rail */}
           <div className="absolute top-5 left-10 right-10 h-1.5 bg-slate-200 rounded-full z-0 pointer-events-none">
             {/* Deep Clinical Teal Filled Progress Line */}
@@ -214,7 +214,13 @@ export const ActiveTrajectoryStepper: React.FC<ActiveTrajectoryStepperProps> = (
               return (
                 <div
                   key={stage.id}
-                  className="flex flex-col items-center group relative cursor-pointer"
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    position: 'relative',
+                    cursor: 'pointer',
+                  }}
                   onMouseEnter={() => setActiveTooltipStageId(stage.id)}
                   onMouseLeave={() => setActiveTooltipStageId(null)}
                   onClick={() => {
@@ -257,7 +263,7 @@ export const ActiveTrajectoryStepper: React.FC<ActiveTrajectoryStepperProps> = (
                       {isCompleted || isActive ? (
                         <CheckCircle2 className="w-5 h-5 text-white stroke-[2.5]" />
                       ) : (
-                        <span>{stage.stepNumber}</span>
+                        <span className="ak-num">{stage.stepNumber}</span>
                       )}
                     </div>
 
@@ -272,28 +278,40 @@ export const ActiveTrajectoryStepper: React.FC<ActiveTrajectoryStepperProps> = (
                     )}
                   </div>
 
-                  {/* Stage Text & Status Badge matching Screenshot */}
-                  <div className="text-center px-1 w-full">
-                    <div className="flex items-center justify-center gap-1.5 mb-1">
-                      <span className="text-[9px] font-mono font-bold tracking-wider uppercase px-2 py-0.5 rounded bg-teal-50 text-[#0d6e60] border border-teal-200">
+                  {/* Stage Text & Status Badge */}
+                  <div style={{ textAlign: 'center', width: '100%', padding: '0 var(--space-1)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, marginBottom: 2 }}>
+                      <Badge variant={isCompleted ? 'success' : isActive ? 'brand' : 'neutral'}>
                         {stage.label}
-                      </span>
+                      </Badge>
                       {stage.timestamp && (
-                        <span className="text-[10px] font-mono text-slate-400">
+                        <span className="caption ak-num" style={{ color: 'var(--text-tertiary)' }}>
                           {stage.timestamp}
                         </span>
                       )}
                     </div>
 
                     <h4
-                      className={`text-xs font-bold tracking-tight transition-colors line-clamp-1 ${
-                        isCompleted || isActive ? 'text-slate-900 font-bold' : 'text-slate-500'
-                      }`}
+                      className="heading-3"
+                      style={{
+                        fontSize: '0.75rem',
+                        margin: '2px 0',
+                        color: isCompleted || isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
+                      }}
                     >
                       {stage.title}
                     </h4>
 
-                    <p className="text-[11px] text-slate-500 truncate mt-0.5 max-w-[170px] mx-auto">
+                    <p
+                      className="caption"
+                      style={{
+                        margin: 0,
+                        color: 'var(--text-tertiary)',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                      }}
+                    >
                       {stage.department}
                     </p>
                   </div>
@@ -301,77 +319,107 @@ export const ActiveTrajectoryStepper: React.FC<ActiveTrajectoryStepperProps> = (
                   {/* ── Interactive Stage Detail Popover HUD ── */}
                   {isTooltipOpen && (
                     <div
-                      className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 w-64 bg-slate-900 text-slate-100 rounded-xl p-3 shadow-xl border border-slate-700 text-left z-50 pointer-events-none animate-in fade-in zoom-in-95 duration-150"
+                      style={{
+                        position: 'absolute',
+                        bottom: 'calc(100% + 12px)',
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        width: 250,
+                        backgroundColor: 'var(--text-primary)',
+                        color: 'var(--ak-color-bg-surface)',
+                        borderRadius: 'var(--radius-md)',
+                        padding: 'var(--space-3)',
+                        boxShadow: 'var(--shadow-lg)',
+                        textAlign: 'left',
+                        zIndex: 50,
+                        pointerEvents: 'none',
+                      }}
                       role="tooltip"
                     >
-                      <div className="flex items-center justify-between pb-1.5 mb-1.5 border-b border-slate-800">
-                        <div className="flex items-center gap-1.5">
-                          <span className="w-1.5 h-1.5 rounded-full bg-teal-400" />
-                          <span className="font-mono text-[10px] text-teal-400 font-bold uppercase tracking-wider">
-                            STAGE {stage.stepNumber}: {stage.label}
-                          </span>
-                        </div>
-                        <span
-                          className={`text-[9px] font-mono font-bold px-1.5 py-0.2 rounded uppercase ${
-                            isCompleted
-                              ? 'bg-teal-950 text-teal-300 border border-teal-800'
-                              : isActive
-                              ? 'bg-sky-950 text-sky-300 border border-sky-800'
-                              : 'bg-slate-800 text-slate-400'
-                          }`}
-                        >
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          borderBottom: '1px solid var(--ak-color-border-subtle)',
+                          paddingBottom: 4,
+                          marginBottom: 6,
+                        }}
+                      >
+                        <span className="caption" style={{ color: 'var(--indigo-300)', fontWeight: 700 }}>
+                          STAGE {stage.stepNumber}: {stage.label}
+                        </span>
+                        <span className="caption" style={{ textTransform: 'uppercase', opacity: 0.8 }}>
                           {stage.status}
                         </span>
                       </div>
 
-                      <h5 className="text-xs font-bold text-white mb-1">{stage.title}</h5>
-                      <p className="text-[11px] text-slate-300 leading-relaxed mb-2">
+                      <h5 style={{ fontSize: '0.8125rem', fontWeight: 700, margin: '0 0 4px', color: 'var(--ak-color-bg-surface)' }}>
+                        {stage.title}
+                      </h5>
+                      <p style={{ fontSize: '0.6875rem', lineHeight: 1.4, margin: '0 0 8px', color: 'var(--ak-color-border-subtle)' }}>
                         {stage.description}
                       </p>
 
-                      <div className="mb-2 p-1.5 rounded bg-slate-800/80 border border-slate-700/60 text-[10px] text-slate-300">
-                        <span className="text-teal-400 font-mono font-bold uppercase block mb-0.5">Clinical Protocol:</span>
+                      <div
+                        style={{
+                          backgroundColor: 'var(--ak-color-border-subtle)',
+                          borderRadius: 'var(--radius-sm)',
+                          padding: 'var(--space-2)',
+                          fontSize: '0.625rem',
+                          marginBottom: 'var(--space-2)',
+                          color: 'var(--ak-color-border-subtle)',
+                        }}
+                      >
+                        <span style={{ color: 'var(--indigo-300)', fontWeight: 700, textTransform: 'uppercase', display: 'block', marginBottom: 2 }}>
+                          Clinical Protocol:
+                        </span>
                         <span>{stage.actionRequired}</span>
                       </div>
 
-                      <div className="space-y-1.5 text-[10px] font-mono bg-slate-950/70 p-2 rounded-lg border border-slate-800">
-                        <div className="flex items-center justify-between text-slate-400">
-                          <span className="flex items-center gap-1">
-                            <MapPin className="w-2.5 h-2.5 text-teal-400" />
-                            <span>Station:</span>
+
+                      <div
+                        style={{
+                          backgroundColor: 'var(--ak-color-border-subtle)',
+                          borderRadius: 'var(--radius-sm)',
+                          padding: 'var(--space-2)',
+                          fontSize: '0.625rem',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: 4,
+                        }}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                          <span style={{ color: 'var(--ak-color-text-muted)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                            <MapPin className="w-2.5 h-2.5" /> Station:
                           </span>
-                          <span className="text-slate-200 font-semibold truncate max-w-[130px]">
-                            {stage.department}
-                          </span>
+                          <span style={{ fontWeight: 600 }}>{stage.department}</span>
                         </div>
-                        <div className="flex items-center justify-between text-slate-400">
-                          <span className="flex items-center gap-1">
-                            <ShieldCheck className="w-2.5 h-2.5 text-emerald-400" />
-                            <span>Evidence:</span>
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                          <span style={{ color: 'var(--ak-color-text-muted)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                            <ShieldCheck className="w-2.5 h-2.5" /> Evidence:
                           </span>
-                          <span className="text-slate-200 truncate max-w-[130px]">
+                          <span style={{ fontWeight: 600, maxWidth: 130, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                             {stage.evidence}
                           </span>
                         </div>
-                        {stage.timestamp && (
-                          <div className="flex items-center justify-between text-slate-400">
-                            <span className="flex items-center gap-1">
-                              <Clock className="w-2.5 h-2.5 text-amber-400" />
-                              <span>Elapsed:</span>
-                            </span>
-                            <span className="text-amber-300 font-bold">
-                              {stage.timestamp}
-                            </span>
-                          </div>
-                        )}
                       </div>
 
-                      <div className="mt-2 pt-1 border-t border-slate-800/80 flex items-center justify-between text-[9px] text-slate-400 font-mono">
+                      <div
+                        style={{
+                          marginTop: 6,
+                          paddingTop: 4,
+                          borderTop: '1px solid var(--ak-color-border-subtle)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          fontSize: '0.5625rem',
+                          color: 'var(--ak-color-text-muted)',
+                        }}
+                      >
                         <span>CLICK TO INSPECT STATION</span>
-                        <ExternalLink className="w-2.5 h-2.5 text-slate-400" />
+                        <ExternalLink className="w-2.5 h-2.5" />
                       </div>
-
-                      <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-x-4 border-x-transparent border-t-4 border-t-slate-900" />
                     </div>
                   )}
                 </div>
@@ -381,50 +429,65 @@ export const ActiveTrajectoryStepper: React.FC<ActiveTrajectoryStepperProps> = (
         </div>
       </div>
 
-      {/* ── Metadata Telemetry & Clinical Alignment Footer (Matching Screenshot) ── */}
-      <div className="px-4 py-2.5 bg-slate-50/90 border-t border-slate-200/80 rounded-b-xl flex flex-wrap items-center justify-between gap-3 text-xs">
-        <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-          <span className="text-[11px] font-mono text-slate-500 uppercase font-semibold">
-            TRAJECTORY STATUS:
+      {/* ── Metadata Telemetry & Clinical Alignment Footer ── */}
+      <div
+        style={{
+          padding: 'var(--space-2) var(--space-4)',
+          backgroundColor: 'var(--bg-app)',
+          borderTop: '1px solid var(--border-subtle)',
+          display: 'flex',
+          flexWrap: 'wrap',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 'var(--space-3)',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+          <span
+            style={{
+              width: 8,
+              height: 8,
+              borderRadius: '50%',
+              backgroundColor: 'var(--color-primary)',
+            }}
+          />
+          <span className="caption" style={{ fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>
+            Trajectory Status:
           </span>
-          <span className="text-slate-900 font-medium text-xs">
+          <span className="body-sm" style={{ fontWeight: 500 }}>
             {getStageHeaderSummary()}
           </span>
         </div>
 
-        <div className="flex items-center gap-3 font-mono text-[11px] text-slate-500">
-          <div className="flex items-center gap-1.5">
-            <span className="text-slate-400">PATIENT ACUITY:</span>
-            <span className="font-bold px-1.5 py-0.2 rounded text-[10px] bg-rose-50 text-rose-700 border border-rose-200">
-              {currentCase?.acuity === 'Critical' ? 'CRITICAL' : 'URGENT'}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <span className="caption" style={{ color: 'var(--text-tertiary)' }}>PATIENT ACUITY:</span>
+            <span className="caption ak-num" style={{ fontWeight: 700 }}>
+              {currentCase?.acuity || 'Standard'}
             </span>
           </div>
 
-          <span className="text-slate-300">|</span>
+          <span style={{ color: 'var(--border-subtle)' }}>|</span>
 
-          <div className="flex items-center gap-1.5">
-            <span className="text-slate-400">PATIENT:</span>
-            <span className="font-semibold text-slate-800">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <span className="caption" style={{ color: 'var(--text-tertiary)' }}>PATIENT:</span>
+            <span className="caption ak-num" style={{ fontWeight: 600 }}>
               {currentCase ? `${currentCase.age}yo ${currentCase.sex}` : 'None'}
             </span>
           </div>
 
-          <span className="text-slate-300">|</span>
+          <span style={{ color: 'var(--border-subtle)' }}>|</span>
 
-          <div className="flex items-center gap-1.5">
-            <span className="text-slate-400">EVIDENCE REASONING:</span>
-            <span className="font-semibold text-[#0d6e60]">100% GROUNDED</span>
-          </div>
-
-          <span className="text-slate-300">|</span>
-
-          <div className="flex items-center gap-1.5">
-            <span className="text-slate-400">AUDIT SIGN-OFF:</span>
-            <span className="font-semibold text-slate-800">M. Vance, MD</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <span className="caption" style={{ color: 'var(--text-tertiary)' }}>EVIDENCE:</span>
+            <span className="caption ak-num" style={{ fontWeight: 700, color: 'var(--color-primary)' }}>
+              100% GROUNDED
+            </span>
           </div>
         </div>
       </div>
-    </section>
+    </Card>
   );
 };
+
+export default ActiveTrajectoryStepper;

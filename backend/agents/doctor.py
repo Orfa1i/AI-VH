@@ -11,6 +11,7 @@ from ..simulation.events import HospitalEvent, EventType
 from ..clinical.tools import ClinicalToolkit
 from ..clinical.models import DifferentialItem, ClinicalReport, LabTestType
 from ..llm.medgemma_service import MedGemmaService
+from ..llm.nemotron_synthesis import nemotron_synthesis_engine
 
 logger = logging.getLogger("DoctorAgent")
 
@@ -78,7 +79,18 @@ class DoctorAgent(BaseAgent):
         )
 
         # 4. Diagnostic Investigations Ordering (Delegated to Lab & Radiology agents)
-        recommended_tests = toolkit.ground_truth.recommended_labs
+        # GROUND TRUTH ISOLATION: workup is derived from the presentation, never from
+        # toolkit.ground_truth.recommended_labs.
+        from .specialists.reasoning_engine import SpecialtyClinicalReasoningEngine
+
+        recommended_tests = SpecialtyClinicalReasoningEngine(
+            specialist_name=self.name, specialty=self.specialty, rag_agent=None, medgemma_service=self.llm
+        ).determine_diagnostic_workup(
+            chief_complaint=patient_info["chief_complaint"],
+            hpi=patient_info["history_of_present_illness"],
+            vitals=toolkit.get_vital_signs(),
+            exam=exam,
+        )
         lab_results_payload = []
 
         for test in recommended_tests:
@@ -132,8 +144,22 @@ class DoctorAgent(BaseAgent):
             rag_context=rag_citations,
         )
 
+        # 5b. Clinical Reasoning & Diagnostic Synthesis Engine (Nemotron)
+        # Synthesizes Patient Data + MedGemma Output + RAG Evidence
+        synthesis_result = nemotron_synthesis_engine.synthesize_diagnostic_report(
+            patient_info=patient_info,
+            vitals_summary=vitals.summary(),
+            exam_findings=exam,
+            lab_results=lab_results_payload,
+            medgemma_decision=decision,
+            citations=rag_citations,
+        )
+
+        primary_diagnosis = synthesis_result.primary_diagnosis or decision.get("primary_diagnosis", "Clinical Presentation")
+        confidence = float(max(0.0, min(1.0, synthesis_result.confidence)))
+
         # Convert differential items
-        diff_items = [
+        diff_items = synthesis_result.differential or [
             DifferentialItem(
                 condition=d["condition"],
                 likelihood=d["likelihood"],
@@ -148,11 +174,12 @@ class DoctorAgent(BaseAgent):
             event_type=EventType.DIAGNOSIS_MADE,
             encounter_id=encounter_id,
             patient_id=patient_id,
-            summary=f"{self.name} established primary diagnosis: {decision['primary_diagnosis']} (Confidence: {decision['confidence'] * 100:.1f}%)",
+            summary=f"{self.name} established primary diagnosis via {synthesis_result.engine_name}: {primary_diagnosis} (Confidence: {confidence * 100:.1f}%)",
             payload={
-                "primary_diagnosis": decision["primary_diagnosis"],
-                "confidence": decision["confidence"],
+                "primary_diagnosis": primary_diagnosis,
+                "confidence": confidence,
                 "differential_count": len(diff_items),
+                "engine": synthesis_result.engine_name,
             }
         )
 
@@ -166,12 +193,13 @@ class DoctorAgent(BaseAgent):
         )
 
         # 8. Clinical Report Generation
+        clinical_reasoning = synthesis_result.clinical_reasoning or decision.get("clinical_reasoning", "")
         report = toolkit.write_clinical_report(
             encounter_id=encounter_id,
-            primary_diagnosis=decision["primary_diagnosis"],
-            diagnostic_confidence=decision["confidence"],
+            primary_diagnosis=primary_diagnosis,
+            diagnostic_confidence=confidence,
             differential=diff_items,
-            clinical_reasoning=decision["clinical_reasoning"],
+            clinical_reasoning=clinical_reasoning,
             treatment_plan=decision["treatment_plan"],
             citations=rag_citations,
         )

@@ -70,6 +70,10 @@ class HospitalEventBus:
     def clear(self):
         self._history.clear()
 
+    @property
+    def events(self) -> List[HospitalEvent]:
+        return self._history
+
 
 # Global Singleton Event Bus Instance
 event_bus = HospitalEventBus()

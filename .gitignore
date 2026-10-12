@@ -28,10 +28,14 @@ MedGemma Model/model/
 models/**/*.bin
 models/**/*.safetensors
 models/**/*.pt
+models/**/*.onnx
+*.gguf
 
-# Large Raw Books (keep directory, ignore giant binary PDFs)
+# Large Raw Books & Binary PDFs
+Medical Books/
 *.pdf
 
+# Large Vectors, Embeddings & Data Dumps
 *.npy
 data/synthea/*
 !data/synthea/demo_patients/
@@ -42,20 +46,35 @@ data/replays/
 data/feedback_snapshots/
 data/events-*.jsonl
 data/feedback-e2e.db
+data/failed_generations*.jsonl
 data/knowledge/*.npy
 data/knowledge/*_collection.json
 data/knowledge/*checkpoint*.json
+data/knowledge/backup_phase1_*/
 
 # Node / Frontend
 node_modules/
 dist/
 build/
 .next/
+frontend/test-results/
+
+# Temporary / Scratch / Local Workspaces
+scratch/
+agent-animation-restore/
+asklevia-identity/
+asklevia-redesign-plan/
+asklevia-ui-kit/
+case-room-bugfix/
+site-scan/
+
+# Large temporary image dumps
+Gemini_Generated_Image_*.jpg
 
 # IDE / OS
 .DS_Store
 Thumbs.db
 .vscode/
 .idea/
-.claude/scheduled_tasks.lock
+.claude/
 eval/reports/

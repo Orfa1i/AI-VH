@@ -11,18 +11,18 @@ interface ReviewQueueProps {
 export const ReviewQueue: React.FC<ReviewQueueProps> = ({ items, selectedId, onSelect }) => {
   if (items.length === 0) {
     return (
-      <div className="p-6 bg-white border border-slate-200 rounded-xl shadow-md text-center">
-        <h2 className="px-4 pb-2 text-xs font-mono font-bold uppercase tracking-wide text-slate-900">
+      <div className="p-6 bg-white border border-[var(--ak-color-border-subtle)] rounded-xl shadow-md text-center">
+        <h2 className="px-4 pb-2 text-xs font-mono font-bold uppercase tracking-wide text-[var(--ak-color-text-primary)]">
           Review queue
         </h2>
-        <p className="text-sm text-slate-600 font-sans">No reports awaiting review.</p>
+        <p className="text-sm text-[var(--ak-color-text-secondary)] font-sans">No reports awaiting review.</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-white border border-slate-200 rounded-xl shadow-md overflow-hidden">
-      <h2 className="px-4 py-3 text-xs font-mono font-bold uppercase tracking-wide text-slate-900 border-b border-slate-200">
+    <div className="bg-white border border-[var(--ak-color-border-subtle)] rounded-xl shadow-md overflow-hidden">
+      <h2 className="px-4 py-3 text-xs font-mono font-bold uppercase tracking-wide text-[var(--ak-color-text-primary)] border-b border-[var(--ak-color-border-subtle)]">
         Review queue
       </h2>
       <ul className="divide-y divide-slate-200">
@@ -35,17 +35,17 @@ export const ReviewQueue: React.FC<ReviewQueueProps> = ({ items, selectedId, onS
                 onClick={() => onSelect(item.original_id)}
                 aria-current={selected ? 'true' : undefined}
                 className={`w-full px-4 py-3 flex items-center gap-3 text-left transition cursor-pointer ${
-                  selected ? 'bg-sky-50' : 'hover:bg-slate-100'
+                  selected ? 'bg-[var(--ak-color-primary-soft)]' : 'hover:bg-[var(--ak-color-bg-subtle)]'
                 }`}
               >
-                <span className="text-xs font-mono font-semibold text-slate-900">{item.case_id}</span>
+                <span className="text-xs font-mono font-semibold text-[var(--ak-color-text-primary)]">{item.case_id}</span>
                 {item.flagged && (
-                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-red-100 text-red-800 border border-red-300">
+                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[var(--ak-color-warning-soft)] text-[var(--ak-color-danger)] border border-[var(--ak-color-border-subtle)]">
                     <AlertTriangle className="w-3 h-3" />
                     FLAGGED
                   </span>
                 )}
-                <span className="ml-auto text-[11px] font-mono text-slate-600">{item.status}</span>
+                <span className="ml-auto text-[11px] font-mono text-[var(--ak-color-text-secondary)]">{item.status}</span>
               </button>
             </li>
           );

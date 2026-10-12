@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import type { ClinicalReport, PhysicianReviewPayload } from '../../types';
+import type { ClinicalReport, PhysicianReviewPayload, ReviewAssessment, ReviewErrorTaxonomy } from '../../types';
+import { REVIEW_ASSESSMENTS, STRUCTURED_ERROR_TAXONOMY } from '../review/taxonomy';
 import {
   FileText,
   CheckCircle2,
@@ -14,7 +15,25 @@ import {
   HeartPulse,
   Thermometer,
   RotateCcw,
+  ShieldCheck,
+  ShieldAlert,
 } from 'lucide-react';
+
+import {
+  Button,
+  Badge,
+  Card,
+  CardHead,
+  CardTitle,
+  TextField,
+  TextArea,
+  Select,
+  Alert,
+  EmptyState,
+  ProgressBar,
+  Chip,
+} from '../ui';
+import { AppPage } from '../layout/Templates';
 
 interface PhysicianReviewDashboardProps {
   reports: ClinicalReport[];
@@ -47,8 +66,9 @@ export const PhysicianReviewDashboard: React.FC<PhysicianReviewDashboardProps> =
     }
   };
 
-
-  // Review Form State
+  // Structured Review Form State
+  const [assessment, setAssessment] = useState<ReviewAssessment>('CORRECT');
+  const [identifiedErrors, setIdentifiedErrors] = useState<ReviewErrorTaxonomy[]>([]);
   const [diagnosisGrade, setDiagnosisGrade] = useState('CORRECT');
   const [reasoningGrade, setReasoningGrade] = useState('SOUND');
   const [testsGrade, setTestsGrade] = useState('APPROPRIATE');
@@ -56,7 +76,36 @@ export const PhysicianReviewDashboard: React.FC<PhysicianReviewDashboardProps> =
   const [overallScore, setOverallScore] = useState<number>(5);
   const [notes, setNotes] = useState('');
   const [correctedDiagnosis, setCorrectedDiagnosis] = useState('');
+  const [correctedReasoning, setCorrectedReasoning] = useState('');
+  const [correctedRecommendations, setCorrectedRecommendations] = useState('');
+  const [reviewerRole, setReviewerRole] = useState('ATTENDING_PHYSICIAN');
   const [submittedReviewSuccess, setSubmittedReviewSuccess] = useState(false);
+  const [evaluatingReport, setEvaluatingReport] = useState(false);
+
+  const toggleErrorTag = (tag: ReviewErrorTaxonomy) => {
+    setIdentifiedErrors((prev) =>
+      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
+    );
+  };
+
+  const handleTriggerEvaluation = async (reportId: string) => {
+    setEvaluatingReport(true);
+    try {
+      const res = await fetch(`/api/reports/${reportId}/evaluate`, { method: 'POST' });
+      if (res.ok) {
+        const evalData = await res.json();
+        const target = reports.find((r) => r.id === reportId);
+        if (target) {
+          target.automated_evaluation = evalData;
+          setSelectedReportId(reportId);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to run on-demand evaluation:', err);
+    } finally {
+      setEvaluatingReport(false);
+    }
+  };
 
   const activeReport = reports.find((r) => r.id === selectedReportId) || reports[0];
 
@@ -83,6 +132,10 @@ export const PhysicianReviewDashboard: React.FC<PhysicianReviewDashboardProps> =
       await onSubmitReview({
         report_id: activeReport.id,
         physician_name: 'Dr. Marcus Vance, MD, FACP',
+        reviewer_role: reviewerRole,
+        specialty: (activeReport as any).specialty || 'INTERNAL_MEDICINE',
+        assessment,
+        identified_errors: identifiedErrors,
         diagnosis_grade: diagnosisGrade,
         reasoning_grade: reasoningGrade,
         tests_grade: testsGrade,
@@ -90,7 +143,11 @@ export const PhysicianReviewDashboard: React.FC<PhysicianReviewDashboardProps> =
         overall_score: overallScore,
         approved,
         notes: notes || (approved ? 'Diagnosis and guideline-directed treatment regimen approved by Attending.' : 'Revision required: clinical refinement needed.'),
-        corrected_diagnosis: correctedDiagnosis || undefined,
+        corrected_diagnosis: correctedDiagnosis.trim() || undefined,
+        corrected_reasoning: correctedReasoning.trim() || undefined,
+        corrected_recommendations: correctedRecommendations.trim()
+          ? correctedRecommendations.split('\n').map((s) => s.trim()).filter(Boolean)
+          : undefined,
       });
       setSubmittedReviewSuccess(true);
       setTimeout(() => setSubmittedReviewSuccess(false), 3500);
@@ -101,486 +158,951 @@ export const PhysicianReviewDashboard: React.FC<PhysicianReviewDashboardProps> =
 
   if (reports.length === 0) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center p-12 text-slate-600 bg-[#f8fafc] telemetry-grid">
-        <div className="p-4 bg-white border border-slate-200 rounded-2xl shadow-xs mb-4">
-          <div className="w-14 h-14 rounded-xl bg-sky-50 border border-sky-200 flex items-center justify-center text-sky-600">
-            <FileText className="w-7 h-7" />
-          </div>
-        </div>
-        <h3 className="text-sm font-mono font-bold text-slate-900 uppercase tracking-widest">
-          NO CLINICAL REPORTS PENDING REVIEW
-        </h3>
-        <p className="text-xs max-w-md text-center mt-2 text-slate-500 font-sans leading-relaxed">
-          Simulate an encounter or admit a patient to generate autonomous Clinical AI reports grounded with Harrison's 21st Edition evidence.
-        </p>
-        <button
-          onClick={handleResetReports}
-          className="mt-4 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-mono font-semibold flex items-center gap-1.5 border border-slate-300 transition cursor-pointer"
-        >
-          <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
-          <span>Reset All Records to Zero</span>
-        </button>
-      </div>
+      <AppPage
+        title="Physician Review Queue"
+        description="Clinical report verification, independent audit dimensions, and RL DPO preference alignment."
+      >
+        <EmptyState
+          icon={<FileText className="w-8 h-8" />}
+          title="No clinical reports pending review"
+          description="Simulate an encounter or admit a patient to generate autonomous Clinical AI reports grounded in multi-specialist medical textbook evidence."
+          action={
+            <Button
+              variant="secondary"
+              size="md"
+              onClick={handleResetReports}
+              leadingIcon={<RotateCcw className="w-3.5 h-3.5" />}
+            >
+              Reset Records to Zero
+            </Button>
+          }
+        />
+      </AppPage>
     );
   }
 
   const confidencePct = Math.round((activeReport?.diagnostic_confidence || 0.92) * 100);
 
   return (
-    <div className="flex-1 flex flex-col md:flex-row overflow-hidden bg-[#f8fafc] text-slate-900 telemetry-grid">
-      {/* ═══════════════════════════════════════════════════════════════════
-          SIDEBAR: CLINICAL REPORT QUEUE
-          ═══════════════════════════════════════════════════════════════════ */}
-      <div className="w-full md:w-80 border-b md:border-b-0 md:border-r border-slate-200 bg-white flex flex-col shrink-0">
-        {/* Sidebar Header */}
-        <div className="p-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
-          <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-lg bg-sky-50 border border-sky-200 flex items-center justify-center text-sky-600 shadow-2xs">
-              <Stethoscope className="w-4 h-4" />
-            </div>
-            <div>
-              <h2 className="text-xs font-mono font-bold tracking-wider text-slate-900 uppercase">
-                CLINICAL QUEUE
-              </h2>
-              <span className="text-[10px] font-mono text-slate-500">Autonomous Encounters</span>
-            </div>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <button
-              onClick={handleResetReports}
-              title="Reset all reports and pending reviews to zero"
-              className="p-1 rounded text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer"
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
-            </button>
-            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono bg-sky-50 text-sky-700 border border-sky-300 font-semibold shadow-2xs">
-              {reports.length} READY
-            </span>
-          </div>
-        </div>
-
-        {/* Report Cards Scroll Area */}
-        <div className="flex-1 overflow-y-auto p-3 space-y-2.5 max-h-60 md:max-h-none">
-          {reports.map((rep) => {
-            const isSelected = rep.id === activeReport?.id;
-            return (
-              <div
-                key={rep.id}
-                onClick={() => setSelectedReportId(rep.id)}
-                className={`p-3 rounded-xl transition-all cursor-pointer border ${
-                  isSelected
-                    ? 'bg-sky-50 border-sky-300 shadow-xs'
-                    : 'bg-slate-50 hover:bg-slate-100 border-slate-200'
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-mono font-bold text-sky-700">
-                    {rep.id}
-                  </span>
-                  <span className="text-[10px] font-mono text-slate-400">
-                    {new Date(rep.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </span>
-                </div>
-                <div className="text-xs font-bold text-slate-900 mt-1 font-sans">
-                  {rep.patient_name}
-                </div>
-                <div className="text-[11px] text-slate-600 truncate mt-0.5 font-sans">
-                  {rep.primary_diagnosis}
-                </div>
-                <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-200 text-[10px] font-mono">
-                  <span className="text-slate-500">CONFIDENCE:</span>
-                  <span className="font-bold text-emerald-700 tabular-nums">
-                    {Math.round((rep.diagnostic_confidence || 0.9) * 100)}%
-                  </span>
-                </div>
+    <AppPage
+      title="Physician Review Dashboard"
+      description="Clinical report verification, multi-stage independent audit dimensions, and DPO alignment."
+      breadcrumbs={[
+        { label: 'Clinical Ops', href: '#' },
+        { label: 'Physician Review', isCurrent: true },
+      ]}
+      actions={
+        <Button
+          variant="secondary"
+          size="md"
+          onClick={handleResetReports}
+          leadingIcon={<RotateCcw className="w-3.5 h-3.5" />}
+        >
+          Reset review queue
+        </Button>
+      }
+    >
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'minmax(260px, 320px) 1fr',
+          gap: 'var(--space-6)',
+          alignItems: 'start',
+        }}
+      >
+        {/* SIDEBAR: CLINICAL REPORT QUEUE */}
+        <Card style={{ padding: 0, overflow: 'hidden' }}>
+          <div
+            style={{
+              padding: 'var(--space-4)',
+              borderBottom: '1px solid var(--border-subtle)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              backgroundColor: 'var(--bg-app)',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+              <Stethoscope className="w-4 h-4" style={{ color: 'var(--color-primary)' }} />
+              <div>
+                <h3 className="heading-3" style={{ fontSize: '0.875rem', margin: 0 }}>
+                  Clinical Queue
+                </h3>
+                <span className="caption" style={{ color: 'var(--text-secondary)' }}>
+                  Autonomous Encounters
+                </span>
               </div>
-            );
-          })}
-        </div>
-      </div>
+            </div>
 
-      {/* ═══════════════════════════════════════════════════════════════════
-          MAIN DETAIL HORIZON: CLINICAL REPORT & ATTENDING VERDICT
-          ═══════════════════════════════════════════════════════════════════ */}
-      {activeReport && (
-        <div className="flex-1 overflow-y-auto p-4 md:p-6 bg-[#f8fafc]">
-          <div className="max-w-4xl mx-auto space-y-5">
-            {/* Success Toast */}
-            {submittedReviewSuccess && (
-              <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-mono flex items-center justify-between shadow-xs animate-in fade-in">
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                  <span>Physician review verdict successfully committed to hospital ledger and DPO dataset.</span>
-                </div>
-              </div>
-            )}
+            <Badge variant="brand" hasDot>
+              {reports.length} Ready
+            </Badge>
+          </div>
 
-            {/* Top Report Header Card */}
-            <div className="p-5 rounded-xl bg-white border border-slate-200 shadow-xs">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-sky-50 text-sky-700 border border-sky-200 font-bold">
-                      {activeReport.id}
+          <div
+            style={{
+              padding: 'var(--space-3)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 'var(--space-2)',
+              maxHeight: 'calc(100vh - 280px)',
+              overflowY: 'auto',
+            }}
+          >
+            {reports.map((rep) => {
+              const isSelected = rep.id === activeReport?.id;
+              return (
+                <div
+                  key={rep.id}
+                  onClick={() => setSelectedReportId(rep.id)}
+                  style={{
+                    padding: 'var(--space-3)',
+                    borderRadius: 'var(--radius-md)',
+                    border: isSelected
+                      ? '2px solid var(--color-primary)'
+                      : '1px solid var(--border-subtle)',
+                    backgroundColor: isSelected ? 'var(--color-primary-tint)' : 'var(--bg-surface)',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span className="caption ak-num" style={{ fontWeight: 700, color: 'var(--color-primary)' }}>
+                      {rep.id}
                     </span>
-                    <span className="text-[10px] font-mono text-slate-400">
-                      ENCOUNTER: {activeReport.encounter_id}
+                    <span className="caption ak-num" style={{ color: 'var(--text-tertiary)' }}>
+                      {new Date(rep.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </span>
                   </div>
-                  <h1 className="text-base font-bold text-slate-900 mt-1 font-sans">
+
+                  <div className="heading-3" style={{ fontSize: '0.875rem', marginTop: 4, marginBottom: 2 }}>
+                    {rep.patient_name}
+                  </div>
+
+                  <div
+                    className="body-sm"
+                    style={{
+                      color: 'var(--text-secondary)',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                    }}
+                  >
+                    {rep.primary_diagnosis}
+                  </div>
+
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      marginTop: 'var(--space-2)',
+                      paddingTop: 'var(--space-2)',
+                      borderTop: '1px solid var(--border-subtle)',
+                      fontSize: '0.75rem',
+                    }}
+                  >
+                    <span className="caption" style={{ color: 'var(--text-secondary)' }}>Confidence:</span>
+                    <span className="ak-num" style={{ fontWeight: 700, color: 'var(--color-success)' }}>
+                      {Math.round((rep.diagnostic_confidence || 0.9) * 100)}%
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </Card>
+
+        {/* MAIN DETAIL COLUMN */}
+        {activeReport && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
+            {/* SUCCESS BANNER */}
+            {submittedReviewSuccess && (
+              <Alert variant="success" title="Review Verdict Committed">
+                Physician review verdict successfully logged to clinical records and DPO fine-tuning set.
+              </Alert>
+            )}
+
+            {/* TOP REPORT HEADER CARD */}
+            <Card>
+              <div
+                style={{
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  alignItems: 'flex-start',
+                  justifyContent: 'space-between',
+                  gap: 'var(--space-4)',
+                  paddingBottom: 'var(--space-4)',
+                  borderBottom: '1px solid var(--border-subtle)',
+                }}
+              >
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+                    <Badge variant="brand">{activeReport.id}</Badge>
+                    <span className="caption ak-num" style={{ color: 'var(--text-tertiary)' }}>
+                      Encounter: {activeReport.encounter_id}
+                    </span>
+                  </div>
+                  <h2 className="heading-2" style={{ marginTop: 'var(--space-2)', marginBottom: 2 }}>
                     {activeReport.patient_name}
-                  </h1>
-                  <p className="text-xs text-slate-500 font-sans mt-0.5">
+                  </h2>
+                  <p className="caption ak-num" style={{ color: 'var(--text-secondary)', margin: 0 }}>
                     {activeReport.patient_id} • Admitted to Clinical Care Pathway
                   </p>
                 </div>
 
-                <div className="sm:text-right shrink-0 bg-slate-50 p-3 rounded-xl border border-slate-200">
-                  <div className="text-2xl font-bold font-mono text-emerald-700 tabular-nums">
+                <div
+                  style={{
+                    backgroundColor: 'var(--bg-app)',
+                    padding: 'var(--space-3) var(--space-4)',
+                    borderRadius: 'var(--radius-md)',
+                    border: '1px solid var(--border-subtle)',
+                    textAlign: 'right',
+                  }}
+                >
+                  <div className="display-sm ak-num" style={{ color: 'var(--color-primary)' }}>
                     {confidencePct}%
                   </div>
-                  <div className="text-[9px] font-mono text-slate-500 uppercase tracking-wider">
-                    DIAGNOSTIC CONFIDENCE
+                  <div className="caption" style={{ color: 'var(--text-secondary)', textTransform: 'uppercase' }}>
+                    Diagnostic Confidence
                   </div>
                 </div>
               </div>
 
-              {/* Biomarkers */}
-              <div className="pt-4 grid grid-cols-3 gap-2.5 text-center">
-                <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200">
-                  <div className="text-[9px] font-mono text-slate-500 uppercase tracking-wider flex items-center justify-center gap-1">
-                    <HeartPulse className="w-3 h-3 text-emerald-600" />
-                    HEART RATE
+              {/* Vitals Telemetry */}
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(3, 1fr)',
+                  gap: 'var(--space-3)',
+                  paddingTop: 'var(--space-4)',
+                }}
+              >
+                <div
+                  style={{
+                    backgroundColor: 'var(--bg-app)',
+                    padding: 'var(--space-3)',
+                    borderRadius: 'var(--radius-sm)',
+                    border: '1px solid var(--border-subtle)',
+                    textAlign: 'center',
+                  }}
+                >
+                  <div className="caption" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, color: 'var(--text-secondary)' }}>
+                    <HeartPulse className="w-3.5 h-3.5" style={{ color: 'var(--color-success)' }} />
+                    Heart Rate
                   </div>
-                  <div className="text-sm font-bold font-mono text-emerald-700 mt-1 tabular-nums">
-                    {activeReport.vital_signs.heart_rate} BPM
+                  <div className="heading-3 ak-num" style={{ marginTop: 4 }}>
+                    {activeReport?.vital_signs?.heart_rate ?? '—'} BPM
                   </div>
                 </div>
-                <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200">
-                  <div className="text-[9px] font-mono text-slate-500 uppercase tracking-wider flex items-center justify-center gap-1">
-                    <Activity className="w-3 h-3 text-sky-600" />
-                    BLOOD PRESSURE
+
+                <div
+                  style={{
+                    backgroundColor: 'var(--bg-app)',
+                    padding: 'var(--space-3)',
+                    borderRadius: 'var(--radius-sm)',
+                    border: '1px solid var(--border-subtle)',
+                    textAlign: 'center',
+                  }}
+                >
+                  <div className="caption" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, color: 'var(--text-secondary)' }}>
+                    <Activity className="w-3.5 h-3.5" style={{ color: 'var(--color-primary)' }} />
+                    Blood Pressure
                   </div>
-                  <div className="text-sm font-bold font-mono text-sky-700 mt-1 tabular-nums">
-                    {activeReport.vital_signs.systolic_bp}/{activeReport.vital_signs.diastolic_bp}
+                  <div className="heading-3 ak-num" style={{ marginTop: 4 }}>
+                    {activeReport?.vital_signs?.systolic_bp != null && activeReport?.vital_signs?.diastolic_bp != null
+                      ? `${activeReport.vital_signs.systolic_bp}/${activeReport.vital_signs.diastolic_bp}`
+                      : '—'}
                   </div>
                 </div>
-                <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200">
-                  <div className="text-[9px] font-mono text-slate-500 uppercase tracking-wider flex items-center justify-center gap-1">
-                    <Thermometer className="w-3 h-3 text-slate-500" />
-                    O2 SATURATION
+
+                <div
+                  style={{
+                    backgroundColor: 'var(--bg-app)',
+                    padding: 'var(--space-3)',
+                    borderRadius: 'var(--radius-sm)',
+                    border: '1px solid var(--border-subtle)',
+                    textAlign: 'center',
+                  }}
+                >
+                  <div className="caption" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, color: 'var(--text-secondary)' }}>
+                    <Thermometer className="w-3.5 h-3.5" style={{ color: 'var(--text-tertiary)' }} />
+                    O2 Saturation
                   </div>
-                  <div className="text-sm font-bold font-mono text-slate-800 mt-1 tabular-nums">
-                    {activeReport.vital_signs.spo2_percent}%
+                  <div className="heading-3 ak-num" style={{ marginTop: 4 }}>
+                    {activeReport?.vital_signs?.spo2_percent != null ? `${activeReport.vital_signs.spo2_percent}%` : '—'}
                   </div>
                 </div>
               </div>
-            </div>
+            </Card>
 
-            {/* Differential Diagnosis Ranking */}
-            <div className="p-5 rounded-xl bg-white border border-slate-200 shadow-xs">
-              <div className="flex items-center justify-between mb-3 border-b border-slate-100 pb-2.5">
-                <div className="flex items-center gap-2">
-                  <Activity className="w-4 h-4 text-amber-600" />
-                  <span className="text-[10px] font-mono font-bold text-slate-900 uppercase tracking-wider">
-                    DIFFERENTIAL DIAGNOSIS RANKING
-                  </span>
+            {/* CORE DIAGNOSTIC IMPRESSION HERO CARD */}
+            <Card>
+              <CardHead>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+                  <Stethoscope className="w-4 h-4" style={{ color: 'var(--color-primary)' }} />
+                  <CardTitle>Core Diagnostic Impression</CardTitle>
                 </div>
-                <span className="text-[10px] font-mono text-slate-500">AI PROBABILITY MATRIX</span>
-              </div>
+                <Badge variant="ai">Clinical Synthesis</Badge>
+              </CardHead>
 
-              <div className="space-y-3">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+                <div
+                  style={{
+                    backgroundColor: 'var(--bg-app)',
+                    padding: 'var(--space-4)',
+                    borderRadius: 'var(--radius-sm)',
+                    border: '1px solid var(--border-subtle)',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 'var(--space-3)', flexWrap: 'wrap' }}>
+                    <div>
+                      <span className="caption" style={{ color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                        Primary Diagnosis
+                      </span>
+                      <h3 className="heading-2" style={{ margin: '4px 0 0', color: 'var(--color-primary)' }}>
+                        {activeReport.primary_diagnosis}
+                      </h3>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+                      <Badge variant="brand">Confidence: {confidencePct}%</Badge>
+                      {activeReport.recommended_disposition && (
+                        <Badge variant="neutral">{activeReport.recommended_disposition}</Badge>
+                      )}
+                    </div>
+                  </div>
+
+                  <div style={{ marginTop: 'var(--space-3)', paddingTop: 'var(--space-3)', borderTop: '1px solid var(--border-subtle)' }}>
+                    <span className="caption" style={{ fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>
+                      Physician Brief & Clinical Rationale:
+                    </span>
+                    <p className="body-md" style={{ margin: 0, color: 'var(--text-primary)', lineHeight: 1.5, whiteSpace: 'pre-line' }}>
+                      {activeReport.clinical_summary || activeReport.clinical_reasoning}
+                    </p>
+                  </div>
+                </div>
+
+                {activeReport.relevant_findings && activeReport.relevant_findings.length > 0 && (
+                  <div
+                    style={{
+                      backgroundColor: 'var(--bg-app)',
+                      padding: 'var(--space-3) var(--space-4)',
+                      borderRadius: 'var(--radius-sm)',
+                      border: '1px solid var(--border-subtle)',
+                    }}
+                  >
+                    <span className="caption" style={{ fontWeight: 600, color: 'var(--color-danger)', display: 'block', marginBottom: 4 }}>
+                      Urgent Red Flags & Actionable Alerts:
+                    </span>
+                    <ul style={{ margin: 0, paddingLeft: 18, color: 'var(--text-secondary)' }}>
+                      {activeReport.relevant_findings.map((finding, idx) => (
+                        <li key={idx} className="body-sm" style={{ marginBottom: 2 }}>{finding}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            </Card>
+
+            {/* AUTOMATED INDEPENDENT MULTI-STAGE EVALUATION */}
+            {activeReport.automated_evaluation ? (
+              <Card>
+                <div
+                  style={{
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: 'var(--space-3)',
+                    paddingBottom: 'var(--space-4)',
+                    borderBottom: '1px solid var(--border-subtle)',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+                    {activeReport.automated_evaluation.passed ? (
+                      <ShieldCheck className="w-6 h-6" style={{ color: 'var(--color-success)' }} />
+                    ) : (
+                      <ShieldAlert className="w-6 h-6" style={{ color: 'var(--color-danger)' }} />
+                    )}
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+                        <span className="heading-3" style={{ fontSize: '0.875rem' }}>
+                          Independent Evaluation Pipeline
+                        </span>
+                        <Badge
+                          variant={
+                            activeReport.automated_evaluation.final_status === 'PASSED'
+                              ? 'success'
+                              : activeReport.automated_evaluation.final_status === 'FLAGGED'
+                              ? 'warning'
+                              : 'danger'
+                          }
+                          hasDot
+                        >
+                          {activeReport.automated_evaluation.final_status}
+                        </Badge>
+                      </div>
+                      <p className="caption" style={{ color: 'var(--text-secondary)', margin: '2px 0 0' }}>
+                        Multi-Stage Audit (6 Focused Dimensions) • Pre-Review Verification
+                      </p>
+                    </div>
+                  </div>
+
+                  <div style={{ textAlign: 'right' }}>
+                    <div className="heading-2 ak-num" style={{ margin: 0 }}>
+                      {Math.round(activeReport.automated_evaluation.overall_score * 100)}%
+                    </div>
+                    <span className="caption" style={{ color: 'var(--text-secondary)' }}>
+                      Overall Score
+                    </span>
+                  </div>
+                </div>
+
+                {/* 6 Dimension Score Grid */}
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                    gap: 'var(--space-3)',
+                    marginTop: 'var(--space-4)',
+                  }}
+                >
+                  {Object.entries(activeReport.automated_evaluation.dimensions).map(([key, dim]) => (
+                    <div
+                      key={key}
+                      style={{
+                        padding: 'var(--space-3)',
+                        borderRadius: 'var(--radius-sm)',
+                        border: '1px solid var(--border-subtle)',
+                        backgroundColor: dim.passed ? 'var(--bg-app)' : 'var(--color-danger-tint)',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                        <span className="caption" style={{ fontWeight: 600 }}>{dim.display_name}</span>
+                        <span
+                          className="ak-num"
+                          style={{
+                            fontWeight: 700,
+                            color: dim.passed ? 'var(--color-success)' : 'var(--color-danger)',
+                            fontSize: '0.75rem',
+                          }}
+                        >
+                          {Math.round(dim.score * 100)}%
+                        </span>
+                      </div>
+                      <p className="caption" style={{ color: 'var(--text-secondary)', margin: 0, fontSize: '0.6875rem' }}>
+                        {dim.explanation}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Flagged items warning if any */}
+                {activeReport.automated_evaluation.failed_checks.length > 0 && (
+                  <div style={{ marginTop: 'var(--space-4)' }}>
+                    <Alert variant="warning" title="Flagged items for physician review">
+                      <ul style={{ margin: '4px 0 0', paddingLeft: 16 }}>
+                        {activeReport.automated_evaluation.fail_reasons.map((reason, idx) => (
+                          <li key={idx} className="body-sm">{reason}</li>
+                        ))}
+                      </ul>
+                    </Alert>
+                  </div>
+                )}
+              </Card>
+            ) : (
+              <Card>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+                    <ShieldAlert className="w-5 h-5" style={{ color: 'var(--text-tertiary)' }} />
+                    <span className="body-sm">
+                      Independent multi-stage audit pending for this report.
+                    </span>
+                  </div>
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    onClick={() => handleTriggerEvaluation(activeReport.id)}
+                    disabled={evaluatingReport}
+                    isLoading={evaluatingReport}
+                  >
+                    Run Automated Audit
+                  </Button>
+                </div>
+              </Card>
+            )}
+
+            {/* DIFFERENTIAL DIAGNOSIS RANKING */}
+            <Card>
+              <CardHead>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+                  <Badge variant="ai">AI</Badge>
+                  <CardTitle>Differential Diagnosis Ranking</CardTitle>
+                </div>
+                <span className="caption ak-num" style={{ color: 'var(--text-secondary)' }}>
+                  Probability Matrix
+                </span>
+              </CardHead>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
                 {activeReport.differential_diagnosis.map((d, idx) => {
                   const pct = Math.round(d.likelihood * 100);
                   return (
-                    <div key={idx} className="space-y-1.5">
-                      <div className="flex justify-between text-xs font-mono">
-                        <span className="font-medium text-slate-800 flex items-center gap-1.5">
-                          <span className="w-4 h-4 rounded bg-slate-100 border border-slate-200 text-[10px] text-slate-600 flex items-center justify-center font-bold">
-                            {idx + 1}
+                    <div key={idx}>
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          marginBottom: 4,
+                        }}
+                      >
+                        <span className="body-sm" style={{ fontWeight: 500 }}>
+                          <span className="ak-num" style={{ color: 'var(--text-tertiary)', marginRight: 6 }}>
+                            {idx + 1}.
                           </span>
                           {d.condition}
                         </span>
-                        <span className="text-sky-700 font-bold tabular-nums">{pct}%</span>
+                        <span className="ak-num" style={{ fontWeight: 700, color: 'var(--color-primary)' }}>
+                          {pct}%
+                        </span>
                       </div>
-                      <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden border border-slate-200">
-                        <div
-                          className={`h-full rounded-full transition-all duration-700 ${
-                            idx === 0
-                              ? 'bg-sky-600'
-                              : idx === 1
-                              ? 'bg-amber-500'
-                              : 'bg-slate-400'
-                          }`}
-                          style={{ width: `${pct}%` }}
-                        />
-                      </div>
+                      <ProgressBar
+                        value={pct}
+                        variant="primary"
+                        size="sm"
+                      />
                     </div>
                   );
                 })}
               </div>
-            </div>
 
-            {/* Guideline-Directed Treatment Plan */}
-            <div className="p-5 rounded-xl bg-white border border-slate-200 shadow-xs">
-              <div className="flex items-center justify-between mb-3 border-b border-slate-100 pb-2.5">
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                  <span className="text-[10px] font-mono font-bold text-slate-900 uppercase tracking-wider">
-                    GUIDELINE-DIRECTED TREATMENT REGIMEN
-                  </span>
-                </div>
-                <span className="px-2 py-0.5 bg-emerald-50 text-emerald-800 rounded-md font-mono text-[9px] border border-emerald-200 font-semibold">
-                  AHA/ACC 2023 COMPLIANT
+              <div style={{ marginTop: 'var(--space-3)' }}>
+                <span className="caption" style={{ color: 'var(--text-tertiary)' }}>
+                  AI-assisted. Review before acting.
                 </span>
               </div>
+            </Card>
 
-              <div className="space-y-2 text-xs">
+            {/* GUIDELINE-DIRECTED TREATMENT PLAN */}
+            <Card>
+              <CardHead>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+                  <CheckCircle2 className="w-4 h-4" style={{ color: 'var(--color-success)' }} />
+                  <CardTitle>Guideline-Directed Treatment Plan</CardTitle>
+                </div>
+                <Badge variant="success">AHA/ACC Guideline Concordant</Badge>
+              </CardHead>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
                 {activeReport.treatment_plan.map((item, idx) => (
                   <div
                     key={idx}
-                    className="flex items-start justify-between p-3 bg-slate-50 rounded-xl border border-slate-200 gap-3"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      justifyContent: 'space-between',
+                      backgroundColor: 'var(--bg-app)',
+                      padding: 'var(--space-3)',
+                      borderRadius: 'var(--radius-sm)',
+                      border: '1px solid var(--border-subtle)',
+                      gap: 'var(--space-3)',
+                    }}
                   >
-                    <div className="flex items-start gap-2.5">
-                      <span className="w-5 h-5 rounded-lg bg-sky-50 text-sky-700 border border-sky-200 font-mono text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">
-                        {idx + 1}
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 'var(--space-2)' }}>
+                      <span className="caption ak-num" style={{ color: 'var(--color-primary)', fontWeight: 700 }}>
+                        {idx + 1}.
                       </span>
-                      <div className="text-slate-800 font-medium leading-relaxed font-sans">
-                        {item}
-                      </div>
+                      <span className="body-sm" style={{ fontWeight: 500 }}>{item}</span>
                     </div>
-                    <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded font-mono text-[9px] border border-emerald-200 shrink-0 font-semibold">
-                      {idx === 0 ? 'ADMINISTERED' : 'ORDERED'}
-                    </span>
+                    <Badge variant="neutral" style={{ flexShrink: 0 }}>
+                      {idx === 0 ? 'Administered' : 'Ordered'}
+                    </Badge>
                   </div>
                 ))}
               </div>
-            </div>
+            </Card>
 
-            {/* Diagnostic Investigations Findings */}
+            {/* INVESTIGATION FINDINGS */}
             {activeReport.investigation_results.length > 0 && (
-              <div className="p-5 rounded-xl bg-white border border-slate-200 shadow-xs">
-                <div className="flex items-center gap-2 mb-3 border-b border-slate-100 pb-2.5">
-                  <TestTube className="w-4 h-4 text-indigo-600" />
-                  <span className="text-[10px] font-mono font-bold text-slate-900 uppercase tracking-wider">
-                    DIAGNOSTIC INVESTIGATIONS &amp; LAB BIOMARKERS
-                  </span>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
-                  {activeReport.investigation_results.map((res, i) => (
-                    <div key={i} className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs">
-                      <div className="flex items-center justify-between font-semibold mb-1.5">
-                        <span className="text-sky-800 font-mono text-[11px]">{res.test_type}</span>
-                        <span className="text-[9px] font-mono text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 font-semibold">
-                          COMPLETED
-                        </span>
-                      </div>
-                      <p className="text-slate-700 text-[11px] leading-relaxed font-sans">{res.interpretation}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Evidence RAG Citations */}
-            {((activeReport.medical_knowledge_citations && activeReport.medical_knowledge_citations.length > 0) ||
-              ((activeReport as any).harrison_citations && (activeReport as any).harrison_citations.length > 0)) && (
-              <div className="p-5 rounded-xl bg-white border border-slate-200 shadow-xs">
-                <div className="flex items-center gap-2 mb-3 border-b border-slate-100 pb-2.5">
-                  <BookOpen className="w-4 h-4 text-sky-600" />
-                  <span className="text-[10px] font-mono font-bold text-slate-900 uppercase tracking-wider">
-                    HARRISON'S 21ST EDITION VECTOR RAG EVIDENCE
-                  </span>
-                </div>
-                <div className="space-y-2">
-                  {(activeReport.medical_knowledge_citations || (activeReport as any).harrison_citations || []).map((c: any, i: number) => (
-                    <div key={i} className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs">
-                      <span className="font-mono text-[11px] text-sky-800 font-bold block mb-1">
-                        {c.chapter || c.topic || 'Medical Grounding'}
-                      </span>
-                      <p className="text-slate-700 leading-relaxed font-sans italic">"{c.text || c.excerpt}"</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Physician Reinforcement Learning Alignment (RL DPO) Console */}
-            <div className="p-5 rounded-xl bg-white border border-emerald-200 shadow-xs">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <div className="w-5 h-5 rounded-md bg-emerald-50 flex items-center justify-center text-emerald-600">
-                    <Sparkles className="w-3.5 h-3.5" />
+              <Card>
+                <CardHead>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+                    <TestTube className="w-4 h-4" style={{ color: 'var(--color-primary)' }} />
+                    <CardTitle>Diagnostic Investigations & Biomarkers</CardTitle>
                   </div>
-                  <span className="text-[11px] font-mono font-bold text-slate-900 uppercase tracking-wider">
-                    PHYSICIAN RL DPO ALIGNMENT
+                </CardHead>
+
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                    gap: 'var(--space-3)',
+                  }}
+                >
+                  {activeReport.investigation_results.map((res, i) => (
+                    <div
+                      key={i}
+                      style={{
+                        backgroundColor: 'var(--bg-app)',
+                        padding: 'var(--space-3)',
+                        borderRadius: 'var(--radius-sm)',
+                        border: '1px solid var(--border-subtle)',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                        <span className="caption ak-num" style={{ fontWeight: 700, color: 'var(--color-primary)' }}>
+                          {res.test_type}
+                        </span>
+                        <Badge variant="success">Completed</Badge>
+                      </div>
+                      <p className="body-sm" style={{ margin: 0, color: 'var(--text-secondary)' }}>
+                        {res.interpretation}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            )}
+
+            {/* DYNAMIC RAG EVIDENCE GROUNDING CITATIONS */}
+            {((activeReport.medical_knowledge_citations && activeReport.medical_knowledge_citations.length > 0) ||
+              ((activeReport as any).harrison_citations && (activeReport as any).harrison_citations.length > 0)) && (() => {
+              const citationsList: any[] = activeReport.medical_knowledge_citations || (activeReport as any).harrison_citations || [];
+              const primaryBook = citationsList.find((c: any) => c.book)?.book || citationsList[0]?.source || "Specialist Medical Literature";
+              const primarySpecialty = citationsList.find((c: any) => c.specialty)?.specialty;
+
+              return (
+                <Card>
+                  <CardHead>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+                      <BookOpen className="w-4 h-4" style={{ color: 'var(--color-primary)' }} />
+                      <CardTitle>{primaryBook} Evidence Grounding</CardTitle>
+                    </div>
+                    <Badge variant="ai">
+                      {primarySpecialty ? `${primarySpecialty} Literature` : 'Verified Evidence'}
+                    </Badge>
+                  </CardHead>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+                    {citationsList.map((c: any, i: number) => {
+                      const bookName = c.book || primaryBook;
+                      const chapterTitle = c.chapter || c.topic || 'Medical Grounding';
+                      const pageStr = c.page ? `p. ${c.page}` : '';
+                      const rawRel = c.relevance != null ? c.relevance : (c.relevance_score != null ? c.relevance_score : null);
+                      const relevanceScore = rawRel != null ? Math.round(rawRel <= 1.0 ? rawRel * 100 : Math.min(100, rawRel * 10)) : null;
+                      const snippet = c.text || c.excerpt || c.source || '';
+
+                      return (
+                        <div
+                          key={i}
+                          style={{
+                            backgroundColor: 'var(--bg-app)',
+                            padding: 'var(--space-3) var(--space-4)',
+                            borderRadius: 'var(--radius-sm)',
+                            border: '1px solid var(--border-subtle)',
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6, flexWrap: 'wrap', gap: 6 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
+                              <Badge variant="neutral" style={{ fontWeight: 600 }}>{bookName}</Badge>
+                              <span className="caption" style={{ fontWeight: 600, color: 'var(--color-primary)' }}>
+                                {chapterTitle} {pageStr && `· ${pageStr}`}
+                              </span>
+                            </div>
+                            {relevanceScore != null && (
+                              <Badge variant="success" className="ak-num">
+                                {relevanceScore}% Relevance
+                              </Badge>
+                            )}
+                          </div>
+                          {snippet && (
+                            <blockquote
+                              className="body-sm"
+                              style={{
+                                fontStyle: 'italic',
+                                margin: 0,
+                                color: 'var(--text-secondary)',
+                                borderLeft: '3px solid var(--color-primary)',
+                                paddingLeft: 'var(--space-3)',
+                                lineHeight: 1.5,
+                              }}
+                            >
+                              "{snippet}"
+                            </blockquote>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </Card>
+              );
+            })()}
+
+            {/* PHYSICIAN RL DPO ALIGNMENT CONSOLE */}
+            <Card>
+              <CardHead>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+                    <Sparkles className="w-4 h-4" style={{ color: 'var(--color-primary)' }} />
+                    <CardTitle>Physician RL DPO Alignment Console</CardTitle>
+                  </div>
+                  <span className="caption" style={{ color: 'var(--text-secondary)' }}>
+                    Reinforce clinical reasoning and diagnosis accuracy through structured feedback
                   </span>
                 </div>
-                <span className="px-2 py-0.5 bg-emerald-50 text-emerald-800 rounded-md font-mono text-[9px] border border-emerald-200 font-bold">
-                  MODEL VER. 4.2
-                </span>
-              </div>
-              <p className="text-xs text-slate-500 leading-relaxed mb-4 font-sans">
-                Score decision accuracy to continuously reinforce Dr. Vance's clinical judgment via Direct Preference Optimization (DPO).
-              </p>
+                <Badge variant="outline">Model Ver. 4.2</Badge>
+              </CardHead>
 
-              {/* Interactive Star Reward Scoring (1-5) */}
-              <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 mb-3.5">
-                <div className="text-[9px] font-mono text-slate-500 uppercase tracking-wider">
-                  REWARD SCORING (1 TO 5 STARS)
-                </div>
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mt-2">
-                  <div className="flex items-center gap-1.5">
+              {/* Star Rating */}
+              <div
+                style={{
+                  backgroundColor: 'var(--bg-app)',
+                  padding: 'var(--space-4)',
+                  borderRadius: 'var(--radius-md)',
+                  border: '1px solid var(--border-subtle)',
+                  marginBottom: 'var(--space-4)',
+                }}
+              >
+                <span className="ak-label" style={{ display: 'block', marginBottom: 'var(--space-2)' }}>
+                  Reward Score (1 to 5 Stars)
+                </span>
+                <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-3)' }}>
+                  <div style={{ display: 'flex', gap: 4 }}>
                     {[1, 2, 3, 4, 5].map((star) => (
                       <button
                         key={star}
                         type="button"
                         onClick={() => setOverallScore(star)}
-                        className="p-1 hover:scale-125 transition-transform duration-200 cursor-pointer focus:outline-none"
-                        title={`Rate ${star} Stars`}
+                        aria-label={`Rate ${star} out of 5 stars`}
+                        aria-pressed={star === overallScore}
+                        className="rounded-xs focus-visible:outline-2 focus-visible:outline-[var(--ak-color-primary)]"
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          cursor: 'pointer',
+                          padding: 4,
+                        }}
                       >
                         <Star
-                          className={`w-6 h-6 transition-colors duration-200 ${
-                            star <= overallScore
-                              ? 'fill-amber-400 text-amber-500 drop-shadow-xs'
-                              : 'text-slate-300 hover:text-slate-400'
-                          }`}
+                          className="w-6 h-6"
+                          style={{
+                            fill: star <= overallScore ? 'var(--ak-color-warning)' : 'none',
+                            color: star <= overallScore ? 'var(--ak-color-warning)' : 'var(--border-subtle)',
+                            transition: 'color 0.15s ease',
+                          }}
                         />
                       </button>
                     ))}
                   </div>
-                  <span className="font-mono text-xs text-slate-800 font-bold">
+                  <span className="caption ak-num" style={{ fontWeight: 600 }}>
                     {getScoreDescription(overallScore)}
                   </span>
                 </div>
               </div>
 
-              {/* Rubric Selectors */}
-              <div className="space-y-3 mb-4 text-xs">
-                <div>
-                  <label className="block text-[10px] font-mono text-slate-600 mb-1">
-                    DIAGNOSIS ACCURACY
-                  </label>
-                  <select
-                    value={diagnosisGrade}
-                    onChange={(e) => setDiagnosisGrade(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 font-mono focus:bg-white focus:outline-none focus:border-sky-500 transition cursor-pointer"
-                  >
-                    <option value="CORRECT">Correct (High Concordance)</option>
-                    <option value="PARTIALLY_CORRECT">Partially Correct</option>
-                    <option value="INCORRECT">Incorrect (Missed Diagnosis)</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-[10px] font-mono text-slate-600 mb-1">
-                    CLINICAL REASONING
-                  </label>
-                  <select
-                    value={reasoningGrade}
-                    onChange={(e) => setReasoningGrade(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 font-mono focus:bg-white focus:outline-none focus:border-sky-500 transition cursor-pointer"
-                  >
-                    <option value="SOUND">Sound and Evidence-based</option>
-                    <option value="MISSING_CRITICAL_EVIDENCE">Missing Critical Evidence</option>
-                    <option value="FAULTY_LOGIC">Faulty Logical Leap</option>
-                    <option value="UNSUPPORTED_CONCLUSION">Unsupported Conclusion</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-[10px] font-mono text-slate-600 mb-1">
-                    WORKUP &amp; LAB ORDERING
-                  </label>
-                  <select
-                    value={testsGrade}
-                    onChange={(e) => setTestsGrade(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 font-mono focus:bg-white focus:outline-none focus:border-sky-500 transition cursor-pointer"
-                  >
-                    <option value="APPROPRIATE">Appropriate and Indicated</option>
-                    <option value="OVER_ORDERING">Over-ordering / Defensive</option>
-                    <option value="MISSING_ESSENTIAL_TEST">Missing Essential Guideline Test</option>
-                    <option value="INAPPROPRIATE_TEST">Inappropriate / Unsafe Test</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-[10px] font-mono text-slate-600 mb-1">
-                    TREATMENT SAFETY
-                  </label>
-                  <select
-                    value={treatmentGrade}
-                    onChange={(e) => setTreatmentGrade(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 font-mono focus:bg-white focus:outline-none focus:border-sky-500 transition cursor-pointer"
-                  >
-                    <option value="SAFE_AND_OPTIMAL">Safe and Guideline-Optimal</option>
-                    <option value="SUBOPTIMAL">Suboptimal Intervention</option>
-                    <option value="CONTRAINDICATED_OR_HARMFUL">Contraindicated / Harmful</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-[10px] font-mono text-slate-600 mb-1">
-                    CORRECTED DIAGNOSIS (IF REVISED)
-                  </label>
-                  <input
-                    type="text"
-                    value={correctedDiagnosis}
-                    onChange={(e) => setCorrectedDiagnosis(e.target.value)}
-                    placeholder="Refined clinical diagnosis (optional)..."
-                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 font-mono focus:bg-white focus:outline-none focus:border-sky-500 transition"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[10px] font-mono text-slate-600 mb-1">
-                    ATTENDING CLINICAL CRITIQUE / NOTES
-                  </label>
-                  <textarea
-                    rows={2}
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    placeholder="Attending feedback or training preference..."
-                    className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:border-sky-500 resize-none font-sans"
-                  />
-                </div>
-              </div>
-
-              {/* Verdict Buttons */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                <button
-                  disabled={isSubmitting}
-                  onClick={() => handleReviewAction(true)}
-                  className="bg-emerald-600 hover:bg-emerald-500 text-white py-3 px-4 rounded-xl font-mono text-xs font-bold tracking-wider active:scale-[0.98] transition-all flex items-center justify-between cursor-pointer shadow-xs disabled:opacity-50"
-                >
-                  <span>APPROVE VERDICT</span>
-                  <div className="w-6 h-6 rounded-lg bg-white/20 flex items-center justify-center">
-                    <ThumbsUp className="w-3.5 h-3.5 text-white" />
-                  </div>
-                </button>
-
-                <button
-                  disabled={isSubmitting}
-                  onClick={() => handleReviewAction(false)}
-                  className="bg-slate-100 hover:bg-rose-50 text-slate-700 hover:text-rose-700 border border-slate-300 hover:border-rose-300 py-3 px-4 rounded-xl font-mono text-xs font-bold tracking-wider active:scale-[0.98] transition-all flex items-center justify-between cursor-pointer disabled:opacity-50"
-                >
-                  <span>REJECT / FLAG</span>
-                  <div className="w-6 h-6 rounded-lg bg-slate-200 flex items-center justify-center">
-                    <ThumbsDown className="w-3.5 h-3.5 text-slate-600" />
-                  </div>
-                </button>
-              </div>
-
-              <div className="text-center pt-3">
-                <span className="text-[10px] text-slate-400 font-mono">
-                  DPO preference pair logged securely to hospital telemetry ledger.
+              {/* Overall Assessment Buttons */}
+              <div style={{ marginBottom: 'var(--space-4)' }}>
+                <span className="ak-label" style={{ display: 'block', marginBottom: 'var(--space-2)' }}>
+                  Overall Clinical Assessment
                 </span>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'var(--space-2)' }}>
+                  {REVIEW_ASSESSMENTS.map((item) => {
+                    const isSelected = assessment === item.value;
+                    return (
+                      <Button
+                        key={item.value}
+                        variant={isSelected ? 'primary' : 'secondary'}
+                        onClick={() => setAssessment(item.value)}
+                        style={{ width: '100%' }}
+                      >
+                        {item.label}
+                      </Button>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
+
+              {/* Identified Clinical Defects */}
+              <div style={{ marginBottom: 'var(--space-4)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-2)' }}>
+                  <span className="ak-label">Identified Clinical Defects (Optional)</span>
+                  <span className="caption ak-num" style={{ color: 'var(--text-tertiary)' }}>
+                    {identifiedErrors.length} selected
+                  </span>
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  {STRUCTURED_ERROR_TAXONOMY.map((err) => {
+                    const isSelected = identifiedErrors.includes(err.code);
+                    return (
+                      <Chip
+                        key={err.code}
+                        isSelected={isSelected}
+                        onClick={() => toggleErrorTag(err.code)}
+                      >
+                        {err.label}
+                      </Chip>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Reviewer Role & Diagnosis Grade */}
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                  gap: 'var(--space-4)',
+                  marginBottom: 'var(--space-4)',
+                }}
+              >
+                <Select
+                  label="Reviewer Role"
+                  value={reviewerRole}
+                  onChange={(e) => setReviewerRole(e.target.value)}
+                >
+                  <option value="ATTENDING_PHYSICIAN">Attending Physician (MD/DO)</option>
+                  <option value="CLINICAL_RESIDENT">Clinical Resident</option>
+                  <option value="MEDICAL_STUDENT">Medical Student</option>
+                </Select>
+
+                <Select
+                  label="Diagnosis Accuracy"
+                  value={diagnosisGrade}
+                  onChange={(e) => setDiagnosisGrade(e.target.value)}
+                >
+                  <option value="CORRECT">Correct (High Concordance)</option>
+                  <option value="PARTIALLY_CORRECT">Partially Correct</option>
+                  <option value="INCORRECT">Incorrect (Missed Diagnosis)</option>
+                </Select>
+              </div>
+
+              {/* Rubric Selects */}
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                  gap: 'var(--space-4)',
+                  marginBottom: 'var(--space-4)',
+                }}
+              >
+                <Select
+                  label="Clinical Reasoning"
+                  value={reasoningGrade}
+                  onChange={(e) => setReasoningGrade(e.target.value)}
+                >
+                  <option value="SOUND">Sound and Evidence-based</option>
+                  <option value="MISSING_CRITICAL_EVIDENCE">Missing Critical Evidence</option>
+                  <option value="FAULTY_LOGIC">Faulty Logical Leap</option>
+                  <option value="UNSUPPORTED_CONCLUSION">Unsupported Conclusion</option>
+                </Select>
+
+                <Select
+                  label="Workup & Lab Ordering"
+                  value={testsGrade}
+                  onChange={(e) => setTestsGrade(e.target.value)}
+                >
+                  <option value="APPROPRIATE">Appropriate and Indicated</option>
+                  <option value="OVER_ORDERING">Over-ordering / Defensive</option>
+                  <option value="MISSING_ESSENTIAL_TEST">Missing Essential Guideline Test</option>
+                  <option value="INAPPROPRIATE_TEST">Inappropriate / Unsafe Test</option>
+                </Select>
+
+                <Select
+                  label="Treatment Safety"
+                  value={treatmentGrade}
+                  onChange={(e) => setTreatmentGrade(e.target.value)}
+                >
+                  <option value="SAFE_AND_OPTIMAL">Safe and Guideline-Optimal</option>
+                  <option value="SUBOPTIMAL">Suboptimal Intervention</option>
+                  <option value="CONTRAINDICATED_OR_HARMFUL">Contraindicated / Harmful</option>
+                </Select>
+              </div>
+
+              {/* Structured Corrections */}
+              <div
+                style={{
+                  backgroundColor: 'var(--bg-app)',
+                  padding: 'var(--space-4)',
+                  borderRadius: 'var(--radius-md)',
+                  border: '1px solid var(--border-subtle)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 'var(--space-3)',
+                  marginBottom: 'var(--space-4)',
+                }}
+              >
+                <span className="heading-3" style={{ fontSize: '0.875rem' }}>
+                  Structured Clinical Corrections (Optional)
+                </span>
+
+                <TextField
+                  label="Corrected Primary Diagnosis"
+                  value={correctedDiagnosis}
+                  onChange={(e) => setCorrectedDiagnosis(e.target.value)}
+                  placeholder="e.g. Acute Non-ST-Elevation Myocardial Infarction"
+                />
+
+                <TextArea
+                  label="Corrected Clinical Reasoning"
+                  value={correctedReasoning}
+                  onChange={(e) => setCorrectedReasoning(e.target.value)}
+                  placeholder="Physiological rationale supporting the diagnosis..."
+                  rows={2}
+                />
+
+                <TextArea
+                  label="Corrected Recommendations & Treatment (One per line)"
+                  value={correctedRecommendations}
+                  onChange={(e) => setCorrectedRecommendations(e.target.value)}
+                  placeholder="Aspirin 325 mg PO chewable immediately&#10;Ticagrelor 180 mg PO loading dose"
+                  rows={2}
+                />
+              </div>
+
+              <TextArea
+                label="Attending Clinical Notes / Critique"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="Attending feedback or training preference..."
+                rows={2}
+              />
+
+              {/* Action Buttons */}
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                  gap: 'var(--space-3)',
+                  marginTop: 'var(--space-6)',
+                }}
+              >
+                <Button
+                  variant="primary"
+                  size="lg"
+                  onClick={() => handleReviewAction(true)}
+                  disabled={isSubmitting}
+                  isLoading={isSubmitting}
+                  leadingIcon={<ThumbsUp className="w-4 h-4" />}
+                >
+                  Approve report
+                </Button>
+
+                <Button
+                  variant="danger"
+                  size="lg"
+                  onClick={() => handleReviewAction(false)}
+                  disabled={isSubmitting}
+                  leadingIcon={<ThumbsDown className="w-4 h-4" />}
+                >
+                  Reject report
+                </Button>
+              </div>
+            </Card>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
+    </AppPage>
   );
 };
 

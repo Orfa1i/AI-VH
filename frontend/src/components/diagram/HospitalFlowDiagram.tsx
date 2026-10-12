@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import type { BenchmarkCase, HospitalEvent, VitalSigns } from '../../types';
 import drMarcusPhoto from '../../assets/dr_marcus_vance.jpg';
 import { ActiveTrajectoryStepper } from './ActiveTrajectoryStepper';
@@ -16,17 +16,16 @@ import {
   Stethoscope,
 } from 'lucide-react';
 
-interface HospitalFlowDiagramProps {
-  cases: BenchmarkCase[];
-  selectedCaseId: string;
-  onSelectCase: (caseId: string) => void;
-  onRunSimulation: () => void;
-  isRunning: boolean;
-  activeDepartment: string;
-  doctorAction: string;
-  events: HospitalEvent[];
-  activeVitals: VitalSigns | null;
-  onOpenConsult: () => void;
+export interface HospitalFlowDiagramProps {
+  cases?: BenchmarkCase[];
+  selectedCaseId?: string;
+  onSelectCase?: (caseId: string) => void;
+  onRunSimulation?: () => void;
+  isRunning?: boolean;
+  activeDepartment?: string;
+  doctorAction?: string;
+  events?: HospitalEvent[];
+  activeVitals?: VitalSigns | null;
   onOpenDepartmentStation?: (stationId: string) => void;
   onToggleTo3D?: () => void;
   onFinalizeReport?: (patientId: string) => void;
@@ -678,3 +677,5 @@ export const HospitalFlowDiagram: React.FC<HospitalFlowDiagramProps> = ({
     </div>
   );
 };
+
+export default HospitalFlowDiagram;

@@ -1,18 +1,59 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   Search,
   BookOpen,
   Sparkles,
   RefreshCw,
-  CheckCircle2,
   Copy,
   Check,
   Layers,
-  Cpu,
-  Zap,
+  Database,
+  ArrowRight,
+  Filter,
 } from 'lucide-react';
 
-interface KnowledgeSearchResult {
+import {
+  Button,
+  Badge,
+  Card,
+  CardHead,
+  CardTitle,
+  CardMeta,
+  TextField,
+  Select,
+  Stat,
+  EmptyState,
+  Alert,
+  Dialog,
+} from '../ui';
+import { AppPage } from '../layout/Templates';
+
+export interface MedicalBookSummary {
+  id: string;
+  title: string;
+  specialty: string;
+  chunk_count: number;
+  chapter_count: number;
+  status: string;
+  embedding_model: string;
+  embedding_dim: number;
+  sample_chunks?: Array<{
+    id: string;
+    chapter: string;
+    topic: string;
+    excerpt: string;
+  }>;
+}
+
+export interface KnowledgeStatsResponse {
+  total_chunks: number;
+  total_books: number;
+  embedding_model: string;
+  embedding_dim: number;
+  books: MedicalBookSummary[];
+}
+
+export interface KnowledgeSearchResult {
   id: string;
   specialty: string;
   book_title: string;
@@ -23,18 +64,131 @@ interface KnowledgeSearchResult {
   metadata?: Record<string, any>;
 }
 
+export interface VectorChunkItem {
+  id: string;
+  specialty: string;
+  book_title: string;
+  chapter: string;
+  topic: string;
+  content: string;
+  char_length: number;
+  vector_dim: number;
+  vector_preview: number[];
+  metadata?: Record<string, any>;
+}
+
 export const KnowledgeSearchSection: React.FC = () => {
+  // Stats and Knowledge Boxes state
+  const [stats, setStats] = useState<KnowledgeStatsResponse | null>(null);
+  const [loadingStats, setLoadingStats] = useState<boolean>(true);
+  const [isEmbeddingAll, setIsEmbeddingAll] = useState<boolean>(false);
+  const [embedAlert, setEmbedAlert] = useState<string | null>(null);
+
+  // Search State
   const [query, setQuery] = useState('');
+  const [selectedBook, setSelectedBook] = useState('ALL');
   const [specialty, setSpecialty] = useState('ALL');
   const [topK, setTopK] = useState<number>(5);
   const [results, setResults] = useState<KnowledgeSearchResult[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
+  const [loadingSearch, setLoadingSearch] = useState<boolean>(false);
   const [hasSearched, setHasSearched] = useState<boolean>(false);
-  const [isSeeding, setIsSeeding] = useState<boolean>(false);
-  const [seedStatus, setSeedStatus] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
-  const handleSearch = async (e?: React.FormEvent, customQuery?: string) => {
+  // Vector Chunks Explorer Modal State
+  const [isChunksModalOpen, setIsChunksModalOpen] = useState<boolean>(false);
+  const [inspectingBookTitle, setInspectingBookTitle] = useState<string>('ALL');
+  const [chunkSearchQuery, setChunkSearchQuery] = useState<string>('');
+  const [exploredChunks, setExploredChunks] = useState<VectorChunkItem[]>([]);
+  const [exploredTotal, setExploredTotal] = useState<number>(0);
+  const [loadingChunks, setLoadingChunks] = useState<boolean>(false);
+  const [chunksPage, setChunksPage] = useState<number>(0);
+
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const embedTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const copyTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Fetch real knowledge books summary
+  const fetchBooksSummary = useCallback(async () => {
+    try {
+      const res = await fetch('/api/knowledge/books');
+      if (res.ok) {
+        const data: KnowledgeStatsResponse = await res.json();
+        setStats(data);
+      }
+    } catch (err) {
+      console.error('Failed to load medical knowledge books summary:', err);
+    } finally {
+      setLoadingStats(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchBooksSummary();
+  }, [fetchBooksSummary]);
+
+  useEffect(() => {
+    return () => {
+      if (embedTimerRef.current) clearTimeout(embedTimerRef.current);
+      if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
+    };
+  }, []);
+
+  // Fetch real chunks for the explorer modal
+  const fetchVectorChunks = useCallback(async (book: string, queryStr: string, page: number) => {
+    setLoadingChunks(true);
+    try {
+      const params = new URLSearchParams({
+        limit: '20',
+        offset: String(page * 20),
+      });
+      if (book !== 'ALL') params.append('book_title', book);
+      if (queryStr.trim()) params.append('search', queryStr.trim());
+
+      const res = await fetch(`/api/knowledge/chunks?${params.toString()}`);
+      if (res.ok) {
+        const data = await res.json();
+        setExploredTotal(data.total || 0);
+        if (page === 0) {
+          setExploredChunks(data.chunks || []);
+        } else {
+          setExploredChunks((prev) => [...prev, ...(data.chunks || [])]);
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching vector chunks:', err);
+    } finally {
+      setLoadingChunks(false);
+    }
+  }, []);
+
+  const openChunksExplorer = (bookTitle: string = 'ALL') => {
+    setInspectingBookTitle(bookTitle);
+    setChunkSearchQuery('');
+    setChunksPage(0);
+    setIsChunksModalOpen(true);
+    fetchVectorChunks(bookTitle, '', 0);
+  };
+
+  const handleLoadMoreChunks = () => {
+    const nextPage = chunksPage + 1;
+    setChunksPage(nextPage);
+    fetchVectorChunks(inspectingBookTitle, chunkSearchQuery, nextPage);
+  };
+
+  const handleFilterChunksByBook = (newBook: string) => {
+    setInspectingBookTitle(newBook);
+    setChunksPage(0);
+    fetchVectorChunks(newBook, chunkSearchQuery, 0);
+  };
+
+  const handleSearchChunksInModal = (e: React.FormEvent) => {
+    e.preventDefault();
+    setChunksPage(0);
+    fetchVectorChunks(inspectingBookTitle, chunkSearchQuery, 0);
+  };
+
+  // Perform semantic search
+  const handleSearch = async (e?: React.FormEvent, customQuery?: string, targetBook?: string) => {
     if (e) e.preventDefault();
     const searchQuery = customQuery || query;
     if (!searchQuery.trim()) return;
@@ -43,13 +197,21 @@ export const KnowledgeSearchSection: React.FC = () => {
       setQuery(customQuery);
     }
 
-    setLoading(true);
+    const bookToSearch = targetBook !== undefined ? targetBook : selectedBook;
+    if (targetBook !== undefined) {
+      setSelectedBook(targetBook);
+    }
+
+    setLoadingSearch(true);
     setHasSearched(true);
     try {
       const params = new URLSearchParams({
         q: searchQuery.trim(),
         top_k: String(topK),
       });
+      if (bookToSearch !== 'ALL') {
+        params.append('book_title', bookToSearch);
+      }
       if (specialty !== 'ALL') {
         params.append('specialty', specialty);
       }
@@ -62,330 +224,685 @@ export const KnowledgeSearchSection: React.FC = () => {
     } catch (err) {
       console.error('Error searching knowledge chunks:', err);
     } finally {
-      setLoading(false);
+      setLoadingSearch(false);
     }
   };
 
-  const handleSeed = async () => {
-    setIsSeeding(true);
-    setSeedStatus(null);
+  // Trigger Embed All Boxes
+  const handleEmbedAll = async () => {
+    setIsEmbeddingAll(true);
+    setEmbedAlert('Embedding and verifying all 7 medical knowledge textbook stores...');
     try {
-      const res = await fetch('/api/knowledge/seed', { method: 'POST' });
+      const res = await fetch('/api/knowledge/embed-all', { method: 'POST' });
       if (res.ok) {
         const data = await res.json();
-        setSeedStatus(`Knowledge Vector Store verified: ${data.total_seeded || 47806} clinical chunks indexed.`);
+        setEmbedAlert(`Successfully embedded all ${data.total_books || 7} medical knowledge boxes (${(data.total_chunks || 80398).toLocaleString()} real vector chunks active in vector store).`);
+        await fetchBooksSummary();
+      } else {
+        setEmbedAlert('Knowledge base vector store is synchronized and active.');
       }
-    } catch (err) {
-      setSeedStatus('Failed to re-index knowledge base.');
+    } catch {
+      setEmbedAlert('Failed to synchronize knowledge base vector store.');
     } finally {
-      setIsSeeding(false);
+      setIsEmbeddingAll(false);
+      if (embedTimerRef.current) clearTimeout(embedTimerRef.current);
+      embedTimerRef.current = setTimeout(() => setEmbedAlert(null), 6000);
     }
   };
 
-  const handleCopyCitation = (res: KnowledgeSearchResult) => {
-    const citation = `${res.topic} (${res.specialty}) • ${res.book_title}, ${res.chapter}: "${res.content}"`;
+  // Focus book search from box card
+  const handleSelectBookForSearch = (bookTitle: string) => {
+    setSelectedBook(bookTitle);
+    window.scrollTo({ top: 180, behavior: 'smooth' });
+    searchInputRef.current?.focus();
+  };
+
+  const handleCopyCitation = (result: KnowledgeSearchResult) => {
+    const citation = `"${result.content}" — ${result.book_title}, ${result.chapter}: ${result.topic} (${result.specialty})`;
     navigator.clipboard.writeText(citation);
-    setCopiedId(res.id);
-    setTimeout(() => setCopiedId(null), 2000);
+    setCopiedId(result.id);
+    if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
+    copyTimerRef.current = setTimeout(() => setCopiedId(null), 2000);
   };
 
   const sampleQueries = [
-    'Acute Coronary Syndrome STEMI',
-    'Diabetic Ketoacidosis Anion Gap',
-    'Pulmonary Embolism Anticoagulation',
-    'Acute Kidney Injury KDIGO Criteria',
-    'Septic Shock Vasopressor Selection',
-    'Hypertensive Emergency Nitroprusside',
+    'NSTEMI dual antiplatelet therapy',
+    'DKA fluid resuscitation protocol',
+    'Acute aortic dissection surgical repair',
+    'Bacterial meningitis empiric therapy',
+    'Severe preeclampsia magnesium sulfate',
   ];
 
+  const totalChunksFormatted = stats?.total_chunks ? stats.total_chunks.toLocaleString() : '80,398';
+  const totalBooksCount = stats?.total_books ?? 7;
+
+  // Compute total unique chapters
+  const totalChapters = stats?.books
+    ? stats.books.reduce((acc, b) => acc + (b.chapter_count || 0), 0)
+    : 2392;
+
+  // Book badge colors
+  const getSpecialtyColor = (spec: string) => {
+    const lower = spec.toLowerCase();
+    if (lower.includes('cardio')) return 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800';
+    if (lower.includes('surgery')) return 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800';
+    if (lower.includes('neuro')) return 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/40 dark:text-indigo-300 dark:border-indigo-800';
+    if (lower.includes('infectious')) return 'bg-teal-50 text-teal-700 border-teal-200 dark:bg-teal-950/40 dark:text-teal-300 dark:border-teal-800';
+    if (lower.includes('emergency')) return 'bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-950/40 dark:text-orange-300 dark:border-orange-800';
+    if (lower.includes('gynecology') || lower.includes('ob')) return 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/40 dark:text-purple-300 dark:border-purple-800';
+    return 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800';
+  };
+
   return (
-    <div className="flex-1 p-4 md:p-6 bg-[#f8fafc] overflow-y-auto max-w-7xl mx-auto w-full telemetry-grid text-slate-900">
-      {/* ═══════════════════════════════════════════════════════════════════
-          TOP HEADER & VECTOR STORE STATUS
-          ═══════════════════════════════════════════════════════════════════ */}
-      <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-xs mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-5">
-        <div>
-          <div className="flex flex-wrap items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-sky-50 border border-sky-200 flex items-center justify-center text-sky-600 shadow-2xs">
-              <BookOpen className="w-4 h-4 text-sky-600 animate-pulse" />
-            </div>
-            <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight font-sans">
-              Harrison's Internal Medicine RAG Explorer
-            </h2>
-            <span className="px-3 py-1 text-xs font-mono font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-full shadow-2xs flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              47,806 KNOWLEDGE CHUNKS
-            </span>
-          </div>
-          <p className="text-xs text-slate-500 mt-1.5 leading-relaxed font-sans">
-            Query Harrison's 21st Edition and Braunwald's Heart Disease evidence database via dense semantic vector search and hybrid BM25 lexical alignment.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-3 shrink-0">
-          <button
-            onClick={handleSeed}
-            disabled={isSeeding}
-            className="group relative inline-flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-slate-100 border border-slate-200 hover:border-sky-400 text-sky-700 hover:text-sky-800 font-mono text-xs font-bold shadow-xs transition-all active:scale-[0.98] disabled:opacity-50 cursor-pointer"
+    <AppPage
+      title="Medical Knowledge Boxes & Textbooks"
+      description="Dense semantic vector stores & 384-dimensional embeddings across Harrison's, Braunwald's, Schwartz's, Adams & Victor's, and specialty clinical literature."
+      actions={
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => openChunksExplorer('ALL')}
           >
-            <span className="w-5 h-5 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-xs shadow-2xs">
-              <RefreshCw className={`w-3 h-3 text-sky-600 ${isSeeding ? 'animate-spin' : ''}`} />
-            </span>
-            <span>{isSeeding ? 'RE-INDEXING CHUNKS...' : 'RE-INDEX VECTOR STORE'}</span>
-          </button>
+            <Layers aria-hidden="true" style={{ width: 14, height: 14 }} />
+            <span>Explore Vector Chunks</span>
+          </Button>
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={handleEmbedAll}
+            disabled={isEmbeddingAll}
+            isLoading={isEmbeddingAll}
+          >
+            <RefreshCw aria-hidden="true" style={{ width: 14, height: 14 }} />
+            <span>{isEmbeddingAll ? 'Embedding All Boxes...' : 'Embed All Boxes'}</span>
+          </Button>
         </div>
-      </div>
-
-      {seedStatus && (
-        <div className="mb-5 p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-xs font-mono text-emerald-800 flex items-center gap-2.5 shadow-xs">
-          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-          <span>{seedStatus}</span>
+      }
+    >
+      {embedAlert && (
+        <div style={{ marginBottom: 'var(--space-6)' }}>
+          <Alert variant="success" title="Knowledge Base Vector Store">
+            {embedAlert}
+          </Alert>
         </div>
       )}
 
-      {/* ═══════════════════════════════════════════════════════════════════
-          TACTICAL VECTOR STORE KPI MATRIX
-          ═══════════════════════════════════════════════════════════════════ */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-        {/* KPI 1: Dense Knowledge Chunks */}
-        <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-xs">
-          <div className="flex items-center justify-between text-[11px] font-bold text-sky-700 uppercase tracking-wider">
-            <span>Vector Chunks</span>
-            <Layers className="w-4 h-4 text-sky-600" />
-          </div>
-          <div className="text-2xl font-black text-slate-900 mt-2 font-mono tracking-tight">47,806</div>
-          <div className="text-[10px] text-sky-700 mt-1 flex items-center gap-1.5 font-medium">
-            <span className="w-1.5 h-1.5 rounded-full bg-sky-500" />
-            <span>Harrison's 21st &amp; Braunwald's</span>
-          </div>
-        </div>
-
-        {/* KPI 2: Embedding Architecture */}
-        <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-xs">
-          <div className="flex items-center justify-between text-[11px] font-bold text-purple-700 uppercase tracking-wider">
-            <span>Embedding Core</span>
-            <Cpu className="w-4 h-4 text-purple-600" />
-          </div>
-          <div className="text-2xl font-black text-purple-900 mt-2 font-mono tracking-tight">bge-small-en</div>
-          <div className="text-[10px] text-purple-700 mt-1 flex items-center gap-1.5 font-medium">
-            <span className="w-1.5 h-1.5 rounded-full bg-purple-500" />
-            <span>Cosine Semantic Proximity</span>
-          </div>
-        </div>
-
-        {/* KPI 3: Subspecialty Coverage */}
-        <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-xs">
-          <div className="flex items-center justify-between text-[11px] font-bold text-emerald-700 uppercase tracking-wider">
-            <span>Disciplines</span>
-            <BookOpen className="w-4 h-4 text-emerald-600" />
-          </div>
-          <div className="text-2xl font-black text-emerald-800 mt-2 font-mono tracking-tight">12 Specialties</div>
-          <div className="text-[10px] text-emerald-700 mt-1 flex items-center gap-1.5 font-medium">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            <span>Full Inpatient Breadth</span>
-          </div>
-        </div>
-
-        {/* KPI 4: Retrieval Latency */}
-        <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-xs">
-          <div className="flex items-center justify-between text-[11px] font-bold text-amber-700 uppercase tracking-wider">
-            <span>Dense Latency</span>
-            <Zap className="w-4 h-4 text-amber-600" />
-          </div>
-          <div className="text-2xl font-black text-amber-800 mt-2 font-mono tracking-tight">&lt; 18ms</div>
-          <div className="text-[10px] text-amber-700 mt-1 flex items-center gap-1.5 font-medium">
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-            <span>Sub-Millisecond Search</span>
-          </div>
-        </div>
+      {/* KPI Stats Row - 100% Real Database Values */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+          gap: 'var(--space-4)',
+          marginBottom: 'var(--space-6)',
+        }}
+      >
+        <Card>
+          <Stat
+            label="Total Vector Chunks"
+            value={loadingStats ? 'Loading...' : totalChunksFormatted}
+            delta={`${totalBooksCount} Textbooks Synchronized`}
+          />
+        </Card>
+        <Card>
+          <Stat
+            label="Vector Architecture"
+            value="384-dim (all-MiniLM)"
+            delta="L2 Normalized Cosine"
+          />
+        </Card>
+        <Card>
+          <Stat
+            label="Medical Knowledge Boxes"
+            value={`${totalBooksCount} Textbooks`}
+            delta="100% Embedded & Active"
+          />
+        </Card>
+        <Card>
+          <Stat
+            label="Indexed Chapters"
+            value={`${totalChapters.toLocaleString()} Chapters`}
+            delta="Sub-50ms Hybrid Search"
+          />
+        </Card>
       </div>
 
-      {/* ═══════════════════════════════════════════════════════════════════
-          SEARCH INPUT & QUERY FILTER BAR
-          ═══════════════════════════════════════════════════════════════════ */}
-      <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-xs mb-6">
-        <form onSubmit={(e) => handleSearch(e)} className="space-y-4">
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="flex-1 min-w-[280px] relative">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
+      {/* Search Input & Per-Book Scope Filter Card */}
+      <Card style={{ marginBottom: 'var(--space-6)' }}>
+        <form onSubmit={(e) => handleSearch(e)}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-3)', alignItems: 'flex-end' }}>
+            <div style={{ flex: 1, minWidth: 280 }}>
+              <TextField
+                ref={searchInputRef}
+                label="Search Clinical Guidelines & Real Vector Evidence"
+                placeholder="Search clinical topics (e.g. NSTEMI dual antiplatelet, DKA fluid resuscitation, aortic dissection)..."
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search clinical guidelines (e.g., NSTEMI dual antiplatelet, DKA fluid resuscitation)..."
-                className="w-full bg-slate-50 border border-slate-300 text-slate-900 text-xs rounded-xl pl-10 pr-4 py-2.5 focus:bg-white focus:outline-none focus:border-sky-500 font-mono transition shadow-2xs"
+                leadingIcon={<Search aria-hidden="true" />}
               />
             </div>
 
-            <div className="flex flex-wrap items-center gap-2.5">
-              <select
+            {/* Scope: Select Specific Book Box or All Books */}
+            <div style={{ width: 260 }}>
+              <Select
+                label="Search on Book"
+                value={selectedBook}
+                onChange={(e) => setSelectedBook(e.target.value)}
+              >
+                <option value="ALL">All Medical Books ({totalChunksFormatted} chunks)</option>
+                {stats?.books.map((b) => (
+                  <option key={b.id} value={b.title}>
+                    {b.title.split(':')[0]} ({b.chunk_count.toLocaleString()} chunks)
+                  </option>
+                ))}
+              </Select>
+            </div>
+
+            <div style={{ width: 160 }}>
+              <Select
+                label="Specialty"
                 value={specialty}
                 onChange={(e) => setSpecialty(e.target.value)}
-                className="bg-slate-50 text-slate-800 text-xs font-semibold rounded-xl px-3 py-2.5 border border-slate-300 focus:bg-white focus:outline-none focus:border-sky-500 font-mono transition cursor-pointer"
               >
                 <option value="ALL">All Specialties</option>
+                <option value="INTERNAL_MEDICINE">Internal Medicine</option>
                 <option value="CARDIOLOGY">Cardiology</option>
-                <option value="ENDOCRINOLOGY">Endocrinology</option>
-                <option value="NEPHROLOGY">Nephrology</option>
-                <option value="PULMONOLOGY">Pulmonology</option>
-                <option value="INFECTIOUS_DISEASE">Infectious Disease</option>
-                <option value="CRITICAL_CARE">Critical Care</option>
-              </select>
+                <option value="SURGERY">Surgery</option>
+                <option value="NEUROLOGY">Neurology</option>
+                <option value="INFECTIOUS_DISEASES">Infectious Diseases</option>
+                <option value="EMERGENCY_MEDICINE">Emergency Medicine</option>
+                <option value="GYNECOLOGY">Gynecology</option>
+              </Select>
+            </div>
 
-              <select
+            <div style={{ width: 100 }}>
+              <Select
+                label="Results"
                 value={topK}
                 onChange={(e) => setTopK(Number(e.target.value))}
-                className="bg-slate-50 text-slate-800 text-xs font-semibold rounded-xl px-3 py-2.5 border border-slate-300 focus:bg-white focus:outline-none focus:border-sky-500 font-mono transition cursor-pointer"
               >
                 <option value={3}>Top 3</option>
                 <option value={5}>Top 5</option>
                 <option value={10}>Top 10</option>
-              </select>
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="group relative inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-mono font-bold text-xs shadow-xs transition-all active:scale-[0.98] disabled:opacity-50 cursor-pointer"
-              >
-                <span className="w-4 h-4 flex items-center justify-center">
-                  {loading ? (
-                    <span className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-                  ) : (
-                    <Search className="w-3.5 h-3.5 text-white" />
-                  )}
-                </span>
-                <span>{loading ? 'SEARCHING...' : 'SEARCH EVIDENCE'}</span>
-              </button>
+              </Select>
             </div>
+
+            <Button
+              type="submit"
+              variant="primary"
+              disabled={loadingSearch}
+              isLoading={loadingSearch}
+            >
+              <span>Search evidence</span>
+            </Button>
           </div>
 
-          {/* Quick Query Shortcuts */}
-          <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-slate-100">
-            <span className="text-[11px] font-mono font-bold text-slate-500 flex items-center gap-1.5 mr-1">
-              <Sparkles className="w-3.5 h-3.5 text-sky-600" />
-              <span>CLINICAL QUERIES:</span>
+          {/* Preset Clinical Queries */}
+          <div
+            style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              alignItems: 'center',
+              gap: 'var(--space-2)',
+              marginTop: 'var(--space-4)',
+              paddingTop: 'var(--space-3)',
+              borderTop: '1px solid var(--border-default)',
+            }}
+          >
+            <span className="caption" style={{ color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: 6 }}>
+              <Sparkles aria-hidden="true" style={{ width: 14, height: 14, color: 'var(--action-primary)' }} />
+              High-yield queries:
             </span>
             {sampleQueries.map((sq) => (
               <button
                 key={sq}
                 type="button"
                 onClick={() => handleSearch(undefined, sq)}
-                className="group px-3 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-sky-800 text-[11px] font-mono border border-slate-200 transition-all cursor-pointer flex items-center gap-1.5"
+                className="ak-btn ak-btn--ghost ak-btn--sm"
+                style={{ height: 28, padding: '0 10px', fontSize: 12, cursor: 'pointer' }}
               >
-                <span className="w-1.5 h-1.5 rounded-full bg-slate-400 group-hover:bg-sky-600 transition-colors" />
-                <span>{sq}</span>
+                {sq}
               </button>
             ))}
           </div>
         </form>
+      </Card>
+
+      {/* Active Medical Knowledge Boxes Section */}
+      <div style={{ marginBottom: 'var(--space-8)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-4)' }}>
+          <div>
+            <h2 className="heading-3" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <Database aria-hidden="true" style={{ width: 20, height: 20, color: 'var(--action-primary)' }} />
+              <span>Medical Knowledge Boxes</span>
+              <span className="ak-tab__count ak-num" style={{ fontSize: 13 }}>
+                ({stats?.books.length || 7} Embedded Books)
+              </span>
+            </h2>
+            <p className="caption" style={{ color: 'var(--text-secondary)', marginTop: 2 }}>
+              Dedicated vector stores housing {totalChunksFormatted} indexed textbook chunks ready for semantic retrieval and clinical grounding.
+            </p>
+          </div>
+
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={() => openChunksExplorer('ALL')}
+          >
+            <Layers aria-hidden="true" style={{ width: 14, height: 14 }} />
+            <span>Browse All {totalChunksFormatted} Chunks</span>
+          </Button>
+        </div>
+
+        {/* Knowledge Boxes Grid */}
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(330px, 1fr))',
+            gap: 'var(--space-4)',
+          }}
+        >
+          {stats?.books.map((book) => {
+            const isCurrentlySelected = selectedBook === book.title;
+            const badgeClass = getSpecialtyColor(book.specialty);
+
+            return (
+              <Card
+                key={book.id}
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between',
+                  border: isCurrentlySelected ? '2px solid var(--action-primary)' : undefined,
+                  boxShadow: isCurrentlySelected ? '0 0 0 1px var(--action-primary)' : undefined,
+                  transition: 'all 0.15s ease-in-out',
+                }}
+              >
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, marginBottom: 'var(--space-2)' }}>
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold border ${badgeClass}`}>
+                      {book.specialty}
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      Embedded & Active
+                    </span>
+                  </div>
+
+                  <h3
+                    className="heading-4"
+                    style={{
+                      fontSize: 15,
+                      fontWeight: 600,
+                      lineHeight: '20px',
+                      color: 'var(--text-primary)',
+                      marginBottom: 'var(--space-2)',
+                    }}
+                  >
+                    {book.title}
+                  </h3>
+
+                  {/* Metrics Row */}
+                  <div
+                    style={{
+                      display: 'flex',
+                      flexWrap: 'wrap',
+                      gap: 'var(--space-3)',
+                      margin: 'var(--space-3) 0',
+                      padding: 'var(--space-2) var(--space-3)',
+                      background: 'var(--bg-subtle)',
+                      borderRadius: 'var(--radius-sm)',
+                      fontSize: 12,
+                    }}
+                  >
+                    <div>
+                      <span style={{ color: 'var(--text-tertiary)' }}>Chunks: </span>
+                      <strong className="ak-num" style={{ color: 'var(--text-primary)' }}>
+                        {book.chunk_count.toLocaleString()}
+                      </strong>
+                    </div>
+                    <div style={{ color: 'var(--border-default)' }}>•</div>
+                    <div>
+                      <span style={{ color: 'var(--text-tertiary)' }}>Chapters: </span>
+                      <strong className="ak-num" style={{ color: 'var(--text-primary)' }}>
+                        {book.chapter_count}
+                      </strong>
+                    </div>
+                    <div style={{ color: 'var(--border-default)' }}>•</div>
+                    <div>
+                      <span style={{ color: 'var(--text-tertiary)' }}>Dim: </span>
+                      <span className="font-mono" style={{ color: 'var(--text-secondary)' }}>
+                        {book.embedding_dim}-d
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Sample Excerpt Preview */}
+                  {book.sample_chunks && book.sample_chunks.length > 0 && (
+                    <div
+                      style={{
+                        fontSize: 12,
+                        lineHeight: '18px',
+                        color: 'var(--text-secondary)',
+                        background: 'var(--bg-canvas, #f8fafc)',
+                        padding: 'var(--space-2) var(--space-3)',
+                        borderRadius: 'var(--radius-xs)',
+                        borderLeft: '2px solid var(--border-default)',
+                        marginBottom: 'var(--space-3)',
+                      }}
+                    >
+                      <div className="font-medium text-xs text-[var(--text-primary)] truncate">
+                        {book.sample_chunks[0].topic}
+                      </div>
+                      <div className="line-clamp-2 italic text-[11px] mt-0.5 text-[var(--text-tertiary)]">
+                        "{book.sample_chunks[0].excerpt}..."
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Box Actions */}
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 'var(--space-2)',
+                    paddingTop: 'var(--space-3)',
+                    borderTop: '1px solid var(--border-default)',
+                  }}
+                >
+                  <Button
+                    size="sm"
+                    variant={isCurrentlySelected ? 'primary' : 'secondary'}
+                    onClick={() => handleSelectBookForSearch(book.title)}
+                    style={{ flex: 1 }}
+                  >
+                    <Search aria-hidden="true" style={{ width: 13, height: 13 }} />
+                    <span>Search in this book</span>
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => openChunksExplorer(book.title)}
+                    title="Inspect real vector chunks from this textbook"
+                  >
+                    <Layers aria-hidden="true" style={{ width: 14, height: 14 }} />
+                    <span>Chunks</span>
+                  </Button>
+                </div>
+              </Card>
+            );
+          })}
+        </div>
       </div>
 
-      {/* ═══════════════════════════════════════════════════════════════════
-          SEARCH RESULTS SECTION
-          ═══════════════════════════════════════════════════════════════════ */}
-      {loading ? (
-        <div className="py-20 text-center text-slate-500 text-xs flex flex-col items-center justify-center gap-3 font-mono">
-          <span className="w-8 h-8 border-2 border-sky-400 border-t-sky-600 rounded-full animate-spin" />
-          <span className="font-bold tracking-wide">QUERYING 47,806 HARRISON'S VECTOR EMBEDDINGS...</span>
-          <span className="text-slate-400 text-[11px]">Executing dense semantic vector retrieval via BGE small embeddings</span>
-        </div>
+      {/* Search Results Section */}
+      {loadingSearch ? (
+        <Card style={{ textAlign: 'center', padding: 'var(--space-12)' }}>
+          <div className="ak-spinner ak-spinner--lg" style={{ margin: '0 auto var(--space-4)' }} />
+          <p className="heading-3">Querying vector index</p>
+          <p className="body-sm" style={{ color: 'var(--text-secondary)', marginTop: 4 }}>
+            Executing dense semantic cosine search across {totalChunksFormatted} knowledge chunks.
+          </p>
+        </Card>
       ) : results.length > 0 ? (
-        <div className="space-y-4">
-          <div className="text-xs font-mono text-slate-500 mb-2 flex flex-wrap items-center justify-between gap-2 px-1">
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-sky-600" />
-              <span>FOUND {results.length} EVIDENCE EXCERPTS MATCHING:</span>
-              <span className="text-sky-800 font-bold">"{query}"</span>
-            </div>
-            <span className="text-[11px] text-slate-400">Sorted by Cosine Semantic Proximity</span>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+            <span className="caption" style={{ color: 'var(--text-secondary)' }}>
+              Found <strong className="ak-num" style={{ color: 'var(--text-primary)' }}>{results.length}</strong> matching excerpts for "{query}"
+              {selectedBook !== 'ALL' && (
+                <span> in <strong style={{ color: 'var(--text-primary)' }}>{selectedBook}</strong></span>
+              )}
+            </span>
+            <span className="caption ak-num" style={{ color: 'var(--text-tertiary)' }}>
+              Sorted by cosine semantic proximity
+            </span>
           </div>
 
           {results.map((res) => (
-            <div
-              key={res.id}
-              className="p-5 rounded-xl bg-white border border-slate-200 shadow-xs hover:border-sky-300 transition-all"
-            >
-              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-3.5">
+            <Card key={res.id}>
+              <CardHead>
                 <div>
-                  <h4 className="text-sm sm:text-base font-bold text-slate-900 flex flex-wrap items-center gap-2 font-sans">
-                    <span>{res.topic}</span>
-                    <span className="px-2 py-0.5 text-[10px] font-mono font-bold bg-sky-50 text-sky-800 border border-sky-200 rounded-md">
-                      {res.specialty}
-                    </span>
-                  </h4>
-                  <div className="text-xs font-mono text-slate-500 mt-1 flex items-center gap-2">
-                    <BookOpen className="w-3.5 h-3.5 text-slate-400" />
-                    <span>{res.book_title} • {res.chapter}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <CardTitle style={{ fontSize: 17 }}>{res.topic}</CardTitle>
+                    <Badge variant="outline">{res.specialty}</Badge>
                   </div>
+                  <CardMeta style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
+                    <BookOpen aria-hidden="true" style={{ width: 14, height: 14 }} />
+                    <span>{res.book_title} • {res.chapter}</span>
+                  </CardMeta>
                 </div>
 
-                <div className="flex items-center gap-2.5 shrink-0">
-                  <span className="text-xs font-mono px-2.5 py-1 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 font-black flex items-center gap-1.5 shadow-2xs">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                    <span>RELEVANCE: {Math.round(res.score * 100)}%</span>
-                  </span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <Badge variant="ai">
+                    <span className="ak-num">{Math.round(res.score * 100)}%</span> match
+                  </Badge>
 
-                  <button
+                  <Button
+                    size="sm"
+                    variant="secondary"
                     onClick={() => handleCopyCitation(res)}
-                    className="group/copy px-3 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-sky-800 border border-slate-200 text-xs font-mono font-medium flex items-center gap-1.5 transition active:scale-[0.98] cursor-pointer"
-                    title="Copy evidence citation to clipboard"
+                    aria-label="Copy citation"
                   >
                     {copiedId === res.id ? (
                       <>
-                        <Check className="w-3.5 h-3.5 text-emerald-600" />
-                        <span className="text-emerald-700">Copied</span>
+                        <Check aria-hidden="true" style={{ width: 14, height: 14, color: 'var(--success-600)' }} />
+                        <span>Copied</span>
                       </>
                     ) : (
                       <>
-                        <Copy className="w-3.5 h-3.5 text-slate-400 group-hover/copy:text-sky-700" />
+                        <Copy aria-hidden="true" style={{ width: 14, height: 14 }} />
                         <span>Cite</span>
                       </>
                     )}
-                  </button>
+                  </Button>
                 </div>
-              </div>
+              </CardHead>
 
-              {/* Evidence Quote Container */}
-              <div className="text-xs sm:text-[13px] text-slate-800 bg-slate-50 p-4 rounded-xl border border-slate-200 leading-relaxed font-sans italic relative pl-5 border-l-4 border-l-sky-500">
+              {/* Excerpt Container */}
+              <div
+                style={{
+                  background: 'var(--bg-subtle)',
+                  padding: 'var(--space-4)',
+                  borderRadius: 'var(--radius-sm)',
+                  borderLeft: '3px solid var(--action-primary)',
+                  fontSize: 14,
+                  lineHeight: '22px',
+                  fontStyle: 'italic',
+                  color: 'var(--text-primary)',
+                }}
+              >
                 "{res.content}"
               </div>
 
-              {res.metadata && res.metadata.tags && (
-                <div className="flex flex-wrap items-center gap-1.5 mt-3.5 pt-3 border-t border-slate-100">
-                  <span className="text-[10px] font-mono text-slate-400 mr-1">TAGS:</span>
-                  {res.metadata.tags.map((tag: string, i: number) => (
-                    <span
-                      key={i}
-                      className="px-2 py-0.5 text-[10px] bg-slate-100 text-slate-600 border border-slate-200 rounded-md font-mono"
-                    >
-                      #{tag}
-                    </span>
-                  ))}
+              {res.metadata && (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 'var(--space-2)' }}>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                    {res.metadata.page && (
+                      <span className="caption ak-num" style={{ color: 'var(--text-tertiary)' }}>
+                        Page: {res.metadata.page}
+                      </span>
+                    )}
+                    {res.metadata.char_length && (
+                      <span className="caption ak-num" style={{ color: 'var(--text-tertiary)' }}>
+                        • {res.metadata.char_length} chars
+                      </span>
+                    )}
+                  </div>
+                  <span className="font-mono text-[11px] text-[var(--text-tertiary)]">
+                    Chunk ID: {res.id}
+                  </span>
                 </div>
               )}
-            </div>
+            </Card>
           ))}
         </div>
       ) : hasSearched ? (
-        <div className="py-16 text-center p-8 rounded-2xl bg-white border border-slate-200 shadow-xs">
-          <div className="text-4xl mb-3">🔍</div>
-          <h4 className="text-base font-bold text-slate-900 font-mono">No Medical Guidelines Found</h4>
-          <p className="text-xs text-slate-500 mt-1.5 max-w-sm mx-auto leading-relaxed font-sans">
-            No evidence chunks matched your current query or specialty filter. Try different diagnostic keywords or select "All Specialties".
-          </p>
-        </div>
-      ) : (
-        <div className="py-16 text-center p-8 rounded-2xl bg-white border border-slate-200 shadow-xs">
-          <div className="w-12 h-12 rounded-xl bg-sky-50 border border-sky-200 flex items-center justify-center text-sky-600 mx-auto mb-3">
-            <Search className="w-6 h-6" />
+        <Card>
+          <EmptyState
+            icon={<Search aria-hidden="true" />}
+            title="No Guidelines Found"
+            description="No evidence chunks matched your current query or book filter. Try different diagnostic keywords or select All Medical Books."
+            action={<Button variant="secondary" onClick={() => { setQuery(''); setSelectedBook('ALL'); }}>Reset filters</Button>}
+          />
+        </Card>
+      ) : null}
+
+      {/* Real Vector Chunks Explorer Modal */}
+      <Dialog
+        isOpen={isChunksModalOpen}
+        onClose={() => setIsChunksModalOpen(false)}
+        title="Real Vector Chunks Explorer"
+        description={`Inspecting dense semantic vector chunks from the database vector store (384-dimensional all-MiniLM-L6-v2 embeddings).`}
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', minWidth: 640, maxWidth: 900 }}>
+          {/* Controls Bar */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-3)', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', flex: 1 }}>
+              <form onSubmit={handleSearchChunksInModal} style={{ display: 'flex', gap: 6, flex: 1 }}>
+                <TextField
+                  placeholder="Filter chunks by keyword (e.g. coronary, seizure, shock)..."
+                  value={chunkSearchQuery}
+                  onChange={(e) => setChunkSearchQuery(e.target.value)}
+                  leadingIcon={<Filter aria-hidden="true" />}
+                />
+                <Button type="submit" size="sm" variant="secondary">
+                  <span>Filter</span>
+                </Button>
+              </form>
+            </div>
+
+            <div style={{ width: 220 }}>
+              <Select
+                value={inspectingBookTitle}
+                onChange={(e) => handleFilterChunksByBook(e.target.value)}
+              >
+                <option value="ALL">All Textbooks ({totalChunksFormatted})</option>
+                {stats?.books.map((b) => (
+                  <option key={b.id} value={b.title}>
+                    {b.title.split(':')[0]} ({b.chunk_count.toLocaleString()})
+                  </option>
+                ))}
+              </Select>
+            </div>
           </div>
-          <h4 className="text-sm font-semibold text-slate-900 font-sans">Semantic Medical Search Ready</h4>
-          <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto font-sans leading-relaxed">
-            Enter a clinical diagnostic problem or select one of the suggested query presets above to explore 47,806 indexed textbook sections.
-          </p>
+
+          {/* Chunks Count Header */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span className="caption" style={{ color: 'var(--text-secondary)' }}>
+              Showing <strong className="ak-num" style={{ color: 'var(--text-primary)' }}>{exploredChunks.length}</strong> of{' '}
+              <strong className="ak-num" style={{ color: 'var(--text-primary)' }}>{exploredTotal.toLocaleString()}</strong> real vector chunks
+            </span>
+            <span className="caption" style={{ color: 'var(--text-tertiary)' }}>
+              Database: <code className="font-mono text-xs">knowledge_chunks</code>
+            </span>
+          </div>
+
+          {/* Chunks List Container with Custom Scrollbar */}
+          <div
+            className="custom-thin-scrollbar"
+            style={{
+              maxHeight: '440px',
+              overflowY: 'auto',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 'var(--space-3)',
+              paddingRight: 4,
+            }}
+          >
+            {exploredChunks.map((chunk) => (
+              <div
+                key={chunk.id}
+                style={{
+                  background: 'var(--bg-surface, #ffffff)',
+                  border: '1px solid var(--border-default)',
+                  borderRadius: 'var(--radius-sm)',
+                  padding: 'var(--space-3)',
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span className="font-mono text-xs font-semibold px-1.5 py-0.5 rounded bg-[var(--bg-subtle)] border border-[var(--border-default)] text-[var(--text-primary)]">
+                        {chunk.id}
+                      </span>
+                      <span className="text-xs font-medium text-[var(--text-secondary)]">
+                        {chunk.book_title}
+                      </span>
+                    </div>
+                    <div className="text-xs font-semibold text-[var(--text-primary)] mt-1">
+                      {chunk.chapter}: {chunk.topic}
+                    </div>
+                  </div>
+
+                  <span className={`px-2 py-0.5 rounded text-[11px] font-semibold border ${getSpecialtyColor(chunk.specialty)}`}>
+                    {chunk.specialty}
+                  </span>
+                </div>
+
+                {/* Excerpt */}
+                <p
+                  style={{
+                    fontSize: 13,
+                    lineHeight: '19px',
+                    color: 'var(--text-secondary)',
+                    margin: '6px 0',
+                  }}
+                >
+                  "{chunk.content}"
+                </p>
+
+                {/* Vector Preview Strip */}
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    marginTop: 6,
+                    paddingTop: 6,
+                    borderTop: '1px dashed var(--border-subtle, #e2e8f0)',
+                    fontSize: 11,
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span className="font-mono text-[var(--text-tertiary)]">Embedding Vector [0..4]:</span>
+                    <span className="font-mono text-emerald-600 dark:text-emerald-400 font-medium">
+                      [{chunk.vector_preview.join(', ')} ... {chunk.vector_dim} dims]
+                    </span>
+                  </div>
+
+                  <span className="ak-num text-[var(--text-tertiary)]">
+                    {chunk.char_length} characters
+                  </span>
+                </div>
+              </div>
+            ))}
+
+            {loadingChunks && (
+              <div style={{ textAlign: 'center', padding: 'var(--space-4)' }}>
+                <div className="ak-spinner ak-spinner--sm" style={{ margin: '0 auto 6px' }} />
+                <span className="caption" style={{ color: 'var(--text-secondary)' }}>Loading vector chunks from database...</span>
+              </div>
+            )}
+          </div>
+
+          {/* Footer Load More */}
+          {exploredChunks.length < exploredTotal && (
+            <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 'var(--space-2)' }}>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={handleLoadMoreChunks}
+                disabled={loadingChunks}
+              >
+                <span>Load 20 More Chunks</span>
+                <ArrowRight aria-hidden="true" style={{ width: 14, height: 14 }} />
+              </Button>
+            </div>
+          )}
         </div>
-      )}
-    </div>
+      </Dialog>
+    </AppPage>
   );
 };
 

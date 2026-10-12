@@ -88,18 +88,35 @@ class ClinicalReport(BaseModel):
     investigation_results: List[LabResult] = Field(default_factory=list)
     
     # Assessment & Plan
+    clinical_summary: str = Field(default="", description="Synthesized clinical presentation and history summary")
+    relevant_findings: List[str] = Field(default_factory=list, description="Key physical exam and investigation findings")
     differential_diagnosis: List[DifferentialItem] = Field(default_factory=list)
     primary_diagnosis: str
     diagnostic_confidence: float = Field(..., ge=0.0, le=1.0)
     clinical_reasoning: str
     treatment_plan: List[str] = Field(default_factory=list)
     recommended_disposition: str = "Admit to Internal Medicine / Observation"
+    recommended_next_steps: List[str] = Field(default_factory=list, description="Follow-up monitoring and disposition steps")
+    safety_warnings: List[str] = Field(default_factory=list, description="Emergency red flags and urgent safety alerts")
     
     # Evidence & Citations
     medical_knowledge_citations: List[Dict[str, Any]] = Field(default_factory=list)
 
+    # Grounding provenance (Phase 2 fail-safe): True when this report fell back
+    # to a legacy/ungrounded path after a grounded attempt failed. Ungrounded
+    # reports are displayed as such and permanently excluded from RL export.
+    ungrounded: bool = False
+
     # Pharmacy & Medication Safety Review (Phase 7)
     pharmacist_review: Optional['MedicationSafetyReport'] = None
+
+    # Automated Multi-Stage Evaluation (Independent 6-Dimension Pipeline)
+    automated_evaluation: Optional[Dict[str, Any]] = None
+
+    # Production Multi-Agent Architecture & Provenance Traceability
+    multi_agent_consultation: Optional[Dict[str, Any]] = None
+    provenance: Optional[Dict[str, Any]] = None
+    data_origin: Optional[str] = "REAL_OR_BENCHMARK"
 
 
 class MedicationSafetyReport(BaseModel):
@@ -148,22 +165,74 @@ class TreatmentSafetyFeedback(str, Enum):
     CONTRAINDICATED_OR_HARMFUL = "CONTRAINDICATED_OR_HARMFUL"
 
 
+class ReviewAssessment(str, Enum):
+    CORRECT = "CORRECT"
+    PARTIALLY_CORRECT = "PARTIALLY_CORRECT"
+    INCORRECT = "INCORRECT"
+
+
+class ReviewErrorTaxonomy(str, Enum):
+    MISSING_INFORMATION = "MISSING_INFORMATION"
+    HALLUCINATION = "HALLUCINATION"
+    INCORRECT_DIAGNOSIS = "INCORRECT_DIAGNOSIS"
+    INCORRECT_REASONING = "INCORRECT_REASONING"
+    UNSUPPORTED_RECOMMENDATION = "UNSUPPORTED_RECOMMENDATION"
+    INCORRECT_MEDICAL_FACT = "INCORRECT_MEDICAL_FACT"
+    POOR_EVIDENCE_USE = "POOR_EVIDENCE_USE"
+    OTHER = "OTHER"
+
+
+class DatasetEligibilityStatus(str, Enum):
+    ELIGIBLE = "ELIGIBLE"
+    INELIGIBLE_INCOMPLETE = "INELIGIBLE_INCOMPLETE"
+    INELIGIBLE_DUPLICATE = "INELIGIBLE_DUPLICATE"
+    INELIGIBLE_UNGROUNDED = "INELIGIBLE_UNGROUNDED"
+
+
 class PhysicianReview(BaseModel):
     id: str
     report_id: str
     encounter_id: str
     physician_name: str = "Attending Physician, MD"
+    reviewer_role: str = "ATTENDING_PHYSICIAN"  # PHYSICIAN | RESIDENT | STUDENT
+    specialty: str = "INTERNAL_MEDICINE"
     reviewed_at: datetime = Field(default_factory=datetime.utcnow)
     
     # Structured ratings
-    diagnosis_grade: DiagnosisFeedback
-    reasoning_grade: ReasoningFeedback
-    tests_grade: TestAppropriatenessFeedback
-    treatment_grade: TreatmentSafetyFeedback
+    assessment: ReviewAssessment = ReviewAssessment.CORRECT
+    identified_errors: List[ReviewErrorTaxonomy] = Field(default_factory=list)
+    diagnosis_grade: DiagnosisFeedback = DiagnosisFeedback.CORRECT
+    reasoning_grade: ReasoningFeedback = ReasoningFeedback.SOUND
+    tests_grade: TestAppropriatenessFeedback = TestAppropriatenessFeedback.APPROPRIATE
+    treatment_grade: TreatmentSafetyFeedback = TreatmentSafetyFeedback.SAFE_AND_OPTIMAL
     overall_score: int = Field(..., ge=1, le=5, description="1 (Dangerous) to 5 (Exemplary)")
     
-    # Corrective annotations
+    # Corrective annotations (stored separately from original report)
     approved: bool
     corrected_diagnosis: Optional[str] = None
+    corrected_reasoning: Optional[str] = None
     corrected_treatment: Optional[List[str]] = None
+    corrected_recommendations: Optional[List[str]] = None
     physician_feedback_notes: str
+    provenance: Dict[str, Any] = Field(default_factory=dict)
+
+
+class TrainingDatasetRecord(BaseModel):
+    """
+    Immutable, provenance-linked training dataset record holding all 13
+    lifecycle fields for model training dataset compilation.
+    """
+    id: str
+    case_id: str
+    patient_id: str
+    report_id: str
+    model_version: str
+    specialty: str
+    original_input: Dict[str, Any]
+    original_ai_output: Dict[str, Any]
+    reviewer_feedback: Dict[str, Any]
+    corrected_output: Dict[str, Any]
+    provenance: Dict[str, Any]
+    review_status: str  # APPROVED | CORRECTED | REJECTED
+    dataset_eligibility: DatasetEligibilityStatus
+    timestamp: datetime = Field(default_factory=datetime.utcnow)

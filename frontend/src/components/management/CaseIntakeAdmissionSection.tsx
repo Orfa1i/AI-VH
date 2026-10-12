@@ -1,35 +1,71 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import type { BenchmarkCase, PatientRecord } from '../../types';
 import {
-  UserPlus,
-  CheckCircle2,
   RotateCcw,
   ArrowRight,
-  ShieldAlert,
   Activity,
   HeartPulse,
   Thermometer,
   Layers,
   FileSpreadsheet,
-  Zap,
-  Sparkles,
 } from 'lucide-react';
-import { DemoPatientsSection } from '../synthea/DemoPatientsSection';
 
-interface CaseIntakeAdmissionSectionProps {
-  cases: BenchmarkCase[];
+
+import {
+  Button,
+  Badge,
+  Card,
+  CardHead,
+  CardTitle,
+  TextField,
+  TextArea,
+  Select,
+  Alert,
+  Tabs,
+} from '../ui';
+import { AppPage } from '../layout/Templates';
+
+export interface CaseIntakeAdmissionSectionProps {
+  cases?: BenchmarkCase[];
   onPatientAdmitted: (patient: PatientRecord) => void;
   onAdmitAndSimulate?: (caseId: string, patientName?: string) => void;
+  onNavigateTab?: (tab: string) => void;
+  initialMode?: 'MANUAL' | 'SYNTHETIC';
 }
 
 export const CaseIntakeAdmissionSection: React.FC<CaseIntakeAdmissionSectionProps> = ({
+  cases: _cases,
   onPatientAdmitted,
   onAdmitAndSimulate,
+  onNavigateTab,
+  initialMode = 'MANUAL',
 }) => {
+  const iframeRef = useRef<HTMLIFrameElement>(null);
   // Mode switcher: Manual admission form vs. Synthetic Synthea patient library
-  const [intakeMode, setIntakeMode] = useState<'MANUAL' | 'SYNTHETIC'>('MANUAL');
+  const [intakeMode, setIntakeMode] = useState<string>(initialMode);
 
-  // Form fields (blank defaults for real-world admission testing)
+  useEffect(() => {
+    const handleMessage = (e: MessageEvent) => {
+      // Ignore messages dispatched by host window to prevent recursive loops
+      if (e.source === window) return;
+      if (!e.data || typeof e.data !== 'object') return;
+
+      if (e.data.type === 'NAVIGATE' && e.data.tab) {
+        onNavigateTab?.(e.data.tab);
+      } else if (e.data.type === 'SET_INTAKE_MODE' && e.data.mode) {
+        if (initialMode !== 'SYNTHETIC') {
+          setIntakeMode(e.data.mode);
+        }
+      } else if (e.data.type === 'PATIENT_ADMITTED' && e.data.patient) {
+        onPatientAdmitted(e.data.patient);
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [onNavigateTab, onPatientAdmitted, initialMode]);
+
+  // Form fields
   const [name, setName] = useState('');
   const [age, setAge] = useState<number | ''>('');
   const [sex, setSex] = useState<'Male' | 'Female' | 'Other'>('Male');
@@ -73,15 +109,6 @@ export const CaseIntakeAdmissionSection: React.FC<CaseIntakeAdmissionSectionProp
     setSpo2(98.0);
     setTemperature(37.0);
     setSuccessMessage(null);
-  };
-
-  const handleApplyNormalVitals = () => {
-    setHeartRate(72);
-    setSystolicBp(120);
-    setDiastolicBp(80);
-    setRespiratoryRate(16);
-    setSpo2(98.5);
-    setTemperature(37.0);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -149,510 +176,578 @@ export const CaseIntakeAdmissionSection: React.FC<CaseIntakeAdmissionSectionProp
     }
   };
 
+  const acuityOptions = [
+    {
+      id: 'RESUSCITATION',
+      label: 'ESI 1',
+      title: 'Resuscitation',
+      desc: 'Immediate life threat',
+      variant: 'danger' as const,
+      color: 'var(--color-emergency-dark, var(--danger-700))',
+      bgTint: 'var(--emergency-subtle, var(--danger-50))',
+      badgeStyle: { backgroundColor: 'var(--danger-50)', color: 'var(--danger-700)' },
+    },
+    {
+      id: 'EMERGENT',
+      label: 'ESI 2',
+      title: 'Emergent',
+      desc: 'High-risk / Severe vitals',
+      variant: 'danger' as const,
+      color: 'var(--color-emergency, var(--danger-600))',
+      bgTint: 'var(--emergency-subtle, var(--danger-50))',
+      badgeStyle: { backgroundColor: 'var(--danger-50)', color: 'var(--danger-600)' },
+    },
+    {
+      id: 'URGENT',
+      label: 'ESI 3',
+      title: 'Urgent',
+      desc: 'Multiple resources needed',
+      variant: 'warning' as const,
+      color: 'var(--warning-600)',
+      bgTint: 'var(--warning-50)',
+    },
+    {
+      id: 'LESS_URGENT',
+      label: 'ESI 4',
+      title: 'Less Urgent',
+      desc: 'One resource needed',
+      variant: 'info' as const,
+      color: 'var(--info-600)',
+      bgTint: 'var(--info-50)',
+    },
+    {
+      id: 'NON_URGENT',
+      label: 'ESI 5',
+      title: 'Non-Urgent',
+      desc: 'Clinical evaluation only',
+      variant: 'success' as const,
+      color: 'var(--success-600)',
+      bgTint: 'var(--success-50)',
+    },
+  ];
+
+  if (initialMode === 'SYNTHETIC' || intakeMode === 'SYNTHETIC') {
+    return (
+      <div className="w-full h-full flex flex-1 flex-col relative overflow-hidden" style={{ minHeight: 'calc(100vh - 120px)' }}>
+        <iframe
+          ref={iframeRef}
+          src="/case-intake.html"
+          title="Virtual Hospital Case Intake"
+          className="w-full flex-1 border-0"
+          style={{
+            width: '100%',
+            height: '100%',
+            minHeight: 'calc(100vh - 120px)',
+            border: 'none',
+            display: 'block',
+            background: '#F7F8FB',
+          }}
+        />
+      </div>
+    );
+  }
+
   return (
-    <div className="flex-1 p-4 md:p-6 bg-[#f8fafc] overflow-y-auto max-w-7xl mx-auto w-full telemetry-grid text-slate-900">
-      {/* ═══════════════════════════════════════════════════════════════════
-          TOP HEADER: CLINICAL ADMISSION PORTAL
-          ═══════════════════════════════════════════════════════════════════ */}
-      <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-200 pb-5">
-        <div>
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-xl bg-sky-50 border border-sky-200 flex items-center justify-center text-sky-600 shadow-xs">
-              <UserPlus className="w-4 h-4" />
-            </div>
-            <div>
-              <h2 className="text-base font-bold text-slate-900 tracking-wide font-sans uppercase">
-                Clinical Case Intake &amp; Admission Portal
-              </h2>
-              <p className="text-xs text-slate-500 mt-0.5 font-sans">
-                Authenticate real patient records with verified MRNs, ESI acuity scoring, bed allocations, and baseline telemetry.
-              </p>
-            </div>
-          </div>
+    <AppPage
+      title="Case Intake & Triage Admission"
+      breadcrumbs={[
+        { label: 'Clinical Ops', href: '#' },
+        { label: 'Case Intake & Triage', isCurrent: true },
+      ]}
+      actions={
+        <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+          <Button
+            variant="ghost"
+            size="md"
+            onClick={handleResetForm}
+            leadingIcon={<RotateCcw className="w-3.5 h-3.5" />}
+          >
+            Reset form
+          </Button>
         </div>
-
-        {/* Quick Baseline Actions */}
-        <div className="flex items-center gap-2">
-          {intakeMode === 'MANUAL' && (
-            <>
-              <button
-                type="button"
-                onClick={handleApplyNormalVitals}
-                className="px-3 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-mono font-medium flex items-center gap-1.5 transition cursor-pointer shadow-xs"
-              >
-                <Zap className="w-3.5 h-3.5 text-emerald-600" />
-                <span>Normal Baseline Vitals</span>
-              </button>
-              <button
-                type="button"
-                onClick={handleResetForm}
-                className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 text-xs font-mono font-medium flex items-center gap-1.5 transition cursor-pointer shadow-xs"
-              >
-                <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
-                <span>Reset Form</span>
-              </button>
-            </>
-          )}
-        </div>
+      }
+    >
+      {/* MODE TABS SWITCHER */}
+      <div style={{ marginBottom: 'var(--space-6)' }}>
+        <Tabs
+          tabs={[
+            { id: 'MANUAL', label: 'Manual Case Intake & Bed Allocation' },
+            { id: 'SYNTHETIC', label: 'Synthetic Patients & Cohort Generator' },
+          ]}
+          activeId={intakeMode}
+          onChange={(id) => setIntakeMode(id)}
+        />
       </div>
 
-      {/* ═══════════════════════════════════════════════════════════════════
-          CONSOLIDATED VIEW SWITCHER (MANUAL INTAKE vs. SYNTHETIC PATIENTS)
-          ═══════════════════════════════════════════════════════════════════ */}
-      <div className="flex items-center p-1 bg-slate-200/80 rounded-xl font-mono text-xs mb-6 w-fit border border-slate-300/80 shadow-2xs">
-        <button
-          type="button"
-          onClick={() => setIntakeMode('MANUAL')}
-          className={`px-4 py-2 rounded-lg font-bold flex items-center gap-2 transition cursor-pointer ${
-            intakeMode === 'MANUAL'
-              ? 'bg-white text-sky-800 shadow-xs'
-              : 'text-slate-600 hover:text-slate-900'
-          }`}
-        >
-          <UserPlus className="w-3.5 h-3.5" />
-          <span>MANUAL CASE INTAKE &amp; BED ALLOCATION</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => setIntakeMode('SYNTHETIC')}
-          className={`px-4 py-2 rounded-lg font-bold flex items-center gap-2 transition cursor-pointer ${
-            intakeMode === 'SYNTHETIC'
-              ? 'bg-white text-sky-800 shadow-xs'
-              : 'text-slate-600 hover:text-slate-900'
-          }`}
-        >
-          <Sparkles className="w-3.5 h-3.5 text-sky-600" />
-          <span>SYNTHETIC PATIENTS &amp; COHORT GENERATOR (FHIR R4)</span>
-        </button>
-      </div>
-
-      {intakeMode === 'SYNTHETIC' ? (
-        <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
-          <DemoPatientsSection
-            onAdmitSuccess={() => {
-              onPatientAdmitted({} as any);
-            }}
-          />
-        </div>
-      ) : (
-        <>
-          {/* ═══════════════════════════════════════════════════════════════════
-              SUCCESS NOTIFICATION CARD (DOUBLE-BEZEL LIGHT)
-              ═══════════════════════════════════════════════════════════════════ */}
+      <>
+          {/* SUCCESS NOTIFICATION */}
           {successMessage && lastAdmitted && (
-        <div className="mb-6 relative rounded-2xl p-0.5 bg-gradient-to-r from-emerald-400 via-emerald-300 to-slate-200 shadow-sm animate-in fade-in duration-300">
-          <div className="p-4 rounded-[calc(1rem-2px)] bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="flex items-start gap-3.5">
-              <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-200 flex items-center justify-center shrink-0 mt-0.5 shadow-xs">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-              </div>
-              <div>
-                <div className="text-xs font-mono font-bold text-emerald-800 uppercase tracking-wider">
-                  PATIENT ADMITTED TO HOSPITAL LEDGER
-                </div>
-                <p className="text-xs text-slate-700 mt-0.5 font-sans leading-relaxed">{successMessage}</p>
-                <div className="flex flex-wrap items-center gap-2.5 mt-2 text-[10px] font-mono text-emerald-700">
-                  <span className="px-2 py-0.5 rounded bg-emerald-50 border border-emerald-200">
-                    MRN: <strong className="text-slate-900">{lastAdmitted.mrn}</strong>
-                  </span>
-                  <span className="px-2 py-0.5 rounded bg-emerald-50 border border-emerald-200">
-                    ACUITY: <strong className="text-slate-900">{lastAdmitted.triage_acuity}</strong>
-                  </span>
-                  <span className="px-2 py-0.5 rounded bg-emerald-50 border border-emerald-200">
-                    BED: <strong className="text-slate-900">{lastAdmitted.bed_number}</strong>
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {onAdmitAndSimulate && (
-              <button
-                onClick={handleQuickEncounter}
-                className="group relative px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-mono font-bold rounded-xl shadow-sm transition-all flex items-center gap-2 shrink-0 cursor-pointer active:scale-[0.98]"
+            <div style={{ marginBottom: 'var(--space-6)' }}>
+              <Alert
+                variant="success"
+                title="Patient Admitted to Hospital Ledger"
+                actions={
+                  onAdmitAndSimulate && (
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      onClick={handleQuickEncounter}
+                      leadingIcon={<ArrowRight className="w-3.5 h-3.5" />}
+                    >
+                      Dispatch to Pathway
+                    </Button>
+                  )
+                }
               >
-                <span>DISPATCH TO PATHWAY</span>
-                <div className="w-5 h-5 rounded-md bg-white/20 flex items-center justify-center group-hover:translate-x-0.5 transition-transform">
-                  <ArrowRight className="w-3.5 h-3.5 text-white" />
+                <div>{successMessage}</div>
+                <div
+                  style={{
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    gap: 'var(--space-2)',
+                    marginTop: 'var(--space-2)',
+                  }}
+                >
+                  <Badge variant="neutral">MRN: <strong className="ak-num">{lastAdmitted.mrn}</strong></Badge>
+                  <Badge variant="neutral">Acuity: <strong>{lastAdmitted.triage_acuity}</strong></Badge>
+                  <Badge variant="neutral">Bed: <strong>{lastAdmitted.bed_number}</strong></Badge>
                 </div>
-              </button>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* ═══════════════════════════════════════════════════════════════════
-          MAIN INTAKE FORM (DOUBLE-BEZEL CONCENTRIC LIGHT CARDS)
-          ═══════════════════════════════════════════════════════════════════ */}
-      <form onSubmit={handleSubmit} className="space-y-5">
-        {/* Section 1: Demographics & Emergency Severity Index (ESI) */}
-        <div className="relative rounded-2xl p-0.5 bg-gradient-to-b from-sky-200 via-slate-200 to-slate-200 shadow-sm border border-slate-200">
-          <div className="p-5 rounded-[calc(1rem-2px)] bg-white">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
-              <h3 className="text-xs font-mono font-bold text-sky-800 uppercase tracking-wider flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-sky-600" />
-                1. PATIENT DEMOGRAPHICS &amp; BED ALLOCATION
-              </h3>
-              <span className="font-mono text-[10px] text-slate-500">MANDATORY CLINICAL ADMISSION FIELDS</span>
+              </Alert>
             </div>
+          )}
 
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div>
-                <label className="block text-[11px] font-mono text-slate-600 mb-1.5">PATIENT FULL NAME *</label>
-                <input
-                  type="text"
+          {/* MAIN INTAKE FORM */}
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
+            {/* Section 1: Demographics & ESI Acuity */}
+            <Card>
+              <CardHead>
+                <div>
+                  <CardTitle>1. Patient Demographics & Bed Allocation</CardTitle>
+                  <span className="caption" style={{ color: 'var(--text-secondary)' }}>
+                    Mandatory admission credentials and initial unit placement
+                  </span>
+                </div>
+              </CardHead>
+
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                  gap: 'var(--space-4)',
+                  marginBottom: 'var(--space-6)',
+                }}
+              >
+                <TextField
+                  label="Patient Full Name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g., Jane Smith"
-                  className="w-full bg-slate-50 border border-slate-300 text-slate-900 text-xs rounded-xl px-3.5 py-2.5 font-medium focus:bg-white focus:ring-1 focus:ring-sky-500 focus:border-sky-500 focus:outline-none transition shadow-2xs"
+                  placeholder="e.g. Jane Smith"
                   required
                 />
-              </div>
 
-              <div>
-                <label className="block text-[11px] font-mono text-slate-600 mb-1.5">AGE *</label>
-                <input
+                <TextField
+                  label="Age"
                   type="number"
                   value={age}
                   onChange={(e) => setAge(e.target.value === '' ? '' : Number(e.target.value))}
                   min={1}
                   max={120}
-                  placeholder="Age in years"
-                  className="w-full bg-slate-50 border border-slate-300 text-slate-900 text-xs rounded-xl px-3.5 py-2.5 font-mono focus:bg-white focus:ring-1 focus:ring-sky-500 focus:border-sky-500 focus:outline-none transition tabular-nums shadow-2xs"
+                  placeholder="Years"
                   required
                 />
-              </div>
 
-              <div>
-                <label className="block text-[11px] font-mono text-slate-600 mb-1.5">BIOLOGICAL SEX</label>
-                <select
+                <Select
+                  label="Biological Sex"
                   value={sex}
                   onChange={(e) => setSex(e.target.value as any)}
-                  className="w-full bg-slate-50 border border-slate-300 text-slate-900 text-xs rounded-xl px-3.5 py-2.5 focus:bg-white focus:ring-1 focus:ring-sky-500 focus:border-sky-500 focus:outline-none font-mono transition shadow-2xs cursor-pointer"
                 >
                   <option value="Male">Male</option>
                   <option value="Female">Female</option>
                   <option value="Other">Other</option>
-                </select>
-              </div>
+                </Select>
 
-              <div>
-                <label className="block text-[11px] font-mono text-slate-600 mb-1.5">ASSIGNED DEPARTMENT</label>
-                <select
+                <Select
+                  label="Assigned Department"
                   value={assignedDepartment}
                   onChange={(e) => setAssignedDepartment(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-300 text-slate-900 text-xs rounded-xl px-3.5 py-2.5 focus:bg-white focus:ring-1 focus:ring-sky-500 focus:border-sky-500 focus:outline-none font-mono transition shadow-2xs cursor-pointer"
                 >
                   <option value="EMERGENCY">Emergency Department</option>
                   <option value="CARDIOLOGY">Cardiology / CCU</option>
                   <option value="ICU">Medical ICU (MICU)</option>
                   <option value="INTERNAL_MEDICINE">Internal Medicine</option>
                   <option value="STEP_DOWN">Inpatient Step-Down Wing</option>
-                </select>
+                </Select>
               </div>
-            </div>
 
-            {/* Triage Acuity (ESI 1 to 5 Selectable Cards) */}
-            <div className="mt-5 pt-4 border-t border-slate-100">
-              <label className="block text-[11px] font-mono text-slate-600 mb-2.5">
-                EMERGENCY SEVERITY INDEX (ESI) TRIAGE RATING
-              </label>
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-                {[
-                  { id: 'RESUSCITATION', label: 'ESI 1', title: 'Resuscitation', color: 'rose', desc: 'Immediate life threat' },
-                  { id: 'EMERGENT', label: 'ESI 2', title: 'Emergent', color: 'amber', desc: 'High-risk / Severe vitals' },
-                  { id: 'URGENT', label: 'ESI 3', title: 'Urgent', color: 'yellow', desc: 'Multiple resources needed' },
-                  { id: 'LESS_URGENT', label: 'ESI 4', title: 'Less Urgent', color: 'sky', desc: 'One resource needed' },
-                  { id: 'NON_URGENT', label: 'ESI 5', title: 'Non-Urgent', color: 'emerald', desc: 'Clinical evaluation only' },
-                ].map((lvl) => {
-                  const isSelected = triageAcuity === lvl.id;
-                  return (
-                    <div
-                      key={lvl.id}
-                      onClick={() => setTriageAcuity(lvl.id)}
-                      className={`relative rounded-xl p-0.5 cursor-pointer transition-all duration-200 text-left ${
-                        isSelected
-                          ? lvl.color === 'rose'
-                            ? 'bg-rose-500 shadow-xs'
-                            : lvl.color === 'amber'
-                            ? 'bg-amber-500 shadow-xs'
-                            : lvl.color === 'yellow'
-                            ? 'bg-yellow-500 shadow-xs'
-                            : lvl.color === 'sky'
-                            ? 'bg-sky-500 shadow-xs'
-                            : 'bg-emerald-500 shadow-xs'
-                          : 'bg-slate-200 hover:bg-slate-300'
-                      }`}
-                    >
-                      <div
-                        className={`p-3 rounded-[calc(0.75rem-1px)] transition-all ${
-                          isSelected
-                            ? 'bg-white text-slate-900 border-2 border-transparent'
-                            : 'bg-slate-50 hover:bg-white text-slate-700'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <span className={`text-[10px] font-mono font-bold ${
-                            isSelected
-                              ? lvl.color === 'rose' ? 'text-rose-700'
-                                : lvl.color === 'amber' ? 'text-amber-700'
-                                : lvl.color === 'yellow' ? 'text-yellow-700'
-                                : lvl.color === 'sky' ? 'text-sky-700'
-                                : 'text-emerald-700'
-                              : 'text-slate-500'
-                          }`}>
-                            {lvl.label}
-                          </span>
-                          {isSelected && <span className="w-2 h-2 rounded-full bg-sky-600 animate-pulse" />}
-                        </div>
-                        <div className="text-xs font-semibold text-slate-900 mt-1 font-sans">{lvl.title}</div>
-                        <div className="text-[10px] text-slate-500 font-mono mt-0.5 truncate">{lvl.desc}</div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Section 2: Clinical Presentation & Medical History */}
-        <div className="relative rounded-2xl p-0.5 bg-gradient-to-b from-amber-200 via-slate-200 to-slate-200 shadow-sm border border-slate-200">
-          <div className="p-5 rounded-[calc(1rem-2px)] bg-white">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
-              <h3 className="text-xs font-mono font-bold text-amber-800 uppercase tracking-wider flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-amber-600" />
-                2. CLINICAL PRESENTATION &amp; MEDICAL HISTORY
-              </h3>
-              <span className="font-mono text-[10px] text-slate-500">DIAGNOSTIC EVIDENCE PROFILE</span>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="md:col-span-2">
-                <label className="block text-[11px] font-mono text-slate-600 mb-1.5">
-                  CHIEF COMPLAINT (PRESENTING PROBLEM) *
+              {/* Triage Acuity Options */}
+              <div>
+                <label className="ak-label" style={{ display: 'block', marginBottom: 'var(--space-2)' }}>
+                  Emergency Severity Index (ESI) Triage Rating
                 </label>
-                <input
-                  type="text"
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+                    gap: 'var(--space-3)',
+                  }}
+                >
+                  {acuityOptions.map((lvl) => {
+                    const isSelected = triageAcuity === lvl.id;
+                    const activeColor = lvl.color || 'var(--color-emergency, var(--danger-600))';
+                    const activeBg = lvl.bgTint || 'var(--emergency-subtle, var(--color-emergency-tint, var(--danger-50)))';
+                    return (
+                      <div
+                        key={lvl.id}
+                        role="button"
+                        tabIndex={0}
+                        aria-pressed={isSelected}
+                        onClick={() => setTriageAcuity(lvl.id)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            setTriageAcuity(lvl.id);
+                          }
+                        }}
+                        style={{
+                          padding: 'var(--space-3)',
+                          borderRadius: 'var(--radius-md)',
+                          border: isSelected
+                            ? `2px solid ${activeColor}`
+                            : '1px solid var(--border-default)',
+                          backgroundColor: isSelected
+                            ? activeBg
+                            : 'var(--bg-surface)',
+                          boxShadow: isSelected
+                            ? `0 0 0 1px ${activeColor}`
+                            : 'none',
+                          cursor: 'pointer',
+                          transition: 'all 0.15s ease',
+                          outline: 'none',
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <Badge variant={lvl.variant} style={lvl.badgeStyle}>{lvl.label}</Badge>
+                          {isSelected && (
+                            <span
+                              style={{
+                                width: 8,
+                                height: 8,
+                                borderRadius: '50%',
+                                backgroundColor: activeColor,
+                              }}
+                            />
+                          )}
+                        </div>
+                        <div className="heading-3" style={{ fontSize: '0.875rem', marginTop: 6, marginBottom: 2 }}>
+                          {lvl.title}
+                        </div>
+                        <div className="caption" style={{ color: 'var(--text-secondary)' }}>
+                          {lvl.desc}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </Card>
+
+            {/* Section 2: Clinical Presentation & Medical History */}
+            <Card>
+              <CardHead>
+                <div>
+                  <CardTitle>2. Clinical Presentation & Medical History</CardTitle>
+                  <span className="caption" style={{ color: 'var(--text-secondary)' }}>
+                    Diagnostic evidence baseline and patient history profile
+                  </span>
+                </div>
+              </CardHead>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+                <TextField
+                  label="Chief Complaint (Presenting Problem)"
                   value={chiefComplaint}
                   onChange={(e) => setChiefComplaint(e.target.value)}
-                  placeholder="e.g., Acute substernal crushing chest pressure radiating to jaw and left arm"
-                  className="w-full bg-slate-50 border border-slate-300 text-slate-900 text-xs rounded-xl px-3.5 py-2.5 font-medium focus:bg-white focus:ring-1 focus:ring-amber-500 focus:border-amber-500 focus:outline-none transition shadow-2xs"
+                  placeholder="e.g. Acute substernal crushing chest pressure radiating to jaw and left arm"
                   required
                 />
-              </div>
 
-              <div className="md:col-span-2">
-                <label className="block text-[11px] font-mono text-slate-600 mb-1.5">
-                  HISTORY OF PRESENT ILLNESS (HPI)
-                </label>
-                <textarea
+                <TextArea
+                  label="History of Present Illness (HPI)"
                   value={hpi}
                   onChange={(e) => setHpi(e.target.value)}
                   placeholder="Onset, character, severity, radiation, aggravating or alleviating factors, associated symptoms..."
                   rows={2}
-                  className="w-full bg-slate-50 border border-slate-300 text-slate-900 text-xs rounded-xl px-3.5 py-2.5 focus:bg-white focus:ring-1 focus:ring-amber-500 focus:border-amber-500 focus:outline-none resize-none leading-relaxed transition font-sans shadow-2xs"
                 />
-              </div>
 
-              <div>
-                <label className="block text-[11px] font-mono text-slate-600 mb-1.5">
-                  PAST MEDICAL HISTORY (COMMA-SEPARATED)
-                </label>
-                <input
-                  type="text"
-                  value={pastMedicalHistory}
-                  onChange={(e) => setPastMedicalHistory(e.target.value)}
-                  placeholder="e.g., Hypertension, Type 2 DM, Prior MI, Hyperlipidemia"
-                  className="w-full bg-slate-50 border border-slate-300 text-slate-900 text-xs rounded-xl px-3.5 py-2.5 focus:bg-white focus:ring-1 focus:ring-amber-500 focus:border-amber-500 focus:outline-none transition shadow-2xs"
-                />
-              </div>
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr)))',
+                    gap: 'var(--space-4)',
+                  }}
+                >
+                  <TextField
+                    label="Past Medical History (comma-separated)"
+                    value={pastMedicalHistory}
+                    onChange={(e) => setPastMedicalHistory(e.target.value)}
+                    placeholder="e.g. Hypertension, Type 2 DM, Hyperlipidemia"
+                  />
 
-              <div>
-                <label className="block text-[11px] font-mono text-slate-600 mb-1.5">
-                  ACTIVE OUTPATIENT MEDICATIONS
-                </label>
-                <input
-                  type="text"
-                  value={medications}
-                  onChange={(e) => setMedications(e.target.value)}
-                  placeholder="e.g., Metformin 1000mg BID, Atorvastatin 40mg QHS, Lisinopril 20mg"
-                  className="w-full bg-slate-50 border border-slate-300 text-slate-900 text-xs rounded-xl px-3.5 py-2.5 focus:bg-white focus:ring-1 focus:ring-amber-500 focus:border-amber-500 focus:outline-none transition shadow-2xs"
-                />
-              </div>
+                  <TextField
+                    label="Active Medications (comma-separated)"
+                    value={medications}
+                    onChange={(e) => setMedications(e.target.value)}
+                    placeholder="e.g. Metformin 1000mg BID, Atorvastatin 40mg QHS"
+                  />
+                </div>
 
-              <div className="md:col-span-2">
-                <label className="block text-[11px] font-mono text-rose-700 mb-1.5 flex items-center gap-1.5 font-semibold">
-                  <ShieldAlert className="w-3.5 h-3.5 text-rose-600" />
-                  <span>DRUG ALLERGIES &amp; ADVERSE REACTIONS (CRITICAL CLINICAL SAFETY PROFILE)</span>
-                </label>
-                <input
-                  type="text"
+                <TextField
+                  label="Drug Allergies & Adverse Reactions"
                   value={allergies}
                   onChange={(e) => setAllergies(e.target.value)}
-                  placeholder="e.g., Penicillin (Anaphylaxis), Sulfa (Rash), or NKDA"
-                  className="w-full bg-rose-50/60 border border-rose-300 text-rose-950 text-xs rounded-xl px-3.5 py-2.5 focus:bg-white focus:ring-1 focus:ring-rose-500 focus:border-rose-500 focus:outline-none font-medium transition shadow-2xs"
+                  placeholder="e.g. Penicillin (Anaphylaxis), Sulfa (Rash), or NKDA"
+                  helpText="Critical patient safety profile. Enter NKDA if no known allergies."
                 />
               </div>
+            </Card>
+
+            {/* Section 3: Baseline Intake Vitals */}
+            <Card>
+              <CardHead>
+                <div>
+                  <CardTitle>3. Baseline Triage Vitals</CardTitle>
+                  <span className="caption" style={{ color: 'var(--text-secondary)' }}>
+                    Initial telemetry measurements recorded upon presentation
+                  </span>
+                </div>
+              </CardHead>
+
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))',
+                  gap: 'var(--space-3)',
+                }}
+              >
+                <div
+                  style={{
+                    backgroundColor: 'var(--bg-app)',
+                    padding: 'var(--space-3)',
+                    borderRadius: 'var(--radius-sm)',
+                    border: '1px solid var(--border-subtle)',
+                  }}
+                >
+                  <label className="caption" style={{ display: 'flex', alignItems: 'center', gap: 4, color: 'var(--text-secondary)' }}>
+                    <HeartPulse className="w-3.5 h-3.5" style={{ color: 'var(--color-success)' }} />
+                    Heart Rate
+                  </label>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginTop: 4 }}>
+                    <input
+                      type="number"
+                      value={heartRate}
+                      onChange={(e) => setHeartRate(Number(e.target.value))}
+                      className="ak-num"
+                      style={{
+                        width: '100%',
+                        fontSize: '1.125rem',
+                        fontWeight: 700,
+                        border: 'none',
+                        background: 'transparent',
+                        outline: 'none',
+                      }}
+                    />
+                    <span className="caption" style={{ color: 'var(--text-tertiary)' }}>BPM</span>
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    backgroundColor: 'var(--bg-app)',
+                    padding: 'var(--space-3)',
+                    borderRadius: 'var(--radius-sm)',
+                    border: '1px solid var(--border-subtle)',
+                  }}
+                >
+                  <label className="caption" style={{ display: 'flex', alignItems: 'center', gap: 4, color: 'var(--text-secondary)' }}>
+                    <Activity className="w-3.5 h-3.5" style={{ color: 'var(--color-primary)' }} />
+                    Systolic BP
+                  </label>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginTop: 4 }}>
+                    <input
+                      type="number"
+                      value={systolicBp}
+                      onChange={(e) => setSystolicBp(Number(e.target.value))}
+                      className="ak-num"
+                      style={{
+                        width: '100%',
+                        fontSize: '1.125rem',
+                        fontWeight: 700,
+                        border: 'none',
+                        background: 'transparent',
+                        outline: 'none',
+                      }}
+                    />
+                    <span className="caption" style={{ color: 'var(--text-tertiary)' }}>mmHg</span>
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    backgroundColor: 'var(--bg-app)',
+                    padding: 'var(--space-3)',
+                    borderRadius: 'var(--radius-sm)',
+                    border: '1px solid var(--border-subtle)',
+                  }}
+                >
+                  <label className="caption" style={{ display: 'flex', alignItems: 'center', gap: 4, color: 'var(--text-secondary)' }}>
+                    <Activity className="w-3.5 h-3.5" style={{ color: 'var(--color-primary)' }} />
+                    Diastolic BP
+                  </label>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginTop: 4 }}>
+                    <input
+                      type="number"
+                      value={diastolicBp}
+                      onChange={(e) => setDiastolicBp(Number(e.target.value))}
+                      className="ak-num"
+                      style={{
+                        width: '100%',
+                        fontSize: '1.125rem',
+                        fontWeight: 700,
+                        border: 'none',
+                        background: 'transparent',
+                        outline: 'none',
+                      }}
+                    />
+                    <span className="caption" style={{ color: 'var(--text-tertiary)' }}>mmHg</span>
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    backgroundColor: 'var(--bg-app)',
+                    padding: 'var(--space-3)',
+                    borderRadius: 'var(--radius-sm)',
+                    border: '1px solid var(--border-subtle)',
+                  }}
+                >
+                  <label className="caption" style={{ display: 'flex', alignItems: 'center', gap: 4, color: 'var(--text-secondary)' }}>
+                    <Layers className="w-3.5 h-3.5" style={{ color: 'var(--text-tertiary)' }} />
+                    Resp Rate
+                  </label>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginTop: 4 }}>
+                    <input
+                      type="number"
+                      value={respiratoryRate}
+                      onChange={(e) => setRespiratoryRate(Number(e.target.value))}
+                      className="ak-num"
+                      style={{
+                        width: '100%',
+                        fontSize: '1.125rem',
+                        fontWeight: 700,
+                        border: 'none',
+                        background: 'transparent',
+                        outline: 'none',
+                      }}
+                    />
+                    <span className="caption" style={{ color: 'var(--text-tertiary)' }}>bpm</span>
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    backgroundColor: 'var(--bg-app)',
+                    padding: 'var(--space-3)',
+                    borderRadius: 'var(--radius-sm)',
+                    border: '1px solid var(--border-subtle)',
+                  }}
+                >
+                  <label className="caption" style={{ display: 'flex', alignItems: 'center', gap: 4, color: 'var(--text-secondary)' }}>
+                    <Thermometer className="w-3.5 h-3.5" style={{ color: 'var(--color-primary)' }} />
+                    SpO2
+                  </label>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginTop: 4 }}>
+                    <input
+                      type="number"
+                      step="0.1"
+                      value={spo2}
+                      onChange={(e) => setSpo2(Number(e.target.value))}
+                      className="ak-num"
+                      style={{
+                        width: '100%',
+                        fontSize: '1.125rem',
+                        fontWeight: 700,
+                        border: 'none',
+                        background: 'transparent',
+                        outline: 'none',
+                      }}
+                    />
+                    <span className="caption" style={{ color: 'var(--text-tertiary)' }}>%</span>
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    backgroundColor: 'var(--bg-app)',
+                    padding: 'var(--space-3)',
+                    borderRadius: 'var(--radius-sm)',
+                    border: '1px solid var(--border-subtle)',
+                  }}
+                >
+                  <label className="caption" style={{ display: 'flex', alignItems: 'center', gap: 4, color: 'var(--text-secondary)' }}>
+                    <Thermometer className="w-3.5 h-3.5" style={{ color: 'var(--text-tertiary)' }} />
+                    Core Temp
+                  </label>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginTop: 4 }}>
+                    <input
+                      type="number"
+                      step="0.1"
+                      value={temperature}
+                      onChange={(e) => setTemperature(Number(e.target.value))}
+                      className="ak-num"
+                      style={{
+                        width: '100%',
+                        fontSize: '1.125rem',
+                        fontWeight: 700,
+                        border: 'none',
+                        background: 'transparent',
+                        outline: 'none',
+                      }}
+                    />
+                    <span className="caption" style={{ color: 'var(--text-tertiary)' }}>°C</span>
+                  </div>
+                </div>
+              </div>
+            </Card>
+
+            {/* ACTION BUTTONS */}
+            <div
+              style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: 'var(--space-4)',
+                paddingTop: 'var(--space-2)',
+              }}
+            >
+              <Button variant="secondary" size="md" onClick={handleResetForm}>
+                Reset fields
+              </Button>
+
+              <Button
+                variant="primary"
+                size="lg"
+                type="submit"
+                disabled={isSubmitting}
+                isLoading={isSubmitting}
+                leadingIcon={<FileSpreadsheet className="w-4 h-4" />}
+              >
+                {isSubmitting ? 'Admitting patient...' : 'Admit patient to record system'}
+              </Button>
             </div>
-          </div>
-        </div>
-
-        {/* Section 3: Baseline Intake Vitals (Lead II Synchronized Hardware Tiles) */}
-        <div className="relative rounded-2xl p-0.5 bg-gradient-to-b from-emerald-200 via-slate-200 to-slate-200 shadow-sm border border-slate-200">
-          <div className="p-5 rounded-[calc(1rem-2px)] bg-white">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
-              <h3 className="text-xs font-mono font-bold text-emerald-800 uppercase tracking-wider flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-emerald-600" />
-                3. BASELINE TRIAGE VITALS (TELEMETRY SEED)
-              </h3>
-              <span className="font-mono text-[10px] text-emerald-700 font-semibold">LEAD II SYNCHRONIZED</span>
-            </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
-              {/* HR */}
-              <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 focus-within:border-emerald-500 focus-within:bg-white transition shadow-2xs">
-                <label className="block text-[10px] font-mono text-slate-500 mb-1 flex items-center gap-1">
-                  <HeartPulse className="w-3 h-3 text-emerald-600" />
-                  HEART RATE
-                </label>
-                <div className="flex items-baseline gap-1">
-                  <input
-                    type="number"
-                    value={heartRate}
-                    onChange={(e) => setHeartRate(Number(e.target.value))}
-                    className="w-full bg-transparent text-emerald-700 text-base font-bold font-mono focus:outline-none tabular-nums"
-                  />
-                  <span className="text-[10px] font-mono text-slate-400">BPM</span>
-                </div>
-              </div>
-
-              {/* Sys BP */}
-              <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 focus-within:border-sky-500 focus-within:bg-white transition shadow-2xs">
-                <label className="block text-[10px] font-mono text-slate-500 mb-1 flex items-center gap-1">
-                  <Activity className="w-3 h-3 text-sky-600" />
-                  SYSTOLIC BP
-                </label>
-                <div className="flex items-baseline gap-1">
-                  <input
-                    type="number"
-                    value={systolicBp}
-                    onChange={(e) => setSystolicBp(Number(e.target.value))}
-                    className="w-full bg-transparent text-slate-800 text-base font-bold font-mono focus:outline-none tabular-nums"
-                  />
-                  <span className="text-[10px] font-mono text-slate-400">mmHg</span>
-                </div>
-              </div>
-
-              {/* Dia BP */}
-              <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 focus-within:border-sky-500 focus-within:bg-white transition shadow-2xs">
-                <label className="block text-[10px] font-mono text-slate-500 mb-1 flex items-center gap-1">
-                  <Activity className="w-3 h-3 text-sky-600" />
-                  DIASTOLIC BP
-                </label>
-                <div className="flex items-baseline gap-1">
-                  <input
-                    type="number"
-                    value={diastolicBp}
-                    onChange={(e) => setDiastolicBp(Number(e.target.value))}
-                    className="w-full bg-transparent text-slate-800 text-base font-bold font-mono focus:outline-none tabular-nums"
-                  />
-                  <span className="text-[10px] font-mono text-slate-400">mmHg</span>
-                </div>
-              </div>
-
-              {/* RR */}
-              <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 focus-within:border-slate-400 focus-within:bg-white transition shadow-2xs">
-                <label className="block text-[10px] font-mono text-slate-500 mb-1 flex items-center gap-1">
-                  <Layers className="w-3 h-3 text-slate-500" />
-                  RESP RATE
-                </label>
-                <div className="flex items-baseline gap-1">
-                  <input
-                    type="number"
-                    value={respiratoryRate}
-                    onChange={(e) => setRespiratoryRate(Number(e.target.value))}
-                    className="w-full bg-transparent text-slate-800 text-base font-bold font-mono focus:outline-none tabular-nums"
-                  />
-                  <span className="text-[10px] font-mono text-slate-400">bpm</span>
-                </div>
-              </div>
-
-              {/* SpO2 */}
-              <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 focus-within:border-sky-400 focus-within:bg-white transition shadow-2xs">
-                <label className="block text-[10px] font-mono text-slate-500 mb-1 flex items-center gap-1">
-                  <Thermometer className="w-3 h-3 text-sky-600" />
-                  SPO2 %
-                </label>
-                <div className="flex items-baseline gap-1">
-                  <input
-                    type="number"
-                    step="0.1"
-                    value={spo2}
-                    onChange={(e) => setSpo2(Number(e.target.value))}
-                    className="w-full bg-transparent text-sky-700 text-base font-bold font-mono focus:outline-none tabular-nums"
-                  />
-                  <span className="text-[10px] font-mono text-slate-400">%</span>
-                </div>
-              </div>
-
-              {/* Temp */}
-              <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 focus-within:border-slate-400 focus-within:bg-white transition shadow-2xs">
-                <label className="block text-[10px] font-mono text-slate-500 mb-1 flex items-center gap-1">
-                  <Thermometer className="w-3 h-3 text-slate-500" />
-                  TEMP CORE
-                </label>
-                <div className="flex items-baseline gap-1">
-                  <input
-                    type="number"
-                    step="0.1"
-                    value={temperature}
-                    onChange={(e) => setTemperature(Number(e.target.value))}
-                    className="w-full bg-transparent text-slate-800 text-base font-bold font-mono focus:outline-none tabular-nums"
-                  />
-                  <span className="text-[10px] font-mono text-slate-400">°C</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* ═══════════════════════════════════════════════════════════════════
-            SUBMIT ACTION CONTROLS
-            ═══════════════════════════════════════════════════════════════════ */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-3">
-          <button
-            type="button"
-            onClick={handleResetForm}
-            className="w-full sm:w-auto px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-mono rounded-xl border border-slate-300 flex items-center justify-center gap-2 transition cursor-pointer shadow-xs"
-          >
-            <RotateCcw className="w-3.5 h-3.5" />
-            <span>RESET FIELDS</span>
-          </button>
-
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="group relative w-full sm:w-auto px-6 py-3 bg-sky-600 hover:bg-sky-500 text-white font-mono font-bold text-xs rounded-xl transition-all flex items-center justify-between sm:justify-center gap-3 cursor-pointer shadow-sm active:scale-[0.98] disabled:opacity-50"
-          >
-            {isSubmitting ? (
-              <>
-                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                <span>ADMITTING TO HOSPITAL RECORD SYSTEM...</span>
-              </>
-            ) : (
-              <>
-                <span>ADMIT PATIENT TO RECORD SYSTEM</span>
-                <div className="w-6 h-6 rounded-lg bg-white/20 flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <FileSpreadsheet className="w-3.5 h-3.5 text-white" />
-                </div>
-              </>
-            )}
-          </button>
-        </div>
-      </form>
+          </form>
         </>
-      )}
-    </div>
+    </AppPage>
   );
 };
 

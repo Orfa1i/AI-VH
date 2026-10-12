@@ -29,6 +29,19 @@ CREATE TABLE IF NOT EXISTS clinical_reports (
     FOREIGN KEY (encounter_id) REFERENCES encounters(encounter_id)
 );
 
+CREATE TABLE IF NOT EXISTS report_evaluations (
+    id TEXT PRIMARY KEY,
+    report_id TEXT NOT NULL,
+    encounter_id TEXT NOT NULL,
+    overall_score REAL NOT NULL,
+    severity TEXT NOT NULL,
+    final_status TEXT NOT NULL,
+    passed BOOLEAN NOT NULL,
+    evaluated_at TIMESTAMP NOT NULL,
+    raw_json TEXT NOT NULL,
+    FOREIGN KEY (report_id) REFERENCES clinical_reports(id)
+);
+
 CREATE TABLE IF NOT EXISTS physician_reviews (
     id TEXT PRIMARY KEY,
     report_id TEXT NOT NULL,
@@ -95,19 +108,71 @@ CREATE TABLE IF NOT EXISTS hospital_staff (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS case_pool (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    age INTEGER NOT NULL,
+    sex TEXT NOT NULL,
+    triage_acuity TEXT NOT NULL,
+    chief_complaint TEXT NOT NULL,
+    specialty_category TEXT NOT NULL DEFAULT 'INTERNAL_MEDICINE',
+    source TEXT NOT NULL DEFAULT 'SYNTHEA',
+    difficulty_level INTEGER DEFAULT 1,
+    status TEXT NOT NULL DEFAULT 'UNADMITTED',
+    raw_json TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS training_dataset_records (
+    id TEXT PRIMARY KEY,
+    case_id TEXT NOT NULL,
+    patient_id TEXT NOT NULL,
+    report_id TEXT NOT NULL,
+    model_version TEXT NOT NULL,
+    specialty TEXT NOT NULL,
+    review_status TEXT NOT NULL,
+    dataset_eligibility TEXT NOT NULL,
+    original_input TEXT NOT NULL,
+    original_ai_output TEXT NOT NULL,
+    reviewer_feedback TEXT NOT NULL,
+    corrected_output TEXT NOT NULL,
+    provenance TEXT NOT NULL,
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    raw_json TEXT NOT NULL,
+    FOREIGN KEY (report_id) REFERENCES clinical_reports(id)
+);
+
+CREATE TABLE IF NOT EXISTS knowledge_sources (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    url TEXT NOT NULL,
+    description TEXT DEFAULT '',
+    status TEXT NOT NULL DEFAULT 'ACTIVE',
+    source_type TEXT NOT NULL DEFAULT 'CUSTOM',
+    last_synced_at TIMESTAMP,
+    error_message TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE INDEX IF NOT EXISTS idx_reports_case ON clinical_reports(case_id);
 CREATE INDEX IF NOT EXISTS idx_reports_encounter ON clinical_reports(encounter_id);
 CREATE INDEX IF NOT EXISTS idx_reviews_report ON physician_reviews(report_id);
 CREATE INDEX IF NOT EXISTS idx_reviews_encounter ON physician_reviews(encounter_id);
 CREATE INDEX IF NOT EXISTS idx_dpo_prompt ON dpo_feedback_pairs(prompt);
 CREATE INDEX IF NOT EXISTS idx_knowledge_specialty ON knowledge_chunks(specialty);
+CREATE INDEX IF NOT EXISTS idx_knowledge_sources_status ON knowledge_sources(status);
 CREATE INDEX IF NOT EXISTS idx_patients_status ON patients(admission_status);
 CREATE INDEX IF NOT EXISTS idx_patients_mrn ON patients(mrn);
 CREATE INDEX IF NOT EXISTS idx_staff_role ON hospital_staff(role);
 CREATE INDEX IF NOT EXISTS idx_staff_dept ON hospital_staff(department);
+CREATE INDEX IF NOT EXISTS idx_pool_status ON case_pool(status);
+CREATE INDEX IF NOT EXISTS idx_pool_specialty ON case_pool(specialty_category);
+CREATE INDEX IF NOT EXISTS idx_tdr_patient_case ON training_dataset_records(patient_id, case_id);
+CREATE INDEX IF NOT EXISTS idx_tdr_eligibility ON training_dataset_records(dataset_eligibility);
 """
 
 POSTGRES_SCHEMA = """
+
 CREATE TABLE IF NOT EXISTS encounters (
     encounter_id VARCHAR(64) PRIMARY KEY,
     case_id VARCHAR(64) NOT NULL,
@@ -127,6 +192,18 @@ CREATE TABLE IF NOT EXISTS clinical_reports (
     primary_diagnosis TEXT NOT NULL,
     confidence_score DOUBLE PRECISION NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    raw_json JSONB NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS report_evaluations (
+    id VARCHAR(64) PRIMARY KEY,
+    report_id VARCHAR(64) NOT NULL,
+    encounter_id VARCHAR(64) NOT NULL,
+    overall_score DOUBLE PRECISION NOT NULL,
+    severity VARCHAR(32) NOT NULL,
+    final_status VARCHAR(32) NOT NULL,
+    passed BOOLEAN NOT NULL,
+    evaluated_at TIMESTAMP WITH TIME ZONE NOT NULL,
     raw_json JSONB NOT NULL
 );
 
@@ -195,14 +272,66 @@ CREATE TABLE IF NOT EXISTS hospital_staff (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS case_pool (
+    id VARCHAR(64) PRIMARY KEY,
+    name VARCHAR(128) NOT NULL,
+    age INTEGER NOT NULL,
+    sex VARCHAR(16) NOT NULL,
+    triage_acuity VARCHAR(32) NOT NULL,
+    chief_complaint TEXT NOT NULL,
+    specialty_category VARCHAR(64) NOT NULL DEFAULT 'INTERNAL_MEDICINE',
+    source VARCHAR(64) NOT NULL DEFAULT 'SYNTHEA',
+    difficulty_level INTEGER DEFAULT 1,
+    status VARCHAR(32) NOT NULL DEFAULT 'UNADMITTED',
+    raw_json JSONB NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS training_dataset_records (
+    id VARCHAR(64) PRIMARY KEY,
+    case_id VARCHAR(64) NOT NULL,
+    patient_id VARCHAR(64) NOT NULL,
+    report_id VARCHAR(64) NOT NULL,
+    model_version VARCHAR(64) NOT NULL,
+    specialty VARCHAR(64) NOT NULL,
+    review_status VARCHAR(32) NOT NULL,
+    dataset_eligibility VARCHAR(32) NOT NULL,
+    original_input JSONB NOT NULL,
+    original_ai_output JSONB NOT NULL,
+    reviewer_feedback JSONB NOT NULL,
+    corrected_output JSONB NOT NULL,
+    provenance JSONB NOT NULL,
+    timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    raw_json JSONB NOT NULL,
+    FOREIGN KEY (report_id) REFERENCES clinical_reports(id)
+);
+
+CREATE TABLE IF NOT EXISTS knowledge_sources (
+    id VARCHAR(64) PRIMARY KEY,
+    name VARCHAR(128) NOT NULL,
+    url VARCHAR(512) NOT NULL,
+    description TEXT DEFAULT '',
+    status VARCHAR(32) NOT NULL DEFAULT 'ACTIVE',
+    source_type VARCHAR(32) NOT NULL DEFAULT 'CUSTOM',
+    last_synced_at TIMESTAMP WITH TIME ZONE,
+    error_message TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE INDEX IF NOT EXISTS idx_reports_case ON clinical_reports(case_id);
 CREATE INDEX IF NOT EXISTS idx_reports_encounter ON clinical_reports(encounter_id);
 CREATE INDEX IF NOT EXISTS idx_reviews_report ON physician_reviews(report_id);
 CREATE INDEX IF NOT EXISTS idx_reviews_encounter ON physician_reviews(encounter_id);
 CREATE INDEX IF NOT EXISTS idx_dpo_prompt ON dpo_feedback_pairs(prompt);
 CREATE INDEX IF NOT EXISTS idx_knowledge_specialty ON knowledge_chunks(specialty);
+CREATE INDEX IF NOT EXISTS idx_knowledge_sources_status ON knowledge_sources(status);
 CREATE INDEX IF NOT EXISTS idx_patients_status ON patients(admission_status);
 CREATE INDEX IF NOT EXISTS idx_patients_mrn ON patients(mrn);
 CREATE INDEX IF NOT EXISTS idx_staff_role ON hospital_staff(role);
 CREATE INDEX IF NOT EXISTS idx_staff_dept ON hospital_staff(department);
+CREATE INDEX IF NOT EXISTS idx_pool_status ON case_pool(status);
+CREATE INDEX IF NOT EXISTS idx_pool_specialty ON case_pool(specialty_category);
+CREATE INDEX IF NOT EXISTS idx_tdr_patient_case ON training_dataset_records(patient_id, case_id);
+CREATE INDEX IF NOT EXISTS idx_tdr_eligibility ON training_dataset_records(dataset_eligibility);
 """
+

@@ -1,7 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { HospitalFlowDiagram } from './HospitalFlowDiagram';
-import { VitalsMonitorHUD } from '../dashboard/VitalsMonitorHUD';
-import { InternalMedicineConsultModal } from '../specialists/InternalMedicineConsultModal';
 import { DepartmentStationModal } from '../specialists/DepartmentStationModal';
 import { toggleGlobalMute, isGlobalMuted } from '../../utils/speechSynthesis';
 import type { HospitalEvent, BenchmarkCase, VitalSigns, ClinicalReport } from '../../types';
@@ -59,7 +57,6 @@ export const PatientJourneyFlowPage: React.FC<PatientJourneyFlowPageProps> = ({
   const [activeNavSection, setActiveNavSection] = useState<string>('2D_PATHWAY');
 
   // Modals
-  const [isConsultOpen, setIsConsultOpen] = useState<boolean>(false);
   const [departmentStationId, setDepartmentStationId] = useState<string | null>(null);
 
   // Department State
@@ -67,6 +64,60 @@ export const PatientJourneyFlowPage: React.FC<PatientJourneyFlowPageProps> = ({
   const [doctorAction, setDoctorAction] = useState<string>('Reviewing Inpatient Radiographs & Lab Panels');
 
   const wsRef = useRef<WebSocket | null>(null);
+  const isMountedRef = useRef<boolean>(true);
+  const reconnectTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleIncomingEvent = useCallback((evt: HospitalEvent) => {
+    setEvents((prev) => [...prev.slice(-100), evt]);
+
+    switch (evt.event_type) {
+      case 'PATIENT_ARRIVED':
+        setActiveDepartment('RECEPTION');
+        break;
+
+      case 'NURSE_TRIAGE_STARTED':
+      case 'VITALS_RECORDED':
+        setActiveDepartment('NURSE_STATION');
+        if (evt.payload.heart_rate) {
+          setActiveVitals(evt.payload as VitalSigns);
+        }
+        break;
+
+      case 'DOCTOR_ASSIGNED':
+      case 'EXAMINATION_STARTED':
+      case 'PATIENT_INTERVIEWED':
+        setActiveDepartment('EXAMINATION_ROOM_1');
+        setDoctorAction('Conducting clinical exam and interview');
+        break;
+
+      case 'RAG_QUERY_INITIATED':
+      case 'RAG_KNOWLEDGE_RETRIEVED':
+        setDoctorAction('Querying clinical medical knowledge base');
+        break;
+
+      case 'LAB_ORDERED':
+      case 'LAB_RESULT_READY':
+        setActiveDepartment('LABORATORY');
+        setDoctorAction('Reviewing laboratory biomarkers');
+        break;
+
+      case 'DIAGNOSIS_MADE':
+      case 'TREATMENT_ORDERED':
+        setActiveDepartment('DOCTOR_STATION');
+        setDoctorAction('Physician diagnosis established');
+        break;
+
+      case 'CLINICAL_REPORT_GENERATED':
+        setActiveDepartment('DOCTOR_STATION');
+        setDoctorAction('Report finalized and queued');
+        break;
+
+      case 'ENCOUNTER_CLOSED':
+        setActiveDepartment('DISCHARGE');
+        setDoctorAction('Patient discharged and route closed');
+        break;
+    }
+  }, []);
 
   const showNotification = (title: string, message: string) => {
     const id = `notif-${Date.now()}`;
@@ -117,16 +168,18 @@ export const PatientJourneyFlowPage: React.FC<PatientJourneyFlowPageProps> = ({
 
   // Setup WebSocket connection for live telemetry stream
   useEffect(() => {
+    isMountedRef.current = true;
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsUrl = `${protocol}//${window.location.hostname}:8000/ws/simulation`;
 
     const connectWs = () => {
+      if (!isMountedRef.current) return;
       try {
         const socket = new WebSocket(wsUrl);
         wsRef.current = socket;
 
         socket.onopen = () => {
-          setIsWsConnected(true);
+          // Connected to simulation event stream
         };
 
         socket.onmessage = (event) => {
@@ -139,8 +192,10 @@ export const PatientJourneyFlowPage: React.FC<PatientJourneyFlowPageProps> = ({
         };
 
         socket.onclose = () => {
-          setIsWsConnected(false);
-          setTimeout(connectWs, 3000);
+          if (isMountedRef.current) {
+            if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
+            reconnectTimerRef.current = setTimeout(connectWs, 3000);
+          }
         };
 
         socket.onerror = () => {
@@ -154,7 +209,14 @@ export const PatientJourneyFlowPage: React.FC<PatientJourneyFlowPageProps> = ({
     connectWs();
 
     return () => {
-      if (wsRef.current) wsRef.current.close();
+      isMountedRef.current = false;
+      if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
+      if (wsRef.current) {
+        wsRef.current.onclose = null;
+        wsRef.current.onerror = null;
+        wsRef.current.onmessage = null;
+        wsRef.current.close();
+      }
     };
   }, []);
 
@@ -208,9 +270,6 @@ export const PatientJourneyFlowPage: React.FC<PatientJourneyFlowPageProps> = ({
 
   const handleStationInteract = (stationId: string) => {
     switch (stationId) {
-      case 'INTERNAL_MEDICINE':
-        setIsConsultOpen(true);
-        break;
       case 'LABORATORY':
       case 'RADIOLOGY':
       case 'NURSE_STATION':
@@ -637,6 +696,7 @@ export const PatientJourneyFlowPage: React.FC<PatientJourneyFlowPageProps> = ({
         onClose={() => setIsConsultOpen(false)}
       />
 
+      {/* Modals */}
       <DepartmentStationModal
         stationId={departmentStationId}
         isOpen={departmentStationId !== null}

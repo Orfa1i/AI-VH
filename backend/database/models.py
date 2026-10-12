@@ -118,3 +118,16 @@ class HospitalStaffRecord(BaseModel):
     total_encounters: int = 0
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
+
+class KnowledgeSourceRecord(BaseModel):
+    id: str
+    name: str
+    url: str
+    description: str = ""
+    status: str = "ACTIVE"  # ACTIVE, INACTIVE, SYNCING, ERROR
+    source_type: str = "CUSTOM"  # PUBMED, OPENFDA, RXNORM, CUSTOM
+    last_synced_at: Optional[datetime] = None
+    error_message: Optional[str] = None
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+

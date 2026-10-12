@@ -379,3 +379,136 @@ class RetrievalClient:
                 return [EvidenceItem(**item) for item in data.get("evidence", [])]
 
         raise RuntimeError("RetrievalClient requires either a service instance or endpoint_url.")
+
+
+# ---------------------------------------------------------------------------
+# Phase 1 two-pass Harrison retrieval (ADDITIVE; legacy retrieve() untouched).
+# Pass 1: symptoms + findings -> candidate differential queries.
+# Pass 2: per-candidate targeted queries (criteria, severity, workup, mgmt).
+# Owner: AI Engineer. Threshold UNTUNED (see ADR-0017); do not tune on fixtures.
+# ---------------------------------------------------------------------------
+
+class TwoPassRetrievalConfig(BaseModel):
+    """Tunable two-pass retrieval parameters (provisional until validation set)."""
+
+    top_k_per_query: int = Field(default=6, ge=5, le=8, description="top_k per query (spec 5-8)")
+    similarity_threshold: float = Field(
+        default=0.01,
+        description=(
+            "PROVISIONAL UNTUNED threshold on the cosine-similarity scale [0, 1] "
+            "(L2-normalized all-MiniLM-L6-v2 dot product, negatives clipped). "
+            "Tune on eval/retrieval_validation_v1 once physician labels land."
+        ),
+    )
+    max_total_chunks: int = Field(default=24, description="Cap on total context chunks after dedup")
+
+
+class TwoPassQueryRecord(BaseModel):
+    """One issued query and its returned chunk ids/scores (for retrieval_log)."""
+
+    query: str
+    top_k: int
+    returned_chunk_ids: List[str] = Field(default_factory=list)
+    scores: Dict[str, float] = Field(default_factory=dict)
+
+
+def build_pass1_query(structured_case: Dict[str, Any]) -> str:
+    """Build the Pass 1 query from symptoms + examination findings."""
+    symptoms = structured_case.get("presenting_symptoms") or []
+    if isinstance(symptoms, str):
+        symptoms = [symptoms]
+    exam = structured_case.get("examination_findings") or ""
+    duration = structured_case.get("symptom_duration") or ""
+    parts = list(symptoms)
+    if exam:
+        parts.append(str(exam))
+    if duration:
+        parts.append(f"duration {duration}")
+    return " ".join(p.strip() for p in parts if str(p).strip())
+
+
+def build_pass2_queries(candidate_diagnosis: str) -> Dict[str, str]:
+    """Build targeted Pass 2 queries for one candidate diagnosis."""
+    candidate = (candidate_diagnosis or "").strip()
+    return {
+        "diagnostic_criteria": f"{candidate} diagnostic criteria",
+        "severity_scoring": f"{candidate} severity scoring",
+        "workup": f"{candidate} diagnostic workup",
+        "management": f"{candidate} management treatment",
+    }
+
+
+def dedupe_and_cap(hits: List[Any], max_total: int) -> List[Any]:
+    """Deduplicate hits by chunk_id (keep highest score) and cap the total."""
+    best: Dict[str, Any] = {}
+    best_score: Dict[str, float] = {}
+    for hit in hits:
+        cid = str(getattr(hit, "chunk_id", "") or "")
+        if not cid:
+            continue
+        score = float(getattr(hit, "score", 0.0) or 0.0)
+        if cid not in best or score > best_score[cid]:
+            best[cid] = hit
+            best_score[cid] = score
+    ranked = sorted(best.values(), key=lambda h: float(getattr(h, "score", 0.0) or 0.0), reverse=True)
+    return ranked[: max(1, int(max_total))]
+
+
+def two_pass_retrieve(
+    search_fn: Any,
+    structured_case: Dict[str, Any],
+    candidate_differentials: List[str],
+    config: Optional[TwoPassRetrievalConfig] = None,
+) -> Any:
+    """
+    Run two-pass retrieval through any search_fn(query, top_k) -> hits.
+
+    Returns (deduped_hits, query_records). Applies the provisional similarity
+    threshold, then reranks (by score), dedupes and caps the total context.
+    """
+    cfg = config or TwoPassRetrievalConfig()
+    all_hits: List[Any] = []
+    records: List[TwoPassQueryRecord] = []
+
+    pass1_query = build_pass1_query(structured_case)
+    if pass1_query:
+        hits = search_fn(pass1_query, top_k=cfg.top_k_per_query) or []
+        kept = [h for h in hits if float(getattr(h, "score", 0.0) or 0.0) >= cfg.similarity_threshold]
+        all_hits.extend(kept)
+        records.append(
+            TwoPassQueryRecord(
+                query=pass1_query,
+                top_k=cfg.top_k_per_query,
+                returned_chunk_ids=[str(getattr(h, "chunk_id", "")) for h in kept],
+                scores={str(getattr(h, "chunk_id", "")): float(getattr(h, "score", 0.0) or 0.0) for h in kept},
+            )
+        )
+
+    for candidate in candidate_differentials or []:
+        for _, query_text in build_pass2_queries(candidate).items():
+            hits = search_fn(query_text, top_k=cfg.top_k_per_query) or []
+            kept = [h for h in hits if float(getattr(h, "score", 0.0) or 0.0) >= cfg.similarity_threshold]
+            all_hits.extend(kept)
+            records.append(
+                TwoPassQueryRecord(
+                    query=query_text,
+                    top_k=cfg.top_k_per_query,
+                    returned_chunk_ids=[str(getattr(h, "chunk_id", "")) for h in kept],
+                    scores={str(getattr(h, "chunk_id", "")): float(getattr(h, "score", 0.0) or 0.0) for h in kept},
+                )
+            )
+
+    return dedupe_and_cap(all_hits, cfg.max_total_chunks), records
+
+
+def format_harrison_context(hits: List[Any]) -> str:
+    """Format hits inside delimited <harrison_chunk> tags (Phase 1 retrieval side)."""
+    blocks: List[str] = []
+    for hit in hits:
+        cid = str(getattr(hit, "chunk_id", "") or "")
+        metadata = getattr(hit, "metadata", {}) or {}
+        chapter = str(metadata.get("chapter_title") or metadata.get("chapter") or "")
+        page = str(metadata.get("page") or "")
+        text = str(getattr(hit, "text", "") or "")
+        blocks.append(f'<harrison_chunk id="{cid}" chapter="{chapter}" page="{page}">{text}</harrison_chunk>')
+    return "\n".join(blocks)

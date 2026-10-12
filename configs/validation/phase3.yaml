@@ -1,0 +1,14 @@
+# Phase 3 validator tunables (agent-owned). Threshold promotions to
+# configs/thresholds.yaml require the project owner (report proposes values).
+# Score scales: grounding/harrison fractions [0,1]; rouge_l F1 [0,1];
+# quote fuzzy ratio [0,1]; cosine similarity [0,1].
+grounding_fraction_min: 0.6
+harrison_fraction_min: 0.6
+quote_fuzzy_min: 0.9
+verbatim_span_words: 12
+rouge_l_max: 0.4
+min_case_findings: 3
+repetition_sentence_max: 2
+repetition_ngram_n: 8
+repetition_ngram_max: 2
+max_regeneration_retries: 2
