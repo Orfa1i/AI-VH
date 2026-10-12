@@ -963,9 +963,22 @@ class HospitalOrchestrator:
             "dxDelta": {}
         })
 
-        # Event 2+: Secondary Specialist Consultation Findings
+        # Event 2+: Secondary Specialist Consultation Findings & Dynamic Handoff Referrals
         for s_spec, finding in consultation_record.consultation_findings.items():
             f_key = specialty_code_map.get(s_spec.upper().replace(" ", "_"), "em")
+            if f_key != primary_key:
+                # Dynamic Handoff: Primary specialist requests referral to consulting specialist
+                events.append({
+                    "who": primary_key,
+                    "to": f_key,
+                    "kind": "referral",
+                    "short": f"REFERRAL: Requesting {s_spec.title()} consultation for {finding.primary_diagnosis}",
+                    "detail": f"{routing.suggested_specialist_name.split(',')[0]} requests urgent {s_spec.title()} multidisciplinary evaluation. Target specialist activated to assist.",
+                    "voice": f"Requesting urgent {s_spec.title()} consultation to assist with clinical management.",
+                    "agreeWith": list(agreed_set),
+                    "planAgrees": [],
+                    "dxDelta": {}
+                })
             agreed_set.add(f_key)
             recs_text = "; ".join(finding.treatment_recommendations[:2]) if finding.treatment_recommendations else "Specialty monitoring indicated"
             events.append({

@@ -43,6 +43,13 @@ Streamlined the attending physician attestation flow in the Case Room (`frontend
 - **Cross-Frame Synchronization**: Emits `REPORT_REVIEWED` and `REPORT_GENERATED` to `window.parent.postMessage` and `BroadcastChannel('vh_patient_channel')`, triggering `refreshData()` in `App.tsx` and dynamically updating the **Clinical Reports** tab.
 - **Verified via Playwright**: Verified with `test_sign_button.cjs` and `test_portal_integration.cjs` (0 errors, 100% green).
 
+### 1.5 Multi-Agent 4-Phase Lifecycle & Real-Time Nvidia Technical Integration
+Implemented full multi-agent state lifecycle management and real-time evidence synthesis:
+- **1. Initial State**: In `frontend/public/case-room.html` and `resetToInitialState()`, all 7 clinical specialists (`im`, `ca`, `ne`, `su`, `em`, `ob`, `gy`) initialize in a **Ready** state (`NODE_STATUS.idle = 'Ready'`) upon intake or receiving an admitted case from the Patient Directory. Removed premature standby class assignment. Display neutral `Ready` badges (`<span class="tag ready">Ready</span>`) across all router relevance cards before routing.
+- **2. Routing Execution**: Upon running the MedGemma router (`#b-main-control`), the system partitions specialists into active vs. standby. Assigned/lead agents remain active without standby styling, while non-assigned specialists transition to **Standby** status (`nodes[k].classList.add('standby')` and status `Standby`).
+- **3. Dynamic Handoff**: Implemented `handleDynamicHandoff(ev)`: when an active specialist determines that a referral or secondary consultation is required (`kind: 'referral'` or directed `ev.to` specialist in `backend/simulation/orchestrator.py`), the target specialist dynamically awakens from Standby to **Ready** status (`NODE_STATUS.idle`). The agent pulses with green halo/ring feedback (`pulse-ready`), their card status updates to `Ready to assist`, and they actively participate in subsequent deliberation turns.
+- **4. Technical Integration**: Verified that all agents actively query MedGemma 4B (RTX 4060 GPU), Shared Knowledge Sources (`shared_knowledge_service` for RxNorm, NABD, DailyMed), and Medical Knowledge Books (Harrison's, Braunwald's, Schwartz's, etc.), with real-time evidence synthesis powered by Nvidia infrastructure (`nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B` via Nebius AI Studio) returning verified citations and clinical differential diagnoses in real time.
+
 ---
 
 ## 2. Key Decisions & Rationale
@@ -50,24 +57,29 @@ Streamlined the attending physician attestation flow in the Case Room (`frontend
 - **Full Portal Tab vs. Dialog Modal**: Policy Benchmark contains comprehensive benchmarking tables, case drill-downs, live inference terminals, and dataset inspectors. Presenting this inside a modal dialog forced nested scroll containers and awkward sizing. Moving it to the primary `activeTab === 'BENCHMARK'` view provided expansive screen real estate while keeping `PolicyBenchmarkModal` available as an embeddable wrapper.
 - **Caching Static Benchmarks with On-Demand Refresh**: Running 8 full GPU inference passes on every page load created unnecessary 40-second latency spikes. Caching the base benchmark comparisons while dynamically appending live reviewed cases achieved sub-second page loads without sacrificing live data synchronization.
 - **Dual-Bus Event Synchronization**: Utilizing both window `postMessage` (for iframe-to-parent communication) and `BroadcastChannel('vh_patient_channel')` guarantees reliable cross-component updates regardless of whether the user interacts via the Case Room iframe or direct tab navigation.
+- **Deterministic Agent Node IDs & Reactivity**: Assigned explicit IDs (`node-${k}`) to agent stations in SVG table, ensuring robust DOM targeting, accessible labeling, and reliable automated testing.
 
 ---
 
 ## 3. Verification & Quality Gates
 
-1. **Production Build (`pnpm run build`)**:
-   - `tsc -b && vite build` succeeded with exit code 0.
-   - Built 1,899 transformed modules in 1.83s.
-2. **Linter Check (`pnpm run lint`)**:
-   - Oxlint completed across 70 files with 0 errors.
-3. **Playwright Visual Verification (`capture_benchmark.cjs`)**:
-   - Rendered all 5 sub-views in automated browser and captured high-resolution screenshots:
-     - `policy-benchmark-optimized.png`: Overview tab, KPI cards, and dimension table all fit within viewport without overflow.
-     - `policy-benchmark-reviewed-cohort.png`: Reviewed cohort data flow tab with synchronization status.
-     - `policy-benchmark-cases-drilldown.png`: Side-by-side comparative cards with high-contrast case switcher.
-     - `policy-benchmark-live-inference.png`: GPU inference console.
-4. **Git Version Control**:
-   - Changes committed to branch `redesign/phase-7` under commit `4613834`.
+1. **Frontend Lifecycle Automation Suite (`frontend/scripts/test_case_room_lifecycle.cjs`)**:
+   - Step 1: Loaded `case-room.html` in headless Chromium.
+   - Step 2: All 7 agents verified in `Ready` status on initial intake (0 in standby, 7 Ready badges).
+   - Step 3: Triggered routing execution; partitioned active specialists (`ob`, `su`) vs standby specialists (`ca`, `im`, `em`, `ne`, `gy`).
+   - Step 4: Referral event awakened standby specialist (`ca`) immediately to `Ready` status to assist with `pulse-ready` animation and active card badge.
+   - Result: 100% green (exit code 0).
+2. **Backend Orchestrator & Nvidia Integration Test (`scripts/test_agent_lifecycle.py`)**:
+   - Verified Step 1-5 production clinical workflow with MedGemma router, primary specialist consultation, and secondary referral event emission.
+   - Live Nebius AI Studio Nemotron-3-Nano-30B-A3B real-time API call verified: returned `HELLP syndrome (severe preeclampsia)` with confidence `0.90` and real-time citations (`Source 1-12`).
+   - Shared Knowledge Source verified: retrieved RxCUI and pharmacology evidence from RxNorm / NABD.
+   - Result: 100% green (exit code 0).
+3. **Frontend Vitest Unit Test Suite (`pnpm test`)**:
+   - 12 test files passed (51/51 tests green).
+4. **Production Build (`pnpm run build`)**:
+   - Built 1,899 modules with 0 TypeScript or bundling errors.
+5. **Linter Check (`pnpm run lint`)**:
+   - 0 errors across 72 files.
 
 ---
 

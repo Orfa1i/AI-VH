@@ -588,6 +588,18 @@ button { font: inherit; color: inherit; }
   background: #EEEFFD;
   color: #2B2FD9;
 }
+.rc .tag.ready {
+  background: #ECFDF5;
+  color: #059669;
+}
+.rc .tag.standby-tag {
+  background: #F1F3F8;
+  color: #8C93A8;
+}
+.rc .tag.assist {
+  background: #FEF3C7;
+  color: #D97706;
+}
 .rc .rbar {
   display: block;
   height: 5px;
@@ -900,6 +912,22 @@ button { font: inherit; color: inherit; }
 .node.standby .face .eye { animation: none; transform: scaleY(.28); }
 .node.standby .face .led { animation: led 6s ease-in-out infinite; }
 .node.standby .av { animation-duration: 7s; }
+
+/* Dynamic Handoff: Wake up to assist animation */
+@keyframes pulseReady {
+  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+  50% { transform: scale(1.1); box-shadow: 0 0 0 12px rgba(16, 185, 129, 0); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+.node.pulse-ready .face {
+  animation: pulseReady 1.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+  filter: none !important;
+  opacity: 1 !important;
+}
+.node.pulse-ready .st {
+  color: #059669 !important;
+  font-weight: 600;
+}
 
 /* Halo and Spin Conic */
 .node .halo {
@@ -2791,8 +2819,10 @@ const CASES = {
       let tagMarkup = '';
       if (isRouted && status) {
         if (isLead) tagMarkup = '<span class="tag lead">Lead</span>';
-        else if (isStandby) tagMarkup = '<span class="tag">Standby</span>';
+        else if (isStandby) tagMarkup = '<span class="tag standby-tag">Standby</span>';
         else tagMarkup = '<span class="tag">Assigned</span>';
+      } else {
+        tagMarkup = '<span class="tag ready">Ready</span>';
       }
 
       btn.innerHTML = `
@@ -2851,6 +2881,7 @@ const CASES = {
     const a = AGENTS[k];
     const b = document.createElement('button');
     b.type = 'button';
+    b.id = 'node-' + k;
     b.className = 'node';
     b.style.setProperty('--c', a.color);
     b.style.setProperty('--d', `${(-i * 0.63).toFixed(2)}s`);
@@ -3000,9 +3031,7 @@ const CASES = {
       nodes[k].className = 'node';
       nodes[k].style.setProperty('--gx', '0px');
       nodes[k].style.setProperty('--gy', '0px');
-      const isSb = (activeCase.router && activeCase.router.standby && activeCase.router.standby.includes(k));
-      if (isSb) nodes[k].classList.add('standby');
-      nodes[k].querySelector('.st').textContent = isSb ? NODE_STATUS.standby : NODE_STATUS.idle;
+      nodes[k].querySelector('.st').textContent = NODE_STATUS.idle;
     });
 
     renderRouterCards();
@@ -3086,6 +3115,48 @@ const CASES = {
     }
   }
 
+  /* Dynamic Handoff: Switch target agent from Standby to Ready to assist */
+  function handleDynamicHandoff(ev) {
+    if (!ev) return;
+    const isReferral = (ev.kind === 'referral') ||
+      (ev.short && /referral|consult/i.test(ev.short)) ||
+      (ev.to && ev.to !== 'board' && SEAT_ORDER.includes(ev.to) && nodes[ev.to] && nodes[ev.to].classList.contains('standby'));
+
+    if (isReferral && ev.to && SEAT_ORDER.includes(ev.to)) {
+      const target = ev.to;
+      const targetNode = nodes[target];
+      if (targetNode) {
+        targetNode.classList.remove('standby');
+        triggerOneShot(targetNode, 'pulse-ready', 1400);
+        targetNode.querySelector('.st').textContent = NODE_STATUS.idle; // Switched to Ready to assist
+
+        // Update routing state
+        if (state.routing) {
+          if (Array.isArray(state.routing.standby)) {
+            state.routing.standby = state.routing.standby.filter(x => x !== target);
+          }
+          if (!Array.isArray(state.routing.assigned)) state.routing.assigned = [];
+          if (!state.routing.assigned.includes(target)) state.routing.assigned.push(target);
+          if (state.routing.status) state.routing.status[target] = 'assigned';
+        }
+
+        // Update target router card
+        if (rcol[target]) {
+          rcol[target].classList.remove('standby');
+          const pc = rcol[target].querySelector('.pc');
+          if (pc) {
+            const oldTag = pc.querySelector('.tag');
+            if (oldTag) oldTag.remove();
+            const newTag = document.createElement('span');
+            newTag.className = 'tag assist';
+            newTag.textContent = 'Ready to assist';
+            pc.appendChild(newTag);
+          }
+        }
+      }
+    }
+  }
+
   /* Deliberation Event Handlers */
   function startEventThinking(idx, now) {
     const events = activeCase.events || [];
@@ -3096,6 +3167,7 @@ const CASES = {
 
     const ev = events[idx];
     const whoAg = AGENTS[ev.who] || { name: ev.who, short: ev.who, book: '' };
+    handleDynamicHandoff(ev);
 
     // Update Phase based on progress
     if (idx === 0) state.phase = 'review';
@@ -3134,6 +3206,7 @@ const CASES = {
 
     const ev = events[idx];
     const whoAg = AGENTS[ev.who] || { name: ev.who, short: ev.who, book: '' };
+    handleDynamicHandoff(ev);
 
     state.eventSubState = 'speaking';
     state.subStateTime = now;
@@ -3491,6 +3564,22 @@ const CASES = {
       // Transition to review and automatic switch to Discussion tab!
       state.phase = 'review';
       state.tab = 'discussion';
+
+      // Routing Execution: Identify assigned agents vs standby agents
+      const activeStandby = (state.routing && state.routing.standby) ? state.routing.standby : [];
+      const routingStatus = (state.routing && state.routing.status) ? state.routing.status : {};
+
+      SEAT_ORDER.forEach(k => {
+        const isSb = activeStandby.includes(k) || (routingStatus[k] === 'standby');
+        if (isSb) {
+          nodes[k].classList.add('standby');
+          nodes[k].querySelector('.st').textContent = NODE_STATUS.standby;
+        } else {
+          nodes[k].classList.remove('standby');
+          nodes[k].querySelector('.st').textContent = NODE_STATUS.idle;
+        }
+      });
+
       syncPanels();
       renderRouterCards();
       animateScores(state.routing ? state.routing.scores : null, 1300);
