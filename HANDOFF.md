@@ -26,7 +26,13 @@
   - When actual imaging studies exist, the section displays with formatted cards and study inspection modal triggers.
 - **Test Suite Cleanliness Compliance**: Updated reviewer strings in `case-room.html` to neutral attending titles ("Attending Physician on Duty" / "Attending Physician, MD") to satisfy strict test assertions in `tests/test_trajectory_graph_suite.py`.
 
-### 1.3 Prior Session Deliverables Maintained
+### 1.3 Trajectory Point Labels Removal & Smooth Rail Motion
+- **Removed Static Station Labels**: Removed `<span class="tag">Gateway</span>`, `<span class="tag">Assessment</span>`, `<span class="tag">Diagnostics</span>`, and `<span class="tag">Disposition</span>` from the trajectory points in both `frontend/index.html` and `frontend/public/landing.html`.
+- **Clean Waypoint Typography**: Kept clean monospace station numerals (`01`, `02`, `03`, `04`) centered along the trajectory rail.
+- **Continuous Motion Verification**: Verified the SVG rail dot (`#rail-dot`) and pulse marker (`#rail-pulse`) glide continuously and smoothly along the line without any visual crowding or badge jitter.
+- **Playwright Test Suite**: Added `frontend/scripts/test_trajectory_dot.cjs` asserting that no trajectory station contains the removed label strings and confirming live delta advancement of `cx` across animation frames.
+
+### 1.4 Prior Session Deliverables Maintained
 - **Single-Click 'Review and Sign'**: Instant green checkmark, zero intermediate modal or redirection, automated background report transfer to Clinical Reports.
 - **Dynamic Multi-Specialty Citations**: Accurate grounding to specialist medical textbooks (*Braunwald's*, *Williams*, *Schwartz's*, *Adams and Victor's*, *Tintinalli's*) with verbatim quotes.
 - **Concise Clinical Reporting**: High-yield physician summaries constrained to 2–3 sentences with structured diagnostic and evidence breakdowns.
@@ -47,21 +53,28 @@
    - Step 1: Confirmed `#dossier-sec-imaging` is completely hidden on admitted patient without imaging.
    - Step 2: Confirmed section is visible with study card rendered when imaging is present.
    - Step 3: Confirmed section cleanly re-hides upon switching back to a patient without imaging.
-   - Result: 3/3 checks passed.
-2. **Trajectory Graph Test Suite (`tests/test_trajectory_graph_suite.py`)**:
-   - `test_case_room_html_cleanliness`: Passed (0 human doctor names found).
-   - `test_patient_directory_admit_patient_api`: Passed.
-   - `test_case_room_dynamic_patient_intake_contract`: Passed.
-   - `test_case_room_full_trajectory_flow_contract`: Passed.
-   - Result: 4/4 passed (100% green).
-3. **Frontend Production Build (`pnpm run build`)**:
-   - 1,899 modules transformed, built in 2.40s with 0 errors.
-4. **Frontend Linter Check (`pnpm run lint`)**:
-   - 0 errors across 74 files.
-
----
-
-## 4. Concrete Next Steps
-
-1. **Reviewer Attestation Audit**: Verify attested reports in the Clinical Reports tab to ensure signed status and specialty citations render seamlessly.
-2. **Additional Specialty Ingestion**: Admit cases across diverse clinical departments (Neurology, Surgery, Obstetrics) to confirm imaging sections adapt dynamically per case.
+50:    - Result: 3/3 checks passed.
+51: 2. **Trajectory Graph Test Suite (`tests/test_trajectory_graph_suite.py`)**:
+52:    - `test_case_room_html_cleanliness`: Passed (0 human doctor names found).
+53:    - `test_patient_directory_admit_patient_api`: Passed.
+54:    - `test_case_room_dynamic_patient_intake_contract`: Passed.
+55:    - `test_case_room_full_trajectory_flow_contract`: Passed.
+56:    - Result: 4/4 passed (100% green).
+57: 3. **Frontend Production Build (`pnpm run build`)**:
+58:    - 1,899 modules transformed, built in 2.40s with 0 errors.
+59: 4. **Frontend Linter Check (`pnpm run lint`)**:
+60:    - 0 errors across 74 files.
+61: 
+62: ---
+63: 
+64: ## 4. Hackathon Submission Deliverables
+65: - **Elevator Pitch Tagline**: *"A hospital that thinks, and learns from its physicians."* (55 chars) with track variants.
+66: - **Devpost Project Story**: Complete 7-part submission text with LaTeX math formulations for DPO loss and clinical reward functions, empirical metrics (+107.6% decision gain), technical architecture, and roadmap.
+67: 
+68: ---
+69: 
+70: ## 5. Concrete Next Steps
+71: 
+72: 1. **Hackathon Form Submission**: Paste the generated pitch and project story into the Devpost application.
+73: 2. **Reviewer Attestation Audit**: Verify attested reports in the Clinical Reports tab to ensure signed status and specialty citations render seamlessly.
+74: 3. **Additional Specialty Ingestion**: Admit cases across diverse clinical departments (Neurology, Surgery, Obstetrics) to confirm imaging sections adapt dynamically per case.
