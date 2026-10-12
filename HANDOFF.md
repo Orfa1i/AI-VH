@@ -2,7 +2,7 @@
 
 **Date:** 2026-10-13  
 **Git Branch:** `redesign/phase-7`  
-**Latest Commit:** Pending commit (`feat(ui): remove landing page eyebrow and make trajectory graph imaging section conditional`)  
+**Latest Commit:** `ca5333a` (`feat(ui): remove landing page eyebrow and make trajectory graph imaging section conditional`)  
 **Environment Status:**
 - Frontend Dev Server: Running on `http://localhost:5173` (Vite)
 - Backend API Server: Running on `http://127.0.0.1:8000` (FastAPI / Uvicorn, MedGemma 4B + DPO LoRA on RTX 4060 GPU)
