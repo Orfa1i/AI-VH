@@ -123,3 +123,63 @@ AI-VH/
 - **GPU**: NVIDIA GeForce RTX 4060 (8GB VRAM)
 - **Quantization**: BitsAndBytes 4-bit NF4 (`bnb_4bit_compute_dtype=torch.bfloat16`)
 - **Foundation Model**: MedGemma (local weights in `./MedGemma Model/model`)
+
+---
+
+## 🔐 Model Setup, Weights & Secrets Management
+
+To keep the repository clean and maintain strict security compliance for the hackathon submission:
+- **No Binary Weights in Git**: Large model weights (MedGemma 4B, LoRA weights, binary checkpoints) and raw textbook PDFs are excluded from git via `.gitignore`.
+- **No Secrets or Private Keys in Git**: Environment variables and API keys must **never** be committed. Only `.env.example` is tracked.
+- **Detailed Setup Guide**: For full instructions on downloading model weights, configuring local vs. cloud inference, and enterprise secret protection, see:
+  👉 [**docs/MODEL_SETUP_AND_SECURITY.md**](docs/MODEL_SETUP_AND_SECURITY.md)
+
+---
+
+## 🚀 Hackathon Submission Quickstart
+
+### 1. Prerequisites
+- **Python**: 3.11+ (Python 3.13 recommended)
+- **Node.js**: v20+ & **pnpm**: v9+
+- **CUDA**: 12.2+ (for local GPU inference on RTX 4060)
+
+### 2. Environment Setup
+```bash
+# Clone the repository
+git clone https://github.com/mohamadorfali2006/AI-VH.git
+cd AI-VH
+
+# Copy example environment configuration
+cp .env.example .env
+# Edit .env with your Nebius API key or local model configurations
+```
+
+### 3. Backend Launch
+```bash
+# Install Python dependencies
+pip install -r requirements.txt
+
+# Start FastAPI simulation server
+python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000
+```
+
+### 4. Frontend Launch
+```bash
+# Install frontend dependencies and launch development server
+cd frontend
+pnpm install
+pnpm run dev
+```
+Access the application at `http://localhost:5173`.
+
+### 5. Run Verification & Acceptance Tests
+```bash
+# Run backend trajectory & simulation test suite
+python -m pytest tests/test_trajectory_graph_suite.py
+
+# Run frontend build & lint verification
+cd frontend
+pnpm run build
+pnpm run lint
+```
+
