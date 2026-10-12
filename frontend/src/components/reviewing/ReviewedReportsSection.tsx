@@ -9,6 +9,7 @@ import {
   RefreshCw,
   Cpu,
   Play,
+  BookOpen,
 } from 'lucide-react';
 
 import type { ClinicalReport } from '../../types';
@@ -524,6 +525,48 @@ export const ReviewedReportsSection: React.FC<ReviewedReportsSectionProps> = ({
                       </ul>
                     </div>
                   )}
+
+                  {activeItem.report.medical_knowledge_citations && activeItem.report.medical_knowledge_citations.length > 0 && (() => {
+                    const citList = activeItem.report.medical_knowledge_citations;
+                    const primeBook = citList.find(c => c.book)?.book || citList[0]?.source || 'Specialty Medical Literature';
+                    return (
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                          <BookOpen className="w-3.5 h-3.5" style={{ color: 'var(--color-primary)' }} />
+                          <span className="ak-label" style={{ margin: 0 }}>{primeBook} Evidence Grounding</span>
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+                          {citList.map((c, idx) => (
+                            <div
+                              key={idx}
+                              style={{
+                                backgroundColor: 'var(--bg-app)',
+                                padding: 'var(--space-3)',
+                                borderRadius: 'var(--radius-sm)',
+                                border: '1px solid var(--border-subtle)',
+                              }}
+                            >
+                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4, flexWrap: 'wrap', gap: 4 }}>
+                                <span className="caption" style={{ fontWeight: 600, color: 'var(--color-primary)' }}>
+                                  {c.book || primeBook} · {c.chapter || c.topic || 'Clinical Reference'} {c.page ? `(p. ${c.page})` : ''}
+                                </span>
+                                {c.relevance != null && (
+                                  <Badge variant="success" className="ak-num">
+                                    {Math.round(c.relevance <= 1.0 ? c.relevance * 100 : Math.min(100, c.relevance * 10))}% Relevance
+                                  </Badge>
+                                )}
+                              </div>
+                              {(c.text || c.excerpt) && (
+                                <p className="body-sm" style={{ margin: 0, fontStyle: 'italic', color: 'var(--text-secondary)' }}>
+                                  "{c.text || c.excerpt}"
+                                </p>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
               </Card>
             </>

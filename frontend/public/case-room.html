@@ -2669,10 +2669,9 @@ const CASES = {
     $('#sign-pt-meta').textContent = `${c.demog || 'Inpatient'} · ${c.acuity || 'Acuity Level 2'}`;
     $('#sign-dx-title').textContent = c.dx || 'Clinical Presentation Under Review';
     const confVal = Math.round((c.conf || 0.92) * 100);
-    $('#sign-dx-conf').textContent = `Confidence: ${confVal}%`;
     const evSources = (state.report && state.report.medical_knowledge_citations && state.report.medical_knowledge_citations.length)
-      ? state.report.medical_knowledge_citations.map(k => k.source || k.reference).join(', ')
-      : (state.routing?.target_medical_book || "Harrison's Internal Medicine 21st Edition");
+      ? state.report.medical_knowledge_citations.map(k => k.source || k.reference || k.book).join(', ')
+      : (state.routing?.target_medical_book || (c.specialty ? `${c.specialty} Medical Reference` : "Specialist Medical Literature"));
     $('#sign-dx-evidence').textContent = `Evidence Grounding: ${evSources}`;
 
     const ordersUl = $('#sign-orders-list');

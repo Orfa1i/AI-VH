@@ -60,46 +60,48 @@ For each case:
 10. Identify red flags or findings requiring urgent attention.
 11. Produce a final clinical synthesis with an explicit confidence level.
 
+REPORT CONCISENESS & PHYSICIAN CLARITY (CRITICAL)
+- Provide ONLY high-yield clinical insights. Avoid excessive text, narrative bloat, conversational padding, or repetitive paragraphs.
+- The reviewing physician needs immediate diagnostic clarity without wading through redundant prose.
+- CLINICAL SUMMARY: Limit strictly to 2 to 3 concise sentences highlighting the core presentation and critical abnormal findings.
+- KEY CLINICAL FINDINGS: Bulleted list of only the 3-5 most critical positive/negative findings.
+- EVIDENCE SYNTHESIS: Concise bullet points correlating patient signs directly with retrieved textbook evidence.
+- FINAL DIAGNOSTIC SYNTHESIS: Clinical Synthesis must be a direct, 1-2 sentence statement summarizing why the primary diagnosis is favored.
+
 OUTPUT FORMAT
 Return the following exact section headers in plain markdown (do not omit any section):
 
 CLINICAL SUMMARY
-- Concise summary of the relevant patient information.
+- Concise summary of the relevant patient information (strictly 2-3 sentences).
 
 KEY CLINICAL FINDINGS
-- Important positive findings.
-- Important negative findings.
-- Relevant laboratory, imaging, medication, and history information.
+- 3 to 5 critical positive and negative findings.
 
 MEDGEMMA ANALYSIS
-- Main hypotheses produced by MedGemma.
-- Important strengths, weaknesses, or uncertainties in those hypotheses.
+- Core diagnostic hypotheses and critical appraisal.
 
 EVIDENCE SYNTHESIS
-- Relevant evidence from the patient data.
-- Relevant evidence from retrieved medical knowledge.
-- Important agreements or contradictions.
+- Bullet points synthesizing patient observations with retrieved medical knowledge.
 
 DIFFERENTIAL DIAGNOSIS
 For each major diagnosis:
 - Diagnosis: <Name>
 - Priority: <High | Moderate | Low>
-- Supporting evidence: <Findings and citations>
+- Supporting evidence: <Key findings and citations>
 - Contradicting evidence: <Opposing findings or absence of features>
 - Confidence: <Likelihood, e.g., 0.80 or High>
 
 MISSING INFORMATION
-- Missing data or investigations that could materially change the assessment.
+- High-yield pending or recommended investigations.
 
 SAFETY / RED FLAGS
-- Urgent or potentially dangerous findings.
-- Explain why they matter.
+- Urgent clinical red flags requiring immediate action.
 
 FINAL DIAGNOSTIC SYNTHESIS
 - Primary Diagnosis: <Specific named condition>
 - Diagnostic Confidence: <0.0 to 1.0>
 - Certainty: <confirmed | probable | provisional>
-- Clinical Synthesis: <Provide the most likely diagnosis or diagnostic direction based only on the available evidence. Clearly state uncertainty when present. Do not overstate confidence.>
+- Clinical Synthesis: <Crisp 1-2 sentence rationale for physician confirmation.>
 
 EVIDENCE SOURCES
 - List only the sources actually supplied by the retrieval system. Never invent references.
@@ -433,14 +435,14 @@ class NemotronSynthesisEngine:
         red_flags_text = sections.get("SAFETY / RED FLAGS", "")
         red_flags = [l.strip().lstrip("-* ").strip() for l in red_flags_text.splitlines() if l.strip().startswith(("-", "*"))]
 
-        # 4. Formulate Coherent Clinical Reasoning
+        # 4. Formulate Coherent Clinical Reasoning (Concise & High-Yield)
         reasoning_blocks = []
-        if sections.get("CLINICAL SUMMARY"):
-            reasoning_blocks.append(f"Summary: {sections['CLINICAL SUMMARY'].strip()}")
         if sections.get("EVIDENCE SYNTHESIS"):
-            reasoning_blocks.append(f"Evidence Synthesis: {sections['EVIDENCE SYNTHESIS'].strip()}")
+            reasoning_blocks.append(f"Evidence Grounding:\n{sections['EVIDENCE SYNTHESIS'].strip()}")
         if sections.get("FINAL DIAGNOSTIC SYNTHESIS"):
-            reasoning_blocks.append(f"Diagnostic Conclusion: {sections['FINAL DIAGNOSTIC SYNTHESIS'].strip()}")
+            reasoning_blocks.append(f"Diagnostic Assessment:\n{sections['FINAL DIAGNOSTIC SYNTHESIS'].strip()}")
+        elif sections.get("CLINICAL SUMMARY"):
+            reasoning_blocks.append(sections["CLINICAL SUMMARY"].strip())
 
         clinical_reasoning = "\n\n".join(reasoning_blocks) if reasoning_blocks else raw_text.strip()
 

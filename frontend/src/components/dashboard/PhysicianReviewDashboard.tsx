@@ -165,7 +165,7 @@ export const PhysicianReviewDashboard: React.FC<PhysicianReviewDashboardProps> =
         <EmptyState
           icon={<FileText className="w-8 h-8" />}
           title="No clinical reports pending review"
-          description="Simulate an encounter or admit a patient to generate autonomous Clinical AI reports grounded in Harrison's 21st Edition evidence."
+          description="Simulate an encounter or admit a patient to generate autonomous Clinical AI reports grounded in multi-specialist medical textbook evidence."
           action={
             <Button
               variant="secondary"
@@ -436,6 +436,74 @@ export const PhysicianReviewDashboard: React.FC<PhysicianReviewDashboardProps> =
               </div>
             </Card>
 
+            {/* CORE DIAGNOSTIC IMPRESSION HERO CARD */}
+            <Card>
+              <CardHead>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+                  <Stethoscope className="w-4 h-4" style={{ color: 'var(--color-primary)' }} />
+                  <CardTitle>Core Diagnostic Impression</CardTitle>
+                </div>
+                <Badge variant="ai">Clinical Synthesis</Badge>
+              </CardHead>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+                <div
+                  style={{
+                    backgroundColor: 'var(--bg-app)',
+                    padding: 'var(--space-4)',
+                    borderRadius: 'var(--radius-sm)',
+                    border: '1px solid var(--border-subtle)',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 'var(--space-3)', flexWrap: 'wrap' }}>
+                    <div>
+                      <span className="caption" style={{ color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                        Primary Diagnosis
+                      </span>
+                      <h3 className="heading-2" style={{ margin: '4px 0 0', color: 'var(--color-primary)' }}>
+                        {activeReport.primary_diagnosis}
+                      </h3>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+                      <Badge variant="brand">Confidence: {confidencePct}%</Badge>
+                      {activeReport.recommended_disposition && (
+                        <Badge variant="neutral">{activeReport.recommended_disposition}</Badge>
+                      )}
+                    </div>
+                  </div>
+
+                  <div style={{ marginTop: 'var(--space-3)', paddingTop: 'var(--space-3)', borderTop: '1px solid var(--border-subtle)' }}>
+                    <span className="caption" style={{ fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>
+                      Physician Brief & Clinical Rationale:
+                    </span>
+                    <p className="body-md" style={{ margin: 0, color: 'var(--text-primary)', lineHeight: 1.5, whiteSpace: 'pre-line' }}>
+                      {activeReport.clinical_summary || activeReport.clinical_reasoning}
+                    </p>
+                  </div>
+                </div>
+
+                {activeReport.relevant_findings && activeReport.relevant_findings.length > 0 && (
+                  <div
+                    style={{
+                      backgroundColor: 'var(--bg-app)',
+                      padding: 'var(--space-3) var(--space-4)',
+                      borderRadius: 'var(--radius-sm)',
+                      border: '1px solid var(--border-subtle)',
+                    }}
+                  >
+                    <span className="caption" style={{ fontWeight: 600, color: 'var(--color-danger)', display: 'block', marginBottom: 4 }}>
+                      Urgent Red Flags & Actionable Alerts:
+                    </span>
+                    <ul style={{ margin: 0, paddingLeft: 18, color: 'var(--text-secondary)' }}>
+                      {activeReport.relevant_findings.map((finding, idx) => (
+                        <li key={idx} className="body-sm" style={{ marginBottom: 2 }}>{finding}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            </Card>
+
             {/* AUTOMATED INDEPENDENT MULTI-STAGE EVALUATION */}
             {activeReport.automated_evaluation ? (
               <Card>
@@ -697,39 +765,79 @@ export const PhysicianReviewDashboard: React.FC<PhysicianReviewDashboardProps> =
               </Card>
             )}
 
-            {/* RAG GROUNDING CITATIONS */}
+            {/* DYNAMIC RAG EVIDENCE GROUNDING CITATIONS */}
             {((activeReport.medical_knowledge_citations && activeReport.medical_knowledge_citations.length > 0) ||
-              ((activeReport as any).harrison_citations && (activeReport as any).harrison_citations.length > 0)) && (
-              <Card>
-                <CardHead>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-                    <BookOpen className="w-4 h-4" style={{ color: 'var(--color-primary)' }} />
-                    <CardTitle>Harrison's 21st Edition Vector Grounding</CardTitle>
-                  </div>
-                </CardHead>
+              ((activeReport as any).harrison_citations && (activeReport as any).harrison_citations.length > 0)) && (() => {
+              const citationsList: any[] = activeReport.medical_knowledge_citations || (activeReport as any).harrison_citations || [];
+              const primaryBook = citationsList.find((c: any) => c.book)?.book || citationsList[0]?.source || "Specialist Medical Literature";
+              const primarySpecialty = citationsList.find((c: any) => c.specialty)?.specialty;
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-                  {(activeReport.medical_knowledge_citations || (activeReport as any).harrison_citations || []).map((c: any, i: number) => (
-                    <div
-                      key={i}
-                      style={{
-                        backgroundColor: 'var(--bg-app)',
-                        padding: 'var(--space-3)',
-                        borderRadius: 'var(--radius-sm)',
-                        border: '1px solid var(--border-subtle)',
-                      }}
-                    >
-                      <span className="caption" style={{ fontWeight: 700, color: 'var(--color-primary)', display: 'block', marginBottom: 2 }}>
-                        {c.chapter || c.topic || 'Medical Grounding'}
-                      </span>
-                      <p className="body-sm" style={{ fontStyle: 'italic', margin: 0, color: 'var(--text-secondary)' }}>
-                        "{c.text || c.excerpt}"
-                      </p>
+              return (
+                <Card>
+                  <CardHead>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+                      <BookOpen className="w-4 h-4" style={{ color: 'var(--color-primary)' }} />
+                      <CardTitle>{primaryBook} Evidence Grounding</CardTitle>
                     </div>
-                  ))}
-                </div>
-              </Card>
-            )}
+                    <Badge variant="ai">
+                      {primarySpecialty ? `${primarySpecialty} Literature` : 'Verified Evidence'}
+                    </Badge>
+                  </CardHead>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+                    {citationsList.map((c: any, i: number) => {
+                      const bookName = c.book || primaryBook;
+                      const chapterTitle = c.chapter || c.topic || 'Medical Grounding';
+                      const pageStr = c.page ? `p. ${c.page}` : '';
+                      const rawRel = c.relevance != null ? c.relevance : (c.relevance_score != null ? c.relevance_score : null);
+                      const relevanceScore = rawRel != null ? Math.round(rawRel <= 1.0 ? rawRel * 100 : Math.min(100, rawRel * 10)) : null;
+                      const snippet = c.text || c.excerpt || c.source || '';
+
+                      return (
+                        <div
+                          key={i}
+                          style={{
+                            backgroundColor: 'var(--bg-app)',
+                            padding: 'var(--space-3) var(--space-4)',
+                            borderRadius: 'var(--radius-sm)',
+                            border: '1px solid var(--border-subtle)',
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6, flexWrap: 'wrap', gap: 6 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
+                              <Badge variant="neutral" style={{ fontWeight: 600 }}>{bookName}</Badge>
+                              <span className="caption" style={{ fontWeight: 600, color: 'var(--color-primary)' }}>
+                                {chapterTitle} {pageStr && `· ${pageStr}`}
+                              </span>
+                            </div>
+                            {relevanceScore != null && (
+                              <Badge variant="success" className="ak-num">
+                                {relevanceScore}% Relevance
+                              </Badge>
+                            )}
+                          </div>
+                          {snippet && (
+                            <blockquote
+                              className="body-sm"
+                              style={{
+                                fontStyle: 'italic',
+                                margin: 0,
+                                color: 'var(--text-secondary)',
+                                borderLeft: '3px solid var(--color-primary)',
+                                paddingLeft: 'var(--space-3)',
+                                lineHeight: 1.5,
+                              }}
+                            >
+                              "{snippet}"
+                            </blockquote>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </Card>
+              );
+            })()}
 
             {/* PHYSICIAN RL DPO ALIGNMENT CONSOLE */}
             <Card>

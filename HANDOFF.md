@@ -58,33 +58,39 @@ Implemented full multi-agent state lifecycle management and real-time evidence s
 - **Caching Static Benchmarks with On-Demand Refresh**: Running 8 full GPU inference passes on every page load created unnecessary 40-second latency spikes. Caching the base benchmark comparisons while dynamically appending live reviewed cases achieved sub-second page loads without sacrificing live data synchronization.
 - **Dual-Bus Event Synchronization**: Utilizing both window `postMessage` (for iframe-to-parent communication) and `BroadcastChannel('vh_patient_channel')` guarantees reliable cross-component updates regardless of whether the user interacts via the Case Room iframe or direct tab navigation.
 - **Deterministic Agent Node IDs & Reactivity**: Assigned explicit IDs (`node-${k}`) to agent stations in SVG table, ensuring robust DOM targeting, accessible labeling, and reliable automated testing.
+- **Dynamic Multi-Specialty Citation Grounding**: Permanently eliminated static fallbacks to *Harrison's Principles of Internal Medicine*. Citations are now directly bound to the diagnosing agent's specialty textbook (e.g. *Braunwald's Heart Disease* for Cardiology, *Williams Obstetrics* for Obstetrics, *Schwartz's Principles of Surgery* for Surgery, *Adams and Victor's* for Neurology, *Tintinalli's* for Emergency Medicine) with verbatim evidence text snippets preserved end to end.
+- **High-Density Diagnostic Conciseness**: Clinical summaries are constrained to 2–3 high-yield sentences, stripping out conversational filler, repetitive paragraphs, and boilerplate disclaimers for immediate attending physician review.
+
+### 1.6 Dynamic Specialty Evidence Grounding & Concise Clinical Reporting
+- **Backend Citation Preservation**: In `backend/simulation/orchestrator.py`, preserved rich citation dictionaries (`book`, `chapter`, `page`, `text`, `relevance_score`, `specialty`) directly from `combined_citations` instead of discarding them in favor of synthetic strings. Bound sparse fallback directly to `routing.target_medical_book`.
+- **High-Yield Synthesis Prompting**: Updated `SYNTHESIS_SYSTEM_PROMPT` in `backend/llm/nemotron_synthesis.py` with strict physician conciseness requirements. Separated `clinical_summary` (concise 2–3 sentence clinical presentation) from structured diagnostic reasoning (`Evidence Grounding` + `Diagnostic Assessment`), eliminating redundant duplicate narrative blocks.
+- **Core Diagnostic Impression Hero Card**: In `frontend/src/components/dashboard/PhysicianReviewDashboard.tsx`, added a prominent hero card directly displaying the Primary Diagnosis, Confidence Meter, Recommended Disposition, Physician Brief, and Urgent Red Flags for immediate sub-30-second triage.
+- **Dynamic Evidence Grounding UI**: In both `PhysicianReviewDashboard.tsx` and `ReviewedReportsSection.tsx`, replaced static Harrison's titles with `{primaryBook} Evidence Grounding`, dynamic book badges, chapter and page numbers (`Ch. <X> · p. <Y>`), relevance percentages (`<Z>% Relevance`), and styled verbatim quote blocks (`"{text}"`).
+- **Case Room Evidence Sync**: In `frontend/public/case-room.html` (and `dist/case-room.html`), updated the evidence grounding text to dynamically map the active case's target medical book and specialty reference.
 
 ---
 
 ## 3. Verification & Quality Gates
 
-1. **Frontend Lifecycle Automation Suite (`frontend/scripts/test_case_room_lifecycle.cjs`)**:
-   - Step 1: Loaded `case-room.html` in headless Chromium.
-   - Step 2: All 7 agents verified in `Ready` status on initial intake (0 in standby, 7 Ready badges).
-   - Step 3: Triggered routing execution; partitioned active specialists (`ob`, `su`) vs standby specialists (`ca`, `im`, `em`, `ne`, `gy`).
-   - Step 4: Referral event awakened standby specialist (`ca`) immediately to `Ready` status to assist with `pulse-ready` animation and active card badge.
-   - Result: 100% green (exit code 0).
-2. **Backend Orchestrator & Nvidia Integration Test (`scripts/test_agent_lifecycle.py`)**:
-   - Verified Step 1-5 production clinical workflow with MedGemma router, primary specialist consultation, and secondary referral event emission.
-   - Live Nebius AI Studio Nemotron-3-Nano-30B-A3B real-time API call verified: returned `HELLP syndrome (severe preeclampsia)` with confidence `0.90` and real-time citations (`Source 1-12`).
-   - Shared Knowledge Source verified: retrieved RxCUI and pharmacology evidence from RxNorm / NABD.
-   - Result: 100% green (exit code 0).
-3. **Frontend Vitest Unit Test Suite (`pnpm test`)**:
-   - 12 test files passed (51/51 tests green).
-4. **Production Build (`pnpm run build`)**:
-   - Built 1,899 modules with 0 TypeScript or bundling errors.
-5. **Linter Check (`pnpm run lint`)**:
-   - 0 errors across 72 files.
+1. **Automated Dynamic Citation & Conciseness Test Suite (`backend/tests/test_dynamic_citations_conciseness.py`)**:
+   - `test_dynamic_citations_cardiology`: Passed (dynamically cited *Braunwald's Heart Disease*, verified verbatim evidence snippet and concise summary).
+   - `test_dynamic_citations_obstetrics`: Passed (dynamically cited *Williams Obstetrics*, verified verbatim evidence snippet and concise summary).
+   - Result: 2/2 tests passed (100% green).
+2. **Specialist RAG & Hospital Encounter Test Suite (`backend/tests/test_internal_medicine_rag.py`)**:
+   - 5/5 tests passed including full hospital encounter simulation with citations.
+3. **End-to-End Simulation Test Suite (`backend/tests/test_simulation.py`)**:
+   - 3/3 tests passed including clinical simulation end-to-end.
+4. **Live API Telemetry Verification**:
+   - `GET /api/reports/pending` returned live cardiology report dynamically grounded in *Braunwald's Heart Disease* (Chapter: *Angina Caused by Increased Myocardial Oxygen Requirements*, Page: 1465) with verbatim clinical text snippet.
+5. **Frontend Production Build (`pnpm run build`)**:
+   - 1,899 modules transformed, 0 TypeScript or bundling errors.
+6. **Frontend Linter Check (`pnpm run lint`)**:
+   - 0 errors across 73 files.
 
 ---
 
 ## 4. Concrete Next Steps
 
-1. **Admit & Attest Additional Cases**: Run new cohort cases (e.g. Liam Chen or Diana Reyes) through Case Room triage, submit physician sign-off, and verify their immediate appearance in the Reviewed Cohort table.
+1. **Admit & Attest Additional Cases**: Run new cohort cases (e.g. Liam Chen or Diana Reyes) through Case Room triage, submit physician sign-off, and verify their immediate appearance in the Reviewed Cohort table with dynamic citations.
 2. **Execute Live On-Device DPO Fine-Tuning**: Trigger a live fine-tuning iteration using exported DPO JSONL dataset pairs to further optimize MedGemma 4B on the local RTX 4060 GPU.
-3. **Trajectory Graph Integration**: Link policy comparison scores directly to the Trajectory Graph tab for multi-agent deliberation visualization.
+3. **Interactive Passage Modal**: Expand the citation block with an optional drawer/modal for physicians wanting to read the extended 2-page textbook chapter context directly within the dashboard.

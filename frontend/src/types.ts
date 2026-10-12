@@ -24,14 +24,19 @@ export interface DifferentialItem {
 }
 
 export interface MedicalCitation {
-  id: string;
-  book: string;
-  chapter: string;
-  topic: string;
-  page: number;
-  specialty: string;
-  text: string;
+  id?: string;
+  book?: string;
+  chapter?: string;
+  topic?: string;
+  page?: number | string;
+  specialty?: string;
+  text?: string;
+  excerpt?: string;
+  source?: string;
+  reference?: string;
+  relevance?: number;
   relevance_score?: number;
+  retrieved_at?: string;
 }
 
 export interface ClinicalReport {
@@ -51,12 +56,15 @@ export interface ClinicalReport {
   physical_exam_findings: Record<string, string>;
   investigations_ordered: string[];
   investigation_results: LabResult[];
+  clinical_summary?: string;
+  relevant_findings?: string[];
   differential_diagnosis: DifferentialItem[];
   primary_diagnosis: string;
   diagnostic_confidence: number;
   clinical_reasoning: string;
   treatment_plan: string[];
   recommended_disposition: string;
+  recommended_next_steps?: string[];
   medical_knowledge_citations: MedicalCitation[];
   pharmacist_review?: MedicationSafetyReport;
   automated_evaluation?: AggregateEvaluationResult;

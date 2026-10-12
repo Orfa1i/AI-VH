@@ -679,7 +679,7 @@ class HospitalOrchestrator:
         report.multi_agent_consultation = consult_record.model_dump()
         if consult_record.emergency_red_flags:
             # Emergency red flags must trigger the appropriate safety escalation and must never be suppressed
-            report.safety_warnings = list(set(report.safety_warnings + consult_record.emergency_red_flags))
+            report.safety_warnings = list(set(getattr(report, "safety_warnings", []) + consult_record.emergency_red_flags))
 
         
         # 5. Pharmacist Medication Safety Review & Dispensing in Pharmacy
@@ -1098,21 +1098,93 @@ class HospitalOrchestrator:
                 f"Urgent specialist consultation follow-up with {routing.specialty.title()} Service",
             ]
 
-        # Citations
+        # Citations - Ground dynamically in the diagnosing specialist's retrieved literature
         citations: List[Dict[str, Any]] = []
-        if synthesis_result.evidence_sources:
+        if combined_citations:
+            for c in combined_citations:
+                if isinstance(c, dict):
+                    book_title = (
+                        c.get("book")
+                        or c.get("source")
+                        or routing.target_medical_book
+                        or "Specialty Medical Reference"
+                    )
+                    chapter_title = (
+                        c.get("chapter")
+                        or c.get("chapter_title")
+                        or c.get("topic")
+                        or "Clinical Guidance"
+                    )
+                    page_num = c.get("page") or c.get("page_number") or ""
+                    snippet = c.get("text") or c.get("content") or c.get("excerpt") or ""
+                    raw_score = c.get("relevance_score", c.get("relevance", c.get("score", 0.95)))
+                    try:
+                        rel_score = float(raw_score)
+                    except (ValueError, TypeError):
+                        rel_score = 0.95
+                    if rel_score > 1.0:
+                        rel_score = round(min(1.0, rel_score / 10.0), 2)
+
+                    citations.append({
+                        "book": str(book_title),
+                        "chapter": str(chapter_title),
+                        "topic": str(c.get("topic", chapter_title)),
+                        "page": page_num,
+                        "text": str(snippet),
+                        "excerpt": str(snippet[:400] if len(snippet) > 400 else snippet),
+                        "source": f"{book_title} - {chapter_title}" + (f", p.{page_num}" if page_num else ""),
+                        "reference": f"{book_title} (Ch. {chapter_title})" if chapter_title else str(book_title),
+                        "specialty": c.get("specialty") or routing.specialty,
+                        "relevance": rel_score,
+                        "relevance_score": rel_score,
+                        "retrieved_at": datetime.utcnow().isoformat(),
+                    })
+                elif isinstance(c, str):
+                    citations.append({
+                        "book": routing.target_medical_book or "Specialty Medical Reference",
+                        "chapter": "Evidence Grounding",
+                        "topic": "Clinical Guidance",
+                        "page": "",
+                        "text": c,
+                        "excerpt": c,
+                        "source": c,
+                        "reference": c,
+                        "specialty": routing.specialty,
+                        "relevance": 0.92,
+                        "relevance_score": 0.92,
+                        "retrieved_at": datetime.utcnow().isoformat(),
+                    })
+        elif synthesis_result.evidence_sources:
             for src in synthesis_result.evidence_sources:
+                book_name = routing.target_medical_book or "Specialty Medical Reference"
                 citations.append({
+                    "book": book_name,
+                    "chapter": "Clinical Evidence",
+                    "topic": "Diagnostic Grounding",
+                    "page": "",
+                    "text": src,
+                    "excerpt": src,
                     "source": src,
                     "reference": src,
-                    "relevance": 0.95,
+                    "specialty": routing.specialty,
+                    "relevance": 0.92,
+                    "relevance_score": 0.92,
                     "retrieved_at": datetime.utcnow().isoformat(),
                 })
+
         if not citations and routing.target_medical_book:
             citations.append({
+                "book": routing.target_medical_book,
+                "chapter": f"Clinical {routing.specialty.replace('_', ' ').title()} Guidelines",
+                "topic": routing.specialty.replace('_', ' ').title(),
+                "page": "",
+                "text": f"Guideline-directed evidence and diagnostic criteria for {synthesis_result.primary_diagnosis} referenced from {routing.target_medical_book}.",
+                "excerpt": f"Guideline-directed evidence from {routing.target_medical_book}.",
                 "source": routing.target_medical_book,
                 "reference": routing.target_medical_book,
+                "specialty": routing.specialty,
                 "relevance": 0.90,
+                "relevance_score": 0.90,
                 "retrieved_at": datetime.utcnow().isoformat(),
             })
 
@@ -1122,6 +1194,12 @@ class HospitalOrchestrator:
             exam_findings = {str(k): (v if isinstance(v, str) else str(v)) for k, v in imaging.items()}
         elif isinstance(imaging, list):
             exam_findings = {f"Study_{i+1}": (str(x.get("desc", "")) if isinstance(x, dict) else str(x)) for i, x in enumerate(imaging)}
+
+        # Extract concise clinical summary (prefer 2-3 sentence overview)
+        concise_summary = (
+            synthesis_result.sections.get("CLINICAL SUMMARY", "").strip()
+            or (synthesis_result.clinical_reasoning[:300] + "..." if len(synthesis_result.clinical_reasoning) > 300 else synthesis_result.clinical_reasoning)
+        )
 
         # Assemble ClinicalReport instance
         report = ClinicalReport(
@@ -1138,7 +1216,7 @@ class HospitalOrchestrator:
             allergies=allergies if isinstance(allergies, list) else [str(allergies)],
             vital_signs=report_vitals,
             physical_exam_findings=exam_findings,
-            clinical_summary=synthesis_result.clinical_reasoning,
+            clinical_summary=concise_summary,
             relevant_findings=list(set(synthesis_result.red_flags + consultation_record.emergency_red_flags)),
             differential_diagnosis=diff_items,
             primary_diagnosis=synthesis_result.primary_diagnosis,

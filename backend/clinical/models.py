@@ -97,6 +97,7 @@ class ClinicalReport(BaseModel):
     treatment_plan: List[str] = Field(default_factory=list)
     recommended_disposition: str = "Admit to Internal Medicine / Observation"
     recommended_next_steps: List[str] = Field(default_factory=list, description="Follow-up monitoring and disposition steps")
+    safety_warnings: List[str] = Field(default_factory=list, description="Emergency red flags and urgent safety alerts")
     
     # Evidence & Citations
     medical_knowledge_citations: List[Dict[str, Any]] = Field(default_factory=list)
