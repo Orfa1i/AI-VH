@@ -2,7 +2,7 @@
 
 **Date:** 2026-10-13  
 **Git Branch:** `redesign/phase-7`  
-**Latest Commit:** `13af3ab` (`docs(figures): add CCF-A publication method architecture figure and documentation`)  
+**Latest Commit:** `633f9b2` (`chore(repo): clean repository for hackathon submission, exclude large assets, add model security guide`)  
 **Environment Status:**
 - Frontend Dev Server: Running on `http://localhost:5173` (Vite)
 - Backend API Server: Running on `http://127.0.0.1:8000` (FastAPI / Uvicorn, MedGemma 4B + DPO LoRA on RTX 4060 GPU)
@@ -32,7 +32,13 @@
 - **Continuous Motion Verification**: Verified the SVG rail dot (`#rail-dot`) and pulse marker (`#rail-pulse`) glide continuously and smoothly along the line without any visual crowding or badge jitter.
 - **Playwright Test Suite**: Added `frontend/scripts/test_trajectory_dot.cjs` asserting that no trajectory station contains the removed label strings and confirming live delta advancement of `cx` across animation frames.
 
-### 1.4 Prior Session Deliverables Maintained
+### 1.5 Hackathon Submission Repository Preparation & Model Security
+- **Cleaned Repository Tracking**: Excluded binary model weights (`*.safetensors`, `*.bin`, `*.pt`), giant PDFs, failure dumps, and scratch directories via updated `.gitignore`.
+- **Created Model Setup & Security Guide**: Authored [`docs/MODEL_SETUP_AND_SECURITY.md`](docs/MODEL_SETUP_AND_SECURITY.md) detailing local MedGemma 4B setup, DPO LoRA adapter mounting, NVIDIA Nemotron API integration, and enterprise key protection.
+- **Enhanced README Quickstart**: Updated [`README.md`](README.md) with step-by-step hackathon setup, execution, and verification commands.
+- **Pre-Flight Secrets Audit**: Ran automated secrets scanner across all tracked repository files, confirming zero exposed credentials, private keys, or API tokens.
+
+### 1.6 Prior Session Deliverables Maintained
 - **Single-Click 'Review and Sign'**: Instant green checkmark, zero intermediate modal or redirection, automated background report transfer to Clinical Reports.
 - **Dynamic Multi-Specialty Citations**: Accurate grounding to specialist medical textbooks (*Braunwald's*, *Williams*, *Schwartz's*, *Adams and Victor's*, *Tintinalli's*) with verbatim quotes.
 - **Concise Clinical Reporting**: High-yield physician summaries constrained to 2–3 sentences with structured diagnostic and evidence breakdowns.
