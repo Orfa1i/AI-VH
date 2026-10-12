@@ -2,7 +2,7 @@
 
 **Date:** 2026-10-13  
 **Git Branch:** `redesign/phase-7`  
-**Latest Commit:** `ca5333a` (`feat(ui): remove landing page eyebrow and make trajectory graph imaging section conditional`)  
+**Latest Commit:** `3bd39d7` (`feat(ui): remove Gateway, Assessment, Diagnostics, and Disposition labels from trajectory points`)  
 **Environment Status:**
 - Frontend Dev Server: Running on `http://localhost:5173` (Vite)
 - Backend API Server: Running on `http://127.0.0.1:8000` (FastAPI / Uvicorn, MedGemma 4B + DPO LoRA on RTX 4060 GPU)
@@ -53,28 +53,28 @@
    - Step 1: Confirmed `#dossier-sec-imaging` is completely hidden on admitted patient without imaging.
    - Step 2: Confirmed section is visible with study card rendered when imaging is present.
    - Step 3: Confirmed section cleanly re-hides upon switching back to a patient without imaging.
-50:    - Result: 3/3 checks passed.
-51: 2. **Trajectory Graph Test Suite (`tests/test_trajectory_graph_suite.py`)**:
-52:    - `test_case_room_html_cleanliness`: Passed (0 human doctor names found).
-53:    - `test_patient_directory_admit_patient_api`: Passed.
-54:    - `test_case_room_dynamic_patient_intake_contract`: Passed.
-55:    - `test_case_room_full_trajectory_flow_contract`: Passed.
-56:    - Result: 4/4 passed (100% green).
-57: 3. **Frontend Production Build (`pnpm run build`)**:
-58:    - 1,899 modules transformed, built in 2.40s with 0 errors.
-59: 4. **Frontend Linter Check (`pnpm run lint`)**:
-60:    - 0 errors across 74 files.
-61: 
-62: ---
-63: 
-64: ## 4. Hackathon Submission Deliverables
-65: - **Elevator Pitch Tagline**: *"A hospital that thinks, and learns from its physicians."* (55 chars) with track variants.
-66: - **Devpost Project Story**: Complete 7-part submission text with LaTeX math formulations for DPO loss and clinical reward functions, empirical metrics (+107.6% decision gain), technical architecture, and roadmap.
-67: 
-68: ---
-69: 
-70: ## 5. Concrete Next Steps
-71: 
-72: 1. **Hackathon Form Submission**: Paste the generated pitch and project story into the Devpost application.
-73: 2. **Reviewer Attestation Audit**: Verify attested reports in the Clinical Reports tab to ensure signed status and specialty citations render seamlessly.
-74: 3. **Additional Specialty Ingestion**: Admit cases across diverse clinical departments (Neurology, Surgery, Obstetrics) to confirm imaging sections adapt dynamically per case.
+   - Result: 3/3 checks passed.
+2. **Trajectory Graph Test Suite (`tests/test_trajectory_graph_suite.py`)**:
+   - `test_case_room_html_cleanliness`: Passed (0 human doctor names found).
+   - `test_patient_directory_admit_patient_api`: Passed.
+   - `test_case_room_dynamic_patient_intake_contract`: Passed.
+   - `test_case_room_full_trajectory_flow_contract`: Passed.
+   - Result: 4/4 passed (100% green).
+3. **Frontend Production Build (`pnpm run build`)**:
+   - 1,899 modules transformed, built in 2.40s with 0 errors.
+4. **Frontend Linter Check (`pnpm run lint`)**:
+   - 0 errors across 74 files.
+
+---
+
+## 4. Hackathon Submission Deliverables
+- **Elevator Pitch Tagline**: *"A hospital that thinks, and learns from its physicians."* (55 chars) with track variants.
+- **Devpost Project Story**: Complete 7-part submission text with LaTeX math formulations for DPO loss and clinical reward functions, empirical metrics (+107.6% decision gain), technical architecture, and roadmap.
+
+---
+
+## 5. Concrete Next Steps
+
+1. **Hackathon Form Submission**: Paste the generated pitch and project story into the Devpost application.
+2. **Reviewer Attestation Audit**: Verify attested reports in the Clinical Reports tab to ensure signed status and specialty citations render seamlessly.
+3. **Additional Specialty Ingestion**: Admit cases across diverse clinical departments (Neurology, Surgery, Obstetrics) to confirm imaging sections adapt dynamically per case.
