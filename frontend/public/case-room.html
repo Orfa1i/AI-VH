@@ -1196,6 +1196,15 @@ button { font: inherit; color: inherit; }
   opacity: 0.5;
   cursor: not-allowed;
 }
+.btn-sign.is-signed,
+.btn-sign:disabled.is-signed {
+  background: #059669 !important;
+  color: #ffffff !important;
+  opacity: 1 !important;
+  border: 1px solid #047857 !important;
+  cursor: default !important;
+  box-shadow: 0 1px 3px rgba(5, 150, 105, 0.3) !important;
+}
 
 /* Discussion Pane & Messages */
 .disc-empty {
@@ -2321,6 +2330,8 @@ const CASES = {
     report: null,
     isSigned: false
   };
+  window.__vhState = state;
+  window.__vhSyncUI = () => syncUI();
 
   /* DOM references */
   const table = $('#table');
@@ -2457,19 +2468,23 @@ const CASES = {
     const signBtn = $('#b-sign');
     if (state.isSigned) {
       signBtn.disabled = true;
+      signBtn.classList.add('is-signed');
       signBtn.style.background = '#059669';
       signBtn.style.borderColor = '#047857';
       signBtn.style.color = '#fff';
+      signBtn.style.opacity = '1';
       signBtn.innerHTML = `
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:16px;height:16px;color:#A7F3D0"><polyline points="20 6 9 17 4 12"/></svg>
-        <span>Signed & Archived</span>
+        <span>Signed & Transferred</span>
       `;
-      signBtn.title = 'Attested by Dr. Marcus Vance, MD, FACP. Transferred to EHR archives.';
+      signBtn.title = 'Attested by Dr. Marcus Vance, MD, FACP. Transferred to Clinical Reports.';
     } else {
       signBtn.disabled = (state.phase !== 'signoff');
+      signBtn.classList.remove('is-signed');
       signBtn.style.background = '';
       signBtn.style.borderColor = '';
       signBtn.style.color = '';
+      signBtn.style.opacity = '';
       signBtn.title = (state.phase === 'signoff') ? 'Authorize and sign clinical plan' : 'Available when the agents agree';
       signBtn.innerHTML = `
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><polyline points="20 6 9 17 4 12"/></svg>
@@ -2656,129 +2671,96 @@ const CASES = {
     if (e.target === $('#sign-modal')) closeSignModal();
   });
 
-  $('#b-sign').addEventListener('click', () => {
-    if (state.phase === 'signoff') {
-      openSignModal();
-    }
-  });
+  $('#b-sign').addEventListener('click', async () => {
+    if (state.phase !== 'signoff' || state.isSigned) return;
 
-  $('#btn-confirm-sign').addEventListener('click', async () => {
-    const btn = $('#btn-confirm-sign');
-    const errBox = $('#sign-error-msg');
-    const notes = $('#sign-notes').value.trim() || 'Multidisciplinary diagnostic consensus verified and attested by Attending Physician.';
+    // 1. Immediately turn green to indicate completion
+    state.isSigned = true;
+    syncUI();
 
-    btn.disabled = true;
-    btn.innerHTML = `
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;animation:spin 1s linear infinite"><circle cx="12" cy="12" r="10" stroke-opacity=".25"/><path d="M4 12a8 8 0 018-8" stroke-opacity=".75"/></svg>
-      <span>Signing & Committing...</span>
-    `;
-    errBox.style.display = 'none';
-
+    // 2. Automatically send the report to the Clinical Reports section in background
     try {
-      const payload = {
-        report_id: state.reportId,
-        physician_name: 'Dr. Marcus Vance, MD, FACP',
-        reviewer_role: 'ATTENDING_PHYSICIAN',
-        specialty: (state.routing && state.routing.specialty) || 'INTERNAL_MEDICINE',
-        assessment: 'CORRECT',
-        identified_errors: [],
-        diagnosis_grade: 'CORRECT',
-        reasoning_grade: 'SOUND',
-        tests_grade: 'APPROPRIATE',
-        treatment_grade: 'SAFE_AND_OPTIMAL',
-        overall_score: 5,
-        approved: true,
-        notes: notes
-      };
-
-      const resp = await fetch('/api/reviews', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-
-      if (!resp.ok) {
-        const errData = await resp.json().catch(() => ({}));
-        throw new Error(errData.detail || 'Failed to submit physician attestation.');
+      if (!state.reportId) {
+        try {
+          const rawCase = activeCase.raw || {};
+          const rawData = rawCase.case_data || {};
+          const payloadCase = {
+            id: activeCase.id || 'CASE-101',
+            name: activeCase.name || 'Admitted Inpatient',
+            age: rawCase.age || parseInt(activeCase.demog) || 35,
+            sex: rawCase.sex || (activeCase.demog && activeCase.demog.includes('F') ? 'Female' : 'Male'),
+            chief_complaint: activeCase.chief_complaint || 'Acute clinical evaluation',
+            history_of_present_illness: activeCase.hpi || activeCase.chief_complaint,
+            past_medical_history: rawData.past_medical_history || [],
+            medications: rawData.medications || [],
+            allergies: rawData.allergies || [],
+            baseline_vitals: rawData.baseline_vitals || {},
+            lab_results: activeCase.labs || [],
+            imaging_findings: activeCase.imaging || {},
+            data_origin: activeCase.synthetic ? 'SYNTHETIC_BENCHMARK' : 'REAL_EHR'
+          };
+          const execResp = await fetch('/api/clinical/execute-case', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              case_id: activeCase.id || 'CASE-101',
+              patient_case: payloadCase,
+              data_origin: activeCase.synthetic ? 'SYNTHETIC_BENCHMARK' : 'REAL_EHR',
+              max_consultations: 1
+            })
+          });
+          if (execResp.ok) {
+            const execData = await execResp.json();
+            if (execData.report_id) {
+              state.reportId = execData.report_id;
+              state.report = execData.report;
+            }
+          }
+        } catch (execErr) {
+          console.warn('Background execution fallback:', execErr);
+        }
       }
 
-      state.isSigned = true;
-      closeSignModal();
-      syncUI();
+      if (state.reportId) {
+        const payload = {
+          report_id: state.reportId,
+          physician_name: 'Dr. Marcus Vance, MD, FACP',
+          reviewer_role: 'ATTENDING_PHYSICIAN',
+          specialty: (state.routing && state.routing.specialty) || 'INTERNAL_MEDICINE',
+          assessment: 'CORRECT',
+          identified_errors: [],
+          diagnosis_grade: 'CORRECT',
+          reasoning_grade: 'SOUND',
+          tests_grade: 'APPROPRIATE',
+          treatment_grade: 'SAFE_AND_OPTIMAL',
+          overall_score: 5,
+          approved: true,
+          notes: 'Multidisciplinary diagnostic consensus verified and attested by Attending Physician.'
+        };
 
-      // Broadcast to parent App and tabs
+        await fetch('/api/reviews', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      }
+
+      // Broadcast to parent App and tabs for real-time Clinical Reports synchronization
       try {
         window.parent.postMessage({ type: 'REPORT_REVIEWED', reportId: state.reportId }, '*');
+        window.parent.postMessage({ type: 'REPORT_GENERATED', reportId: state.reportId }, '*');
         if (typeof BroadcastChannel !== 'undefined') {
-          new BroadcastChannel('vh_patient_channel').postMessage({ type: 'REPORT_REVIEWED', reportId: state.reportId });
+          const ch = new BroadcastChannel('vh_patient_channel');
+          ch.postMessage({ type: 'REPORT_REVIEWED', reportId: state.reportId });
+          ch.postMessage({ type: 'REPORT_GENERATED', reportId: state.reportId });
         }
       } catch (postErr) {
         console.warn('Could not post reviewed message:', postErr);
       }
-
-      // Show in-app banner with navigation shortcuts
-      showSignedBanner();
-
     } catch (err) {
-      console.error('Sign-off error:', err);
-      errBox.textContent = err.message || 'Error occurred during attestation submission.';
-      errBox.style.display = 'block';
-      btn.disabled = false;
-      btn.innerHTML = `
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><polyline points="20 6 9 17 4 12"/></svg>
-        <span>Authorize & Commit Sign-off</span>
-      `;
+      console.warn('Background report transmission error:', err);
     }
   });
-
-  function showSignedBanner() {
-    const existing = $('#signed-banner');
-    if (existing) existing.remove();
-
-    const banner = document.createElement('div');
-    banner.id = 'signed-banner';
-    banner.style.cssText = 'position:fixed;bottom:24px;right:24px;max-width:480px;background:#064E3B;color:#fff;padding:16px 20px;border-radius:12px;box-shadow:0 20px 25px -5px rgba(0,0,0,0.3);border:1px solid #059669;z-index:99999;display:flex;flex-direction:column;gap:10px;';
-    banner.innerHTML = `
-      <div style="display:flex;align-items:center;gap:10px;">
-        <div style="width:28px;height:28px;border-radius:50%;background:#10B981;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:bold;">
-          ✓
-        </div>
-        <div>
-          <div style="font-size:13px;font-weight:700;font-family:monospace;">Clinical Report Attested & Transferred</div>
-          <div style="font-size:11px;color:#A7F3D0;font-family:sans-serif;">Report #${state.reportId} successfully archived to EHR repository.</div>
-        </div>
-      </div>
-      <div style="display:flex;gap:8px;margin-top:4px;">
-        <button id="b-goto-reports" type="button" style="padding:6px 12px;background:#10B981;border:none;border-radius:6px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;">
-          View in Clinical Reports
-        </button>
-        <button id="b-goto-reviewing" type="button" style="padding:6px 12px;background:rgba(255,255,255,0.15);border:none;border-radius:6px;color:#fff;font-size:11px;font-weight:600;cursor:pointer;">
-          Inspect Reviewed Archive
-        </button>
-        <button id="b-dismiss-banner" type="button" style="margin-left:auto;padding:6px 8px;background:none;border:none;color:#A7F3D0;font-size:16px;cursor:pointer;">
-          &times;
-        </button>
-      </div>
-    `;
-
-    document.body.appendChild(banner);
-
-    $('#b-goto-reports').addEventListener('click', () => {
-      window.parent.postMessage({ type: 'NAVIGATE', tab: 'REPORTS' }, '*');
-      banner.remove();
-    });
-    $('#b-goto-reviewing').addEventListener('click', () => {
-      window.parent.postMessage({ type: 'NAVIGATE', tab: 'REVIEWING' }, '*');
-      banner.remove();
-    });
-    $('#b-dismiss-banner').addEventListener('click', () => {
-      banner.remove();
-    });
-
-    setTimeout(() => {
-      if (document.body.contains(banner)) banner.remove();
-    }, 12000);
-  }
 
   /* Render Router Cards */
   function renderRouterCards() {

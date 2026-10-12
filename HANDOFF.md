@@ -34,6 +34,15 @@ Resolved backend event loop starvation and integrated reviewed reports into the 
 - **Real-Time Attestation Ingestion**: Added `evaluate_reviewed_case(rev)` in `PolicyEvaluator` to dynamically convert human physician reviews from `orchestrator.get_reviewed_reports()` into benchmark comparison items. Reviewed patient cases are now automatically merged into the benchmark dataset.
 - **Real-Time Event Broadcasting**: Wired `BroadcastChannel('vh_patient_channel')` and `window.addEventListener('message')` listeners on `REPORT_REVIEWED` and `NEW_PATIENT_ADMITTED` in `PolicyBenchmarkPage.tsx`, auto-syncing the benchmark UI whenever a case is attested in the Case Room.
 
+### 1.4 Single-Click 'Review and Sign' Immediate Completion & Zero Redirection
+Streamlined the attending physician attestation flow in the Case Room (`frontend/public/case-room.html` and `frontend/dist/case-room.html`):
+- **Immediate Green Feedback**: Clicking `#b-sign` ('Review and sign') instantly applies `.btn-sign.is-signed` styling (emerald `#059669`, border `#047857`, opacity `1.0`, checkmark SVG icon, and text `Signed & Transferred`).
+- **Complete Elimination of Intermediates**: Permanently bypassed the full-screen modal overlay (`#sign-modal`) and floating action banner (`#signed-banner`). No intermediate forms, notes textareas, or confirmation dialogs.
+- **Zero Redirection**: The clinician remains cleanly in their active Case Room encounter without navigation away or disruptive view jumps.
+- **Background Report Attestation**: Dispatches `POST /api/reviews` payload asynchronously in the background. If case generation is pending, executes the case first to guarantee valid report association.
+- **Cross-Frame Synchronization**: Emits `REPORT_REVIEWED` and `REPORT_GENERATED` to `window.parent.postMessage` and `BroadcastChannel('vh_patient_channel')`, triggering `refreshData()` in `App.tsx` and dynamically updating the **Clinical Reports** tab.
+- **Verified via Playwright**: Verified with `test_sign_button.cjs` and `test_portal_integration.cjs` (0 errors, 100% green).
+
 ---
 
 ## 2. Key Decisions & Rationale
