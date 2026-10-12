@@ -229,26 +229,23 @@ export const PatientCaseSidebar: React.FC<PatientCaseSidebarProps> = ({
     ];
   }, [activeCase, caseData]);
 
-  // Resolve Imaging
+  // Resolve Imaging - only included if there is actual data related to the case
   const imagingList: ImagingItemData[] = React.useMemo(() => {
-    if (activeCase?.imaging && Array.isArray(activeCase.imaging)) {
+    if (activeCase?.imaging && Array.isArray(activeCase.imaging) && activeCase.imaging.length > 0) {
       return activeCase.imaging;
     }
-    if (caseData?.imaging && Array.isArray(caseData.imaging)) {
+    if (caseData?.imaging && Array.isArray(caseData.imaging) && caseData.imaging.length > 0) {
       return caseData.imaging;
     }
-    return [
-      {
-        title: 'Bedside RUQ Ultrasound',
-        mod: 'POCUS Scan',
-        desc: 'Liver capsule intact, no subcapsular haematoma; gallbladder normal',
-      },
-      {
-        title: 'Continuous Cardiotocography',
-        mod: 'Fetal Monitoring',
-        desc: 'Baseline 140 bpm, moderate variability, reactive non-stress pattern',
-      },
-    ];
+    const findings = (activeCase as any)?.imaging_findings || (caseData as any)?.imaging_findings;
+    if (findings && typeof findings === 'object' && !Array.isArray(findings) && Object.keys(findings).length > 0) {
+      return Object.entries(findings).map(([title, desc]) => ({
+        title,
+        mod: 'Diagnostic Study',
+        desc: String(desc),
+      }));
+    }
+    return [];
   }, [activeCase, caseData]);
 
   // Resolve Plan

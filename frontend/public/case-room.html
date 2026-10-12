@@ -1385,7 +1385,7 @@ button { font: inherit; color: inherit; }
     </div>
 
     <!-- Imaging & Studies (2-line clamp, finding first) -->
-    <div class="dossier-sec">
+    <div class="dossier-sec" id="dossier-sec-imaging">
       <span class="dossier-title">Imaging & Studies</span>
       <div class="imaging-list" id="imaging-list">
         <!-- Rendered dynamically -->
@@ -1563,9 +1563,9 @@ button { font: inherit; color: inherit; }
       <div style="margin-bottom: 16px; border-top: 1px dashed #E2E8F0; padding-top: 14px;">
         <label style="display: block; font-size: 11px; font-weight: 700; font-family: monospace; text-transform: uppercase; color: #475569; margin-bottom: 6px;">Attending Physician Reviewer</label>
         <div style="display: flex; align-items: center; gap: 10px; background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 10px 14px;">
-          <div style="width: 28px; height: 28px; border-radius: 50%; background: #2563EB; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700;">MV</div>
+          <div style="width: 28px; height: 28px; border-radius: 50%; background: #2563EB; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700;">AP</div>
           <div>
-            <div style="font-size: 12px; font-weight: 700; color: #0F172A;">Dr. Marcus Vance, MD, FACP</div>
+            <div style="font-size: 12px; font-weight: 700; color: #0F172A;">Attending Physician on Duty</div>
             <div style="font-size: 10px; color: #64748B; font-family: monospace;">Chief of Clinical Medicine · Attending Attestation</div>
           </div>
         </div>
@@ -2360,6 +2360,8 @@ const CASES = {
   };
   window.__vhState = state;
   window.__vhSyncUI = () => syncUI();
+  window.__vhPopulateSidebar = (c) => populateSidebar(c);
+  window.__vhGetActiveCase = () => activeCase;
 
   /* DOM references */
   const table = $('#table');
@@ -2505,7 +2507,7 @@ const CASES = {
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:16px;height:16px;color:#A7F3D0"><polyline points="20 6 9 17 4 12"/></svg>
         <span>Signed & Transferred</span>
       `;
-      signBtn.title = 'Attested by Dr. Marcus Vance, MD, FACP. Transferred to Clinical Reports.';
+      signBtn.title = 'Attested by Attending Physician. Transferred to Clinical Reports.';
     } else {
       signBtn.disabled = (state.phase !== 'signoff');
       signBtn.classList.remove('is-signed');
@@ -2583,24 +2585,39 @@ const CASES = {
     // Render Labs
     renderLabs(c);
 
-    // Imaging Studies (2-line clamp on findings, finding first)
+    // Imaging Studies (2-line clamp on findings, finding first) - only included if there is actual data
+    const imgSec = $('#dossier-sec-imaging') || $('#imaging-list')?.closest('.dossier-sec');
     const imgList = $('#imaging-list');
-    imgList.innerHTML = c.imaging.map((img, idx) => `
-      <div class="imaging-card" data-idx="${idx}">
-        <div class="imaging-info">
-          <span class="imaging-title">${img.title}</span>
-          <span class="imaging-findings">${img.desc}</span>
-        </div>
-        <button type="button" class="imaging-btn" aria-label="View study">View</button>
-      </div>
-    `).join('');
+    const hasImaging = c && Array.isArray(c.imaging) && c.imaging.length > 0 && c.imaging.some(img => img && (img.title || img.desc));
 
-    imgList.querySelectorAll('.imaging-card').forEach(card => {
-      card.addEventListener('click', () => {
-        const idx = parseInt(card.dataset.idx, 10);
-        openImagingModal(c.imaging[idx]);
-      });
-    });
+    if (imgSec) {
+      if (hasImaging) {
+        imgSec.style.display = '';
+        if (imgList) {
+          imgList.innerHTML = c.imaging.map((img, idx) => `
+            <div class="imaging-card" data-idx="${idx}">
+              <div class="imaging-info">
+                <span class="imaging-title">${img.title || 'Diagnostic Study'}</span>
+                <span class="imaging-findings">${img.desc || ''}</span>
+              </div>
+              <button type="button" class="imaging-btn" aria-label="View study">View</button>
+            </div>
+          `).join('');
+
+          imgList.querySelectorAll('.imaging-card').forEach(card => {
+            card.addEventListener('click', () => {
+              const idx = parseInt(card.dataset.idx, 10);
+              openImagingModal(c.imaging[idx]);
+            });
+          });
+        }
+      } else {
+        imgSec.style.display = 'none';
+        if (imgList) {
+          imgList.innerHTML = '';
+        }
+      }
+    }
   }
 
   /* Render Labs: Abnormal only by default, expand to all */
@@ -2751,7 +2768,7 @@ const CASES = {
       if (state.reportId) {
         const payload = {
           report_id: state.reportId,
-          physician_name: 'Dr. Marcus Vance, MD, FACP',
+          physician_name: 'Attending Physician, MD',
           reviewer_role: 'ATTENDING_PHYSICIAN',
           specialty: (state.routing && state.routing.specialty) || 'INTERNAL_MEDICINE',
           assessment: 'CORRECT',
@@ -3668,15 +3685,18 @@ const CASES = {
       { name: 'Creatinine', val: '75 µmol/L', ref: '45-84', flag: 'Normal', status: 'normal' },
     ];
 
-    const imaging = (raw.imaging && raw.imaging.length) ? raw.imaging : [
-      {
-        title: 'Bedside Intake Evaluation',
-        mod: 'Point-of-Care Assessment',
-        desc: 'Completed upon admission into hospital inpatient ward',
+    let imaging = [];
+    if (raw.imaging && Array.isArray(raw.imaging) && raw.imaging.length > 0) {
+      imaging = raw.imaging;
+    } else if (raw.imaging_findings && typeof raw.imaging_findings === 'object' && Object.keys(raw.imaging_findings).length > 0) {
+      imaging = Object.entries(raw.imaging_findings).map(([title, desc]) => ({
+        title: title,
+        mod: 'Diagnostic Study',
+        desc: String(desc),
         icon: 'scan',
-        modalText: `<b>Intake Assessment:</b> Patient admitted for: ${p.chief_complaint}. Monitored in bed ${p.bed_number || 'BAY-01'}.`
-      }
-    ];
+        modalText: `<b>${title}:</b> ${desc}`
+      }));
+    }
 
     const dx = raw.presumptive_diagnosis || p.chief_complaint || 'Undifferentiated Admission';
 
@@ -3812,8 +3832,9 @@ const CASES = {
         $('#pt-cc').textContent = 'All hospital beds are currently vacant or discharged.';
         $('#pt-hpi').textContent = 'To test clinical triage, please navigate to Case Intake and admit an inpatient record.';
         $('#vitals-grid').innerHTML = '<div style="grid-column: 1 / -1; padding: 12px; text-align: center; color: var(--mute); font-size: 12px;">No active telemetry</div>';
-        $('#labs-list').innerHTML = '<div style="padding: 12px; text-align: center; color: var(--mute); font-size: 12px;">No active laboratory results</div>';
-        $('#imaging-list').innerHTML = '<div style="padding: 12px; text-align: center; color: var(--mute); font-size: 12px;">No active imaging studies</div>';
+        const imgSec = $('#dossier-sec-imaging') || $('#imaging-list')?.closest('.dossier-sec');
+        if (imgSec) imgSec.style.display = 'none';
+        if ($('#imaging-list')) $('#imaging-list').innerHTML = '';
         $('#board').innerHTML = '<b>MedGemma router</b><p>Waiting for an admitted patient. Admit patients in Intake.</p>';
         return;
       }
