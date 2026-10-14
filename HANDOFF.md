@@ -1,86 +1,86 @@
 # AI-VH Project Handoff & Session State
 
-**Date:** 2026-10-13  
-**Git Branch:** `redesign/phase-7`  
-**Latest Commit:** `633f9b2` (`chore(repo): clean repository for hackathon submission, exclude large assets, add model security guide`)  
+**Date:** 2026-10-15  
+**Git Branch:** `main` (Default), `redesign/phase-7`, `master`  
+**Latest Commit:** `7a1b0c6` (`docs(readme): add visual brand assets, method architecture figure, and backend persistence endpoints`)  
+**Repository Remote:** `https://github.com/Orfa1i/AI-VH.git` (Default branch: `main`)  
 **Environment Status:**
 - Frontend Dev Server: Running on `http://localhost:5173` (Vite)
-- Backend API Server: Running on `http://127.0.0.1:8000` (FastAPI / Uvicorn, MedGemma 4B + DPO LoRA on RTX 4060 GPU)
+- Backend API Server: Available on `http://127.0.0.1:8000` (FastAPI / Uvicorn, MedGemma 4B + DPO LoRA on RTX 4060 GPU)
 - Cloudflare Quick Tunnel: Active at `https://critics-dealers-buzz-camcorders.trycloudflare.com`
 
 ---
 
 ## 1. Accomplished This Session
 
-### 1.1 Landing Page Eyebrow Text Removal
-- Removed the small font eyebrow text `<span class="eyebrow"><i></i>Virtual Hospital by Asklevia</span>` in the hero section across both:
-  - `frontend/index.html`
-  - `frontend/public/landing.html`
-- Preserved clean visual flow directly into the headline: "A hospital that thinks, and learns from its physicians."
+### 1.1 Visual Identity & Asset Integration in README.md
+- **Official Asklevia Brand Header**: Embedded horizontal SVG/PNG brand identity (`docs/assets/vh-logo-horizontal.png` & `vh-symbol.png`) into [`README.md`](README.md).
+- **Publication-Grade CCF-A Method Architecture Figure**: Embedded the high-resolution architecture figure (`docs/figures/ai_vh_method_architecture.jpg`) displaying:
+  - Panel (a): Clinical Case Intake & MedGemma Triage Router (multimodal EHR input and dispatch to 7 specialist agents).
+  - Panel (b): Multi-Agent Deliberation & Evidence Grounding (RAG across Harrison's, Braunwald's, Williams, Schwartz's, etc.).
+  - Panel (c): Attending Physician Attestation & Multi-Dimensional Grading (4-axis clinical evaluation and DPO preference pair generation).
+  - Panel (d): On-Device Direct Preference Optimization (DPO loss formulation and closed feedback loop to clinical router).
+- **Curated UI Screenshot Gallery**: Added high-resolution visual previews for all core surfaces:
+  - Landing & Hospital Trajectory Overview (`docs/assets/preview-landing.png`)
+  - Real-Time Case Room & Specialist Deliberation (`docs/assets/preview-case-room.png`)
+  - Multimodal Clinical Intake & Triage (`docs/assets/preview-intake.png`)
+  - Attending Physician Attestation Dashboard (`docs/assets/preview-reports.png`)
+  - Direct Preference Optimization (DPO) Benchmark Studio (`docs/assets/preview-benchmark.png`)
+  - Specialist RAG & Medical Library Grounding (`docs/assets/preview-knowledge.png`)
 
-### 1.2 Conditional Trajectory Graph Imaging & Studies Section
-- **Conditional Visibility**: In `frontend/public/case-room.html` and `frontend/src/components/case/PatientCaseSidebar.tsx`, the "Imaging & Studies" section at the bottom of the patient dossier is now strictly conditional.
-- **Removed Synthetic Fallback**: Eliminated the artificial fallback object (`Bedside Intake Evaluation`) that previously forced the section to display for cases with no imaging.
-- **Clean Empty State & Toggling**:
-  - When a case has no imaging data (or when all beds are vacant), the container (`#dossier-sec-imaging`) is completely hidden (`display: none`) and `#imaging-list` is emptied.
-  - When actual imaging studies exist, the section displays with formatted cards and study inspection modal triggers.
-- **Test Suite Cleanliness Compliance**: Updated reviewer strings in `case-room.html` to neutral attending titles ("Attending Physician on Duty" / "Attending Physician, MD") to satisfy strict test assertions in `tests/test_trajectory_graph_suite.py`.
+### 1.2 Backend Persistence & Discharge Integration
+- **Persisted Report Finalization**: Synced `/reports/finalize` endpoint accepting `FinalizeReportRequest` (`patient_id`, `review_status`, `attestation_notes`, `grading`) with SQLite persistence.
+- **Patient Discharge Lifecycle**: Added `/patients/{patient_id}/discharge` endpoint in `backend/api/router.py` to seamlessly transition admitted patients to discharged status upon report signing.
+- **Unified Pending Reports Lookup**: Enhanced `orchestrator.get_pending_reports()` in `backend/simulation/orchestrator.py` to search active memory and fall back to SQLite records, preventing orphaned or missing reports after review.
 
-### 1.3 Trajectory Point Labels Removal & Smooth Rail Motion
-- **Removed Static Station Labels**: Removed `<span class="tag">Gateway</span>`, `<span class="tag">Assessment</span>`, `<span class="tag">Diagnostics</span>`, and `<span class="tag">Disposition</span>` from the trajectory points in both `frontend/index.html` and `frontend/public/landing.html`.
-- **Clean Waypoint Typography**: Kept clean monospace station numerals (`01`, `02`, `03`, `04`) centered along the trajectory rail.
-- **Continuous Motion Verification**: Verified the SVG rail dot (`#rail-dot`) and pulse marker (`#rail-pulse`) glide continuously and smoothly along the line without any visual crowding or badge jitter.
-- **Playwright Test Suite**: Added `frontend/scripts/test_trajectory_dot.cjs` asserting that no trajectory station contains the removed label strings and confirming live delta advancement of `cx` across animation frames.
-
-### 1.5 Hackathon Submission Repository Preparation & Model Security
-- **Cleaned Repository Tracking**: Excluded binary model weights (`*.safetensors`, `*.bin`, `*.pt`), giant PDFs, failure dumps, and scratch directories via updated `.gitignore`.
-- **Created Model Setup & Security Guide**: Authored [`docs/MODEL_SETUP_AND_SECURITY.md`](docs/MODEL_SETUP_AND_SECURITY.md) detailing local MedGemma 4B setup, DPO LoRA adapter mounting, NVIDIA Nemotron API integration, and enterprise key protection.
-- **Enhanced README Quickstart**: Updated [`README.md`](README.md) with step-by-step hackathon setup, execution, and verification commands.
-- **Pre-Flight Secrets Audit**: Ran automated secrets scanner across all tracked repository files, confirming zero exposed credentials, private keys, or API tokens.
-
-### 1.6 Prior Session Deliverables Maintained
-- **Single-Click 'Review and Sign'**: Instant green checkmark, zero intermediate modal or redirection, automated background report transfer to Clinical Reports.
-- **Dynamic Multi-Specialty Citations**: Accurate grounding to specialist medical textbooks (*Braunwald's*, *Williams*, *Schwartz's*, *Adams and Victor's*, *Tintinalli's*) with verbatim quotes.
-- **Concise Clinical Reporting**: High-yield physician summaries constrained to 2–3 sentences with structured diagnostic and evidence breakdowns.
-- **Multi-Agent 4-Phase Lifecycle**: All agents initialize in Ready state; MedGemma router activates assigned specialists while setting others to Standby; dynamic referrals awaken target specialists back to Ready.
+### 1.3 Repository Architecture & Default Branch Governance
+- **Default Branch Configured to `main`**: Pointed GitHub default branch to `main` via `gh repo edit Orfa1i/AI-VH --default-branch main`, ensuring all visitors landing on GitHub immediately see the finalized presentation and documentation.
+- **Synchronized Remote Branches**: Fast-forwarded and synchronized `origin/main`, `origin/master`, and `origin/redesign/phase-7` to commit `7a1b0c6`.
+- **Zero Pending PRs or Issues**: Audited repository status; confirmed all 3 PRs merged and 0 open issues.
+- **Model Security Compliance**: Large model weights (`*.safetensors`, `*.bin`, `*.pt`) excluded from VCS; comprehensive local setup documented in [`docs/MODEL_SETUP_AND_SECURITY.md`](docs/MODEL_SETUP_AND_SECURITY.md).
 
 ---
 
 ## 2. Key Decisions & Rationale
 
-- **No Artificial Fallback Data**: In clinical decision support tools, displaying synthetic placeholder studies (such as "Bedside Intake Evaluation") under an "Imaging & Studies" banner creates clinical ambiguity. Suppressing the section entirely when no actual imaging or diagnostic studies exist reflects authentic EHR behavior.
-- **Dynamic Structural Hiding**: Both `#dossier-sec-imaging` and inner `#imaging-list` are managed together, guaranteeing no orphaned headers, borders, or empty padding remain in the dossier layout when imaging is omitted.
+- **Default Branch Alignment (`main`)**: The repository historically defaulted to `phase1-case-extraction-retrieval`, causing public GitHub visitors to see an outdated version of the project. Switching default branch to `main` via the GitHub API ensures judges and reviewers see the modern Asklevia platform immediately.
+- **Selective Backend Cherry-Pick**: PR #3 contained an old canvas-based layout from early October that would have regressed the modern CSS/HTML design. By porting only the backend API router schemas and orchestrator persistence methods, we preserved 100% of the UI design while gaining database persistence.
+- **Zero Secret Exposure**: Verified all environment variables and secrets are handled via local `.env` and excluded from version control.
 
 ---
 
 ## 3. Verification & Quality Gates
 
-1. **Playwright E2E Imaging Visibility Test (`frontend/scripts/test_imaging_visibility.cjs`)**:
-   - Step 1: Confirmed `#dossier-sec-imaging` is completely hidden on admitted patient without imaging.
-   - Step 2: Confirmed section is visible with study card rendered when imaging is present.
-   - Step 3: Confirmed section cleanly re-hides upon switching back to a patient without imaging.
-   - Result: 3/3 checks passed.
-2. **Trajectory Graph Test Suite (`tests/test_trajectory_graph_suite.py`)**:
-   - `test_case_room_html_cleanliness`: Passed (0 human doctor names found).
-   - `test_patient_directory_admit_patient_api`: Passed.
-   - `test_case_room_dynamic_patient_intake_contract`: Passed.
-   - `test_case_room_full_trajectory_flow_contract`: Passed.
-   - Result: 4/4 passed (100% green).
-3. **Frontend Production Build (`pnpm run build`)**:
-   - 1,899 modules transformed, built in 2.40s with 0 errors.
-4. **Frontend Linter Check (`pnpm run lint`)**:
-   - 0 errors across 74 files.
+1. **Frontend Production Build (`pnpm run build` in `frontend/`)**:
+   - 1,899 modules transformed.
+   - Client bundle built in 1.92s with 0 errors.
+2. **Frontend Linter (`pnpm run lint` in `frontend/`)**:
+   - 0 errors across 75 files (18 non-blocking framework warnings).
+3. **Backend Trajectory Graph Suite (`py -3.13 -m pytest tests/test_trajectory_graph_suite.py`)**:
+   - `test_case_room_html_cleanliness`: PASSED
+   - `test_patient_directory_admit_patient_api`: PASSED
+   - `test_case_room_dynamic_patient_intake_contract`: PASSED
+   - `test_case_room_full_trajectory_flow_contract`: PASSED
+   - 4/4 passed (100% green in 17.38s).
+4. **Git Remote & Branch Synchronization**:
+   - `redesign/phase-7`: commit `7a1b0c6` (Pushed to origin)
+   - `main`: commit `7a1b0c6` (Pushed to origin, default branch)
+   - `master`: commit `7a1b0c6` (Pushed to origin)
+   - Default branch: `main` (Verified via `gh repo view`)
 
 ---
 
-## 4. Hackathon Submission Deliverables
-- **Elevator Pitch Tagline**: *"A hospital that thinks, and learns from its physicians."* (55 chars) with track variants.
-- **Devpost Project Story**: Complete 7-part submission text with LaTeX math formulations for DPO loss and clinical reward functions, empirical metrics (+107.6% decision gain), technical architecture, and roadmap.
+## 4. Hackathon Submission Deliverables Ready
+
+- **GitHub Repository**: `https://github.com/Orfa1i/AI-VH`
+- **Elevator Pitch Tagline**: *"A hospital that thinks, and learns from its physicians."*
+- **Devpost Submission Guide**: Documented in `README.md` and `docs/MODEL_SETUP_AND_SECURITY.md`.
+- **Live Demo Preview**: Available via Cloudflare Quick Tunnel and local Vite/FastAPI instances.
 
 ---
 
-## 5. Concrete Next Steps
+## 5. Next Steps
 
-1. **Hackathon Form Submission**: Paste the generated pitch and project story into the Devpost application.
-2. **Reviewer Attestation Audit**: Verify attested reports in the Clinical Reports tab to ensure signed status and specialty citations render seamlessly.
-3. **Additional Specialty Ingestion**: Admit cases across diverse clinical departments (Neurology, Surgery, Obstetrics) to confirm imaging sections adapt dynamically per case.
+1. **Submit Devpost Application**: Use the README overview, architecture diagram, and elevator pitch to complete the hackathon form.
+2. **Live Demo Walkthrough**: Run the end-to-end case admission and review flow through the Cloudflare tunnel.
+3. **Optional Offline Model Verification**: Run a full local GPU pass with MedGemma 4B using the instructions in `docs/MODEL_SETUP_AND_SECURITY.md`.
