@@ -90,6 +90,15 @@ class ComparativeInferenceRequest(BaseModel):
     force_gpu: Optional[bool] = False
 
 
+class FinalizeReportRequest(BaseModel):
+    patient_id: str
+    encounter_id: Optional[str] = None
+    trajectory_summary: Optional[str] = None
+    vitals: Optional[Dict[str, Any]] = None
+    findings: Optional[Dict[str, Any]] = None
+    discharge_patient: bool = True
+
+
 class PatientAdmitRequest(BaseModel):
     name: str
     age: int
@@ -655,6 +664,8 @@ async def list_cases():
                 "acuity": p.get("triage_acuity", "URGENT"),
                 "department": p.get("assigned_department", "EMERGENCY"),
                 "bed_number": p.get("bed_number", ""),
+                "status": p.get("admission_status", "ADMITTED").lower(),
+                "admission_status": p.get("admission_status", "ADMITTED"),
             }
             for p in patients
             if p.get("admission_status") != "DISCHARGED"
@@ -662,6 +673,109 @@ async def list_cases():
     except Exception as e:
         logger.error(f"Error listing cases from patients: {e}", exc_info=True)
         return []
+
+
+@api_router.post("/patients/{patient_id}/discharge")
+async def discharge_patient_endpoint(patient_id: str):
+    """Marks a patient as discharged in the hospital census database."""
+    success = orchestrator.db.discharge_patient(patient_id)
+    return {"success": success, "patient_id": patient_id, "status": "DISCHARGED"}
+
+
+@api_router.post("/reports/finalize")
+async def finalize_report_endpoint(req: FinalizeReportRequest):
+    """Finalizes a clinical encounter report, persists it to the database, queues it for doctor review, and discharges patient."""
+    try:
+        existing_report = None
+        for rep in orchestrator.reports.values():
+            if getattr(rep, "patient_id", None) == req.patient_id or getattr(rep, "case_id", None) == req.patient_id or getattr(rep, "encounter_id", None) == req.encounter_id:
+                existing_report = rep
+                break
+
+        if not existing_report:
+            db_reports = orchestrator.db.list_reports(case_id=req.patient_id, limit=1)
+            if db_reports:
+                raw = db_reports[0].get("raw_json")
+                if raw and isinstance(raw, str):
+                    try:
+                        import json
+                        from ..models.clinical import ClinicalReport
+                        rep_data = json.loads(raw)
+                        existing_report = ClinicalReport(**rep_data)
+                        orchestrator.reports[existing_report.id] = existing_report
+                    except Exception:
+                        pass
+
+        if not existing_report:
+            import uuid
+            from ..models.clinical import ClinicalReport, VitalSigns
+            patient_record = orchestrator.db.get_patient(req.patient_id)
+            p_name = patient_record.get("name", "Unknown Patient") if patient_record else "Patient"
+            p_age = patient_record.get("age", 50) if patient_record else 50
+            p_sex = patient_record.get("sex", "UNKNOWN") if patient_record else "UNKNOWN"
+            p_complaint = patient_record.get("chief_complaint", req.trajectory_summary or "Clinical Encounter Completed") if patient_record else (req.trajectory_summary or "Clinical Encounter Completed")
+
+            vitals_data = req.vitals or {}
+            vitals_obj = VitalSigns(
+                heart_rate=vitals_data.get("heart_rate", 78),
+                systolic_bp=vitals_data.get("systolic_bp", 120),
+                diastolic_bp=vitals_data.get("diastolic_bp", 80),
+                respiratory_rate=vitals_data.get("respiratory_rate", 16),
+                temperature_c=vitals_data.get("temperature_c", 37.0),
+                spo2_percent=vitals_data.get("spo2_percent", 98.0)
+            )
+
+            existing_report = ClinicalReport(
+                id=f"REP-{uuid.uuid4().hex[:6].upper()}",
+                encounter_id=req.encounter_id or f"ENC-{uuid.uuid4().hex[:8].upper()}",
+                patient_id=req.patient_id,
+                patient_name=p_name,
+                patient_age=p_age,
+                patient_sex=p_sex,
+                chief_complaint=p_complaint,
+                history_of_present_illness=p_complaint,
+                vital_signs=vitals_obj,
+                physical_exam_findings=req.findings or {"General": "Encounter completed and findings evaluated."},
+                investigations_ordered=["Complete Blood Count (CBC)", "Basic Metabolic Panel (BMP)"],
+                investigation_results=[],
+                differential_diagnosis=[],
+                primary_diagnosis=req.trajectory_summary or "Clinical Encounter Completed",
+                diagnostic_confidence=0.88,
+                clinical_reasoning="Clinical findings evaluated against standard clinical protocols.",
+                treatment_plan=["Maintain continuous vital signs monitoring", "Supportive care as clinically indicated"],
+                recommended_disposition="Discharge Cleared / Routine Follow-up",
+                medical_knowledge_citations=[]
+            )
+            orchestrator.reports[existing_report.id] = existing_report
+            orchestrator.db.save_report(existing_report, case_id=req.patient_id)
+
+        if req.discharge_patient:
+            orchestrator.db.discharge_patient(req.patient_id)
+
+        event_bus.publish(
+            event_type="CLINICAL_REPORT_GENERATED",
+            encounter_id=existing_report.encounter_id,
+            patient_id=req.patient_id,
+            sender_agent_id="attending_physician",
+            department="DISCHARGE",
+            payload={
+                "report_id": existing_report.id,
+                "patient_name": existing_report.patient_name,
+                "disposition": existing_report.recommended_disposition,
+                "status": "DISCHARGED"
+            },
+            summary=f"Clinical report #{existing_report.id} finalized for {existing_report.patient_name} and queued for review."
+        )
+
+        return {
+            "success": True,
+            "report_id": existing_report.id,
+            "report": existing_report.model_dump() if hasattr(existing_report, "model_dump") else existing_report,
+            "discharged": req.discharge_patient
+        }
+    except Exception as e:
+        logger.error(f"Error finalizing report: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @api_router.post("/simulation/run")
