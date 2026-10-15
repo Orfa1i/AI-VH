@@ -7,6 +7,24 @@
 </p>
 
 <p align="center">
+  <a href="https://orfa1i.github.io/AI-VH/"><img src="https://img.shields.io/badge/📱_Instant_Mobile_Demo-Open_in_Browser-2B2FD9?style=for-the-badge&logo=safari&logoColor=white" alt="Open Live Demo" /></a>
+  <a href="https://orfa1i.github.io/AI-VH/"><img src="https://img.shields.io/badge/Demo_Status-Online_24%2F7-059669?style=for-the-badge&logo=githubpages&logoColor=white" alt="GitHub Pages Status" /></a>
+</p>
+
+<div align="center">
+
+> ### 🚀 **[👉 CLICK HERE TO LAUNCH LIVE DEMO ON YOUR PHONE OR BROWSER 👈](https://orfa1i.github.io/AI-VH/)**
+> *Zero install • Touch-friendly & mobile optimized • Instant multi-agent deliberation & trajectory simulation*
+> 
+> 🔗 **Direct Ward Jump Links:**  
+> [🏥 **Hospital Trajectory & Landing**](https://orfa1i.github.io/AI-VH/) &nbsp;•&nbsp; 
+> [🩺 **Specialist Case Room Deliberation**](https://orfa1i.github.io/AI-VH/case-room.html) &nbsp;•&nbsp; 
+> [📋 **Case Intake & ESI Triage**](https://orfa1i.github.io/AI-VH/case-intake.html) &nbsp;•&nbsp; 
+> [👥 **Clinical Staff Roster**](https://orfa1i.github.io/AI-VH/staff-roster.html)
+
+</div>
+
+<p align="center">
   <a href="#-quickstart"><img src="https://img.shields.io/badge/Status-Hackathon--Ready-059669?style=flat-square&logo=git" alt="Hackathon Ready" /></a>
   <a href="#-system-architecture"><img src="https://img.shields.io/badge/Architecture-CCF--A%20Method%20Figure-2563EB?style=flat-square" alt="CCF-A Method Architecture" /></a>
   <a href="#-empirical-evaluation--reinforcement-learning"><img src="https://img.shields.io/badge/Alignment-DPO%20LoRA%20(+107.6%25)-7C3AED?style=flat-square" alt="DPO Alignment" /></a>
@@ -20,6 +38,7 @@
 
 ## 📑 Table of Contents
 
+0. [📱 Live Interactive Mobile & Web Demo](#-click-here-to-launch-live-demo-on-your-phone-or-browser-)
 1. [Executive Summary & Core Innovation](#-executive-summary--core-innovation)
 2. [System Architecture (CCF-A Method Figure)](#-system-architecture)
 3. [Clinical Multi-Agent Workflow Walkthrough](#-clinical-multi-agent-workflow-walkthrough)

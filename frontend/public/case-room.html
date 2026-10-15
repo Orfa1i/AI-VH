@@ -3894,7 +3894,26 @@ const CASES = {
       setupDraftPlan(activeCase);
       resetToInitialState();
     } catch (err) {
-      console.warn('Could not fetch admitted patients from database:', err);
+      console.warn('Could not fetch admitted patients from database, falling back to canonical benchmark cases:', err);
+      if (!caseSelect.options.length || caseSelect.value === '') {
+        admittedCasesMap = {};
+        caseSelect.innerHTML = '';
+        Object.keys(CASES).forEach(k => {
+          const c = CASES[k];
+          admittedCasesMap[k] = c;
+          const opt = document.createElement('option');
+          opt.value = k;
+          opt.textContent = `${c.name} — ${c.dx} (${c.acuity})`;
+          caseSelect.appendChild(opt);
+        });
+        const defaultKey = preferredPatientId && CASES[preferredPatientId] ? preferredPatientId : (CASES['elena'] ? 'elena' : Object.keys(CASES)[0]);
+        caseSelect.value = defaultKey;
+        currentCaseKey = defaultKey;
+        activeCase = CASES[defaultKey];
+        populateSidebar(activeCase);
+        setupDraftPlan(activeCase);
+        resetToInitialState();
+      }
     } finally {
       isLoadingAdmittedPatients = false;
     }
