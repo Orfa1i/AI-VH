@@ -26,13 +26,13 @@
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache_2.0-blue.svg?style=flat-square" alt="License: Apache 2.0" /></a>
-  <a href="#-hackathon-submission-quickstart"><img src="https://img.shields.io/badge/Status-Hackathon--Ready-059669?style=flat-square&logo=git" alt="Hackathon Ready" /></a>
+  <a href="#-quick-start-download--run"><img src="https://img.shields.io/badge/Status-Hackathon--Ready-059669?style=flat-square&logo=git" alt="Hackathon Ready" /></a>
   <a href="#-system-architecture"><img src="https://img.shields.io/badge/Architecture-CCF--A%20Method%20Figure-2563EB?style=flat-square" alt="CCF-A Method Architecture" /></a>
   <a href="#-empirical-evaluation--reinforcement-learning"><img src="https://img.shields.io/badge/Alignment-DPO%20LoRA%20(+107.6%25)-7C3AED?style=flat-square" alt="DPO Alignment" /></a>
   <a href="#-hardware--local-execution"><img src="https://img.shields.io/badge/GPU-RTX%204060%20(4--Bit%20NF4)-0284C7?style=flat-square&logo=nvidia" alt="NVIDIA RTX 4060" /></a>
   <a href="#-model-setup--security-protection"><img src="https://img.shields.io/badge/Security-OWASP%20Grounded-10B981?style=flat-square" alt="OWASP Security" /></a>
-  <a href="#-hackathon-submission-quickstart"><img src="https://img.shields.io/badge/Python-3.13%20%7C%20FastAPI-3776AB?style=flat-square&logo=python" alt="Python 3.13" /></a>
-  <a href="#-hackathon-submission-quickstart"><img src="https://img.shields.io/badge/Frontend-React%2019%20%7C%20Vite%208-61DAFB?style=flat-square&logo=react" alt="React 19 Vite" /></a>
+  <a href="#-quick-start-download--run"><img src="https://img.shields.io/badge/Python-3.13%20%7C%20FastAPI-3776AB?style=flat-square&logo=python" alt="Python 3.13" /></a>
+  <a href="#-quick-start-download--run"><img src="https://img.shields.io/badge/Frontend-React%2019%20%7C%20Vite%208-61DAFB?style=flat-square&logo=react" alt="React 19 Vite" /></a>
 </p>
 
 ### 📌 Hackathon Evaluation & Submission Links
@@ -42,7 +42,7 @@
 | **Public Code Repository** | [`https://github.com/Orfa1i/AI-VH`](https://github.com/Orfa1i/AI-VH) | Public open source repository with complete source code |
 | **Hosted Working Demo URL** | [`https://orfa1i.github.io/AI-VH/`](https://orfa1i.github.io/AI-VH/) | 24/7 online live interactive demo (mobile & desktop) |
 | **Open Source License** | [Apache License 2.0 (`LICENSE`)](LICENSE) | OSI-approved open source license file at repository root |
-| **Setup & Run Instructions** | [Quickstart Guide](#-hackathon-submission-quickstart) | Step-by-step local setup, Docker, and verification suite |
+| **Setup & Run Instructions** | [Quickstart Guide](#-quick-start-download--run) | Step-by-step local setup, Docker, and verification suite |
 
 ---
 
@@ -50,12 +50,12 @@
 
 0. [📱 Live Interactive Mobile & Web Demo](#-click-here-to-launch-live-demo-on-your-phone-or-browser-)
 1. [Executive Summary & Core Innovation](#-executive-summary--core-innovation)
-2. [System Architecture (CCF-A Method Figure)](#-system-architecture)
-3. [Clinical Multi-Agent Workflow Walkthrough](#-clinical-multi-agent-workflow-walkthrough)
-4. [Empirical Evaluation & Reinforcement Learning (DPO)](#-empirical-evaluation--reinforcement-learning)
-5. [Hardware Specifications & Local Execution](#-hardware--local-execution)
-6. [Model Setup, Weights & Security Protection](#-model-setup--security-protection)
-7. [Hackathon Submission Quickstart](#-hackathon-submission-quickstart)
+2. [Quick Start: Download & Run](#-quick-start-download--run)
+3. [System Architecture (CCF-A Method Figure)](#-system-architecture)
+4. [Clinical Multi-Agent Workflow Walkthrough](#-clinical-multi-agent-workflow-walkthrough)
+5. [Empirical Evaluation & Reinforcement Learning (DPO)](#-empirical-evaluation--reinforcement-learning)
+6. [Hardware Specifications & Local Execution](#-hardware--local-execution)
+7. [Model Setup, Weights & Security Protection](#-model-setup--security-protection)
 8. [Automated Verification & Quality Gates](#-automated-verification--quality-gates)
 9. [Open Source License](#-license)
 
@@ -73,6 +73,67 @@ Current medical AI systems often operate as isolated chatbots or static question
 - **NVIDIA Nemotron Synthesis**: Multi-agent discourse is synthesized into concise, structured clinical assessment reports with verbatim evidence snippets.
 - **Human-in-the-Loop Attestation**: Attending physicians review reports via single-click attestation (`Review and Sign`), instantly grading clinical safety and generating preference triplets $(x, y_w, y_l)$ for Direct Preference Optimization (DPO).
 - **On-Device Continuous Improvement**: Reinforcement learning aligns local MedGemma 4B weights on local NVIDIA RTX GPU hardware, closing the active feedback loop.
+
+---
+
+## ⚡ Quick Start: Download & Run
+
+Get the full AI-VH platform running locally in under 3 minutes. The system supports **local GPU inference** (MedGemma 4B on NVIDIA RTX), **cloud API synthesis** (Nebius AI Studio), and an **autonomous offline simulation mode** with zero external dependencies.
+
+### 📋 Prerequisites
+- **Python**: `3.10+` (tested on Python 3.11 & 3.13)
+- **Node.js**: `v18+` & **pnpm** (or `npm`)
+- **Git**
+- *(Optional)* NVIDIA GPU with CUDA 12+ for on-device 4-bit MedGemma inference. (If no GPU is present, the backend automatically runs in high-speed CPU mock mode).
+
+---
+
+### Step 1: Clone the Repository
+```bash
+git clone https://github.com/Orfa1i/AI-VH.git
+cd AI-VH
+```
+
+### Step 2: Configure Environment
+```bash
+# Create local configuration from template
+cp .env.example .env
+
+# (Optional) Add your Nebius AI API key for cloud model inference:
+# NEBIUS_API_KEY="your-api-key-here"
+# Note: The platform operates out-of-the-box with synthetic clinical data even without an API key!
+```
+
+### Step 3: Install Backend & Launch Server
+In your first terminal:
+```bash
+# Install Python backend dependencies
+pip install -r requirements.txt
+
+# Start the FastAPI clinical simulation backend
+python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000
+```
+> 🩺 *FastAPI backend initializes on `http://127.0.0.1:8000` with interactive Swagger API docs at `http://127.0.0.1:8000/docs`.*
+
+### Step 4: Install Frontend & Launch Portal
+In a second terminal:
+```bash
+cd frontend
+
+# Install UI dependencies
+pnpm install
+
+# Start Vite development server
+pnpm run dev
+```
+> 🌐 *Open [`http://localhost:5173`](http://localhost:5173) in your browser to access the complete Virtual Hospital workspace.*
+
+---
+
+### 🚀 Instant Zero-Install Option (For Judges & Mobile Reviewers)
+If you prefer not to install dependencies locally, you can immediately test the full platform:
+- **Hosted 24/7 Mobile & Web Application**: [`https://orfa1i.github.io/AI-VH/`](https://orfa1i.github.io/AI-VH/)
+- All 9 clinical wards, particle-based deliberation visualizations, and physician review workflows run client-side without server setup.
 
 ---
 
@@ -95,42 +156,37 @@ Current medical AI systems often operate as isolated chatbots or static question
 ## 🏥 Clinical Multi-Agent Workflow Walkthrough
 
 ### 1. Patient Intake & ESI Acuity Triage
-<p align="center">
-  <img src="docs/assets/preview-intake.png" width="90%" alt="Case Intake & Triage Interface" />
-</p>
 Patients arrive via emergency or elective admission. The intake station extracts demographics, chief complaint, medical history, baseline vitals, and calculates an Emergency Severity Index (ESI) acuity score (Level 1–5), generating an admission telemetry stream.
+- **Key Capabilities**: Real-time physiological vital validation, automated ESI triage scoring, structured EHR ingestion.
+- 🔗 **Live Demo Link**: [`https://orfa1i.github.io/AI-VH/case-intake.html`](https://orfa1i.github.io/AI-VH/case-intake.html)
 
 ---
 
 ### 2. Trajectory Graph & Specialist Deliberation Table
-<p align="center">
-  <img src="docs/assets/preview-case-room.png" width="90%" alt="Trajectory Graph & Specialist Deliberation Table" />
-</p>
 The core Case Room provides a synchronized SVG deliberation table where assigned specialist agents gather. Packet particles visualize inter-agent communication, and the MedGemma router dynamically awakens secondary consults when cross-specialty findings emerge. The patient dossier dynamically displays laboratory data and imaging studies only when actual findings exist for the case.
+- **Key Capabilities**: Real-time multi-agent token streaming, packet particle deliberation animation, dynamic specialty routing (Cardiology, Neurology, Surgery, Ob/Gyn, Emergency).
+- 🔗 **Live Demo Link**: [`https://orfa1i.github.io/AI-VH/case-room.html`](https://orfa1i.github.io/AI-VH/case-room.html)
 
 ---
 
 ### 3. Medical Knowledge Grounding & Real-Time RAG
-<p align="center">
-  <img src="docs/assets/preview-knowledge.png" width="90%" alt="Medical Knowledge Books & Semantic Retrieval" />
-</p>
 Every clinical claim is grounded in indexed medical literature. Diagnostic differentials explicitly cite the specific textbook corresponding to the treating discipline (e.g., *Braunwald's* for cardiology cases, *Williams* for obstetrics), extracting verbatim textual evidence, chapter, and page references.
+- **Key Capabilities**: 47,800+ vector chunks (384-dimensional embeddings), sub-50ms hybrid vector retrieval, live pharmacology verification (openFDA, RxNorm, PubMed).
+- 🔗 **Live Demo Link**: [`https://orfa1i.github.io/AI-VH/#portal`](https://orfa1i.github.io/AI-VH/#portal)
 
 ---
 
 ### 4. Attending Physician Review & 1-Click Sign-Off
-<p align="center">
-  <img src="docs/assets/preview-reports.png" width="90%" alt="Clinical Reports & Physician Review" />
-</p>
 Reports are synthesized with high clinical density (concise 2–3 sentence physician summary, primary diagnosis, recommended disposition, and urgent red flags). Attending physicians can complete sign-off with a single click—instantly turning green (`Signed & Transferred`) without disruptive intermediate forms or redirects.
+- **Key Capabilities**: Multi-dimensional clinical rubric (Diagnosis, Reasoning, Workup, Treatment Safety), 1-click attestation, automated DPO preference pair generation.
+- 🔗 **Live Demo Link**: [`https://orfa1i.github.io/AI-VH/#portal`](https://orfa1i.github.io/AI-VH/#portal)
 
 ---
 
 ### 5. Policy Benchmark Portal & DPO Live Evaluation
-<p align="center">
-  <img src="docs/assets/preview-benchmark.png" width="90%" alt="Policy Benchmark Portal" />
-</p>
 The dedicated Policy Benchmark portal continuously tracks model performance across 6 clinical axes (Diagnostic Accuracy, Safety & Contraindications, Reasoning Depth, Citation Grounding, Treatment Appropriateness, Escalation Correctness), allowing on-device comparative evaluation between Base MedGemma and DPO-aligned checkpoints.
+- **Key Capabilities**: Comparative radar charts, on-device telemetry monitoring (VRAM, latency, LoRA rank), live win-rate tracking (+107.6% clinical score gain).
+- 🔗 **Live Demo Link**: [`https://orfa1i.github.io/AI-VH/#portal`](https://orfa1i.github.io/AI-VH/#portal)
 
 ---
 
@@ -170,43 +226,6 @@ To ensure repository cleanliness, rapid cloning, and security:
 - **Zero Exposed Secrets**: All API tokens and credentials are strictly excluded via `.gitignore`.
 - **Setup Guide**: Comprehensive instructions on downloading model weights, configuring local GPU inference, and enterprise secrets management are documented in:  
   👉 [**`docs/MODEL_SETUP_AND_SECURITY.md`**](docs/MODEL_SETUP_AND_SECURITY.md)
-
----
-
-## 🚀 Hackathon Submission Quickstart
-
-### 1. Prerequisites
-- **Python**: 3.11+ (Python 3.13 recommended)
-- **Node.js**: v20+ & **pnpm**: v9+
-- **CUDA**: 12.2+ (for local GPU inference on NVIDIA RTX 4060)
-
-### 2. Environment Configuration
-```bash
-# Clone the repository
-git clone https://github.com/Orfa1i/AI-VH.git
-cd AI-VH
-
-# Copy the example environment template
-cp .env.example .env
-# Edit .env with your Nebius API key or local model configurations
-```
-
-### 3. Start Backend API & Simulation Engine
-```bash
-# Install Python dependencies
-pip install -r requirements.txt
-
-# Launch FastAPI simulation backend
-python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000
-```
-
-### 4. Start Frontend Application
-```bash
-cd frontend
-pnpm install
-pnpm run dev
-```
-Open [`http://localhost:5173`](http://localhost:5173) in your browser.
 
 ---
 

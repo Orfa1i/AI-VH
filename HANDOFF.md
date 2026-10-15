@@ -72,35 +72,47 @@
 - **Relative Asset and Sub-Page Referencing**: Because GitHub Pages hosts project sites on subpaths (`/<username>/<repo>/`), absolute URLs starting with `/` escape the repo directory. Using `./` guarantees exact resolution regardless of domain or subpath.
 - **Client-Side Autonomous Graceful Fallback**: Providing canonical, production-grade fallback datasets ensures anyone testing the portal directly from GitHub Pages experiences zero errors, rich interactive data, and responsive clinical workflows even when the local GPU backend is offline.
 
+### 1.6 README Elevation & Quick Start Repositioning
+- **User Request**:
+  - Add a clear, step-by-step Quick Start guide near the top of the README (after the demo link, summary table, and brief introduction, but before deeper experience details).
+  - Remove all outdated dark-mode screenshots from the old black version. If updated light-version screenshots are not present, do not use the old ones and ask the user for the new assets.
+- **Implemented Fixes**:
+  - **Repositioned Quick Start Section**: Added `## ⚡ Quick Start: Download & Run` right after `## 🌟 Executive Summary & Core Innovation` and before `## 🏛️ System Architecture`.
+  - **Step-by-Step Instructions**: Included prerequisites, Step 1 (clone), Step 2 (environment configuration), Step 3 (FastAPI backend launch on port 8000), Step 4 (React + Vite frontend launch on port 5173), and a zero-install browser mode link for judges.
+  - **Removed Outdated Dark Screenshots**: Removed all 5 outdated dark-mode preview images (`preview-intake.png`, `preview-case-room.png`, `preview-knowledge.png`, `preview-reports.png`, `preview-benchmark.png`) from Section 4.
+  - **Interactive Route Cards**: Replaced screenshot embeds with clean, modern feature cards linking directly to the live interactive routes on GitHub Pages.
+  - **Removed Duplicate Section**: Cleaned up the redundant bottom quickstart section, ensuring a cohesive and professional README structure.
+
+---
+
+## 2. Key Decisions & Rationale
+
+- **Quick Start Placement**: Positioning setup commands immediately after the executive summary ensures technical judges and reviewers can start testing locally within seconds of opening the repo.
+- **Strict Prohibition on Outdated Dark UI**: The user's redesigned platform uses a clean, modern Asklevia light-mode design system. Displaying old black/dark screenshots undermines the visual identity and brand quality of the submission. Removing them until the user provides updated assets ensures 100% brand consistency.
+
 ---
 
 ## 3. Verification & Quality Gates
 
-1. **GitHub Repository Metadata & License Detection**:
+1. **README Structure & Anchors**:
+   - `## ⚡ Quick Start: Download & Run` verified at position 2 in TOC and body.
+   - All badge and summary table anchors point to `#-quick-start-download--run`.
+   - Zero outdated dark screenshot references remaining in `README.md`.
+2. **GitHub Repository Metadata & License Detection**:
    - `licenseInfo`: `{"key": "apache-2.0", "name": "Apache License 2.0"}` (Detected on GitHub)
    - `homepageUrl`: `https://orfa1i.github.io/AI-VH/` (Visible in repo About sidebar)
    - `isPrivate`: `false` (Public repository verified)
-2. **GitHub Pages Live Status Check (Zero 404s)**:
-   - `https://orfa1i.github.io/AI-VH/`: HTTP `200 OK`
-   - `https://orfa1i.github.io/AI-VH/case-intake.html`: HTTP `200 OK`
-   - `https://orfa1i.github.io/AI-VH/staff-roster.html`: HTTP `200 OK`
-   - `https://orfa1i.github.io/AI-VH/case-room.html`: HTTP `200 OK`
-   - `https://orfa1i.github.io/AI-VH/logos/vh-logo-compact.svg`: HTTP `200 OK`
 3. **Frontend Production Build (`pnpm run build`)**:
-   - 1,899 modules transformed, built in 1.39s with 0 errors.
-4. **Frontend Linter (`pnpm run lint`)**:
-   - 0 errors across 75 files.
-5. **Backend Test Suite (`py -3.13 -m pytest tests/test_trajectory_graph_suite.py`)**:
-   - 4/4 passed in 15.40s (100% green).
-6. **Git Branches Synchronized**:
+   - 1,899 modules transformed, built in 2.26s with 0 errors.
+4. **Git Branches Synchronized**:
    - `gh-pages`: Live static site
-   - `redesign/phase-7`: Latest working branch (`a0bdfef`)
-   - `main`: Default branch (`a0bdfef`)
-   - `master`: Synchronized (`a0bdfef`)
+   - `redesign/phase-7`: Latest working branch
+   - `main`: Default branch
+   - `master`: Synchronized
 
 ---
 
 ## 4. Next Steps
 
-1. Review the live mobile demo on phone via `https://orfa1i.github.io/AI-VH/`.
-2. Finalize submission links on Devpost with the GitHub Pages URL.
+1. Request user-provided updated light-mode screenshot assets for the 5 clinical stations (Intake, Case Room, Knowledge Books, Reports Queue, Benchmark).
+2. Embed the new screenshots upon receipt and update the repository presentation.
