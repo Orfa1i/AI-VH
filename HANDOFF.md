@@ -97,37 +97,47 @@
     - Added cross-reference note under `## 🏥 Clinical Multi-Agent Workflow Walkthrough` highlighting that all 5 clinical stations and multi-agent interactions are demonstrated in the video.
   - Built production bundle (`pnpm run build` in 1.85s) verifying `dist/virtual-hospital-hackathon-demo-1080p-web.mp4` (28,496,241 bytes) is ready for CDN delivery.
 
+### 1.8 Video Walkthrough Replacement (`vh-linkedin-fast-4x5-your-music.mp4`)
+- **User Instruction**: Replace the previously added video with `vh-linkedin-fast-4x5-your-music.mp4`.
+- **Implemented Actions**:
+  - Removed old 27.18 MB video (`virtual-hospital-hackathon-demo-1080p-web.mp4`) from git and disk.
+  - Copied new 8.71 MB 4:5 mobile-optimized video (`vh-linkedin-fast-4x5-your-music.mp4`, 9,134,851 bytes) to:
+    - `docs/assets/vh-linkedin-fast-4x5-your-music.mp4` (tracked in git)
+    - `frontend/public/vh-linkedin-fast-4x5-your-music.mp4` (served by Vite & deployed to `gh-pages`)
+  - **Updated `README.md`**:
+    - Updated video badge in header to `🎬 Video Demo: Platform Walkthrough`.
+    - Updated submission table row with new video filename, 8.7 MB size, and direct streaming links.
+    - Updated HTML5 `<video>` player embed with responsive 4:5 vertical proportions (`max-width: 520px; border-radius: 14px;`).
+    - Updated download and GitHub Pages CDN mirror streaming badges.
+  - Rebuilt production bundle (`pnpm run build` in 1.49s) verifying `dist/vh-linkedin-fast-4x5-your-music.mp4` is bundled and ready for immediate deployment.
+
 ---
 
 ## 2. Key Decisions & Rationale
 
 - **Quick Start Placement**: Positioning setup commands immediately after the executive summary ensures technical judges and reviewers can start testing locally within seconds of opening the repo.
-- **Video Walkthrough Over Static Screenshots**: The 27MB 1080p web-optimized video provides dynamic, end-to-end evidence of multi-agent deliberation, token streaming, RAG textbook retrieval, and 1-click physician attestation in high fidelity, eliminating the need for fragmented or outdated screenshots.
-- **Dual-Hosting Video Architecture**: Providing both in-repo storage (`docs/assets/`) and GitHub Pages CDN hosting (`https://orfa1i.github.io/AI-VH/...`) guarantees immediate browser playback across all mobile and desktop devices without requiring cloning or video players.
+- **Fast 4:5 Mobile-Optimized Video Selection**: At 8.71 MB, `vh-linkedin-fast-4x5-your-music.mp4` delivers rapid loading and high-energy demonstration tailored for phone and mobile evaluation, perfect for judges reviewing on handheld devices or laptops.
+- **Clean Repository Asset Maintenance**: Fully purged the previous 27MB binary asset from the working tree and git index to prevent repo bloat.
 
 ---
 
 ## 3. Verification & Quality Gates
 
 1. **Video File Integrity**:
-   - `docs/assets/virtual-hospital-hackathon-demo-1080p-web.mp4`: 28,496,241 bytes (~27.18 MB, well within GitHub's 100MB limit).
-   - `frontend/public/virtual-hospital-hackathon-demo-1080p-web.mp4`: Verified present.
-   - `frontend/dist/virtual-hospital-hackathon-demo-1080p-web.mp4`: Verified bundled during build.
+   - `docs/assets/vh-linkedin-fast-4x5-your-music.mp4`: 9,134,851 bytes (~8.71 MB).
+   - `frontend/public/vh-linkedin-fast-4x5-your-music.mp4`: 9,134,851 bytes.
+   - `frontend/dist/vh-linkedin-fast-4x5-your-music.mp4`: Verified bundled during build.
+   - `frontend/dist/virtual-hospital-hackathon-demo-1080p-web.mp4`: Verified removed (`False`).
 2. **README Structure & Anchors**:
-   - `## ⚡ Quick Start: Download & Run` verified at position 2 in TOC and body.
-   - `## 🎬 Full Platform Video Walkthrough` verified at position 3 in TOC and body.
    - All badge and summary table anchors point to valid section IDs.
-3. **GitHub Repository Metadata & License Detection**:
-   - `licenseInfo`: `{"key": "apache-2.0", "name": "Apache License 2.0"}` (Detected on GitHub)
-   - `homepageUrl`: `https://orfa1i.github.io/AI-VH/` (Visible in repo About sidebar)
-   - `isPrivate`: `false` (Public repository verified)
-4. **Frontend Production Build (`pnpm run build`)**:
-   - 1,899 modules transformed, built in 1.85s with 0 errors.
+   - HTML5 video player configured with 520px max-width for crisp 4:5 presentation.
+3. **Frontend Production Build (`pnpm run build`)**:
+   - 1,899 modules transformed, built in 1.49s with 0 errors.
 
 ---
 
 ## 4. Next Steps
 
-1. Push commit with embedded video assets, updated README, and HANDOFF to `origin redesign/phase-7`, `origin main`, and `origin master`.
-2. Confirm GitHub Actions deploys updated build with video to `origin gh-pages`.
-3. Provide final verification check on the deployed video streaming URL.
+1. Push commit with updated video assets, README, and HANDOFF to `origin redesign/phase-7`, `origin main`, and `origin master`.
+2. Confirm GitHub Actions deploys updated build with new video to `origin gh-pages`.
+3. Verify live HTTP 200 on `https://orfa1i.github.io/AI-VH/vh-linkedin-fast-4x5-your-music.mp4`.

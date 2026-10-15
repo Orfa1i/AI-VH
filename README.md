@@ -8,7 +8,7 @@
 
 <p align="center">
   <a href="https://orfa1i.github.io/AI-VH/"><img src="https://img.shields.io/badge/📱_Instant_Mobile_Demo-Open_in_Browser-2B2FD9?style=for-the-badge&logo=safari&logoColor=white" alt="Open Live Demo" /></a>
-  <a href="#-full-platform-video-walkthrough"><img src="https://img.shields.io/badge/🎬_Video_Demo-1080p_Walkthrough-E11D48?style=for-the-badge&logo=youtube&logoColor=white" alt="Video Demo" /></a>
+  <a href="#-full-platform-video-walkthrough"><img src="https://img.shields.io/badge/🎬_Video_Demo-Platform_Walkthrough-E11D48?style=for-the-badge&logo=youtube&logoColor=white" alt="Video Demo" /></a>
   <a href="https://orfa1i.github.io/AI-VH/"><img src="https://img.shields.io/badge/Demo_Status-Online_24%2F7-059669?style=for-the-badge&logo=githubpages&logoColor=white" alt="GitHub Pages Status" /></a>
 </p>
 
@@ -42,7 +42,7 @@
 |:---|:---|:---|
 | **Public Code Repository** | [`https://github.com/Orfa1i/AI-VH`](https://github.com/Orfa1i/AI-VH) | Public open source repository with complete source code |
 | **Hosted Working Demo URL** | [`https://orfa1i.github.io/AI-VH/`](https://orfa1i.github.io/AI-VH/) | 24/7 online live interactive demo (mobile & desktop) |
-| **Video Walkthrough (1080p)** | [Watch Video (27 MB)](docs/assets/virtual-hospital-hackathon-demo-1080p-web.mp4) • [CDN Stream](https://orfa1i.github.io/AI-VH/virtual-hospital-hackathon-demo-1080p-web.mp4) | High-definition screen recording of complete platform in action |
+| **Video Walkthrough** | [Watch Video (8.7 MB)](docs/assets/vh-linkedin-fast-4x5-your-music.mp4) • [CDN Stream](https://orfa1i.github.io/AI-VH/vh-linkedin-fast-4x5-your-music.mp4) | High-definition mobile-optimized walkthrough of complete platform in action |
 | **Open Source License** | [Apache License 2.0 (`LICENSE`)](LICENSE) | OSI-approved open source license file at repository root |
 | **Setup & Run Instructions** | [Quickstart Guide](#-quick-start-download--run) | Step-by-step local setup, Docker, and verification suite |
 
@@ -142,19 +142,19 @@ If you prefer not to install dependencies locally, you can immediately test the 
 
 ## 🎬 Full Platform Video Walkthrough
 
-Watch the comprehensive 1080p demonstration walking through patient intake, MedGemma specialty routing, real-time multi-agent particle deliberation, medical textbook grounding, and physician review sign-off:
+Watch the complete virtual hospital walkthrough demonstrating patient intake, MedGemma specialty routing, real-time multi-agent particle deliberation, medical textbook grounding, and physician review sign-off:
 
 <p align="center">
-  <video src="docs/assets/virtual-hospital-hackathon-demo-1080p-web.mp4" controls="controls" width="100%" style="max-width: 860px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.15);">
+  <video src="docs/assets/vh-linkedin-fast-4x5-your-music.mp4" controls="controls" width="100%" style="max-width: 520px; border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,0.15);">
     Your browser does not support HTML5 video.
   </video>
 </p>
 
 <p align="center">
-  <a href="docs/assets/virtual-hospital-hackathon-demo-1080p-web.mp4">
-    <img src="https://img.shields.io/badge/▶️_Direct_Video_File-Download_or_Stream_(27MB)-2563EB?style=for-the-badge&logo=quicktime&logoColor=white" alt="Direct Video Stream" />
+  <a href="docs/assets/vh-linkedin-fast-4x5-your-music.mp4">
+    <img src="https://img.shields.io/badge/▶️_Direct_Video_File-Download_or_Stream_(8.7MB)-2563EB?style=for-the-badge&logo=quicktime&logoColor=white" alt="Direct Video Stream" />
   </a>
-  <a href="https://orfa1i.github.io/AI-VH/virtual-hospital-hackathon-demo-1080p-web.mp4">
+  <a href="https://orfa1i.github.io/AI-VH/vh-linkedin-fast-4x5-your-music.mp4">
     <img src="https://img.shields.io/badge/🌐_Mirror_Stream-GitHub_Pages_CDN-059669?style=for-the-badge&logo=safari&logoColor=white" alt="GitHub Pages Mirror Stream" />
   </a>
 </p>
@@ -179,7 +179,7 @@ Watch the comprehensive 1080p demonstration walking through patient intake, MedG
 
 ## 🏥 Clinical Multi-Agent Workflow Walkthrough
 
-> 🎥 *All 5 clinical stations and multi-agent interactions described below are demonstrated end-to-end in the [1080p Video Walkthrough](#-full-platform-video-walkthrough).*
+> 🎥 *All 5 clinical stations and multi-agent interactions described below are demonstrated end-to-end in the [Video Walkthrough](#-full-platform-video-walkthrough).*
 
 ### 1. Patient Intake & ESI Acuity Triage
 Patients arrive via emergency or elective admission. The intake station extracts demographics, chief complaint, medical history, baseline vitals, and calculates an Emergency Severity Index (ESI) acuity score (Level 1–5), generating an admission telemetry stream.
