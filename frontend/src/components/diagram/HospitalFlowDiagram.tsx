@@ -46,7 +46,7 @@ export const HospitalFlowDiagram: React.FC<HospitalFlowDiagramProps> = ({
     <div className="w-full flex-1 flex flex-col h-full min-h-[920px] bg-[#F7F8FB] relative isolate overflow-hidden">
       <iframe
         ref={iframeRef}
-        src="/case-room.html"
+        src="./case-room.html"
         title="Virtual Hospital Case Room"
         className="w-full flex-1 border-0"
         style={{

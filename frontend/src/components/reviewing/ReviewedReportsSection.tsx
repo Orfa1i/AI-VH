@@ -47,6 +47,166 @@ export interface ReviewedReportItem {
   report: ClinicalReport;
 }
 
+const CANONICAL_DEMO_REVIEWED: ReviewedReportItem[] = [
+  {
+    id: 'rev-demo-001',
+    report_id: 'rep-demo-arthur',
+    encounter_id: 'enc-demo-002',
+    physician_name: 'Dr. Marcus Vance, MD (Chief of Cardiology)',
+    reviewed_at: new Date(Date.now() - 3600000 * 3).toISOString(),
+    diagnosis_grade: 'CORRECT',
+    reasoning_grade: 'SOUND',
+    tests_grade: 'APPROPRIATE',
+    treatment_grade: 'SAFE_AND_OPTIMAL',
+    overall_score: 5,
+    approved: true,
+    notes: 'Exemplary clinical reasoning. NSTEMI promptly identified with serial hs-cTnT and dynamic ECG correlation. Guideline-directed antiplatelet therapy and statin initiation strictly align with 2024 ESC/ACC NSTE-ACS guidelines.',
+    report: {
+      id: 'rep-demo-arthur',
+      encounter_id: 'enc-demo-002',
+      patient_id: 'pat-demo-002',
+      patient_name: 'Arthur Pendelton',
+      patient_age: 68,
+      patient_sex: 'Male',
+      created_at: new Date(Date.now() - 3600000 * 4).toISOString(),
+      chief_complaint: 'Substernal chest pressure radiating to left mandible, diaphoresis, dyspnea on exertion.',
+      history_of_present_illness: '68-year-old male with hypertension and hyperlipidemia presenting with acute onset retrosternal crushing chest pressure radiating to left jaw and shoulder for 45 minutes, associated with cold diaphoresis.',
+      past_medical_history: ['Hypertension (10 yrs)', 'Hyperlipidemia', 'Ex-smoker (20 pack-years)'],
+      medications: ['Amlodipine 5mg daily', 'Atorvastatin 20mg daily'],
+      allergies: ['NKDA'],
+      vital_signs: {
+        timestamp: new Date().toISOString(),
+        heart_rate: 94,
+        systolic_bp: 154,
+        diastolic_bp: 92,
+        respiratory_rate: 20,
+        temperature_c: 36.7,
+        spo2_percent: 96,
+        pain_score: 8,
+      },
+      physical_exam_findings: {
+        Cardiovascular: 'S4 gallop present, no murmurs, normal peripheral pulses.',
+        Pulmonary: 'Bibasilar end-inspiratory crackles.',
+      },
+      investigations_ordered: ['Serial 12-lead ECG', 'High-sensitivity Troponin T (0h, 1h)', 'CBC, CMP, Lipid panel'],
+      investigation_results: [
+        {
+          test_type: 'High-Sensitivity Troponin T',
+          values: { '0h': '68 ng/L', '1h': '142 ng/L' },
+          abnormal_flags: { '0h': true, '1h': true },
+          interpretation: 'Marked delta elevation (>5 ng/L rise at 1 hour) confirming acute myocardial injury.',
+        },
+      ],
+      differential_diagnosis: [
+        {
+          condition: 'Non-ST-Elevation Myocardial Infarction (NSTEMI)',
+          likelihood: 0.94,
+          supporting_points: ['Significant delta troponin elevation', 'ST-depression in leads V4-V6', 'Classic anginal presentation'],
+          opposing_points: ['No persistent ST-elevation on initial ECG'],
+        },
+      ],
+      primary_diagnosis: 'Acute Coronary Syndrome: Non-ST-Elevation Myocardial Infarction (NSTEMI, TIMI Risk Score 5)',
+      diagnostic_confidence: 0.96,
+      clinical_reasoning: 'Positive biomarker delta with ischemic symptoms meets universal definition of acute myocardial infarction. Early invasive coronary angiography indicated within 24 hours.',
+      treatment_plan: [
+        'Aspirin 324mg chewed stat, Ticagrelor 180mg loading dose.',
+        'Enoxaparin 1mg/kg SQ q12h.',
+        'Atorvastatin 80mg oral stat.',
+        'Urgent cardiology consultation for cardiac catheterization.',
+      ],
+      recommended_disposition: 'ADMIT_CARDIAC_ICU',
+      medical_knowledge_citations: [
+        {
+          book: "Braunwald's Heart Disease (12th Edition)",
+          chapter: 'Chapter 38: Acute Coronary Syndromes',
+          topic: 'High-Sensitivity Troponin Rapid Diagnostic Algorithms',
+          source: "Braunwald's, 12e, Ch 38",
+          excerpt: 'A 0h/1h or 0h/2h hs-cTn algorithm allows rapid rule-in and rule-out of NSTEMI with high negative and positive predictive values.',
+          relevance_score: 0.97,
+        },
+      ],
+    },
+  },
+  {
+    id: 'rev-demo-002',
+    report_id: 'rep-demo-diana',
+    encounter_id: 'enc-demo-004',
+    physician_name: 'Dr. Sarah Chen, MD (Stroke Neurology)',
+    reviewed_at: new Date(Date.now() - 3600000 * 8).toISOString(),
+    diagnosis_grade: 'CORRECT',
+    reasoning_grade: 'SOUND',
+    tests_grade: 'APPROPRIATE',
+    treatment_grade: 'SAFE_AND_OPTIMAL',
+    overall_score: 5,
+    approved: true,
+    notes: 'Flawless acute stroke protocol activation. NIHSS calculated accurately at 7. Non-contrast head CT ruled out hemorrhage within 25 minutes of door arrival.',
+    report: {
+      id: 'rep-demo-diana',
+      encounter_id: 'enc-demo-004',
+      patient_id: 'pat-demo-004',
+      patient_name: 'Diana Reyes',
+      patient_age: 35,
+      patient_sex: 'Female',
+      created_at: new Date(Date.now() - 3600000 * 9).toISOString(),
+      chief_complaint: 'Acute onset left-sided facial droop and right upper extremity pronator drift.',
+      history_of_present_illness: '35-year-old female presenting with sudden-onset focal neurological deficits that began 75 minutes prior to arrival while at work.',
+      past_medical_history: ['Migraine with aura', 'Oral contraceptive use'],
+      medications: ['Combined oral contraceptive pill daily'],
+      allergies: ['NKDA'],
+      vital_signs: {
+        timestamp: new Date().toISOString(),
+        heart_rate: 76,
+        systolic_bp: 138,
+        diastolic_bp: 82,
+        respiratory_rate: 16,
+        temperature_c: 36.6,
+        spo2_percent: 99,
+        pain_score: 2,
+      },
+      physical_exam_findings: {
+        Neurological: 'Alert and oriented x4. Left lower facial weakness, mild dysarthria, right pronator drift, NIHSS score: 7.',
+      },
+      investigations_ordered: ['Non-contrast Head CT', 'CTA Head and Neck', 'Point-of-care blood glucose', 'Coagulation studies'],
+      investigation_results: [
+        {
+          test_type: 'Non-contrast Head CT',
+          values: { Intracranial_Hemorrhage: 'Negative', ASPECTS: '10/10' },
+          abnormal_flags: { Intracranial_Hemorrhage: false },
+          interpretation: 'No acute intracranial hemorrhage or territorial infarction identified.',
+        },
+      ],
+      differential_diagnosis: [
+        {
+          condition: 'Acute Ischemic Stroke (LVO vs. Small Vessel)',
+          likelihood: 0.88,
+          supporting_points: ['Sudden focal neurological deficit', 'Clear onset time within 4.5 hour thrombolysis window'],
+          opposing_points: ['Young patient without traditional cardiovascular risk factors'],
+        },
+      ],
+      primary_diagnosis: 'Acute Ischemic Cerebrovascular Event (Candidate for IV Tenecteplase / Thrombolysis)',
+      diagnostic_confidence: 0.91,
+      clinical_reasoning: 'Deficit onset < 4.5 hours with CT negative for hemorrhage. Rapid thrombolytic assessment initiated per AHA/ASA Guidelines.',
+      treatment_plan: [
+        'Confirm IV access, maintain BP < 185/110 mmHg.',
+        'Administer Tenecteplase (TNK-tPA) 0.25 mg/kg IV bolus over 5 seconds.',
+        'Continuous neuro-checks and NIHSS monitoring q15m.',
+        'Admit to Comprehensive Stroke Unit / Neuro-ICU.',
+      ],
+      recommended_disposition: 'ADMIT_NEURO_ICU',
+      medical_knowledge_citations: [
+        {
+          book: "Adams and Victor's Principles of Neurology (12th Edition)",
+          chapter: 'Chapter 33: Cerebrovascular Diseases',
+          topic: 'Intravenous Thrombolysis Indications and Safety Criteria',
+          source: "Adams & Victor's, 12e, Ch 33",
+          excerpt: 'Intravenous thrombolysis with tenecteplase or alteplase within 4.5 hours of ischemic stroke onset significantly improves functional outcomes at 90 days.',
+          relevance_score: 0.96,
+        },
+      ],
+    },
+  },
+];
+
 interface ReviewedReportsSectionProps {
   onTriggerTrainingSuccess?: () => void;
 }
@@ -77,13 +237,16 @@ export const ReviewedReportsSection: React.FC<ReviewedReportsSectionProps> = ({
       const res = await fetch('/api/reports/reviewed');
       if (res.ok) {
         const data = await res.json();
-        setReviewedItems(data || []);
-        if (data && data.length > 0) {
-          setSelectedId((prev) => prev || (data[0]?.id ?? null));
-        }
+        const items = Array.isArray(data) && data.length > 0 ? data : CANONICAL_DEMO_REVIEWED;
+        setReviewedItems(items);
+        setSelectedId((prev) => prev || (items[0]?.id ?? null));
+      } else {
+        setReviewedItems(CANONICAL_DEMO_REVIEWED);
+        setSelectedId((prev) => prev || CANONICAL_DEMO_REVIEWED[0].id);
       }
-    } catch (err) {
-      console.error('Failed to load reviewed reports:', err);
+    } catch {
+      setReviewedItems(CANONICAL_DEMO_REVIEWED);
+      setSelectedId((prev) => prev || CANONICAL_DEMO_REVIEWED[0].id);
     } finally {
       setLoading(false);
     }

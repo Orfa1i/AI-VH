@@ -231,7 +231,7 @@ export const CaseIntakeAdmissionSection: React.FC<CaseIntakeAdmissionSectionProp
       <div className="w-full h-full flex flex-1 flex-col relative overflow-hidden" style={{ minHeight: 'calc(100vh - 120px)' }}>
         <iframe
           ref={iframeRef}
-          src="/case-intake.html"
+          src="./case-intake.html"
           title="Virtual Hospital Case Intake"
           className="w-full flex-1 border-0"
           style={{

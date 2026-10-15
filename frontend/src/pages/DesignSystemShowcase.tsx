@@ -377,15 +377,15 @@ export const DesignSystemShowcase: React.FC = () => {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 'var(--space-6)', marginTop: 'var(--space-4)' }}>
               <div style={{ padding: 'var(--space-6)', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-md)', background: 'var(--bg-surface)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
                 <span className="caption" style={{ color: 'var(--text-secondary)' }}>Primary Horizontal (Header Master)</span>
-                <img src="/logos/vh-logo-horizontal.svg" alt="Virtual Hospital by Asklevia" style={{ height: 38, width: 'auto', alignSelf: 'flex-start' }} />
+                <img src="./logos/vh-logo-horizontal.svg" alt="Virtual Hospital by Asklevia" style={{ height: 38, width: 'auto', alignSelf: 'flex-start' }} />
               </div>
               <div style={{ padding: 'var(--space-6)', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-md)', background: 'var(--bg-surface)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
                 <span className="caption" style={{ color: 'var(--text-secondary)' }}>Compact Lockup (&lt; 160px Contexts)</span>
-                <img src="/logos/vh-logo-compact.svg" alt="Virtual Hospital Compact" style={{ height: 34, width: 'auto', alignSelf: 'flex-start' }} />
+                <img src="./logos/vh-logo-compact.svg" alt="Virtual Hospital Compact" style={{ height: 34, width: 'auto', alignSelf: 'flex-start' }} />
               </div>
               <div style={{ padding: 'var(--space-6)', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-md)', background: 'var(--bg-surface)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
                 <span className="caption" style={{ color: 'var(--text-secondary)' }}>Stacked Centered Mark</span>
-                <img src="/logos/vh-logo-stacked.svg" alt="Virtual Hospital Stacked" style={{ height: 64, width: 'auto', alignSelf: 'flex-start' }} />
+                <img src="./logos/vh-logo-stacked.svg" alt="Virtual Hospital Stacked" style={{ height: 64, width: 'auto', alignSelf: 'flex-start' }} />
               </div>
             </div>
           </Card>
@@ -399,15 +399,15 @@ export const DesignSystemShowcase: React.FC = () => {
             </CardHead>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 'var(--space-6)', marginTop: 'var(--space-4)' }}>
               <div style={{ padding: 'var(--space-6)', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-md)', background: 'var(--bg-surface)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-3)' }}>
-                <img src="/logos/vh-symbol.svg" alt="Virtual Hospital Helix Symbol" style={{ width: 64, height: 64 }} />
+                <img src="./logos/vh-symbol.svg" alt="Virtual Hospital Helix Symbol" style={{ width: 64, height: 64 }} />
                 <span className="caption" style={{ color: 'var(--text-secondary)' }}>Cross Helix Symbol</span>
               </div>
               <div style={{ padding: 'var(--space-6)', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-md)', background: 'var(--bg-surface)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-3)' }}>
-                <img src="/logos/vh-symbol-small.svg" alt="Virtual Hospital Micro Symbol" style={{ width: 48, height: 48 }} />
+                <img src="./logos/vh-symbol-small.svg" alt="Virtual Hospital Micro Symbol" style={{ width: 48, height: 48 }} />
                 <span className="caption" style={{ color: 'var(--text-secondary)' }}>Small Symbol (&le; 48px)</span>
               </div>
               <div style={{ padding: 'var(--space-6)', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-md)', background: 'var(--bg-surface)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-3)' }}>
-                <img src="/logos/vh-app-icon-rounded.svg" alt="Virtual Hospital App Icon" style={{ width: 64, height: 64 }} />
+                <img src="./logos/vh-app-icon-rounded.svg" alt="Virtual Hospital App Icon" style={{ width: 64, height: 64 }} />
                 <span className="caption" style={{ color: 'var(--text-secondary)' }}>Rounded App Icon (PWA)</span>
               </div>
             </div>

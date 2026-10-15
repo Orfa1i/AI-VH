@@ -79,7 +79,7 @@ export const StaffManagementSection: React.FC<StaffManagementSectionProps> = ({
         setNewSystemPrompt('');
         // Reload iframe if needed
         if (iframeRef.current) {
-          iframeRef.current.src = '/staff-roster.html';
+          iframeRef.current.src = './staff-roster.html';
         }
       }
     } catch (err) {
@@ -93,7 +93,7 @@ export const StaffManagementSection: React.FC<StaffManagementSectionProps> = ({
     <div className="w-full flex-1 flex flex-col h-full min-h-[920px] bg-[#F7F8FB] relative isolate overflow-hidden">
       <iframe
         ref={iframeRef}
-        src="/staff-roster.html"
+        src="./staff-roster.html"
         title="Virtual Hospital Staff Roster"
         className="w-full flex-1 border-0"
         style={{
