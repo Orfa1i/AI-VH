@@ -83,36 +83,51 @@
   - **Interactive Route Cards**: Replaced screenshot embeds with clean, modern feature cards linking directly to the live interactive routes on GitHub Pages.
   - **Removed Duplicate Section**: Cleaned up the redundant bottom quickstart section, ensuring a cohesive and professional README structure.
 
+### 1.7 1080p Video Walkthrough Integration (Replacing Static Screenshots)
+- **User Instruction**: Include `virtual-hospital-hackathon-demo-1080p-web.mp4` directly in the repository instead of images, as the video covers the entire platform experience and replaces static screenshots.
+- **Implemented Actions**:
+  - Copied `virtual-hospital-hackathon-demo-1080p-web.mp4` (27.18 MB) to:
+    - `docs/assets/virtual-hospital-hackathon-demo-1080p-web.mp4` (tracked in git)
+    - `frontend/public/virtual-hospital-hackathon-demo-1080p-web.mp4` (served by Vite & deployed to `gh-pages`)
+  - **Embedded Video in `README.md`**:
+    - Added high-visibility header badge: `🎬 Video Demo: 1080p Walkthrough`
+    - Added dedicated row in `### 📌 Hackathon Evaluation & Submission Links` table with links to repository asset and CDN stream.
+    - Added Table of Contents item: `3. Full Platform Video Walkthrough`.
+    - Added dedicated section `## 🎬 Full Platform Video Walkthrough` with an HTML5 `<video>` player and direct streaming badges.
+    - Added cross-reference note under `## 🏥 Clinical Multi-Agent Workflow Walkthrough` highlighting that all 5 clinical stations and multi-agent interactions are demonstrated in the video.
+  - Built production bundle (`pnpm run build` in 1.85s) verifying `dist/virtual-hospital-hackathon-demo-1080p-web.mp4` (28,496,241 bytes) is ready for CDN delivery.
+
 ---
 
 ## 2. Key Decisions & Rationale
 
 - **Quick Start Placement**: Positioning setup commands immediately after the executive summary ensures technical judges and reviewers can start testing locally within seconds of opening the repo.
-- **Strict Prohibition on Outdated Dark UI**: The user's redesigned platform uses a clean, modern Asklevia light-mode design system. Displaying old black/dark screenshots undermines the visual identity and brand quality of the submission. Removing them until the user provides updated assets ensures 100% brand consistency.
+- **Video Walkthrough Over Static Screenshots**: The 27MB 1080p web-optimized video provides dynamic, end-to-end evidence of multi-agent deliberation, token streaming, RAG textbook retrieval, and 1-click physician attestation in high fidelity, eliminating the need for fragmented or outdated screenshots.
+- **Dual-Hosting Video Architecture**: Providing both in-repo storage (`docs/assets/`) and GitHub Pages CDN hosting (`https://orfa1i.github.io/AI-VH/...`) guarantees immediate browser playback across all mobile and desktop devices without requiring cloning or video players.
 
 ---
 
 ## 3. Verification & Quality Gates
 
-1. **README Structure & Anchors**:
+1. **Video File Integrity**:
+   - `docs/assets/virtual-hospital-hackathon-demo-1080p-web.mp4`: 28,496,241 bytes (~27.18 MB, well within GitHub's 100MB limit).
+   - `frontend/public/virtual-hospital-hackathon-demo-1080p-web.mp4`: Verified present.
+   - `frontend/dist/virtual-hospital-hackathon-demo-1080p-web.mp4`: Verified bundled during build.
+2. **README Structure & Anchors**:
    - `## ⚡ Quick Start: Download & Run` verified at position 2 in TOC and body.
-   - All badge and summary table anchors point to `#-quick-start-download--run`.
-   - Zero outdated dark screenshot references remaining in `README.md`.
-2. **GitHub Repository Metadata & License Detection**:
+   - `## 🎬 Full Platform Video Walkthrough` verified at position 3 in TOC and body.
+   - All badge and summary table anchors point to valid section IDs.
+3. **GitHub Repository Metadata & License Detection**:
    - `licenseInfo`: `{"key": "apache-2.0", "name": "Apache License 2.0"}` (Detected on GitHub)
    - `homepageUrl`: `https://orfa1i.github.io/AI-VH/` (Visible in repo About sidebar)
    - `isPrivate`: `false` (Public repository verified)
-3. **Frontend Production Build (`pnpm run build`)**:
-   - 1,899 modules transformed, built in 2.26s with 0 errors.
-4. **Git Branches Synchronized**:
-   - `gh-pages`: Live static site
-   - `redesign/phase-7`: Latest working branch
-   - `main`: Default branch
-   - `master`: Synchronized
+4. **Frontend Production Build (`pnpm run build`)**:
+   - 1,899 modules transformed, built in 1.85s with 0 errors.
 
 ---
 
 ## 4. Next Steps
 
-1. Request user-provided updated light-mode screenshot assets for the 5 clinical stations (Intake, Case Room, Knowledge Books, Reports Queue, Benchmark).
-2. Embed the new screenshots upon receipt and update the repository presentation.
+1. Push commit with embedded video assets, updated README, and HANDOFF to `origin redesign/phase-7`, `origin main`, and `origin master`.
+2. Confirm GitHub Actions deploys updated build with video to `origin gh-pages`.
+3. Provide final verification check on the deployed video streaming URL.
