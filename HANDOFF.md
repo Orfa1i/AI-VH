@@ -53,10 +53,22 @@
   - Added `.nojekyll` and `404.html` SPA routing fallbacks to `dist` and `public`.
   - Rebuilt production bundle (`pnpm run build` in 1.39s, 0 errors) and force-pushed to `origin gh-pages`.
 
+### 1.5 Hackathon Mentor Feedback Resolution (License & Hosted Project Access)
+- **Mentor Feedback Received**:
+  - Missing Open Source License detectable in the repository's About section.
+  - Missing visible access to hosted project / working demo.
+- **Implemented Fixes**:
+  - **Open Source License (`LICENSE`)**: Added canonical `Apache License 2.0` at repository root. Verified via `gh repo view Orfa1i/AI-VH --json licenseInfo` that GitHub's licensee analyzer now detects `licenseInfo.key = "apache-2.0"` ("Apache License 2.0").
+  - **Repository Homepage & Description**: Updated repository settings via `gh repo edit` to set `homepageUrl = "https://orfa1i.github.io/AI-VH/"` and description. The live working demo is now directly clickable at the top of the repository page in the About box.
+  - **README.md Access Table**: Added high-visibility `Hackathon Evaluation & Submission Links` table and Apache 2.0 license badge, explicitly linking to the public repository, hosted demo, license, and setup instructions.
+  - **Pushed to All Branches**: Synchronized `redesign/phase-7`, `main` (default), and `master` with commit `a0bdfef`.
+
 ---
 
 ## 2. Key Decisions & Rationale
 
+- **Apache License 2.0 Selection**: Apache 2.0 is the gold standard for clinical AI / machine learning projects, providing clear copyright permissions, commercial and research rights, explicit patent grant protections, and instant recognition by hackathon judging systems.
+- **Repository About Box Configuration**: Setting the homepage URL directly on the GitHub repository metadata ensures that judges scanning the repository immediately see the clickable website link without having to search for it.
 - **Relative Asset and Sub-Page Referencing**: Because GitHub Pages hosts project sites on subpaths (`/<username>/<repo>/`), absolute URLs starting with `/` escape the repo directory. Using `./` guarantees exact resolution regardless of domain or subpath.
 - **Client-Side Autonomous Graceful Fallback**: Providing canonical, production-grade fallback datasets ensures anyone testing the portal directly from GitHub Pages experiences zero errors, rich interactive data, and responsive clinical workflows even when the local GPU backend is offline.
 
@@ -64,22 +76,27 @@
 
 ## 3. Verification & Quality Gates
 
-1. **GitHub Pages Live Status Check (Zero 404s)**:
+1. **GitHub Repository Metadata & License Detection**:
+   - `licenseInfo`: `{"key": "apache-2.0", "name": "Apache License 2.0"}` (Detected on GitHub)
+   - `homepageUrl`: `https://orfa1i.github.io/AI-VH/` (Visible in repo About sidebar)
+   - `isPrivate`: `false` (Public repository verified)
+2. **GitHub Pages Live Status Check (Zero 404s)**:
    - `https://orfa1i.github.io/AI-VH/`: HTTP `200 OK`
    - `https://orfa1i.github.io/AI-VH/case-intake.html`: HTTP `200 OK`
    - `https://orfa1i.github.io/AI-VH/staff-roster.html`: HTTP `200 OK`
    - `https://orfa1i.github.io/AI-VH/case-room.html`: HTTP `200 OK`
    - `https://orfa1i.github.io/AI-VH/logos/vh-logo-compact.svg`: HTTP `200 OK`
-2. **Frontend Production Build (`pnpm run build`)**:
+3. **Frontend Production Build (`pnpm run build`)**:
    - 1,899 modules transformed, built in 1.39s with 0 errors.
-3. **Frontend Linter (`pnpm run lint`)**:
+4. **Frontend Linter (`pnpm run lint`)**:
    - 0 errors across 75 files.
-4. **Backend Test Suite (`py -3.13 -m pytest tests/test_trajectory_graph_suite.py`)**:
+5. **Backend Test Suite (`py -3.13 -m pytest tests/test_trajectory_graph_suite.py`)**:
    - 4/4 passed in 15.40s (100% green).
-5. **Git Branches Synchronized**:
+6. **Git Branches Synchronized**:
    - `gh-pages`: Live static site
-   - `redesign/phase-7`: Current working branch
-   - `main`: Default branch
+   - `redesign/phase-7`: Latest working branch (`a0bdfef`)
+   - `main`: Default branch (`a0bdfef`)
+   - `master`: Synchronized (`a0bdfef`)
 
 ---
 
