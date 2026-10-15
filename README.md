@@ -25,14 +25,24 @@
 </div>
 
 <p align="center">
-  <a href="#-quickstart"><img src="https://img.shields.io/badge/Status-Hackathon--Ready-059669?style=flat-square&logo=git" alt="Hackathon Ready" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache_2.0-blue.svg?style=flat-square" alt="License: Apache 2.0" /></a>
+  <a href="#-hackathon-submission-quickstart"><img src="https://img.shields.io/badge/Status-Hackathon--Ready-059669?style=flat-square&logo=git" alt="Hackathon Ready" /></a>
   <a href="#-system-architecture"><img src="https://img.shields.io/badge/Architecture-CCF--A%20Method%20Figure-2563EB?style=flat-square" alt="CCF-A Method Architecture" /></a>
   <a href="#-empirical-evaluation--reinforcement-learning"><img src="https://img.shields.io/badge/Alignment-DPO%20LoRA%20(+107.6%25)-7C3AED?style=flat-square" alt="DPO Alignment" /></a>
   <a href="#-hardware--local-execution"><img src="https://img.shields.io/badge/GPU-RTX%204060%20(4--Bit%20NF4)-0284C7?style=flat-square&logo=nvidia" alt="NVIDIA RTX 4060" /></a>
   <a href="#-model-setup--security-protection"><img src="https://img.shields.io/badge/Security-OWASP%20Grounded-10B981?style=flat-square" alt="OWASP Security" /></a>
-  <a href="#-quickstart"><img src="https://img.shields.io/badge/Python-3.13%20%7C%20FastAPI-3776AB?style=flat-square&logo=python" alt="Python 3.13" /></a>
-  <a href="#-quickstart"><img src="https://img.shields.io/badge/Frontend-React%2019%20%7C%20Vite%208-61DAFB?style=flat-square&logo=react" alt="React 19 Vite" /></a>
+  <a href="#-hackathon-submission-quickstart"><img src="https://img.shields.io/badge/Python-3.13%20%7C%20FastAPI-3776AB?style=flat-square&logo=python" alt="Python 3.13" /></a>
+  <a href="#-hackathon-submission-quickstart"><img src="https://img.shields.io/badge/Frontend-React%2019%20%7C%20Vite%208-61DAFB?style=flat-square&logo=react" alt="React 19 Vite" /></a>
 </p>
+
+### 📌 Hackathon Evaluation & Submission Links
+
+| Requirement | Value & Direct Access Link | Notes |
+|:---|:---|:---|
+| **Public Code Repository** | [`https://github.com/Orfa1i/AI-VH`](https://github.com/Orfa1i/AI-VH) | Public open source repository with complete source code |
+| **Hosted Working Demo URL** | [`https://orfa1i.github.io/AI-VH/`](https://orfa1i.github.io/AI-VH/) | 24/7 online live interactive demo (mobile & desktop) |
+| **Open Source License** | [Apache License 2.0 (`LICENSE`)](LICENSE) | OSI-approved open source license file at repository root |
+| **Setup & Run Instructions** | [Quickstart Guide](#-hackathon-submission-quickstart) | Step-by-step local setup, Docker, and verification suite |
 
 ---
 
@@ -47,6 +57,7 @@
 6. [Model Setup, Weights & Security Protection](#-model-setup--security-protection)
 7. [Hackathon Submission Quickstart](#-hackathon-submission-quickstart)
 8. [Automated Verification & Quality Gates](#-automated-verification--quality-gates)
+9. [Open Source License](#-license)
 
 ---
 
@@ -218,6 +229,17 @@ pnpm run lint
 cd ..
 python scratch/audit_secrets.py
 ```
+
+---
+
+## 📄 License
+
+This project is licensed under the **Apache License, Version 2.0**.
+
+- Commercial and research use permitted
+- Modifications and derivative works permitted
+- Patent grant included
+- Full license terms and conditions: see the [LICENSE](LICENSE) file.
 
 ---
 
